@@ -2,7 +2,7 @@ use bellman::groth16::{create_random_proof, Parameters, Proof,};
 use pairing::bls12_381::{Bls12, Fr};
 use zcash_primitives::jubjub::{JubjubBls12, edwards, Unknown, fs, PrimeOrder};
 use super::circuit::Ring;
-use rand_os::OsRng;
+use rand_core::OsRng;
 
 pub fn prove(
     params: &JubjubBls12,
