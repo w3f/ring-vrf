@@ -55,12 +55,12 @@ fn test_completeness() {
     let tree_depth = 10;
     let auth_path = vec![Some((Fr::random(rng), rng.next_u32() % 2 != 0)); tree_depth];
 
-    let mut cur = pk.to_xy().0;
+    let mut apk_x = pk.to_xy().0;
 
     for (i, val) in auth_path.clone().into_iter().enumerate() {
         let (uncle, b) = val.unwrap();
 
-        let mut lhs = cur;
+        let mut lhs = apk_x;
         let mut rhs = uncle;
 
         if b {
@@ -73,7 +73,7 @@ fn test_completeness() {
         lhs.reverse();
         rhs.reverse();
 
-        cur = pedersen_hash::pedersen_hash::<Bls12, _>(
+        apk_x = pedersen_hash::pedersen_hash::<Bls12, _>(
             pedersen_hash::Personalization::MerkleTree(i),
             lhs.into_iter()
                 .take(Fr::NUM_BITS as usize)
@@ -92,7 +92,7 @@ fn test_completeness() {
 
     let t = SystemTime::now();
     let pvk = prepare_verifying_key::<Bls12>(&crs.vk);
-    let valid = verifier::verify(params, &pvk, proof, pk, vrf_base, vrf_output, cur);
+    let valid = verifier::verify(params, &pvk, proof, vrf_base, vrf_output, apk_x);
     println!("verification = {}", t.elapsed().unwrap().as_millis());
     assert_eq!(valid.unwrap(), true);
 }
