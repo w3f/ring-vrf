@@ -18,8 +18,6 @@ use bellman::gadgets::Assignment;
 use bellman::gadgets::test::TestConstraintSystem;
 use pairing::bls12_381::Bls12;
 
-pub const TREE_DEPTH: usize = zcash_primitives::sapling::SAPLING_COMMITMENT_TREE_DEPTH;
-
 // A circuit for proving that the given vrf_output is valid for the given vrf_input under
 // a key from the predefined set. It formalizes the following language:
 // {(VRF_INPUT, VRF_OUTPUT, set) | VRF_OUTPUT = vrf(sk, VRF_INPUT), PK = derive(sk) and  PK is in set }, where:
