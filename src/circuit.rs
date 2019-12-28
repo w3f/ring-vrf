@@ -18,31 +18,31 @@ use bellman::gadgets::Assignment;
 use bellman::gadgets::test::TestConstraintSystem;
 use pairing::bls12_381::Bls12;
 
-// A circuit for proving that the given vrf_output is valid for the given vrf_input under
-// a key from the predefined set. It formalizes the following language:
-// {(VRF_INPUT, VRF_OUTPUT, set) | VRF_OUTPUT = vrf(sk, VRF_INPUT), PK = derive(sk) and  PK is in set }, where:
-// - sk, PK is an elliptic curve keypair, thus PK is a point, sk is a scalar and derive(sk) = sk * B, for a predefined base pont B
-// - VRF_INPUT and VRF_OUTPUT are elliptic curve points, and vrf(sk, VRF_INPUT) = sk * VRF_INPUT
-// - set //TODO
-
-// These are the values that are required to construct the circuit and populate all the wires.
-// They are defined as Options as for CRS generation only circuit structure is relevant,
-// not the wires' assignments, so knowing the types is enough.
+/// A circuit for proving that the given vrf_output is valid for the given vrf_input under
+/// a key from the predefined set. It formalizes the following language:
+///
+/// {(VRF_INPUT, VRF_OUTPUT, set) | VRF_OUTPUT = vrf(sk, VRF_INPUT), PK = derive(sk) and  PK is in set }, where:
+/// - sk, PK is an elliptic curve keypair, thus PK is a point, sk is a scalar and derive(sk) = sk * B, for a predefined base pont B
+/// - VRF_INPUT and VRF_OUTPUT are elliptic curve points, and vrf(sk, VRF_INPUT) = sk * VRF_INPUT
+/// - set // TODO
+///
+/// These are the values that are required to construct the circuit and populate all the wires.
+/// They are defined as Options as for CRS generation only circuit structure is relevant,
+/// not the wires' assignments, so knowing the types is enough.
 pub struct Ring<'a, E: JubjubEngine> { // TODO: name
-
-    // Jubjub curve parameters.
+    /// Jubjub curve parameters.
     pub params: &'a E::Params,
 
-    // The secret key, an element of Jubjub scalar field.
+    /// The secret key, an element of Jubjub scalar field.
     pub sk: Option<E::Fs>,
 
-    // The VRF input, a point in Jubjub prime order subgroup.
+    /// The VRF input, a point in Jubjub prime order subgroup.
     pub vrf_input: Option<edwards::Point<E, PrimeOrder>>,
 
-    // The authentication path of the public key x-coordinate in the Merkle tree,
-    // the element of Jubjub base field.
-    // This is enough to build the root as the base point is hardcoded in the circuit in the lookup tables,
-    // so we can restore the public key from the secret key.
+    /// The authentication path of the public key x-coordinate in the Merkle tree,
+    /// the element of Jubjub base field.
+    /// This is enough to build the root as the base point is hardcoded in the circuit in the lookup tables,
+    /// so we can restore the public key from the secret key.
     pub auth_path: Vec<Option<(E::Fr, bool)>>,
 }
 
