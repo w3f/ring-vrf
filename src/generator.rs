@@ -2,8 +2,7 @@ use rand_core::{OsRng}; // RngCore
 
 use bellman::groth16::{generate_random_parameters, Parameters,};
 use bellman::SynthesisError;
-use pairing::bls12_381::{Bls12, Fr,};
-use ff::Field;
+use pairing::bls12_381::Bls12;
 use zcash_primitives::jubjub::JubjubBls12;
 
 use crate::{Ring, PathDirection};
@@ -18,7 +17,7 @@ pub fn generate_crs() -> Result<Parameters<Bls12>, SynthesisError> {
         params,
         sk: None,
         vrf_input: None,
-        auth_path: vec![(Fr::random(rng), PathDirection::random(rng)); 10],
+        auth_path: vec![None; 10],
     };
     generate_random_parameters(circuit, rng)
 }

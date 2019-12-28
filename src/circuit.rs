@@ -2,7 +2,7 @@ use zcash_primitives::jubjub::{FixedGenerators, JubjubEngine, edwards, PrimeOrde
 
 use zcash_proofs::circuit::{ecc, pedersen_hash};
 use bellman::{Circuit, ConstraintSystem, SynthesisError};
-use bellman::gadgets::{boolean, num};
+use bellman::gadgets::{boolean, num, Assignment};
 
 use crate::PathDirection;
 
@@ -31,7 +31,7 @@ pub struct Ring<'a, E: JubjubEngine> { // TODO: name
     /// the element of Jubjub base field.
     /// This is enough to build the root as the base point is hardcoded in the circuit in the lookup tables,
     /// so we can restore the public key from the secret key.
-    pub auth_path: Vec<(E::Fr, PathDirection)>,
+    pub auth_path: Vec<Option<(E::Fr, PathDirection)>>,
 }
 
 impl<'a, E: JubjubEngine> Circuit<E> for Ring<'a, E> {
@@ -105,13 +105,13 @@ impl<'a, E: JubjubEngine> Circuit<E> for Ring<'a, E> {
             // depth of the tree.
             let cur_is_right = boolean::Boolean::from(boolean::AllocatedBit::alloc(
                 cs.namespace(|| "position bit"),
-                Some(e.1 == PathDirection::Right),
+                e.map(|e| e.1 == PathDirection::Right),
             )?);
 
             // Witness the authentication path element adjacent
             // at this depth.
             let path_element =
-                num::AllocatedNum::alloc(cs.namespace(|| "path element"), || Ok(e.0))?;
+                num::AllocatedNum::alloc(cs.namespace(|| "path element"), || Ok(e.get()?.0))?;
 
             // Swap the two if the current subtree is on the right
             let (xl, xr) = num::AllocatedNum::conditionally_reverse(
@@ -178,7 +178,7 @@ mod tests {
             params,
             sk: Some(sk),
             vrf_input: Some(vrf_base.clone()),
-            auth_path: auth_path.clone(),
+            auth_path: auth_path.into_iter().map(|a| Some(a)).collect(),
         };
 
         let mut cs = TestConstraintSystem::<Bls12>::new();
