@@ -1,22 +1,10 @@
-use ff::{Field, PrimeField, PrimeFieldRepr, BitIterator};
+use zcash_primitives::jubjub::{FixedGenerators, JubjubEngine, edwards, PrimeOrder};
 
+use zcash_proofs::circuit::{ecc, pedersen_hash};
 use bellman::{Circuit, ConstraintSystem, SynthesisError};
+use bellman::gadgets::{boolean, num};
 
-use zcash_primitives::jubjub::{FixedGenerators, JubjubEngine, edwards, PrimeOrder, JubjubParams};
-
-use zcash_primitives::constants;
-
-use zcash_primitives::primitives::{PaymentAddress, ProofGenerationKey, ValueCommitment};
-
-use zcash_proofs::circuit::ecc;
-use zcash_proofs::circuit::pedersen_hash;
-use bellman::gadgets::blake2s;
-use bellman::gadgets::boolean;
-use bellman::gadgets::multipack;
-use bellman::gadgets::num;
-use bellman::gadgets::Assignment;
-use bellman::gadgets::test::TestConstraintSystem;
-use pairing::bls12_381::Bls12;
+use crate::PathDirection;
 
 /// A circuit for proving that the given vrf_output is valid for the given vrf_input under
 /// a key from the predefined set. It formalizes the following language:
@@ -43,7 +31,7 @@ pub struct Ring<'a, E: JubjubEngine> { // TODO: name
     /// the element of Jubjub base field.
     /// This is enough to build the root as the base point is hardcoded in the circuit in the lookup tables,
     /// so we can restore the public key from the secret key.
-    pub auth_path: Vec<Option<(E::Fr, bool)>>,
+    pub auth_path: Vec<(E::Fr, PathDirection)>,
 }
 
 impl<'a, E: JubjubEngine> Circuit<E> for Ring<'a, E> {
@@ -117,13 +105,13 @@ impl<'a, E: JubjubEngine> Circuit<E> for Ring<'a, E> {
             // depth of the tree.
             let cur_is_right = boolean::Boolean::from(boolean::AllocatedBit::alloc(
                 cs.namespace(|| "position bit"),
-                e.map(|e| e.1),
+                Some(e.1 == PathDirection::Right),
             )?);
 
             // Witness the authentication path element adjacent
             // at this depth.
             let path_element =
-                num::AllocatedNum::alloc(cs.namespace(|| "path element"), || Ok(e.get()?.0))?;
+                num::AllocatedNum::alloc(cs.namespace(|| "path element"), || Ok(e.0))?;
 
             // Swap the two if the current subtree is on the right
             let (xl, xr) = num::AllocatedNum::conditionally_reverse(
@@ -156,80 +144,58 @@ impl<'a, E: JubjubEngine> Circuit<E> for Ring<'a, E> {
     }
 }
 
-#[test]
-fn test_ring() {
+#[cfg(test)]
+mod tests {
+    use ff::Field;
     use bellman::gadgets::test::TestConstraintSystem;
-    use pairing::bls12_381::{Bls12, Fr,};
-    use zcash_primitives::pedersen_hash;
-    use zcash_primitives::jubjub::{JubjubBls12, fs, edwards,};
-    use rand_core::{RngCore, SeedableRng,};
+    use pairing::bls12_381::{Bls12, Fr};
+    use zcash_primitives::jubjub::{JubjubParams, JubjubBls12, fs, edwards};
+    use rand_core::SeedableRng;
     use rand_xorshift::XorShiftRng;
+    use super::*;
+    use crate::{aggregated_pkx, PathDirection};
 
-    let params = &JubjubBls12::new();
+    #[test]
+    fn test_ring() {
+        let params = &JubjubBls12::new();
 
-    let rng = &mut XorShiftRng::from_seed([
-        0x58, 0x62, 0xbe, 0x3d, 0x76, 0x3d, 0x31, 0x8d, 0x17, 0xdb, 0x37, 0x32, 0x54, 0x06, 0xbc,
-        0xe5,
-    ]);
-    let sk = fs::Fs::random(rng);
+        let rng = &mut XorShiftRng::from_seed([
+            0x58, 0x62, 0xbe, 0x3d, 0x76, 0x3d, 0x31, 0x8d,
+            0x17, 0xdb, 0x37, 0x32, 0x54, 0x06, 0xbc, 0xe5,
+        ]);
+        let sk = fs::Fs::random(rng);
 
-    let vrf_base = edwards::Point::rand(rng, params).mul_by_cofactor(params);
-    let base_point = params.generator(FixedGenerators::SpendingKeyGenerator);
-    let pk = base_point.mul(sk, params).to_xy();
+        let vrf_base = edwards::Point::rand(rng, params).mul_by_cofactor(params);
+        let base_point = params.generator(FixedGenerators::SpendingKeyGenerator);
+        let pk = base_point.mul(sk, params).to_xy();
 
-    let tree_depth = 10;
-    let auth_path = vec![Some((Fr::random(rng), rng.next_u32() % 2 != 0)); tree_depth];
+        let tree_depth = 10;
+        let auth_path = vec![(Fr::random(rng), PathDirection::random(rng)); tree_depth];
 
-    let mut cur = pk.0;
+        let apkx = aggregated_pkx::<Bls12>(params, pk.0, &auth_path);
 
-    for (i, val) in auth_path.clone().into_iter().enumerate() {
-        let (uncle, b) = val.unwrap();
-
-        let mut lhs = cur;
-        let mut rhs = uncle;
-
-        if b {
-            ::std::mem::swap(&mut lhs, &mut rhs);
-        }
-
-        let mut lhs: Vec<bool> = BitIterator::new(lhs.into_repr()).collect();
-        let mut rhs: Vec<bool> = BitIterator::new(rhs.into_repr()).collect();
-
-        lhs.reverse();
-        rhs.reverse();
-
-        cur = pedersen_hash::pedersen_hash::<Bls12, _>(
-            pedersen_hash::Personalization::MerkleTree(i),
-            lhs.into_iter()
-                .take(Fr::NUM_BITS as usize)
-                .chain(rhs.into_iter().take(Fr::NUM_BITS as usize)),
+        let instance = Ring {
             params,
-        )
-            .to_xy()
-            .0;
+            sk: Some(sk),
+            vrf_input: Some(vrf_base.clone()),
+            auth_path: auth_path.clone(),
+        };
+
+        let mut cs = TestConstraintSystem::<Bls12>::new();
+
+        instance.synthesize(&mut cs).unwrap();
+        assert!(cs.is_satisfied());
+        assert_eq!(cs.num_inputs(), 5 + 1); // the 1st public input predefined to be = 1
+        //    assert_eq!(cs.num_constraints(), 4280 + 13); //TODO: 13
+
+        println!("{}", cs.num_constraints() - 4293);
+
+        assert_eq!(cs.get_input(1, "VRF_BASE input/x/input variable"), vrf_base.to_xy().0);
+        assert_eq!(cs.get_input(2, "VRF_BASE input/y/input variable"), vrf_base.to_xy().1);
+
+        let vrf = vrf_base.mul(sk, params).to_xy();
+        assert_eq!(cs.get_input(3, "vrf/x/input variable"), vrf.0);
+        assert_eq!(cs.get_input(4, "vrf/y/input variable"), vrf.1);
+        assert_eq!(cs.get_input(5, "anchor/input variable"), apkx);
     }
-
-    let instance = Ring {
-        params,
-        sk: Some(sk),
-        vrf_input: Some(vrf_base.clone()),
-        auth_path:  auth_path.clone(),
-    };
-
-    let mut cs = TestConstraintSystem::<Bls12>::new();
-
-    instance.synthesize(&mut cs).unwrap();
-    assert!(cs.is_satisfied());
-    assert_eq!(cs.num_inputs(), 5 + 1); // the 1st public input predefined to be = 1
-//    assert_eq!(cs.num_constraints(), 4280 + 13); //TODO: 13
-
-    println!("{}", cs.num_constraints() - 4293);
-
-    assert_eq!(cs.get_input(1, "VRF_BASE input/x/input variable"), vrf_base.to_xy().0);
-    assert_eq!(cs.get_input(2, "VRF_BASE input/y/input variable"), vrf_base.to_xy().1);
-
-    let vrf = vrf_base.mul(sk, params).to_xy();
-    assert_eq!(cs.get_input(3, "vrf/x/input variable"), vrf.0);
-    assert_eq!(cs.get_input(4, "vrf/y/input variable"), vrf.1);
-    assert_eq!(cs.get_input(5, "anchor/input variable"), cur);
 }
