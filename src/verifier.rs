@@ -1,13 +1,11 @@
-use bellman::groth16::{verify_proof, PreparedVerifyingKey, Proof,};
-use pairing::bls12_381::Bls12;
-use zcash_primitives::jubjub::{edwards, PrimeOrder, JubjubBls12, Unknown, JubjubEngine};
+use bellman::groth16::{verify_proof, PreparedVerifyingKey, Proof};
+use zcash_primitives::jubjub::{edwards, PrimeOrder, JubjubEngine};
 use ff::Field;
 
 use bellman::SynthesisError;
 
 // TODO: lifetime?
 pub fn verify<E: JubjubEngine>(
-    params: &E::Params,
     // Prepared means that 1 pairing e(alpha, beta) has been precomputed.
     // Makes sense, as we verify multiple proofs for the same circuit
     verifying_key: &PreparedVerifyingKey<E>,

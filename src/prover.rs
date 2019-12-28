@@ -1,17 +1,16 @@
-use bellman::groth16::{create_random_proof, Parameters, Proof,};
+use bellman::groth16::{create_random_proof, Parameters, Proof};
 use pairing::bls12_381::{Bls12, Fr};
-use zcash_primitives::jubjub::{JubjubBls12, edwards, Unknown, fs, PrimeOrder};
-use super::circuit::Ring;
+use zcash_primitives::jubjub::{JubjubBls12, edwards, fs, PrimeOrder};
 use rand_core::OsRng;
+use crate::{Ring, PathDirection};
 
 pub fn prove(
     params: &JubjubBls12,
     proving_key: &Parameters<Bls12>,
     sk: fs::Fs,
     vrf_base: edwards::Point<Bls12, PrimeOrder>,
-    auth_path: Vec<Option<(Fr, bool)>>
+    auth_path: Vec<(Fr, PathDirection)>
 ) -> Result<Proof<Bls12>, ()> {
-//    let params = &JubjubBls12::new();
     let mut rng = OsRng;
     let instance = Ring {
         params,
