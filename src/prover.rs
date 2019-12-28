@@ -16,7 +16,7 @@ pub fn prove(
         params,
         sk: Some(sk),
         vrf_input: Some(vrf_base),
-        auth_path: auth_path,
+        auth_path: auth_path.into_iter().map(|a| Some(a)).collect(),
     };
     let proof =
         create_random_proof(instance, proving_key, &mut rng).expect("proving should not fail");
