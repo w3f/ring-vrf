@@ -1,11 +1,24 @@
-use bellman::groth16::{verify_proof, PreparedVerifyingKey, Proof};
+use bellman::groth16::{verify_proof, prepare_verifying_key, PreparedVerifyingKey, Parameters, Proof};
 use zcash_primitives::jubjub::{edwards, PrimeOrder, JubjubEngine};
 use ff::Field;
 use bellman::SynthesisError;
 use crate::AuthRoot;
 
-// TODO: lifetime?
+/// Verify a proof using the given CRS, VRF input and output, and
+/// authentication root.
 pub fn verify<E: JubjubEngine>(
+    proving_key: &Parameters<E>,
+    zkproof: Proof<E>,
+    vrf_input: edwards::Point<E, PrimeOrder>,
+    vrf_output: edwards::Point<E, PrimeOrder>,
+    auth_root: AuthRoot<E>,
+) -> Result<bool, SynthesisError> {
+    let pvk = prepare_verifying_key::<E>(&proving_key.vk);
+    verify_prepared(&pvk, zkproof, vrf_input, vrf_output, auth_root)
+}
+
+// TODO: lifetime?
+pub fn verify_prepared<E: JubjubEngine>(
     // Prepared means that 1 pairing e(alpha, beta) has been precomputed.
     // Makes sense, as we verify multiple proofs for the same circuit
     verifying_key: &PreparedVerifyingKey<E>,

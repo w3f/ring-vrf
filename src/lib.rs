@@ -8,7 +8,7 @@ pub use crate::circuit::Ring;
 pub use crate::merkle::{MerkleSelection, AuthPath, AuthRoot, AuthPathPoint, auth_hash};
 pub use crate::generator::generate_crs;
 pub use crate::prover::prove;
-pub use crate::verifier::verify;
+pub use crate::verifier::{verify, verify_prepared};
 
 use zcash_primitives::jubjub::JubjubEngine;
 
@@ -26,7 +26,7 @@ mod tests {
     use std::time::SystemTime;
 
     use ff::Field;
-    use bellman::groth16::{prepare_verifying_key, Parameters};
+    use bellman::groth16::Parameters;
     use zcash_primitives::jubjub::{JubjubBls12, JubjubParams, FixedGenerators, fs, edwards};
     use pairing::bls12_381::Bls12;
     use rand_core::SeedableRng;
@@ -80,8 +80,7 @@ mod tests {
         let proof = proof.unwrap();
 
         let t = SystemTime::now();
-        let pvk = prepare_verifying_key::<Bls12>(&crs.vk);
-        let valid = verifier::verify(&pvk, proof, vrf_base, vrf_output, auth_root);
+        let valid = verifier::verify(&crs, proof, vrf_base, vrf_output, auth_root);
         println!("verification = {}", t.elapsed().unwrap().as_millis());
         assert_eq!(valid.unwrap(), true);
     }
