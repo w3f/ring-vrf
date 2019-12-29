@@ -1,10 +1,10 @@
 use ff::Field;
-use zcash_primitives::jubjub::{FixedGenerators, JubjubEngine, edwards, PrimeOrder};
+use zcash_primitives::jubjub::{FixedGenerators, JubjubEngine};
 use zcash_proofs::circuit::{ecc, pedersen_hash};
 use bellman::{Circuit, ConstraintSystem, SynthesisError};
 use bellman::gadgets::{boolean, num, Assignment};
 
-use crate::{MerkleSelection, AuthPath, Params};
+use crate::{MerkleSelection, AuthPath, Params, PrivateKey, VRFInput};
 
 /// A circuit for proving that the given vrf_output is valid for the given vrf_input under
 /// a key from the predefined set. It formalizes the following language:
@@ -22,10 +22,10 @@ pub struct Ring<'a, E: JubjubEngine> { // TODO: name
     pub params: &'a Params<E>,
 
     /// The secret key, an element of Jubjub scalar field.
-    pub sk: Option<E::Fs>,
+    pub sk: Option<PrivateKey<E>>,
 
     /// The VRF input, a point in Jubjub prime order subgroup.
-    pub vrf_input: Option<edwards::Point<E, PrimeOrder>>,
+    pub vrf_input: Option<VRFInput<E>>,
 
     /// The authentication path of the public key x-coordinate in the Merkle tree,
     /// the element of Jubjub base field.
@@ -50,7 +50,9 @@ impl<'a, E: JubjubEngine> Circuit<E> for Ring<'a, E> {
         //    and the check sk * G = PK passes for a congruent (sk + n|fs|) * G = sk * G + n|fs| * G == PK + O
         // 2. Multiplication by a congruent secret key results in the same VRF output:
         //    (sk + n|fs|) * H == sk * H, if ord(H) == |fs|
-        let sk_bits = boolean::field_into_boolean_vec_le(cs.namespace(|| "sk"), self.sk)?;
+        let sk_bits = boolean::field_into_boolean_vec_le(
+            cs.namespace(|| "sk"), self.sk.map(|sk| sk.0)
+        )?;
 
         // Derives the public key from the secret key using the hardcoded generator,
         // that is guaranteed to be in the primeorder subgroup,
@@ -73,7 +75,7 @@ impl<'a, E: JubjubEngine> Circuit<E> for Ring<'a, E> {
         // adds 4 constraints (A.3.3.1) to check that it is indeed a point on Jubjub
         let vrf_input = ecc::EdwardsPoint::witness(
             cs.namespace(|| "VRF_INPUT"),
-            self.vrf_input,
+            self.vrf_input.map(|i| i.0),
             &self.params.engine,
         )?;
 
@@ -163,10 +165,9 @@ impl<'a, E: JubjubEngine> Circuit<E> for Ring<'a, E> {
 
 #[cfg(test)]
 mod tests {
-    use ff::Field;
     use bellman::gadgets::test::TestConstraintSystem;
     use pairing::bls12_381::Bls12;
-    use zcash_primitives::jubjub::{JubjubParams, JubjubBls12, fs, edwards};
+    use zcash_primitives::jubjub::JubjubBls12;
     use rand_core::SeedableRng;
     use rand_xorshift::XorShiftRng;
     use super::*;
@@ -183,19 +184,19 @@ mod tests {
             0x58, 0x62, 0xbe, 0x3d, 0x76, 0x3d, 0x31, 0x8d,
             0x17, 0xdb, 0x37, 0x32, 0x54, 0x06, 0xbc, 0xe5,
         ]);
-        let sk = fs::Fs::random(rng);
 
-        let vrf_base = edwards::Point::rand(rng, &params.engine).mul_by_cofactor(&params.engine);
-        let base_point = params.engine.generator(FixedGenerators::SpendingKeyGenerator);
-        let pk = base_point.mul(sk, &params.engine).to_xy();
+        let sk = PrivateKey::<Bls12>::random(rng);
+        let pk = sk.into_public(&params);
+
+        let vrf_input = VRFInput::<Bls12>::random(rng, &params);
 
         let auth_path = AuthPath::random(params.auth_depth, rng);
-        let auth_root = AuthRoot::from_proof(&auth_path, &pk.0, &params);
+        let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);
 
         let instance = Ring {
             params: &params,
-            sk: Some(sk),
-            vrf_input: Some(vrf_base.clone()),
+            sk: Some(sk.clone()),
+            vrf_input: Some(vrf_input.clone()),
             auth_path: Some(auth_path),
         };
 
@@ -208,12 +209,12 @@ mod tests {
 
         println!("{}", cs.num_constraints() - 4293);
 
-        assert_eq!(cs.get_input(1, "VRF_BASE input/x/input variable"), vrf_base.to_xy().0);
-        assert_eq!(cs.get_input(2, "VRF_BASE input/y/input variable"), vrf_base.to_xy().1);
+        assert_eq!(cs.get_input(1, "VRF_BASE input/x/input variable"), vrf_input.0.to_xy().0);
+        assert_eq!(cs.get_input(2, "VRF_BASE input/y/input variable"), vrf_input.0.to_xy().1);
 
-        let vrf = vrf_base.mul(sk, &params.engine).to_xy();
-        assert_eq!(cs.get_input(3, "vrf/x/input variable"), vrf.0);
-        assert_eq!(cs.get_input(4, "vrf/y/input variable"), vrf.1);
+        let vrf_output = vrf_input.into_output(&sk, &params);
+        assert_eq!(cs.get_input(3, "vrf/x/input variable"), vrf_output.to_xy().0);
+        assert_eq!(cs.get_input(4, "vrf/y/input variable"), vrf_output.to_xy().1);
         assert_eq!(cs.get_input(5, "anchor/input variable"), auth_root.0);
     }
 }
