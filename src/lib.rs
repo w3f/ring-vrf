@@ -10,7 +10,8 @@ pub use crate::generator::generate_crs;
 pub use crate::prover::prove;
 pub use crate::verifier::{verify_unprepared, verify_prepared};
 
-use zcash_primitives::jubjub::JubjubEngine;
+use ff::{Field, ScalarEngine};
+use zcash_primitives::jubjub::{JubjubEngine, FixedGenerators, JubjubParams, PrimeOrder, edwards};
 
 /// Configuration parameters for the system.
 pub struct Params<E: JubjubEngine> {
@@ -20,14 +21,54 @@ pub struct Params<E: JubjubEngine> {
     pub auth_depth: usize,
 }
 
+/// Private key.
+#[derive(Debug, Clone)]
+pub struct PrivateKey<E: JubjubEngine>(pub E::Fs);
+
+impl<E: JubjubEngine> PrivateKey<E> {
+    /// Random private key.
+    pub fn random<R: rand_core::RngCore>(rng: &mut R) -> Self {
+        Self(<E::Fs>::random(rng))
+    }
+
+    /// Into public key.
+    pub fn into_public(&self, params: &Params<E>) -> PublicKey<E> {
+        // Jubjub generator point. TODO: prime or ---
+        let base_point = params.engine.generator(FixedGenerators::SpendingKeyGenerator);
+        base_point.mul(self.0.clone(), &params.engine).to_xy().0
+    }
+}
+
+/// Public key.
+pub type PublicKey<E> = <E as ScalarEngine>::Fr;
+
+/// VRF input.
+#[derive(Debug, Clone)]
+pub struct VRFInput<E: JubjubEngine>(pub edwards::Point<E, PrimeOrder>);
+
+impl<E: JubjubEngine> VRFInput<E> {
+    /// Create a new random VRF input.
+    pub fn random<R: rand_core::RngCore>(rng: &mut R, params: &Params<E>) -> Self {
+        Self(edwards::Point::rand(rng, &params.engine).mul_by_cofactor(&params.engine))
+    }
+
+    /// Into VRF output.
+    pub fn into_output(&self, sk: &PrivateKey<E>, params: &Params<E>) -> VRFOutput<E> {
+        self.0.mul(sk.0.clone(), &params.engine)
+    }
+}
+
+
+/// VRF output.
+pub type VRFOutput<E> = edwards::Point<E, PrimeOrder>;
+
 #[cfg(test)]
 mod tests {
     use std::fs::File;
     use std::time::SystemTime;
 
-    use ff::Field;
     use bellman::groth16::Parameters;
-    use zcash_primitives::jubjub::{JubjubBls12, JubjubParams, FixedGenerators, fs, edwards};
+    use zcash_primitives::jubjub::JubjubBls12;
     use pairing::bls12_381::Bls12;
     use rand_core::SeedableRng;
     use rand_xorshift::XorShiftRng;
@@ -58,29 +99,22 @@ mod tests {
             },
         };
 
-        // Jubjub generator point // TODO: prime or---
-        let base_point = params.engine.generator(FixedGenerators::SpendingKeyGenerator);
+        let sk = PrivateKey::<Bls12>::random(rng);
+        let pk = sk.into_public(&params);
 
-        // validator's secret key, an element of Jubjub scalar field
-        let sk = fs::Fs::random(rng);
-
-        // validator's public key, a point on Jubjub
-        let pk = base_point.mul(sk, &params.engine);
-
-        // VRF base point
-        let vrf_base = edwards::Point::rand(rng, &params.engine).mul_by_cofactor(&params.engine);
-        let vrf_output = vrf_base.mul(sk, &params.engine);
+        let vrf_input = VRFInput::<Bls12>::random(rng, &params);
+        let vrf_output = vrf_input.into_output(&sk, &params);
 
         let auth_path = AuthPath::random(params.auth_depth, rng);
-        let auth_root = AuthRoot::from_proof(&auth_path, &pk.to_xy().0, &params);
+        let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);
 
         let t = SystemTime::now();
-        let proof = prover::prove::<Bls12>(&crs, sk, vrf_base.clone(), auth_path.clone(), &params);
+        let proof = prover::prove::<Bls12>(&crs, sk, vrf_input.clone(), auth_path.clone(), &params);
         println!("proving = {}", t.elapsed().unwrap().as_millis());
         let proof = proof.unwrap();
 
         let t = SystemTime::now();
-        let valid = verifier::verify_unprepared(&crs.vk, proof, vrf_base, vrf_output, auth_root);
+        let valid = verifier::verify_unprepared(&crs.vk, proof, vrf_input, vrf_output, auth_root);
         println!("verification = {}", t.elapsed().unwrap().as_millis());
         assert_eq!(valid.unwrap(), true);
     }
