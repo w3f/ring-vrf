@@ -1,8 +1,8 @@
 use bellman::groth16::{verify_proof, PreparedVerifyingKey, Proof};
 use zcash_primitives::jubjub::{edwards, PrimeOrder, JubjubEngine};
 use ff::Field;
-
 use bellman::SynthesisError;
+use crate::AuthRoot;
 
 // TODO: lifetime?
 pub fn verify<E: JubjubEngine>(
@@ -17,7 +17,7 @@ pub fn verify<E: JubjubEngine>(
     // 2. VRF output, a point on Jubjub
     vrf_output: edwards::Point<E, PrimeOrder>,
     // 3. x-coordinate of the aggreagte public key
-    apk_x: E::Fr,
+    auth_root: AuthRoot<E>,
 ) -> Result<bool, SynthesisError> {
     // TODO: subgroup checks
     // Public inputs are elements of the main curve (BLS12-381) scalar field (that matches Jubjub base field, that's the thing)
@@ -32,7 +32,7 @@ pub fn verify<E: JubjubEngine>(
         public_input[2] = x;
         public_input[3] = y;
     }
-    public_input[4] = apk_x;
+    public_input[4] = auth_root.0;
     // Verify the proof
     verify_proof(verifying_key, &zkproof, &public_input[..])
 }
