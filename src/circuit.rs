@@ -18,8 +18,6 @@ use bellman::gadgets::Assignment;
 use bellman::gadgets::test::TestConstraintSystem;
 use pairing::bls12_381::Bls12;
 
-pub const TREE_DEPTH: usize = zcash_primitives::sapling::SAPLING_COMMITMENT_TREE_DEPTH;
-
 // A circuit for proving that the given vrf_output is valid for the given vrf_input under
 // a key from the predefined set. It formalizes the following language:
 // {(VRF_INPUT, VRF_OUTPUT, set) | VRF_OUTPUT = vrf(sk, VRF_INPUT), PK = derive(sk) and  PK is in set }, where:
@@ -75,7 +73,7 @@ impl<'a, E: JubjubEngine> Circuit<E> for Ring<'a, E> {
 //        // and assures their assignment matches the values calculated in the previous step in 2 constraints.
 //        // These 2 constraints are not strictly required, just Bellman is implemented this way.
 //        // TODO: x coordinate only
-        pk.inputize(cs.namespace(|| "PK"))?;
+//        pk.inputize(cs.namespace(|| "PK"))?;
 
         // Allocates VRF_BASE on the circuit and checks that it is a point on the curve
         // adds 4 constraints (A.3.3.1) to check that it is indeed a point on Jubjub
@@ -222,19 +220,16 @@ fn test_ring() {
 
     instance.synthesize(&mut cs).unwrap();
     assert!(cs.is_satisfied());
-    assert_eq!(cs.num_inputs(), 7 + 1); // the 1st public input predefined to be = 1
+    assert_eq!(cs.num_inputs(), 5 + 1); // the 1st public input predefined to be = 1
 //    assert_eq!(cs.num_constraints(), 4280 + 13); //TODO: 13
 
     println!("{}", cs.num_constraints() - 4293);
 
-    assert_eq!(cs.get_input(1, "PK/x/input variable"), pk.0);
-    assert_eq!(cs.get_input(2, "PK/y/input variable"), pk.1);
-
-    assert_eq!(cs.get_input(3, "VRF_BASE input/x/input variable"), vrf_base.to_xy().0);
-    assert_eq!(cs.get_input(4, "VRF_BASE input/y/input variable"), vrf_base.to_xy().1);
+    assert_eq!(cs.get_input(1, "VRF_BASE input/x/input variable"), vrf_base.to_xy().0);
+    assert_eq!(cs.get_input(2, "VRF_BASE input/y/input variable"), vrf_base.to_xy().1);
 
     let vrf = vrf_base.mul(sk, params).to_xy();
-    assert_eq!(cs.get_input(5, "vrf/x/input variable"), vrf.0);
-    assert_eq!(cs.get_input(6, "vrf/y/input variable"), vrf.1);
-    assert_eq!(cs.get_input(7, "anchor/input variable"), cur);
+    assert_eq!(cs.get_input(3, "vrf/x/input variable"), vrf.0);
+    assert_eq!(cs.get_input(4, "vrf/y/input variable"), vrf.1);
+    assert_eq!(cs.get_input(5, "anchor/input variable"), cur);
 }

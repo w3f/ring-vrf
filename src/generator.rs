@@ -1,10 +1,13 @@
+use rand_core::{RngCore, OsRng};
+
 use bellman::groth16::{generate_random_parameters, Parameters,};
 use bellman::SynthesisError;
 use pairing::bls12_381::{Bls12, Fr,};
 use ff::Field;
 use zcash_primitives::jubjub::JubjubBls12;
+
 use super::circuit::Ring;
-use rand_core::{RngCore,OsRng};
+
 
 // Generates structured (meaning circuit-depending) Groth16
 // CRS (that comprises proving and verificaton keys) over BLS12-381

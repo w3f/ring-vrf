@@ -13,7 +13,7 @@ bellman = { git = "https://github.com/zcash/librustzcash" }
 zcash_primitives = { git = "https://github.com/zcash/librustzcash" }
 zcash_proofs = { git = "https://github.com/zcash/librustzcash" }
 
-rand_core = "0.5"
+rand_core = "0.5.1"
 
 [dev-dependencies]
 rand_xorshift = "0.2"
