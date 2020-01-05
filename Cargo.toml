@@ -1,8 +1,8 @@
 [package]
 name = "ring-vrf"
-version = "0.1.0"
+version = "0.0.1"
 description = "Ring VRF implementation using zkSNARKs."
-authors = ["Sergey Vasilyev <swasilyev@gmail.com>", "Wei Tang <hi@that.world>"]
+authors = ["Sergey Vasilyev <swasilyev@gmail.com>", "Jeff Burdges <jeff@web3.foundation>", "Wei Tang <hi@that.world>"]
 edition = "2018"
 license = "MIT"
 
