@@ -8,7 +8,7 @@ pub use crate::circuit::Ring;
 pub use crate::merkle::{MerkleSelection, AuthPath, AuthRoot, AuthPathPoint, auth_hash};
 pub use crate::generator::generate_crs;
 pub use crate::prover::prove;
-pub use crate::verifier::{verify, verify_prepared};
+pub use crate::verifier::{verify_unprepared, verify_prepared};
 
 use zcash_primitives::jubjub::JubjubEngine;
 
@@ -80,7 +80,7 @@ mod tests {
         let proof = proof.unwrap();
 
         let t = SystemTime::now();
-        let valid = verifier::verify(&crs, proof, vrf_base, vrf_output, auth_root);
+        let valid = verifier::verify_unprepared(&crs.vk, proof, vrf_base, vrf_output, auth_root);
         println!("verification = {}", t.elapsed().unwrap().as_millis());
         assert_eq!(valid.unwrap(), true);
     }
