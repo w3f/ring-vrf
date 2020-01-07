@@ -1,3 +1,7 @@
+// Copyright (c) 2019-2020 Web 3 Foundation
+
+//! Ring VRF
+
 mod merkle;
 mod circuit;
 mod generator;
@@ -23,9 +27,9 @@ pub struct Params<E: JubjubEngine> {
 
 /// Private key.
 #[derive(Debug, Clone)]
-pub struct PrivateKey<E: JubjubEngine>(pub E::Fs);
+pub struct SecretKey<E: JubjubEngine>(pub E::Fs);
 
-impl<E: JubjubEngine> PrivateKey<E> {
+impl<E: JubjubEngine> SecretKey<E> {
     /// Random private key.
     pub fn random<R: rand_core::RngCore>(rng: &mut R) -> Self {
         Self(<E::Fs>::random(rng))
@@ -53,7 +57,7 @@ impl<E: JubjubEngine> VRFInput<E> {
     }
 
     /// Into VRF output.
-    pub fn into_output(&self, sk: &PrivateKey<E>, params: &Params<E>) -> VRFOutput<E> {
+    pub fn into_output(&self, sk: &SecretKey<E>, params: &Params<E>) -> VRFOutput<E> {
         self.0.mul(sk.0.clone(), &params.engine)
     }
 }
@@ -99,7 +103,7 @@ mod tests {
             },
         };
 
-        let sk = PrivateKey::<Bls12>::random(rng);
+        let sk = SecretKey::<Bls12>::random(rng);
         let pk = sk.into_public(&params);
 
         let vrf_input = VRFInput::<Bls12>::random(rng, &params);

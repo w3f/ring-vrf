@@ -1,11 +1,15 @@
+// Copyright (c) 2019-2020 Web 3 Foundation
+
+//! Ring VRF zk SNARK prover
+
 use bellman::groth16::{create_random_proof, Parameters, Proof};
 use zcash_primitives::jubjub::JubjubEngine;
 use rand_core::OsRng;
-use crate::{Ring, Params, AuthPath, VRFInput, PrivateKey};
+use crate::{Ring, Params, AuthPath, VRFInput, SecretKey};
 
 pub fn prove<E: JubjubEngine>(
     proving_key: &Parameters<E>,
-    sk: PrivateKey<E>,
+    sk: SecretKey<E>,
     vrf_input: VRFInput<E>,
     auth_path: AuthPath<E>,
     params: &Params<E>,

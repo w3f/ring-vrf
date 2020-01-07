@@ -1,10 +1,14 @@
+// Copyright (c) 2019-2020 Web 3 Foundation
+
+//! Ring VRF zkSNARK circut
+
 use ff::Field;
 use zcash_primitives::jubjub::{FixedGenerators, JubjubEngine};
 use zcash_proofs::circuit::{ecc, pedersen_hash};
 use bellman::{Circuit, ConstraintSystem, SynthesisError};
 use bellman::gadgets::{boolean, num, Assignment};
 
-use crate::{MerkleSelection, AuthPath, Params, PrivateKey, VRFInput};
+use crate::{MerkleSelection, AuthPath, Params, SecretKey, VRFInput};
 
 /// A circuit for proving that the given vrf_output is valid for the given vrf_input under
 /// a key from the predefined set. It formalizes the following language:
@@ -22,7 +26,7 @@ pub struct Ring<'a, E: JubjubEngine> { // TODO: name
     pub params: &'a Params<E>,
 
     /// The secret key, an element of Jubjub scalar field.
-    pub sk: Option<PrivateKey<E>>,
+    pub sk: Option<SecretKey<E>>,
 
     /// The VRF input, a point in Jubjub prime order subgroup.
     pub vrf_input: Option<VRFInput<E>>,
@@ -185,7 +189,7 @@ mod tests {
             0x17, 0xdb, 0x37, 0x32, 0x54, 0x06, 0xbc, 0xe5,
         ]);
 
-        let sk = PrivateKey::<Bls12>::random(rng);
+        let sk = SecretKey::<Bls12>::random(rng);
         let pk = sk.into_public(&params);
 
         let vrf_input = VRFInput::<Bls12>::random(rng, &params);

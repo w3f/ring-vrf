@@ -1,3 +1,7 @@
+// Copyright (c) 2019-2020 Web 3 Foundation
+
+//! Ring VRF zkSNARK SRS generator
+
 use rand_core::{OsRng}; // RngCore
 
 use bellman::groth16::{generate_random_parameters, Parameters,};
