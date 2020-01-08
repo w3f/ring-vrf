@@ -1,0 +1,53 @@
+\documentclass{article}
+
+\title{Cofactor mistakes in Schnorr DLEQ proofs}
+\author{Jeffrey Burdges}
+
+\newcommand{\algo}[1]{\ensuremath{\mathsf{#1}}}
+\newcommand{\VRF}{\algo{VRF}} 
+\newcommand{\Sign}{\algo{Sign}} 
+\newcommand{\Verify}{\algo{Verify}} 
+\newcommand{\Output}{\algo{Output}} 
+
+\begin{document}
+
+\maketitle
+
+We explain a common cofactor mistake in Schnorr DLEQ proof schemes that breaks many proposals incorporating them.  We observe this mistake in both V(X)Ed25519 by Trever Perrin, which prevents it from providing a VRF as claimed, as well as in CloudFlare’s Privacy Pass by Alex Davidson, Ian Goldberg, Nick Sullivan, George Tankersley, and Filippo Valsorda, which completely breaks its anonymity.  We note the cofactor was handled correctly in the IRTF CFRG VRF and “Making NSEC5 Practical for DNSSEC” by many of the same authors.
+
+We first recall the structure of a Schnorr VRF aka DLEQ proof.
+
+$\VRF.\Sign$ takes a secret key x and a message m
+\begin{itemize}
+\item  Set $\alpha = H_1(m)$ and $\gamma = x \alpha$.
+\item  Choose $k \in \{0,\ldots,q-1\}$ randomly.
+\item  Compute $c = H(g,\alpha,x g,\gamma,k g,k \alpha)$.
+\item  Set $s = k - c x \bmod q$  
+\item  Return $(\gamma,c,s)$.
+\end{itemize}
+
+$\VRF.\Verify$ takes $(\gamma,c,s)$, the public key $y$, and the message $m$.
+\begin{itemize}
+\item  Compute $u = c y +  sg$  (if valid then $u = k g$).
+\item  Set $\alpha = H_1(m)$.
+\item  Check that $\gamma \in E$.
+\item  Compute $v = c \gamma + s \alpha$  (if valid then $v = k \alpha$).
+\item  Return true iff $c = H(g,\alpha,x g,\gamma,u,v)$.
+\end{itemize}
+
+$\VRF.\Output$ takes the output point $\gamma$ and preferably a context $\textrm{ctx}$, the message $m$, and the public key $y$, and returns $H(\textrm{ctx},h \gamma,m,y)$ where $h$ is the cofactor
+
+If we omit the the message $m$ then the output might act less like a random oracle.  If we omit the public key $y$ then the scheme cannot be used securely with hierarchical key derivation, meaning the scheme makes sense 
+
+Imagine we omit multiplication $h \gamma$ by the cofactor $h$ in this output routine:  An adversary computes $\alpha = H_1(m)$ and $\gamma[0] = x \alpha$ honestly.  For any $h’$ in the cofactor subgroup $H$, the adversary randomly chooses $k[h’]$ such that $c[h’] = H(g,\alpha,x g,\gamma+h',kg,k\alpha)$ is divisible by the order of $h’$, so either 2, 4, or 8.  Also they set $s[h’] = k[h’] - c[h’] x \bmod q$ as usual.  At this point the proof validates correctly because 
+$$  v[h’] = c[h’] (\gamma + h’) + s[h’] \alpha = c[h’] \gamma + ( k[h’] - c[h’] x) \alpha = k[h’] \alpha . $$
+
+Any deployed systems that omit the cofactor multiplication in $\VRF.\Output$ could be fixed by testing that $\gamma$ lie in the prime order subgroup, but doing so requires an expensive multiplication by the prime q, and worse vulnerable implementations remain likely.  We strongly suggest that they deprecated with their replacements doing the cofactor multiplication correctly.
+
+TODO: Actually check CloudFlare's code, not just the spec.
+
+We can break anonymity in CloudFlare’s Privacy Pass similarly:  Anonymity in Privacy Pass depends upon tokens being correctly constructed.  At present, there are neither multiplication by the cofactor nor checks for checks in the Privacy Pass specification.  As a result, a malicious issuer could deform outputs by elements of the cofactor subgroup $H$, which gives them seven distinct tags with which to deanonymize specific users.  
+
+\end{document}
+
+
