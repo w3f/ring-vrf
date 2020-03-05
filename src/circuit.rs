@@ -1,6 +1,6 @@
 // Copyright (c) 2019-2020 Web 3 Foundation
 
-//! Ring VRF zkSNARK circut
+//! ### Ring VRF zkSNARK circut
 
 use ff::Field;
 use zcash_primitives::jubjub::{FixedGenerators, JubjubEngine};

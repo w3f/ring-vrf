@@ -1,6 +1,6 @@
 // Copyright (c) 2019-2020 Web 3 Foundation
 
-//! Ring VRF zk SNARK prover
+//! ### Ring VRF zk SNARK prover
 
 use bellman::groth16::{create_random_proof, Parameters, Proof};
 use zcash_primitives::jubjub::JubjubEngine;

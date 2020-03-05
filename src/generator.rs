@@ -1,6 +1,6 @@
 // Copyright (c) 2019-2020 Web 3 Foundation
 
-//! Ring VRF zkSNARK SRS generator
+//! ### Ring VRF zkSNARK SRS generator
 
 use rand_core::{OsRng}; // RngCore
 

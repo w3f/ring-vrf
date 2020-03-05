@@ -1,6 +1,6 @@
 // Copyright (c) 2019-2020 Web 3 Foundation
 
-//! Ring VRF zk SNARK verifier
+//! ### Ring VRF zk SNARK verifier
 
 use bellman::groth16::{verify_proof, prepare_verifying_key, PreparedVerifyingKey, VerifyingKey, Proof};
 use zcash_primitives::jubjub::JubjubEngine;

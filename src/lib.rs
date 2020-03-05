@@ -1,6 +1,6 @@
 // Copyright (c) 2019-2020 Web 3 Foundation
 
-//! Ring VRF
+//! ## Ring VRF
 
 mod merkle;
 mod circuit;
