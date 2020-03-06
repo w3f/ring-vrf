@@ -55,7 +55,7 @@ impl<'a, E: JubjubEngine> Circuit<E> for Ring<'a, E> {
         // 2. Multiplication by a congruent secret key results in the same VRF output:
         //    (sk + n|fs|) * H == sk * H, if ord(H) == |fs|
         let sk_bits = boolean::field_into_boolean_vec_le(
-            cs.namespace(|| "sk"), self.sk.map(|sk| sk.0)
+            cs.namespace(|| "sk"), self.sk.map(|sk| sk.key)
         )?;
 
         // Derives the public key from the secret key using the hardcoded generator,
@@ -173,7 +173,6 @@ mod tests {
     use pairing::bls12_381::Bls12;
     use zcash_primitives::jubjub::JubjubBls12;
     use rand_core::SeedableRng;
-    use rand_xorshift::XorShiftRng;
     use super::*;
     use crate::{Params, AuthPath, AuthRoot};
 
@@ -184,18 +183,16 @@ mod tests {
             auth_depth: 10,
         };
 
-        let rng = &mut XorShiftRng::from_seed([
-            0x58, 0x62, 0xbe, 0x3d, 0x76, 0x3d, 0x31, 0x8d,
-            0x17, 0xdb, 0x37, 0x32, 0x54, 0x06, 0xbc, 0xe5,
-        ]);
+        // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
+        let mut rng = ::rand_core::OsRng;
 
-        let sk = SecretKey::<Bls12>::from_rng(rng);
+        let sk = SecretKey::<Bls12>::from_rng(&mut rng);
         let pk = sk.to_public(&params);
 
-        let vrf_input = VRFInput::<Bls12>::random(rng, &params);
+        let vrf_input = VRFInput::<Bls12>::random(&mut rng, &params);
 
-        let auth_path = AuthPath::random(params.auth_depth, rng);
-        let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);
+        let auth_path = AuthPath::random(params.auth_depth, &mut rng);
+        let auth_root = AuthRoot::from_proof(&auth_path, &pk.0, &params);
 
         let instance = Ring {
             params: &params,

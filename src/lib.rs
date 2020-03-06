@@ -2,12 +2,14 @@
 
 //! ## Ring VRF
 
+mod keys;
 mod merkle;
 mod circuit;
 mod generator;
 mod prover;
 mod verifier;
 
+pub use crate::keys::{SecretKey,PublicKey,Keypair};
 pub use crate::circuit::Ring;
 pub use crate::merkle::{MerkleSelection, AuthPath, AuthRoot, AuthPathPoint, auth_hash};
 pub use crate::generator::generate_crs;
@@ -16,6 +18,7 @@ pub use crate::verifier::{verify_unprepared, verify_prepared};
 
 use ff::{Field, ScalarEngine};
 use zcash_primitives::jubjub::{JubjubEngine, FixedGenerators, JubjubParams, PrimeOrder, edwards};
+
 
 /// Configuration parameters for the system.
 pub struct Params<E: JubjubEngine> {
@@ -38,35 +41,13 @@ impl<E: JubjubEngine> VRFInput<E> {
 
     /// Into VRF output.
     pub fn to_output(&self, sk: &SecretKey<E>, params: &Params<E>) -> VRFOutput<E> {
-        self.0.mul(sk.0.clone(), &params.engine)
+        self.0.mul(sk.key.clone(), &params.engine)
     }
 }
 
 
 /// VRF output.
 pub type VRFOutput<E> = edwards::Point<E, PrimeOrder>;
-
-
-/// Private key.
-#[derive(Debug, Clone)]
-pub struct SecretKey<E: JubjubEngine>(pub E::Fs);
-
-impl<E: JubjubEngine> SecretKey<E> {
-    /// Random private key.
-    pub fn from_rng<R: rand_core::RngCore>(rng: &mut R) -> Self {
-        Self(<E::Fs as ::ff::Field>::random(rng))
-    }
-
-    /// Compute public key.
-    pub fn to_public(&self, params: &Params<E>) -> PublicKey<E> {
-        // Jubjub generator point. TODO: prime or ---
-        let base_point = params.engine.generator(FixedGenerators::SpendingKeyGenerator);
-        base_point.mul(self.0.clone(), &params.engine).to_xy().0
-    }
-}
-
-/// Public key.
-pub type PublicKey<E> = <E as ScalarEngine>::Fr;
 
 
 #[cfg(test)]
@@ -78,7 +59,6 @@ mod tests {
     use zcash_primitives::jubjub::JubjubBls12;
     use pairing::bls12_381::Bls12;
     use rand_core::SeedableRng;
-    use rand_xorshift::XorShiftRng;
 
     use super::*;
 
@@ -89,10 +69,8 @@ mod tests {
             auth_depth: 10,
         };
 
-        let rng = &mut XorShiftRng::from_seed([
-            0x58, 0x62, 0xbe, 0x3d, 0x76, 0x3d, 0x31, 0x8d,
-            0x17, 0xdb, 0x37, 0x32, 0x54, 0x06, 0xbc, 0xe5,
-        ]);
+        // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
+        let mut rng = ::rand_core::OsRng;
 
         let crs = match File::open("crs") {
             Ok(f) => Parameters::<Bls12>::read(f, false).expect("can't read CRS"),
@@ -106,14 +84,14 @@ mod tests {
             },
         };
 
-        let sk = SecretKey::<Bls12>::from_rng(rng);
+        let sk = SecretKey::<Bls12>::from_rng(&mut rng);
         let pk = sk.to_public(&params);
 
-        let vrf_input = VRFInput::<Bls12>::random(rng, &params);
+        let vrf_input = VRFInput::<Bls12>::random(&mut rng, &params);
         let vrf_output = vrf_input.to_output(&sk, &params);
 
-        let auth_path = AuthPath::random(params.auth_depth, rng);
-        let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);
+        let auth_path = AuthPath::random(params.auth_depth, &mut rng);
+        let auth_root = AuthRoot::from_proof(&auth_path, &pk.0, &params);
 
         let t = SystemTime::now();
         let proof = prover::prove::<Bls12>(&crs, sk, vrf_input.clone(), auth_path.clone(), &params);
