@@ -25,26 +25,6 @@ pub struct Params<E: JubjubEngine> {
     pub auth_depth: usize,
 }
 
-/// Private key.
-#[derive(Debug, Clone)]
-pub struct SecretKey<E: JubjubEngine>(pub E::Fs);
-
-impl<E: JubjubEngine> SecretKey<E> {
-    /// Random private key.
-    pub fn random<R: rand_core::RngCore>(rng: &mut R) -> Self {
-        Self(<E::Fs>::random(rng))
-    }
-
-    /// Into public key.
-    pub fn into_public(&self, params: &Params<E>) -> PublicKey<E> {
-        // Jubjub generator point. TODO: prime or ---
-        let base_point = params.engine.generator(FixedGenerators::SpendingKeyGenerator);
-        base_point.mul(self.0.clone(), &params.engine).to_xy().0
-    }
-}
-
-/// Public key.
-pub type PublicKey<E> = <E as ScalarEngine>::Fr;
 
 /// VRF input.
 #[derive(Debug, Clone)]
@@ -57,7 +37,7 @@ impl<E: JubjubEngine> VRFInput<E> {
     }
 
     /// Into VRF output.
-    pub fn into_output(&self, sk: &SecretKey<E>, params: &Params<E>) -> VRFOutput<E> {
+    pub fn to_output(&self, sk: &SecretKey<E>, params: &Params<E>) -> VRFOutput<E> {
         self.0.mul(sk.0.clone(), &params.engine)
     }
 }
@@ -65,6 +45,29 @@ impl<E: JubjubEngine> VRFInput<E> {
 
 /// VRF output.
 pub type VRFOutput<E> = edwards::Point<E, PrimeOrder>;
+
+
+/// Private key.
+#[derive(Debug, Clone)]
+pub struct SecretKey<E: JubjubEngine>(pub E::Fs);
+
+impl<E: JubjubEngine> SecretKey<E> {
+    /// Random private key.
+    pub fn from_rng<R: rand_core::RngCore>(rng: &mut R) -> Self {
+        Self(<E::Fs as ::ff::Field>::random(rng))
+    }
+
+    /// Compute public key.
+    pub fn to_public(&self, params: &Params<E>) -> PublicKey<E> {
+        // Jubjub generator point. TODO: prime or ---
+        let base_point = params.engine.generator(FixedGenerators::SpendingKeyGenerator);
+        base_point.mul(self.0.clone(), &params.engine).to_xy().0
+    }
+}
+
+/// Public key.
+pub type PublicKey<E> = <E as ScalarEngine>::Fr;
+
 
 #[cfg(test)]
 mod tests {
@@ -103,11 +106,11 @@ mod tests {
             },
         };
 
-        let sk = SecretKey::<Bls12>::random(rng);
-        let pk = sk.into_public(&params);
+        let sk = SecretKey::<Bls12>::from_rng(rng);
+        let pk = sk.to_public(&params);
 
         let vrf_input = VRFInput::<Bls12>::random(rng, &params);
-        let vrf_output = vrf_input.into_output(&sk, &params);
+        let vrf_output = vrf_input.to_output(&sk, &params);
 
         let auth_path = AuthPath::random(params.auth_depth, rng);
         let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);

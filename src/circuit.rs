@@ -189,8 +189,8 @@ mod tests {
             0x17, 0xdb, 0x37, 0x32, 0x54, 0x06, 0xbc, 0xe5,
         ]);
 
-        let sk = SecretKey::<Bls12>::random(rng);
-        let pk = sk.into_public(&params);
+        let sk = SecretKey::<Bls12>::from_rng(rng);
+        let pk = sk.to_public(&params);
 
         let vrf_input = VRFInput::<Bls12>::random(rng, &params);
 
@@ -216,7 +216,7 @@ mod tests {
         assert_eq!(cs.get_input(1, "VRF_BASE input/x/input variable"), vrf_input.0.to_xy().0);
         assert_eq!(cs.get_input(2, "VRF_BASE input/y/input variable"), vrf_input.0.to_xy().1);
 
-        let vrf_output = vrf_input.into_output(&sk, &params);
+        let vrf_output = vrf_input.to_output(&sk, &params);
         assert_eq!(cs.get_input(3, "vrf/x/input variable"), vrf_output.to_xy().0);
         assert_eq!(cs.get_input(4, "vrf/y/input variable"), vrf_output.to_xy().1);
         assert_eq!(cs.get_input(5, "anchor/input variable"), auth_root.0);

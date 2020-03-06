@@ -13,7 +13,26 @@ bellman = { git = "https://github.com/zcash/librustzcash" }
 zcash_primitives = { git = "https://github.com/zcash/librustzcash" }
 zcash_proofs = { git = "https://github.com/zcash/librustzcash" }
 
-rand_core = "0.5.1"
+
+[dependencies.rand_core]
+version = "0.5.1"
+# default-features = false
+
+[dependencies.rand_chacha]
+version = "0.2" # ?
+default-features = false
+optional = true
+
+[dependencies.zeroize]
+version = "1.0.0"
+default-features = false
+features = ["zeroize_derive"]
 
 [dev-dependencies]
 rand_xorshift = "0.2"
+rand_chacha = "0.2"
+
+[features]
+default = ["rand_chacha"] # "std", 
+
+
