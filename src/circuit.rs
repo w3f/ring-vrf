@@ -1,4 +1,8 @@
 // Copyright (c) 2019-2020 Web 3 Foundation
+//
+// Authors:
+// - Wei Tang <hi@that.world>
+// - Sergey Vasilyev <swasilyev@gmail.com>
 
 //! ### Ring VRF zkSNARK circut
 
@@ -172,7 +176,7 @@ mod tests {
     use bellman::gadgets::test::TestConstraintSystem;
     use pairing::bls12_381::Bls12;
     use zcash_primitives::jubjub::JubjubBls12;
-    use rand_core::SeedableRng;
+
     use super::*;
     use crate::{Params, AuthPath, AuthRoot};
 

@@ -1,4 +1,8 @@
 // Copyright (c) 2019-2020 Web 3 Foundation
+//
+// Authors:
+// - Wei Tang <hi@that.world>
+// - Sergey Vasilyev <swasilyev@gmail.com>
 
 //! ### Ring VRF zk SNARK verifier
 

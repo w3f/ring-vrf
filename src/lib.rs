@@ -1,4 +1,10 @@
 // Copyright (c) 2019-2020 Web 3 Foundation
+//
+// Authors:
+// - Jeffrey Burdges <jeff@web3.foundation>
+// - Wei Tang <hi@that.world>
+// - Sergey Vasilyev <swasilyev@gmail.com>
+
 
 //! ## Ring VRF
 
@@ -16,8 +22,8 @@ pub use crate::generator::generate_crs;
 pub use crate::prover::prove;
 pub use crate::verifier::{verify_unprepared, verify_prepared};
 
-use ff::{Field, ScalarEngine};
-use zcash_primitives::jubjub::{JubjubEngine, FixedGenerators, JubjubParams, PrimeOrder, edwards};
+// use ff::{Field, ScalarEngine};
+use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, edwards};  // FixedGenerators, JubjubParams
 
 
 /// Configuration parameters for the system.
@@ -58,7 +64,7 @@ mod tests {
     use bellman::groth16::Parameters;
     use zcash_primitives::jubjub::JubjubBls12;
     use pairing::bls12_381::Bls12;
-    use rand_core::SeedableRng;
+    // use rand_core::SeedableRng;
 
     use super::*;
 

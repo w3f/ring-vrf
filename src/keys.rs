@@ -2,14 +2,14 @@
 
 //! ### Ring VRF keys
 
-use core::fmt::{Debug};
+// use core::fmt::{Debug};
 
 // use subtle::{Choice,ConstantTimeEq};
 use zeroize::Zeroize;
 use rand_core::{RngCore,CryptoRng};
 
-use ff::{Field, ScalarEngine};
-use zcash_primitives::jubjub::{JubjubEngine, FixedGenerators, JubjubParams, PrimeOrder, edwards};
+use ff::{ScalarEngine}; // Field
+use zcash_primitives::jubjub::{JubjubEngine, FixedGenerators, JubjubParams}; // PrimeOrder, edwards
 
 use crate::{Params};
 
