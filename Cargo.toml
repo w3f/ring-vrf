@@ -13,6 +13,10 @@ bellman = { git = "https://github.com/zcash/librustzcash" }
 zcash_primitives = { git = "https://github.com/zcash/librustzcash" }
 zcash_proofs = { git = "https://github.com/zcash/librustzcash" }
 
+[dependencies.digest] 
+version = "0.8"
+default-features = false
+
 # [dependencies.subtle]
 # version = "2.2.1"
 # default-features = false

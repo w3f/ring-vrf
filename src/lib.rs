@@ -9,6 +9,7 @@
 //! ## Ring VRF
 
 mod keys;
+pub mod context;
 mod merkle;
 mod circuit;
 mod generator;
