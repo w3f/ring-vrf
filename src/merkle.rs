@@ -145,6 +145,8 @@ impl<E: JubjubEngine> AuthRoot<E> {
     }
 
     /// Get the merkle root from a list of public keys. Panic if length of the list is zero.
+    ///
+    /// TODO: We do no initial hashing here for the leaves, but maybe that's fine.
     pub fn from_publickeys<B,I>(iter: I, params: &Params<E>) -> Self
     where B: Borrow<PublicKey<E>>, I: IntoIterator<Item=B>
     {
