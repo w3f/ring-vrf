@@ -1,9 +1,12 @@
-use std::ops::{Deref, DerefMut};
+use core::ops::{Deref, DerefMut};
+use core::iter::IntoIterator;
+use core::borrow::Borrow;
+
 use ff::{PrimeField, BitIterator, Field};
 use pairing::bls12_381::Fr;
 use zcash_primitives::jubjub::JubjubEngine;
 use zcash_primitives::pedersen_hash;
-use crate::Params;
+use crate::{Params, PublicKey};
 
 /// A point in the authentication path.
 #[derive(Clone, Debug)]
@@ -117,9 +120,16 @@ impl<E: JubjubEngine> AuthRoot<E> {
     }
 
     /// Get the merkle root from a plain list. Panic if length of the list is zero.
-    pub fn from_list(list: &[E::Fr], params: &Params<E>) -> Self {
+    ///
+    /// TODO: Should this be public?
+    pub(crate) fn from_list<I>(iter: I, params: &Params<E>) -> Self
+    where I: IntoIterator<Item=E::Fr>
+    // where I: IntoIterator<Item=impl Borrow<E::Fr>>
+    {
         let mut depth_to_bottom = 0;
-        let mut cur = list.iter().cloned().collect::<Vec<_>>();
+        let mut cur = iter.into_iter() 
+             // .map(|p| p.borrow().clone())
+             .collect::<Vec<_>>();
 
         while cur.len() > 1 {
             let mut next = Vec::new();
@@ -134,6 +144,14 @@ impl<E: JubjubEngine> AuthRoot<E> {
         }
 
         Self(cur.pop().expect("initial list is not empty; qed"))
+    }
+
+    /// Get the merkle root from a list of public keys. Panic if length of the list is zero.
+    pub fn from_publickeys<B,I>(iter: I, params: &Params<E>) -> Self
+    where B: Borrow<PublicKey<E>>, I: IntoIterator<Item=B>
+    {
+        let iter = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 );
+        Self::from_list(iter, params)
     }
 }
 

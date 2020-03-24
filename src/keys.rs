@@ -2,17 +2,24 @@
 
 //! ### Ring VRF keys
 
+use std::io;
 // use core::fmt::{Debug};
 
 // use subtle::{Choice,ConstantTimeEq};
 use rand_core::{RngCore,CryptoRng};
 
 use ff::{ScalarEngine}; // Field
-use zcash_primitives::jubjub::{JubjubEngine, FixedGenerators, JubjubParams}; // PrimeOrder, edwards
+use zcash_primitives::jubjub::{
+    JubjubEngine, FixedGenerators, JubjubParams,
+    PrimeOrder, Unknown, edwards::Point
+};
 
 use zeroize::Zeroize;
 
 use crate::{Params};
+
+
+pub(crate) type RawSecretKey<E: JubjubEngine> = E::Fs;
 
 
 /// Seceret key consisting of a JubJub scalar and a secret nonce seed.
@@ -88,39 +95,49 @@ impl<E: JubjubEngine> SecretKey<E> {
         SecretKey::from_rng(::rand::thread_rng())
     }
 
-    /// Derive the `PublicKey` corresponding to this `SecretKey`.
-    pub fn to_public(&self, params: &Params<E>) -> PublicKey<E> {
+    pub(crate) fn to_public_point(&self, params: &Params<E>) -> Point<E,PrimeOrder> {
         // Jubjub generator point. TODO: prime or ---
         let base_point = params.engine.generator(FixedGenerators::SpendingKeyGenerator);
-        PublicKey( base_point.mul(self.key.clone(), &params.engine).to_xy().0 )
+        base_point.mul(self.key.clone(), &params.engine)
+    }
+
+    /// Derive the `PublicKey` corresponding to this `SecretKey`.
+    pub fn to_public(&self, params: &Params<E>) -> PublicKey<E> {
+        PublicKey( self.to_public_point(params).into() )
     }
 
     /// Derive the `Keypair` corresponding to this `SecretKey`.
     pub fn to_keypair(self, params: &Params<E>) -> Keypair<E> {
-        let public = self.to_public(params);
+        let public = self.to_public_point(params);
         Keypair { secret: self, public }
     }
 }
-
 
 
 // was pub type PublicKey<E> = <E as ScalarEngine>::Fr;
 
 /// Public key consisting of a JubJub point
 #[derive(Clone)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct PublicKey<E: JubjubEngine>(pub(crate) <E as ScalarEngine>::Fr);
+pub struct PublicKey<E: JubjubEngine>(pub(crate) Point<E,Unknown>);
 
 // serde_boilerplate!(PublicKey);
 
-// impl<E: JubjubEngine> PublicKey<E> {
-// }
+impl<E: JubjubEngine> PublicKey<E> {
+    pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {
+        Ok(PublicKey( Point::read(reader,params)? ))
+    }
+    
+    pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
+        self.0.write(writer)
+    }
+}
 
 
 pub struct Keypair<E: JubjubEngine> {
     /// The secret half of this keypair.
     pub secret: SecretKey<E>,
     /// The public half of this keypair.
-    pub public: PublicKey<E>,
+    pub public: Point<E,PrimeOrder>, // PublicKey<E> 
 }
 
 impl<E: JubjubEngine> Zeroize for Keypair<E> {
@@ -141,7 +158,7 @@ impl<E: JubjubEngine> Keypair<E> {
     where R: CryptoRng + RngCore,
     {
         let secret = SecretKey::from_rng(csprng);
-        let public = secret.to_public(params);
+        let public = secret.to_public_point(params);
         Keypair{ public, secret }
     }
 
