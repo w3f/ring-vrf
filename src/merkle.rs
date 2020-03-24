@@ -127,19 +127,17 @@ impl<E: JubjubEngine> AuthRoot<E> {
     // where I: IntoIterator<Item=impl Borrow<E::Fr>>
     {
         let mut depth_to_bottom = 0;
-        let mut cur = iter.into_iter() 
-             // .map(|p| p.borrow().clone())
-             .collect::<Vec<_>>();
+        let mut cur = iter.into_iter().collect::<Vec<_>>();
+        let mut next = Vec::new();
 
         while cur.len() > 1 {
-            let mut next = Vec::new();
-
             let left = cur.pop();
             let right = cur.pop();
 
             next.push(auth_hash::<E>(left.as_ref(), right.as_ref(), depth_to_bottom, params));
 
-            cur = next;
+            ::core::mem::swap(&mut cur,&mut next);
+            next.clear();
             depth_to_bottom += 1;
         }
 
