@@ -10,23 +10,20 @@ use rand_core::{RngCore,CryptoRng};
 
 use ff::{ScalarEngine}; // Field
 use zcash_primitives::jubjub::{
-    JubjubEngine, FixedGenerators, JubjubParams,
+    JubjubEngine, // FixedGenerators, JubjubParams,
     PrimeOrder, Unknown, edwards::Point
 };
 
 use zeroize::Zeroize;
 
-use crate::{Params};
-
-
-pub(crate) type RawSecretKey<E: JubjubEngine> = E::Fs;
+use crate::{Params, Scalar};
 
 
 /// Seceret key consisting of a JubJub scalar and a secret nonce seed.
 #[derive(Debug,Clone)]
 pub struct SecretKey<E: JubjubEngine> {
     /// Actual public key represented as a scalar.
-    pub(crate) key: E::Fs,
+    pub(crate) key: Scalar<E>,
     /// Seed for deriving the nonces used in Schnorr proofs.
     ///
     /// We require this be random and secret or else key compromise attacks will ensue.
@@ -96,9 +93,7 @@ impl<E: JubjubEngine> SecretKey<E> {
     }
 
     pub(crate) fn to_public_point(&self, params: &Params<E>) -> Point<E,PrimeOrder> {
-        // Jubjub generator point. TODO: prime or ---
-        let base_point = params.engine.generator(FixedGenerators::SpendingKeyGenerator);
-        base_point.mul(self.key.clone(), &params.engine)
+        params.scalar_to_point(&self.key)
     }
 
     /// Derive the `PublicKey` corresponding to this `SecretKey`.
@@ -111,6 +106,21 @@ impl<E: JubjubEngine> SecretKey<E> {
         let public = self.to_public_point(params);
         Keypair { secret: self, public }
     }
+
+    pub fn read<R: io::Read>(reader: &mut R) -> io::Result<Self> {
+        let key = crate::read_scalar::<E, &mut R>(reader) ?;
+        let mut nonce_seed = [0u8; 32];
+        reader.read_exact(&mut nonce_seed) ?;
+        Ok(SecretKey { key, nonce_seed } )
+    }
+
+    pub fn write<W: io::Write>(&self, writer: &mut W) -> io::Result<()> {
+        crate::write_scalar::<E, &mut W>(&self.key, writer);
+        writer.write_all(&self.nonce_seed) ?;
+        Ok(())
+    }
+
+    // TODO:  Convert to/from zcash_primitives::redjubjub::PrivateKey
 }
 
 

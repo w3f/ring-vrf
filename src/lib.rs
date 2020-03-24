@@ -8,6 +8,7 @@
 
 //! ## Ring VRF
 
+mod scalar;
 mod keys;
 pub mod context;
 mod merkle;
@@ -17,6 +18,7 @@ mod prover;
 mod verifier;
 // mod vrf;
 
+use crate::scalar::{Scalar,read_scalar,write_scalar};
 pub use crate::keys::{SecretKey,PublicKey,Keypair};
 pub use crate::context::{signing_context}; // SigningContext,SigningTranscript
 
@@ -27,7 +29,7 @@ pub use crate::prover::prove;
 pub use crate::verifier::{verify_unprepared, verify_prepared};
 
 // use ff::{Field, ScalarEngine};
-use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, edwards};  // FixedGenerators, JubjubParams
+use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, edwards::Point};
 
 
 /// Configuration parameters for the system.
@@ -41,12 +43,12 @@ pub struct Params<E: JubjubEngine> {
 
 /// VRF input.
 #[derive(Debug, Clone)]
-pub struct VRFInput<E: JubjubEngine>(pub edwards::Point<E, PrimeOrder>);
+pub struct VRFInput<E: JubjubEngine>(pub Point<E, PrimeOrder>);
 
 impl<E: JubjubEngine> VRFInput<E> {
     /// Create a new random VRF input.
     pub fn random<R: rand_core::RngCore>(rng: &mut R, params: &Params<E>) -> Self {
-        Self(edwards::Point::rand(rng, &params.engine).mul_by_cofactor(&params.engine))
+        Self(Point::rand(rng, &params.engine).mul_by_cofactor(&params.engine))
     }
 
     /// Into VRF output.
@@ -57,7 +59,7 @@ impl<E: JubjubEngine> VRFInput<E> {
 
 
 /// VRF output.
-pub type VRFOutput<E> = edwards::Point<E, PrimeOrder>;
+pub type VRFOutput<E> = Point<E, PrimeOrder>;
 
 
 #[cfg(test)]
