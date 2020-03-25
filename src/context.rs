@@ -10,7 +10,10 @@
 use rand_core::{RngCore,CryptoRng};
 
 use ff::{Field, PrimeField, PrimeFieldRepr}; // ScalarEngine 
-// use zcash_primitives::jubjub::{JubjubEngine}; // FixedGenerators, JubjubParams, PrimeOrder, edwards
+use zcash_primitives::jubjub::{
+    JubjubEngine, 
+    PrimeOrder, Unknown, edwards::Point
+};
 
 use merlin::Transcript;
 
@@ -45,15 +48,14 @@ pub trait SigningTranscript {
     }
 
     /// Extend the transcript with a compressed Ristretto point
-    fn commit_point<Fr>(&mut self, label: &'static [u8], point: &Fr) 
-    where Fr: PrimeField
+    fn commit_point<E: JubjubEngine,Subgroup>(&mut self, label: &'static [u8], point: &Point<E,Subgroup>) 
     {
         // ZCash Foundation way: https://github.com/zkcrypto/jubjub/blob/master/src/lib.rs#L397
         // ..
 
         // ZCash ECC's way using zcash_primitives::jubjub and https://docs.rs/ff/0.5.2/ff/trait.PrimeField.html
         let mut buf = [0u8; 32];
-        point.into_repr().write_le(&mut buf[..]).expect("Internal buffer write problem.  JubJub larger than 32 bytes?");
+        point.write(&mut buf[..]).expect("Internal buffer write problem.  JubJub larger than 32 bytes?");
         self.commit_bytes(label, &buf);
     }
 
@@ -122,8 +124,7 @@ where T: SigningTranscript + ?Sized,
     fn proto_name(&mut self, label: &'static [u8])
         {  (**self).proto_name(label)  }
     #[inline(always)]
-    fn commit_point<Fr>(&mut self, label: &'static [u8], point: &Fr) 
-    where Fr: PrimeField
+    fn commit_point<E: JubjubEngine,Subgroup>(&mut self, label: &'static [u8], point: &Point<E,Subgroup>) 
         {  (**self).commit_point(label, point)  }
     #[inline(always)]
     fn challenge_bytes(&mut self, label: &'static [u8], dest: &mut [u8])
