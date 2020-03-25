@@ -4,7 +4,7 @@ use std::io;
 use ff::{Field, PrimeField, PrimeFieldRepr}; // ScalarEngine
 use zcash_primitives::jubjub::{
     JubjubEngine, FixedGenerators, JubjubParams,
-    PrimeOrder, Unknown, edwards::Point
+    PrimeOrder, Unknown, edwards::Point, // ToUniform,
 };
 
 use crate::Params;
@@ -16,6 +16,16 @@ impl<E: JubjubEngine> Params<E> {
         base_point.mul(scalar.clone(), &self.engine)
     }
 }
+
+/*
+pub fn hash_to_scalar<E: JubjubEngine>(ctx: &[u8], a: &[u8], b: &[u8]) -> E::Fs {
+    let mut hasher = Params::new().hash_length(64).personal(ctx).to_state();
+    hasher.update(a);
+    hasher.update(b);
+    let ret = hasher.finalize();
+    E::Fs::to_uniform(ret.as_ref())
+}
+*/
 
 pub(crate) type Scalar<E: JubjubEngine> = E::Fs;
 
@@ -30,4 +40,14 @@ pub(crate) fn read_scalar<E: JubjubEngine, R: io::Read>(reader: R) -> io::Result
 pub(crate) fn write_scalar<E: JubjubEngine, W: io::Write>(s: &E::Fs, writer: W) -> io::Result<()> {
     s.into_repr().write_le(writer)
 }
+
+/*
+pub(crate) fn scalar_to_bytes<E: JubjubEngine>(s: &E::Fs)
+ -> io::Result<[u8; ::core::mem::size_of::<<<E as JubjubEngine>::Fs as PrimeField>::Repr>()]> 
+{
+    let mut bytes = [0u8; ::core::mem::size_of::<<<E as JubjubEngine>::Fs as PrimeField>::Repr>()];
+    write_scalar(s, &mut bytes[..]) ?;
+    Ok(bytes)
+}
+*/
 
