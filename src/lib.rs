@@ -20,7 +20,7 @@ mod verifier;
 
 use crate::scalar::{Scalar,read_scalar,write_scalar};
 pub use crate::keys::{SecretKey,PublicKey,Keypair};
-pub use crate::context::{signing_context}; // SigningContext,SigningTranscript
+pub use crate::context::{signing_context,SigningTranscript,VRFSigningTranscript}; // SigningTranscript
 
 pub use crate::circuit::Ring;
 pub use crate::merkle::{MerkleSelection, AuthPath, AuthRoot, AuthPathPoint, auth_hash};
@@ -103,7 +103,7 @@ mod tests {
         let vrf_output = vrf_input.to_output(&sk, &params);
 
         let auth_path = AuthPath::random(params.auth_depth, &mut rng);
-        let auth_root = AuthRoot::from_proof(&auth_path, &pk.0, &params);
+        let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);
 
         let t = SystemTime::now();
         let proof = prover::prove::<Bls12>(&crs, sk, vrf_input.clone(), auth_path.clone(), &params);

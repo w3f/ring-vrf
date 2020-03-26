@@ -55,7 +55,7 @@ pub trait SigningTranscript {
 
         // ZCash ECC's way using zcash_primitives::jubjub and https://docs.rs/ff/0.5.2/ff/trait.PrimeField.html
         let mut buf = [0u8; 32];
-        point.write(&mut buf[..]).expect("Internal buffer write problem.  JubJub larger than 32 bytes?");
+        point.write(&mut buf[..]).expect("Internal buffer write problem.  JubJub compressed point larger than 32 bytes?");
         self.commit_bytes(label, &buf);
     }
 
@@ -108,7 +108,44 @@ pub trait SigningTranscript {
     fn witness_bytes<R>(&self, label: &'static [u8], dest: &mut [u8], nonce_seeds: &[&[u8]], rng: R)
     where R: RngCore+CryptoRng;
     */
+
+    /// Acknoledge VRF transcript malleablity
+    fn vrf_malleable(self) -> VRFSigningTranscript<Self>
+    where Self: Sized
+       { VRFSigningTranscript(self) }
+
+    /// Non-malleable VRF transcript.
+    ///
+    /// Incompatable with ring VRF however.
+    fn vrf_nonmalleable<E>(mut self, publickey: &crate::PublicKey<E>)
+     -> VRFSigningTranscript<Self> 
+    where E: JubjubEngine, Self: Sized
+    {
+        self.commit_point(b"vrf-nm-pk", &publickey.0);
+        VRFSigningTranscript(self)
+    }
+
+    /// Semi-malleable VRF transcript
+    fn vrf_ring_malleable<E>(mut self, auth_root: &crate::merkle::AuthRoot<E>)
+     -> VRFSigningTranscript<Self> 
+     where E: JubjubEngine, Self: Sized
+    {
+        let mut buf = [0u8; 32];
+        auth_root.0.into_repr()
+        .write_le(&mut buf[..]).expect("Internal buffer write problem.  JubJub base field larger than 32 bytes?");
+        self.commit_bytes(b"vrf-nm-ar", &buf);
+        VRFSigningTranscript(self)
+    }
 }
+
+/// `SigningTranscript` helper struct that manages VRF malleability.
+///
+/// All VRF methods employ this when creating the VRF input, so that
+/// developers must acknoledge their VRF output malleability.
+///
+/// TODO: Explain better
+pub struct VRFSigningTranscript<T: SigningTranscript>(pub(crate) T);
+
 
 
 /// We delegates any mutable reference to its base type, like `&mut Rng`

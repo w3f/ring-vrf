@@ -196,7 +196,7 @@ mod tests {
         let vrf_input = VRFInput::<Bls12>::random(&mut rng, &params);
 
         let auth_path = AuthPath::random(params.auth_depth, &mut rng);
-        let auth_root = AuthRoot::from_proof(&auth_path, &pk.0, &params);
+        let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);
 
         let instance = Ring {
             params: &params,

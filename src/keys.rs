@@ -29,6 +29,9 @@ pub struct SecretKey<E: JubjubEngine> {
     /// We require this be random and secret or else key compromise attacks will ensue.
     /// Any modificaiton here may dirupt some non-public key derivation techniques.
     pub(crate) nonce_seed: [u8; 32],
+
+    // /// 
+    // pub(crate) public: [u8; 32],
 }
 
 // serde_boilerplate!(SecretKey);
@@ -136,7 +139,7 @@ impl<E: JubjubEngine> PublicKey<E> {
     pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {
         Ok(PublicKey( Point::read(reader,params)? ))
     }
-    
+
     pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
         self.0.write(writer)
     }

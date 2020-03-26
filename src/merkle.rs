@@ -1,12 +1,37 @@
+
+use std::io;
+
 use core::ops::{Deref, DerefMut};
 use core::iter::IntoIterator;
 use core::borrow::Borrow;
 
-use ff::{PrimeField, BitIterator, Field};
+use ff::{PrimeField, PrimeFieldRepr, BitIterator, Field}; // ScalarEngine
 use pairing::bls12_381::Fr;
 use zcash_primitives::jubjub::JubjubEngine;
 use zcash_primitives::pedersen_hash;
 use crate::{Params, PublicKey};
+
+
+/// Direction of the binary merkle path, either going left or right.
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum MerkleSelection {
+    /// Move left to the sub-node.
+    Left,
+    /// Move right to the sub-node.
+    Right,
+}
+
+impl MerkleSelection {
+    /// Create a random path direction from a random source.
+    pub fn random<R: rand_core::RngCore>(rng: &mut R) -> Self {
+        if rng.next_u32() % 2 == 0 {
+            MerkleSelection::Left
+        } else {
+            MerkleSelection::Right
+        }
+    }
+}
+
 
 /// A point in the authentication path.
 #[derive(Clone, Debug)]
@@ -15,6 +40,42 @@ pub struct AuthPathPoint<E: JubjubEngine> {
     pub current_selection: MerkleSelection,
     /// Sibling value, if it exists.
     pub sibling: Option<E::Fr>,
+}
+
+impl<E: JubjubEngine> AuthPathPoint<E> {
+    pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {
+        let mut repr = <E::Fr as PrimeField>::Repr::default();
+        repr.read_le(reader) ?;
+
+        use MerkleSelection::*;
+        let current_selection = if (repr.as_ref()[3] >> 63) == 1 { Left } else { Right };
+        repr.as_mut()[3] &= 0x7fffffffffffffff;
+
+        let err = |_| io::Error::new(io::ErrorKind::InvalidInput, "auth path point is not in field" );
+
+        // zcash_primitives::jubjub::fs::MODULUS_BITS = 252
+        let sibling = if (repr.as_ref()[3] >> 62) == 1 {
+            repr.as_mut()[3] &= 0x3fffffffffffffff;
+            Some(E::Fr::from_repr(repr).map_err(err) ?)
+        } else { None };
+
+        Ok(AuthPathPoint { current_selection, sibling })
+    }
+
+    pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
+        let mut repr = self.sibling.map( |x| x.into_repr() ).unwrap_or_default();
+        assert!((repr.as_mut()[3] & 0x7fffffffffffffff) == 0);
+
+        if self.sibling.is_none() {
+            repr.as_mut()[3] |= 0x4000000000000000u64;
+        }
+
+        if self.current_selection == MerkleSelection::Left {
+            repr.as_mut()[3] |= 0x8000000000000000u64;
+        }
+
+        repr.write_le(writer)
+    }
 }
 
 /// The authentication path of the merkle tree.
@@ -63,6 +124,15 @@ impl<E: JubjubEngine> AuthPath<E> {
 
         path
     }
+
+    /*
+    TODO:
+    pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {
+    }
+
+    pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
+    }
+    */
 }
 
 impl<E: JubjubEngine> Default for AuthPath<E> {
@@ -90,22 +160,17 @@ pub struct AuthRoot<E: JubjubEngine>(pub E::Fr);
 
 impl<E: JubjubEngine> Deref for AuthRoot<E> {
     type Target = E::Fr;
-
-    fn deref(&self) -> &E::Fr {
-        &self.0
-    }
+    fn deref(&self) -> &E::Fr { &self.0 }
 }
 
 impl<E: JubjubEngine> DerefMut for AuthRoot<E> {
-    fn deref_mut(&mut self) -> &mut E::Fr {
-        &mut self.0
-    }
+    fn deref_mut(&mut self) -> &mut E::Fr { &mut self.0 }
 }
 
 impl<E: JubjubEngine> AuthRoot<E> {
     /// Get the merkle root from proof.
-    pub fn from_proof(path: &AuthPath<E>, target: &E::Fr, params: &Params<E>) -> Self {
-        let mut cur = target.clone();
+    pub fn from_proof(path: &AuthPath<E>, target: &PublicKey<E>, params: &Params<E>) -> Self {
+        let mut cur = target.0.to_xy().0;
 
         for (depth_to_bottom, point) in path.iter().enumerate() {
             let (left, right) = match point.current_selection {
@@ -122,7 +187,7 @@ impl<E: JubjubEngine> AuthRoot<E> {
     /// Get the merkle root from a plain list. Panic if length of the list is zero.
     ///
     /// TODO: Should this be public?
-    pub(crate) fn from_list<I>(iter: I, params: &Params<E>) -> Self
+    fn from_list<I>(iter: I, params: &Params<E>) -> Self
     where I: IntoIterator<Item=E::Fr>
     // where I: IntoIterator<Item=impl Borrow<E::Fr>>
     {
@@ -153,6 +218,17 @@ impl<E: JubjubEngine> AuthRoot<E> {
         let iter = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 );
         Self::from_list(iter, params)
     }
+
+    pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {
+        let mut repr = <E::Fr as PrimeField>::Repr::default();
+        repr.read_le(reader) ?;
+        let err = |_| io::Error::new(io::ErrorKind::InvalidInput, "auth path point is not in field" );
+        Ok(AuthRoot( E::Fr::from_repr(repr).map_err(err) ? ))
+    }
+
+    pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
+        self.0.into_repr().write_le(writer)
+    }
 }
 
 /// Hash function used to create the authentication merkle tree.
@@ -179,22 +255,3 @@ pub fn auth_hash<E: JubjubEngine>(
     ).to_xy().0
 }
 
-/// Direction of the binary merkle path, either going left or right.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub enum MerkleSelection {
-    /// Move left to the sub-node.
-    Left,
-    /// Move right to the sub-node.
-    Right,
-}
-
-impl MerkleSelection {
-    /// Create a random path direction from a random source.
-    pub fn random<R: rand_core::RngCore>(rng: &mut R) -> Self {
-        if rng.next_u32() % 2 == 0 {
-            MerkleSelection::Left
-        } else {
-            MerkleSelection::Right
-        }
-    }
-}
