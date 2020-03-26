@@ -3,6 +3,7 @@
 // Authors:
 // - Wei Tang <hi@that.world>
 // - Sergey Vasilyev <swasilyev@gmail.com>
+// - Jeffrey Burdges <jeff@web3.foundation>
 
 //! ### Ring VRF zk SNARK verifier
 

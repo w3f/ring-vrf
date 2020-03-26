@@ -2,6 +2,7 @@
 //
 // Authors:
 // - Sergey Vasilyev <swasilyev@gmail.com>
+// - Jeffrey Burdges <jeff@web3.foundation>
 
 //! ### Ring VRF zk SNARK prover
 

@@ -1,3 +1,13 @@
+// -*- mode: rust; -*-
+//
+// Copyright (c) 2019 Web 3 Foundation
+//
+// Authors:
+// - Sergey Vasilyev <swasilyev@gmail.com>
+// - Jeffrey Burdges <jeff@web3.foundation>
+
+//! ### Ring representation as Merkle tree 
+
 
 use std::io;
 
