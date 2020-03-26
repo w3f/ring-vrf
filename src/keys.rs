@@ -118,7 +118,7 @@ impl<E: JubjubEngine> SecretKey<E> {
     }
 
     pub fn write<W: io::Write>(&self, writer: &mut W) -> io::Result<()> {
-        crate::write_scalar::<E, &mut W>(&self.key, writer);
+        crate::write_scalar::<E, &mut W>(&self.key, writer) ?;
         writer.write_all(&self.nonce_seed) ?;
         Ok(())
     }
@@ -137,7 +137,7 @@ pub struct PublicKey<E: JubjubEngine>(pub(crate) Point<E,Unknown>);
 
 impl<E: JubjubEngine> PublicKey<E> {
     pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {
-        Ok(PublicKey( Point::read(reader,params)? ))
+        Ok(PublicKey( Point::read(reader,params) ? ))
     }
 
     pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {

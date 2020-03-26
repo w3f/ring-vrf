@@ -61,7 +61,7 @@ impl<'a, E: JubjubEngine> Circuit<E> for RingVRF<'a, E> {
         //    (sk + n|fs|) * H == sk * H, if ord(H) == |fs|
         let sk_bits = boolean::field_into_boolean_vec_le(
             cs.namespace(|| "sk"), self.sk.map(|sk| sk.key)
-        )?;
+        ) ?;
 
         // Derives the public key from the secret key using the hardcoded generator,
         // that is guaranteed to be in the primeorder subgroup,
@@ -72,13 +72,13 @@ impl<'a, E: JubjubEngine> Circuit<E> for RingVRF<'a, E> {
             FixedGenerators::SpendingKeyGenerator, //TODO: any NUMS point of full order
             &sk_bits,
             &self.params.engine,
-        )?;
+        ) ?;
 
         // Defines first 2 public input wires for the coordinates of the public key in Jubjub base field (~ BLS scalar field)
         // and assures their assignment matches the values calculated in the previous step in 2 constraints.
         // These 2 constraints are not strictly required, just Bellman is implemented this way.
         // TODO: x coordinate only
-        // pk.inputize(cs.namespace(|| "PK"))?;
+        // pk.inputize(cs.namespace(|| "PK")) ?;
 
         // Allocates VRF_BASE on the circuit and checks that it is a point on the curve
         // adds 4 constraints (A.3.3.1) to check that it is indeed a point on Jubjub
@@ -86,7 +86,7 @@ impl<'a, E: JubjubEngine> Circuit<E> for RingVRF<'a, E> {
             cs.namespace(|| "VRF_INPUT"),
             self.vrf_input,
             &self.params.engine,
-        )?;
+        ) ?;
 
         // Checks that VRF_BASE lies in a proper subgroup of Jubjub. Not strictly required as it is the point provided
         // externally as a public input, so MUST be previously checked by the verifier off-circuit.
@@ -95,11 +95,11 @@ impl<'a, E: JubjubEngine> Circuit<E> for RingVRF<'a, E> {
         vrf_input.assert_not_small_order(
             cs.namespace(|| "VRF_BASE not small order"),
             &self.params.engine,
-        )?;
+        ) ?;
 
         // Defines the 3rd and the 4th input wires to be equal VRF_BASE coordinates,
         // thus adding 2 more constraints
-        vrf_input.inputize(cs.namespace(|| "VRF_BASE input"))?;
+        vrf_input.inputize(cs.namespace(|| "VRF_BASE input")) ?;
 
         // Produces VRF output = sk * VRF_BASE, it is a variable base multiplication, thus
         // 3252 constraints (A.3.3.8)
@@ -108,10 +108,10 @@ impl<'a, E: JubjubEngine> Circuit<E> for RingVRF<'a, E> {
             cs.namespace(|| "vrf = sk * VRF_BASE"),
             &sk_bits,
             &self.params.engine
-        )?;
+        ) ?;
 
         // And 2 more constraints to verify the output
-        vrf.inputize(cs.namespace(|| "vrf"))?;
+        vrf.inputize(cs.namespace(|| "vrf")) ?;
 
         // So the circuit is 6 (public inputs) + 252 (sk booleanity) + 750 (fixed-base mul)
         //                 + 20 (on-curve + subgroup check) + 3252 (var-base mul)
@@ -136,12 +136,12 @@ impl<'a, E: JubjubEngine> Circuit<E> for RingVRF<'a, E> {
             let cur_is_right = boolean::Boolean::from(boolean::AllocatedBit::alloc(
                 cs.namespace(|| "position bit"),
                 e.map(|e| e.0 == MerkleSelection::Right),
-            )?);
+            ) ?);
 
             // Witness the authentication path element adjacent
             // at this depth.
             let path_element =
-                num::AllocatedNum::alloc(cs.namespace(|| "path element"), || Ok(e.get()?.1))?;
+                num::AllocatedNum::alloc(cs.namespace(|| "path element"), || Ok(e.get()?.1)) ?;
 
             // Swap the two if the current subtree is on the right
             let (xl, xr) = num::AllocatedNum::conditionally_reverse(
@@ -149,7 +149,7 @@ impl<'a, E: JubjubEngine> Circuit<E> for RingVRF<'a, E> {
                 &cur,
                 &path_element,
                 &cur_is_right,
-            )?;
+            ) ?;
 
             // We don't need to be strict, because the function is
             // collision-resistant. If the prover witnesses a congruency,

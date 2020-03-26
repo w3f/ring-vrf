@@ -29,7 +29,7 @@ pub struct VRFOutput<E: JubjubEngine>(pub Point<E, Unknown>);
 
 impl<E: JubjubEngine> VRFOutput<E> {
     pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {
-        Ok(VRFOutput( Point::read(reader,params)? ))
+        Ok(VRFOutput( Point::read(reader,params) ? ))
     }
 
     pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
