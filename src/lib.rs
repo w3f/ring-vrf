@@ -16,7 +16,7 @@ mod circuit;
 mod generator;
 mod prover;
 mod verifier;
-// mod vrf;
+mod vrf;
 
 use crate::scalar::{Scalar,read_scalar,write_scalar};
 pub use crate::keys::{SecretKey,PublicKey,Keypair};
@@ -27,9 +27,11 @@ pub use crate::merkle::{MerkleSelection, AuthPath, AuthRoot, AuthPathPoint, auth
 pub use crate::generator::generate_crs;
 pub use crate::prover::prove;
 pub use crate::verifier::{verify_unprepared, verify_prepared};
+pub use vrf::{VRFOutput};
+
 
 // use ff::{Field, ScalarEngine};
-use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, edwards::Point};
+use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, Unknown, edwards::Point};
 
 
 /// Configuration parameters for the system.
@@ -43,23 +45,19 @@ pub struct Params<E: JubjubEngine> {
 
 /// VRF input.
 #[derive(Debug, Clone)]
-pub struct VRFInput<E: JubjubEngine>(pub Point<E, PrimeOrder>);
+pub struct VRFInput<E: JubjubEngine>(pub Point<E, Unknown>);
 
 impl<E: JubjubEngine> VRFInput<E> {
     /// Create a new random VRF input.
     pub fn random<R: rand_core::RngCore>(rng: &mut R, params: &Params<E>) -> Self {
-        Self(Point::rand(rng, &params.engine).mul_by_cofactor(&params.engine))
+        Self(Point::rand(rng, &params.engine).mul_by_cofactor(&params.engine).into())
     }
 
     /// Into VRF output.
     pub fn to_output(&self, sk: &SecretKey<E>, params: &Params<E>) -> VRFOutput<E> {
-        self.0.mul(sk.key.clone(), &params.engine)
+        VRFOutput( self.0.mul(sk.key.clone(), &params.engine) )
     }
 }
-
-
-/// VRF output.
-pub type VRFOutput<E> = Point<E, PrimeOrder>;
 
 
 #[cfg(test)]
@@ -111,7 +109,7 @@ mod tests {
         let proof = proof.unwrap();
 
         let t = SystemTime::now();
-        let valid = verifier::verify_unprepared(&crs.vk, proof, vrf_input, vrf_output, auth_root);
+        let valid = verifier::verify_unprepared(&crs.vk, proof, vrf_input, vrf_output, auth_root, &params);
         println!("verification = {}", t.elapsed().unwrap().as_millis());
         assert_eq!(valid.unwrap(), true);
     }

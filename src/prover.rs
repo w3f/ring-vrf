@@ -22,7 +22,7 @@ pub fn prove<E: JubjubEngine>(
     let instance = Ring {
         params,
         sk: Some(sk),
-        vrf_input: Some(vrf_input),
+        vrf_input: Some(vrf_input.0.mul_by_cofactor(&params.engine)),
         auth_path: Some(auth_path),
     };
     let proof =

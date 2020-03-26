@@ -8,7 +8,7 @@
 //! ### Ring VRF zkSNARK circut
 
 use ff::Field;
-use zcash_primitives::jubjub::{FixedGenerators, JubjubEngine};
+use zcash_primitives::jubjub::{FixedGenerators, JubjubEngine, PrimeOrder, Unknown, edwards::Point};
 use zcash_proofs::circuit::{ecc, pedersen_hash};
 use bellman::{Circuit, ConstraintSystem, SynthesisError};
 use bellman::gadgets::{boolean, num, Assignment};
@@ -34,7 +34,7 @@ pub struct Ring<'a, E: JubjubEngine> { // TODO: name
     pub sk: Option<SecretKey<E>>,
 
     /// The VRF input, a point in Jubjub prime order subgroup.
-    pub vrf_input: Option<VRFInput<E>>,
+    pub vrf_input: Option<Point<E, PrimeOrder>>,
 
     /// The authentication path of the public key x-coordinate in the Merkle tree,
     /// the element of Jubjub base field.
@@ -84,7 +84,7 @@ impl<'a, E: JubjubEngine> Circuit<E> for Ring<'a, E> {
         // adds 4 constraints (A.3.3.1) to check that it is indeed a point on Jubjub
         let vrf_input = ecc::EdwardsPoint::witness(
             cs.namespace(|| "VRF_INPUT"),
-            self.vrf_input.map(|i| i.0),
+            self.vrf_input,
             &self.params.engine,
         )?;
 
@@ -202,7 +202,7 @@ mod tests {
         let instance = Ring {
             params: &params,
             sk: Some(sk.clone()),
-            vrf_input: Some(vrf_input.clone()),
+            vrf_input: Some(vrf_input.0.mul_by_cofactor(&params.engine)),
             auth_path: Some(auth_path),
         };
 
@@ -219,8 +219,8 @@ mod tests {
         assert_eq!(cs.get_input(2, "VRF_BASE input/y/input variable"), vrf_input.0.to_xy().1);
 
         let vrf_output = vrf_input.to_output(&sk, &params);
-        assert_eq!(cs.get_input(3, "vrf/x/input variable"), vrf_output.to_xy().0);
-        assert_eq!(cs.get_input(4, "vrf/y/input variable"), vrf_output.to_xy().1);
+        assert_eq!(cs.get_input(3, "vrf/x/input variable"), vrf_output.0.to_xy().0);
+        assert_eq!(cs.get_input(4, "vrf/y/input variable"), vrf_output.0.to_xy().1);
         assert_eq!(cs.get_input(5, "anchor/input variable"), auth_root.0);
     }
 }
