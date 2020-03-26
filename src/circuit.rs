@@ -26,7 +26,7 @@ use crate::{MerkleSelection, AuthPath, Params, SecretKey, VRFInput};
 /// These are the values that are required to construct the circuit and populate all the wires.
 /// They are defined as Options as for CRS generation only circuit structure is relevant,
 /// not the wires' assignments, so knowing the types is enough.
-pub struct Ring<'a, E: JubjubEngine> { // TODO: name
+pub struct RingVRF<'a, E: JubjubEngine> { // TODO: name
     /// Jubjub curve parameters.
     pub params: &'a Params<E>,
 
@@ -43,7 +43,7 @@ pub struct Ring<'a, E: JubjubEngine> { // TODO: name
     pub auth_path: Option<AuthPath<E>>,
 }
 
-impl<'a, E: JubjubEngine> Circuit<E> for Ring<'a, E> {
+impl<'a, E: JubjubEngine> Circuit<E> for RingVRF<'a, E> {
     fn synthesize<CS: ConstraintSystem<E>>(self, cs: &mut CS) -> Result<(), SynthesisError> {
         if let Some(auth_path) = self.auth_path.as_ref() {
             if auth_path.len() != self.params.auth_depth {
@@ -199,7 +199,7 @@ mod tests {
         let auth_path = AuthPath::random(params.auth_depth, &mut rng);
         let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);
 
-        let instance = Ring {
+        let instance = RingVRF {
             params: &params,
             sk: Some(sk.clone()),
             vrf_input: Some(vrf_input.0.mul_by_cofactor(&params.engine)),

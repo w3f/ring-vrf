@@ -22,7 +22,7 @@ use crate::scalar::{Scalar,read_scalar,write_scalar};
 pub use crate::keys::{SecretKey,PublicKey,Keypair};
 pub use crate::context::{signing_context,SigningTranscript,VRFSigningTranscript}; // SigningTranscript
 
-pub use crate::circuit::Ring;
+pub use crate::circuit::RingVRF;
 pub use crate::merkle::{MerkleSelection, AuthPath, AuthRoot, AuthPathPoint, auth_hash};
 pub use crate::generator::generate_crs;
 pub use crate::prover::prove;

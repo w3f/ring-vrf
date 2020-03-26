@@ -9,7 +9,7 @@
 use bellman::groth16::{create_random_proof, Parameters, Proof};
 use zcash_primitives::jubjub::JubjubEngine;
 use rand_core::OsRng;
-use crate::{Ring, Params, AuthPath, VRFInput, SecretKey};
+use crate::{RingVRF, Params, AuthPath, VRFInput, SecretKey};
 
 pub fn prove<E: JubjubEngine>(
     proving_key: &Parameters<E>,
@@ -19,7 +19,7 @@ pub fn prove<E: JubjubEngine>(
     params: &Params<E>,
 ) -> Result<Proof<E>, ()> {
     let mut rng = OsRng;
-    let instance = Ring {
+    let instance = RingVRF {
         params,
         sk: Some(sk),
         vrf_input: Some(vrf_input.0.mul_by_cofactor(&params.engine)),
