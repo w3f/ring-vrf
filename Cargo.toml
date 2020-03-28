@@ -7,11 +7,11 @@ edition = "2018"
 license = "MIT"
 
 [dependencies]
-ff = { git = "https://github.com/zcash/librustzcash" }
-pairing = { git = "https://github.com/zcash/librustzcash" }
-bellman = { git = "https://github.com/zcash/librustzcash" }
-zcash_primitives = { git = "https://github.com/zcash/librustzcash" }
-zcash_proofs = { git = "https://github.com/zcash/librustzcash" }
+ff = { git = "https://github.com/w3f/librustzcash", branch = "s-zk-bellman" }
+pairing = { git = "https://github.com/w3f/librustzcash", branch = "s-zk-bellman" }
+bellman = { git = "https://github.com/w3f/librustzcash", branch = "s-zk-bellman" }
+zcash_primitives = { git = "https://github.com/w3f/librustzcash", branch = "s-zk-bellman" }
+zcash_proofs = { git = "https://github.com/w3f/librustzcash", branch = "s-zk-bellman" }
 bench-utils = { git = "https://github.com/scipr-lab/zexe", features = ["print-trace"]}
 
 [dependencies.digest] 

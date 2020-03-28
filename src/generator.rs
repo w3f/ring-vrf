@@ -8,7 +8,7 @@
 
 use rand_core::{OsRng}; // RngCore
 
-use bellman::groth16::{generate_random_parameters, Parameters,};
+use bellman::groth16::{generate_extended_random_parameters, ExtendedParameters,};
 use bellman::SynthesisError;
 use zcash_primitives::jubjub::JubjubEngine;
 
@@ -17,7 +17,7 @@ use crate::{RingVRF, Params};
 /// Generates structured (meaning circuit-depending) Groth16
 /// CRS (that comprises proving and verificaton keys) over BLS12-381
 /// for the circuit defined in circuit.rs using OS RNG.
-pub fn generate_crs<E: JubjubEngine>(params: &Params<E>) -> Result<Parameters<E>, SynthesisError> {
+pub fn generate_crs<E: JubjubEngine>(params: &Params<E>) -> Result<ExtendedParameters<E>, SynthesisError> {
     let rng = &mut OsRng;
     let circuit = RingVRF {
         params,
@@ -25,5 +25,5 @@ pub fn generate_crs<E: JubjubEngine>(params: &Params<E>) -> Result<Parameters<E>
         vrf_input: None,
         auth_path: None,
     };
-    generate_random_parameters(circuit, rng)
+    generate_extended_random_parameters(circuit, rng)
 }

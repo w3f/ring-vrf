@@ -66,7 +66,7 @@ impl<E: JubjubEngine> VRFInput<E> {
 mod tests {
     use std::fs::File;
 
-    use bellman::groth16::Parameters;
+    use bellman::groth16::ExtendedParameters;
     use zcash_primitives::jubjub::JubjubBls12;
     use pairing::bls12_381::Bls12;
     // use rand_core::SeedableRng;
@@ -77,23 +77,36 @@ mod tests {
     fn test_completeness() {
         let params = Params::<Bls12> {
             engine: JubjubBls12::new(),
-            auth_depth: 10,
+            auth_depth: 16,
         };
 
         // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
         let mut rng = ::rand_core::OsRng;
 
         let crs = match File::open("crs") {
-            Ok(f) => Parameters::<Bls12>::read(f, false).expect("can't read CRS"),
+            Ok(f) => ExtendedParameters::<Bls12>::read(f, false).expect("can't read CRS"),
             Err(_) => {
                 let f = File::create("crs").unwrap();
-                let generation = start_timer!(|| "generation");
+                let crs_generation = start_timer!(|| "CRS generation");
                 let c = generator::generate_crs(&params).expect("can't generate CRS");
-                end_timer!(generation);
+                end_timer!(crs_generation);
                 c.write(&f).unwrap();
                 c
             },
         };
+
+//        let crs_deserialization = start_timer!(|| "CRS deserialization (incl subgroup checks)");
+//        let crs = ExtendedParameters::<Bls12>::read(File::open("crs").unwrap(), true).expect("can't read CRS");
+//        end_timer!(crs_deserialization);
+//        let crs_validation = start_timer!(|| "CRS validation");
+//        let circuit = RingVRF {
+//            params: &params,
+//            sk: None,
+//            vrf_input: None,
+//            auth_path: None,
+//        };
+//        crs.verify(circuit, &mut rng).expect("subversion check failed");
+//        end_timer!(crs_validation);
 
         let sk = SecretKey::<Bls12>::from_rng(&mut rng);
         let pk = sk.to_public(&params);
@@ -104,14 +117,14 @@ mod tests {
         let auth_path = AuthPath::random(params.auth_depth, &mut rng);
         let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);
 
-        let proving = start_timer!(|| "proving");
-        let proof = prover::prove::<Bls12>(&crs, sk, vrf_input.clone(), auth_path.clone(), &params);
-        end_timer!(proving);
+        let proof_generation = start_timer!(|| "proof generation");
+        let proof = prover::prove::<Bls12>(&crs.params, sk, vrf_input.clone(), auth_path.clone(), &params);
+        end_timer!(proof_generation);
         let proof = proof.unwrap();
 
-        let verification = start_timer!(|| "verification");
-        let valid = verifier::verify_unprepared(&crs.vk, proof, vrf_input, vrf_output, auth_root, &params);
-        end_timer!(verification);
+        let proof_verification = start_timer!(|| "proof verification");
+        let valid = verifier::verify_unprepared(&crs.params.vk, proof, vrf_input, vrf_output, auth_root, &params);
+        end_timer!(proof_verification);
         assert_eq!(valid.unwrap(), true);
     }
 }
