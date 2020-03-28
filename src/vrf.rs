@@ -15,7 +15,7 @@
 
 use std::io;
 
-use rand_core::{RngCore,CryptoRng};
+use rand_core::{RngCore,CryptoRng,SeedableRng};
 
 use ff::{Field, PrimeField, PrimeFieldRepr, ScalarEngine}; // ScalarEngine 
 use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, Unknown, edwards::Point};
@@ -33,42 +33,26 @@ pub struct VRFInput<E: JubjubEngine>(pub(crate) Point<E, Unknown>);
 impl<E: JubjubEngine> VRFInput<E> {
     /// Create a new VRF input from an `RngCore`.
     #[inline(always)]
-    fn from_rng<R: RngCore>(rng: &mut R, params: &Params<E>) -> Self {
-        VRFInput( Point::rand(rng, &params.engine).mul_by_cofactor(&params.engine).into() )
+    fn from_rng<R: RngCore>(mut rng: R, params: &Params<E>) -> Self {
+        VRFInput( Point::rand(&mut rng, &params.engine).mul_by_cofactor(&params.engine).into() )
     }
 
     /// Acknoledge VRF transcript malleablity
     ///
     /// TODO: Verify that Point::rand is stable or find a stable alternative.
-    pub fn malleable<T>(t: T, params: &Params<E>) -> VRFInput<E> 
+    pub fn malleable<T>(mut t: T, params: &Params<E>) -> VRFInput<E> 
     where T: SigningTranscript
     {
-        // We give merlin::Transcript with RngCore so that it returns a RngCore
-        // for use in Point::rng, which sounds like an ugly hack, but zcash's
-        // libs work this way.
-        struct ZeroFakeRng;
-        impl ::rand_core::RngCore for ZeroFakeRng {
-            fn next_u32(&mut self) -> u32 {  panic!()  }
-            fn next_u64(&mut self) -> u64 {  panic!()  }
-            fn fill_bytes(&mut self, dest: &mut [u8]) {
-                for i in dest.iter_mut() {  *i = 0;  }
-            }
-            fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), ::rand_core::Error> {
-                self.fill_bytes(dest);
-                Ok(())
-            }
-        }
-        impl CryptoRng for ZeroFakeRng {}
-
-        let mut rng = t.build_rng().finalize(&mut ZeroFakeRng);
-
+        let mut seed = [0u8; 32]; // <ChaChaRng as rand_core::SeedableRng>::Seed::default();
+        t.challenge_bytes(b"vrf-input", seed.as_mut());
+        let rng = ::rand_chacha::ChaChaRng::from_seed(seed);
         VRFInput::from_rng(rng,params)
     }
 
     /// Non-malleable VRF transcript.
     ///
     /// Incompatable with ring VRF however.
-    pub fn nonmalleable<T>(t: T, publickey: &crate::PublicKey<E>, params: &Params<E>)
+    pub fn nonmalleable<T>(mut t: T, publickey: &crate::PublicKey<E>, params: &Params<E>)
      -> VRFInput<E>
     where T: SigningTranscript
     {
@@ -77,7 +61,7 @@ impl<E: JubjubEngine> VRFInput<E> {
     }
 
     /// Semi-malleable VRF transcript
-    pub fn ring_malleable<T>(t: T, auth_root: &crate::merkle::AuthRoot<E>, params: &Params<E>)
+    pub fn ring_malleable<T>(mut t: T, auth_root: &crate::merkle::AuthRoot<E>, params: &Params<E>)
      -> VRFInput<E>
     where T: SigningTranscript
     {
@@ -102,76 +86,68 @@ pub struct VRFOutput<E: JubjubEngine>(pub Point<E, Unknown>);
 
 impl<E: JubjubEngine> VRFOutput<E> {
     pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {
-        Ok(VRFOutput( Point::read(reader,params) ? ))
+        let p = Point::read(reader,params) ?;
+        // ZCash has not method to check for a JubJub point being the identity,
+        // but so long as the VRFInput can only be created by hashing, then this
+        // sounds okay.
+        // if p.is_identity() {
+        //     return Err( io::Error::new(io::ErrorKind::InvalidInput, "Identity point provided as VRF output" ) );
+        // }
+        Ok(VRFOutput(p))
     }
 
     pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
         self.0.write(writer)
     }
-}
 
-/*
-    /// Pair a non-malleable VRF output with the hash of the given transcript.
-    pub fn attach_input<T>(&self, t: VRFSigningTranscript<T>) -> SignatureResult<VRFInOut>
-    where T: SigningTranscript 
+    /// Acknoledge VRF transcript malleablity
+    ///
+    /// TODO: Verify that Point::rand is stable or find a stable alternative.
+    pub fn malleable<T>(&self, mut t: T, params: &Params<E>) -> VRFInOut<E>
+    where T: SigningTranscript
     {
-        let input = public.vrf_hash(t);
-        let output = RistrettoBoth::from_bytes_ser("VRFOutput", VRFOutput::DESCRIPTION, &self.0) ?;
-        if output.as_point().is_identity() { return Err(SignatureError::PointDecompressionError); }
-        Ok(VRFInOut { input, output })
+        let input = VRFInput::malleable(t,params);
+        VRFInOut { input, output: self.clone() }
+    }
+
+    /// Non-malleable VRF transcript.
+    ///
+    /// Incompatable with ring VRF however.
+    pub fn nonmalleable<T>(&self, mut t: T, publickey: &crate::PublicKey<E>, params: &Params<E>)
+     -> VRFInOut<E>
+    where T: SigningTranscript
+    {
+        let input = VRFInput::nonmalleable(t,publickey,params);
+        VRFInOut { input, output: self.clone() }
+    }
+
+    /// Semi-malleable VRF transcript
+    pub fn ring_malleable<T>(&self, mut t: T, auth_root: &crate::merkle::AuthRoot<E>, params: &Params<E>)
+     -> VRFInOut<E>
+    where T: SigningTranscript
+    {
+        let input = VRFInput::ring_malleable(t,auth_root,params);
+        VRFInOut { input, output: self.clone() }
     }
 }
-
 
 
 /// VRF input and output paired together, possibly unverified.
 ///
 /// Internally, we keep both `RistrettoPoint` and `CompressedRistretto`
 /// forms using `RistrettoBoth`.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct VRFInOut {
+#[derive(Debug, Clone)] // PartialEq, Eq, PartialOrd, Ord, Hash
+pub struct VRFInOut<E: JubjubEngine> {
     /// VRF input point
-    pub input: RistrettoBoth,
+    pub input: VRFInput<E>,
     /// VRF output point
-    pub output: RistrettoBoth,
+    pub output: VRFOutput<E>,
 }
 
-impl SecretKey {
-    /// Evaluate the VRF-like multiplication on an uncompressed point,
-    /// probably not useful in this form.
-    pub fn vrf_create_from_point(&self, input: RistrettoBoth) -> VRFInOut {
-        let output = RistrettoBoth::from_point(&self.key * input.as_point());
-        VRFInOut { input, output }
-    }
-
-    /// Evaluate the VRF-like multiplication on a compressed point,
-    /// useful for proving key exchanges, OPRFs, or sequential VRFs.
-    ///
-    /// We caution that such protocols could provide signing oracles
-    /// and note that `vrf_create_from_point` cannot check for
-    /// problematic inputs like `attach_input_hash` does.
-    pub fn vrf_create_from_compressed_point(&self, input: &VRFOutput) -> SignatureResult<VRFInOut> {
-        let input = RistrettoBoth::from_compressed(CompressedRistretto(input.0)) ?;
-        Ok(self.vrf_create_from_point(input))
-    }
-}
-
-impl Keypair {
-    /// Evaluate the VRF on the given transcript.
-    pub fn vrf_create_hash<T: VRFSigningTranscript>(&self, t: T) -> VRFInOut {
-        self.secret.vrf_create_from_point(self.public.vrf_hash(t))
-    }
-}
-
-impl VRFInOut {
-    /// VRF output point bytes for serialization.
-    pub fn as_output_bytes(&self) -> &[u8; 32] {
-        self.output.as_compressed().as_bytes()
-    }
-
-    /// VRF output point bytes for serialization.
-    pub fn to_output(&self) -> VRFOutput {
-        VRFOutput(self.output.as_compressed().to_bytes())
+impl<E: JubjubEngine> VRFInOut<E> {
+    /// Write VRF output
+    pub fn write_output<W: io::Write>(&self, writer: W) -> io::Result<()> {
+        self.output.write(writer)
     }
 
     /// Commit VRF input and output to a transcript.
@@ -184,8 +160,8 @@ impl VRFInOut {
     /// We use this construction both for the VRF usage methods
     /// `VRFInOut::make_*` as well as for signer side batching.
     pub fn commit<T: SigningTranscript>(&self, t: &mut T) {
-        t.commit_point(b"vrf-in", self.input.as_compressed());
-        t.commit_point(b"vrf-out", self.output.as_compressed());
+        t.commit_point(b"vrf-in", &self.input.0);
+        t.commit_point(b"vrf-out", &self.output.0);
     }
 
     /// Raw bytes output from the VRF.
@@ -199,7 +175,7 @@ impl VRFInOut {
     /// ["Ouroboros Praos: An adaptively-secure, semi-synchronous proof-of-stake blockchain"](https://eprint.iacr.org/2017/573.pdf)
     /// by Bernardo David, Peter Gazi, Aggelos Kiayias, and Alexander Russell.
     pub fn make_bytes<B: Default + AsMut<[u8]>>(&self, context: &[u8]) -> B {
-        let mut t = Transcript::new(b"VRFResult");
+        let mut t = ::merlin::Transcript::new(b"VRFResult");
         t.append_message(b"",context);
         self.commit(&mut t);
         let mut seed = B::default();
@@ -212,7 +188,7 @@ impl VRFInOut {
     /// If you are not the signer then you must verify the VRF before calling this method.
     ///
     /// We expect most users would prefer the less generic `VRFInOut::make_chacharng` method.
-    pub fn make_rng<R: ::rand_core::SeedableRng>(&self, context: &[u8]) -> R {
+    pub fn make_rng<R: SeedableRng>(&self, context: &[u8]) -> R {
         R::from_seed(self.make_bytes::<R::Seed>(context))
     }
 
@@ -241,7 +217,7 @@ impl VRFInOut {
     /// the final linked binary size slightly, and improves domain
     /// separation.
     #[inline(always)]
-    pub fn make_merlin_rng(&self, context: &[u8]) -> merlin::TranscriptRng {
+    pub fn make_merlin_rng(&self, context: &[u8]) -> ::merlin::TranscriptRng {
         // Very insecure hack except for our commit_witness_bytes below
         struct ZeroFakeRng;
         impl ::rand_core::RngCore for ZeroFakeRng {
@@ -257,12 +233,14 @@ impl VRFInOut {
         }
         impl ::rand_core::CryptoRng for ZeroFakeRng {}
 
-        let mut t = Transcript::new(b"VRFResult");
+        let mut t = ::merlin::Transcript::new(b"VRFResult");
         t.append_message(b"",context);
         self.commit(&mut t);
         t.build_rng().finalize(&mut ZeroFakeRng)
     }
 }
+
+/*
 
 fn challenge_scalar_128<T: SigningTranscript>(mut t: T) -> Scalar {
     let mut s = [0u8; 16];
