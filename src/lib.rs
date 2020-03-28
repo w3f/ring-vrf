@@ -20,7 +20,7 @@ mod vrf;
 
 use crate::scalar::{Scalar,read_scalar,write_scalar};
 pub use crate::keys::{SecretKey,PublicKey,Keypair};
-pub use crate::context::{signing_context,SigningTranscript,VRFSigningTranscript}; // SigningTranscript
+pub use crate::context::{signing_context,SigningTranscript}; // SigningTranscript
 
 pub use crate::circuit::RingVRF;
 pub use crate::merkle::{MerkleSelection, AuthPath, AuthRoot, AuthPathPoint, auth_hash};
@@ -47,6 +47,8 @@ pub struct Params<E: JubjubEngine> {
 mod tests {
     use std::fs::File;
     use std::time::SystemTime;
+
+    use rand_core::{RngCore}; // CryptoRng
 
     use bellman::groth16::Parameters;
     use zcash_primitives::jubjub::JubjubBls12;
@@ -80,7 +82,8 @@ mod tests {
         let sk = SecretKey::<Bls12>::from_rng(&mut rng);
         let pk = sk.to_public(&params);
 
-        let vrf_input = VRFInput::<Bls12>::random(&mut rng, &params);
+        let t = signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
+        let vrf_input = VRFInput::<Bls12>::malleable(t, &params);
         let vrf_output = vrf_input.to_output(&sk, &params);
 
         let auth_path = AuthPath::random(params.auth_depth, &mut rng);

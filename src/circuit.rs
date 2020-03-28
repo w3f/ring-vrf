@@ -178,6 +178,8 @@ mod tests {
     use pairing::bls12_381::Bls12;
     use zcash_primitives::jubjub::JubjubBls12;
 
+    use rand_core::{RngCore}; // CryptoRng
+
     use super::*;
     use crate::{Params, AuthPath, AuthRoot};
 
@@ -194,7 +196,8 @@ mod tests {
         let sk = SecretKey::<Bls12>::from_rng(&mut rng);
         let pk = sk.to_public(&params);
 
-        let vrf_input = VRFInput::<Bls12>::random(&mut rng, &params);
+        let t = crate::signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
+        let vrf_input = VRFInput::<Bls12>::malleable(t, &params);
 
         let auth_path = AuthPath::random(params.auth_depth, &mut rng);
         let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);

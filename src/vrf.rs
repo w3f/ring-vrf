@@ -17,21 +17,76 @@ use std::io;
 
 use rand_core::{RngCore,CryptoRng};
 
-use ff::{Field, ScalarEngine}; // PrimeField, PrimeFieldRepr
+use ff::{Field, PrimeField, PrimeFieldRepr, ScalarEngine}; // ScalarEngine 
 use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, Unknown, edwards::Point};
 
 use crate::{Params, Scalar};  // use super::*;
 use crate::context::SigningTranscript;
 
 
-/// VRF input, always created locally.
+/// VRF input, always created locally from a `SigningTranscript`.
+///
+/// All creation methods require the developer acknoledge their VRF output malleability.
 #[derive(Debug, Clone)]
-pub struct VRFInput<E: JubjubEngine>(pub Point<E, Unknown>);
+pub struct VRFInput<E: JubjubEngine>(pub(crate) Point<E, Unknown>);
 
 impl<E: JubjubEngine> VRFInput<E> {
-    /// Create a new random VRF input.
-    pub fn random<R: rand_core::RngCore>(rng: &mut R, params: &Params<E>) -> Self {
-        Self(Point::rand(rng, &params.engine).mul_by_cofactor(&params.engine).into())
+    /// Create a new VRF input from an `RngCore`.
+    #[inline(always)]
+    fn from_rng<R: RngCore>(rng: &mut R, params: &Params<E>) -> Self {
+        VRFInput( Point::rand(rng, &params.engine).mul_by_cofactor(&params.engine).into() )
+    }
+
+    /// Acknoledge VRF transcript malleablity
+    ///
+    /// TODO: Verify that Point::rand is stable or find a stable alternative.
+    pub fn malleable<T>(t: T, params: &Params<E>) -> VRFInput<E> 
+    where T: SigningTranscript
+    {
+        // We give merlin::Transcript with RngCore so that it returns a RngCore
+        // for use in Point::rng, which sounds like an ugly hack, but zcash's
+        // libs work this way.
+        struct ZeroFakeRng;
+        impl ::rand_core::RngCore for ZeroFakeRng {
+            fn next_u32(&mut self) -> u32 {  panic!()  }
+            fn next_u64(&mut self) -> u64 {  panic!()  }
+            fn fill_bytes(&mut self, dest: &mut [u8]) {
+                for i in dest.iter_mut() {  *i = 0;  }
+            }
+            fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), ::rand_core::Error> {
+                self.fill_bytes(dest);
+                Ok(())
+            }
+        }
+        impl CryptoRng for ZeroFakeRng {}
+
+        let mut rng = t.build_rng().finalize(&mut ZeroFakeRng);
+
+        VRFInput::from_rng(rng,params)
+    }
+
+    /// Non-malleable VRF transcript.
+    ///
+    /// Incompatable with ring VRF however.
+    pub fn nonmalleable<T>(t: T, publickey: &crate::PublicKey<E>, params: &Params<E>)
+     -> VRFInput<E>
+    where T: SigningTranscript
+    {
+        t.commit_point(b"vrf-nm-pk", &publickey.0);
+        VRFInput::malleable(t,params)
+    }
+
+    /// Semi-malleable VRF transcript
+    pub fn ring_malleable<T>(t: T, auth_root: &crate::merkle::AuthRoot<E>, params: &Params<E>)
+     -> VRFInput<E>
+    where T: SigningTranscript
+    {
+        let mut buf = [0u8; 32];
+        auth_root.0.into_repr()
+        .write_le(&mut buf[..])
+        .expect("Internal buffer write problem.  JubJub base field larger than 32 bytes?");
+        t.commit_bytes(b"vrf-nm-ar", &buf);
+        VRFInput::malleable(t,params)
     }
 
     /// Into VRF output.
