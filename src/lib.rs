@@ -27,7 +27,7 @@ pub use crate::merkle::{MerkleSelection, AuthPath, AuthRoot, AuthPathPoint, auth
 pub use crate::generator::generate_crs;
 pub use crate::prover::prove;
 pub use crate::verifier::{verify_unprepared, verify_prepared};
-pub use vrf::{VRFOutput};
+pub use vrf::{VRFInput,VRFOutput};
 
 
 // use ff::{Field, ScalarEngine};
@@ -40,23 +40,6 @@ pub struct Params<E: JubjubEngine> {
     pub engine: E::Params,
     /// Authentication depth.
     pub auth_depth: usize,
-}
-
-
-/// VRF input.
-#[derive(Debug, Clone)]
-pub struct VRFInput<E: JubjubEngine>(pub Point<E, Unknown>);
-
-impl<E: JubjubEngine> VRFInput<E> {
-    /// Create a new random VRF input.
-    pub fn random<R: rand_core::RngCore>(rng: &mut R, params: &Params<E>) -> Self {
-        Self(Point::rand(rng, &params.engine).mul_by_cofactor(&params.engine).into())
-    }
-
-    /// Into VRF output.
-    pub fn to_output(&self, sk: &SecretKey<E>, params: &Params<E>) -> VRFOutput<E> {
-        VRFOutput( self.0.mul(sk.key.clone(), &params.engine) )
-    }
 }
 
 

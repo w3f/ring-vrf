@@ -23,6 +23,24 @@ use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, Unknown, edwards::Point
 use crate::{Params, Scalar};  // use super::*;
 use crate::context::SigningTranscript;
 
+
+/// VRF input, always created locally.
+#[derive(Debug, Clone)]
+pub struct VRFInput<E: JubjubEngine>(pub Point<E, Unknown>);
+
+impl<E: JubjubEngine> VRFInput<E> {
+    /// Create a new random VRF input.
+    pub fn random<R: rand_core::RngCore>(rng: &mut R, params: &Params<E>) -> Self {
+        Self(Point::rand(rng, &params.engine).mul_by_cofactor(&params.engine).into())
+    }
+
+    /// Into VRF output.
+    pub fn to_output(&self, sk: &crate::SecretKey<E>, params: &Params<E>) -> VRFOutput<E> {
+        VRFOutput( self.0.mul(sk.key.clone(), &params.engine) )
+    }
+}
+
+
 /// VRF output, possibly unverified.
 #[derive(Debug, Clone)] // Default, PartialEq, Eq, PartialOrd, Ord, Hash
 pub struct VRFOutput<E: JubjubEngine>(pub Point<E, Unknown>);
@@ -39,8 +57,8 @@ impl<E: JubjubEngine> VRFOutput<E> {
 
 /*
     /// Pair a non-malleable VRF output with the hash of the given transcript.
-    pub fn attach_input<T>(&self, t: T) -> SignatureResult<VRFInOut>
-    where T: VRFSigningTranscript 
+    pub fn attach_input<T>(&self, t: VRFSigningTranscript<T>) -> SignatureResult<VRFInOut>
+    where T: SigningTranscript 
     {
         let input = public.vrf_hash(t);
         let output = RistrettoBoth::from_bytes_ser("VRFOutput", VRFOutput::DESCRIPTION, &self.0) ?;
