@@ -33,6 +33,8 @@ pub use vrf::{VRFOutput};
 // use ff::{Field, ScalarEngine};
 use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, Unknown, edwards::Point};
 
+#[macro_use]
+extern crate bench_utils;
 
 /// Configuration parameters for the system.
 pub struct Params<E: JubjubEngine> {
@@ -63,7 +65,6 @@ impl<E: JubjubEngine> VRFInput<E> {
 #[cfg(test)]
 mod tests {
     use std::fs::File;
-    use std::time::SystemTime;
 
     use bellman::groth16::Parameters;
     use zcash_primitives::jubjub::JubjubBls12;
@@ -86,9 +87,9 @@ mod tests {
             Ok(f) => Parameters::<Bls12>::read(f, false).expect("can't read CRS"),
             Err(_) => {
                 let f = File::create("crs").unwrap();
-                let t = SystemTime::now();
+                let generation = start_timer!(|| "generation");
                 let c = generator::generate_crs(&params).expect("can't generate CRS");
-                println!("generation = {}", t.elapsed().unwrap().as_secs());
+                end_timer!(generation);
                 c.write(&f).unwrap();
                 c
             },
@@ -103,14 +104,14 @@ mod tests {
         let auth_path = AuthPath::random(params.auth_depth, &mut rng);
         let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);
 
-        let t = SystemTime::now();
+        let proving = start_timer!(|| "proving");
         let proof = prover::prove::<Bls12>(&crs, sk, vrf_input.clone(), auth_path.clone(), &params);
-        println!("proving = {}", t.elapsed().unwrap().as_millis());
+        end_timer!(proving);
         let proof = proof.unwrap();
 
-        let t = SystemTime::now();
+        let verification = start_timer!(|| "verification");
         let valid = verifier::verify_unprepared(&crs.vk, proof, vrf_input, vrf_output, auth_root, &params);
-        println!("verification = {}", t.elapsed().unwrap().as_millis());
+        end_timer!(verification);
         assert_eq!(valid.unwrap(), true);
     }
 }
