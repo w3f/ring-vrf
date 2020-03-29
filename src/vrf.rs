@@ -40,7 +40,7 @@ impl<E: JubjubEngine> VRFInput<E> {
     /// Acknoledge VRF transcript malleablity
     ///
     /// TODO: Verify that Point::rand is stable or find a stable alternative.
-    pub fn malleable<T>(mut t: T, params: &Params<E>) -> VRFInput<E> 
+    pub fn new_malleable<T>(mut t: T, params: &Params<E>) -> VRFInput<E> 
     where T: SigningTranscript
     {
         let mut seed = [0u8; 32]; // <ChaChaRng as rand_core::SeedableRng>::Seed::default();
@@ -52,16 +52,16 @@ impl<E: JubjubEngine> VRFInput<E> {
     /// Non-malleable VRF transcript.
     ///
     /// Incompatable with ring VRF however.
-    pub fn nonmalleable<T>(mut t: T, publickey: &crate::PublicKey<E>, params: &Params<E>)
+    pub fn new_nonmalleable<T>(mut t: T, publickey: &crate::PublicKey<E>, params: &Params<E>)
      -> VRFInput<E>
     where T: SigningTranscript
     {
         t.commit_point(b"vrf-nm-pk", &publickey.0);
-        VRFInput::malleable(t,params)
+        VRFInput::new_malleable(t,params)
     }
 
     /// Semi-malleable VRF transcript
-    pub fn ring_malleable<T>(mut t: T, auth_root: &crate::merkle::AuthRoot<E>, params: &Params<E>)
+    pub fn new_ring_malleable<T>(mut t: T, auth_root: &crate::merkle::AuthRoot<E>, params: &Params<E>)
      -> VRFInput<E>
     where T: SigningTranscript
     {
@@ -70,7 +70,7 @@ impl<E: JubjubEngine> VRFInput<E> {
         .write_le(&mut buf[..])
         .expect("Internal buffer write problem.  JubJub base field larger than 32 bytes?");
         t.commit_bytes(b"vrf-nm-ar", &buf);
-        VRFInput::malleable(t,params)
+        VRFInput::new_malleable(t,params)
     }
 
     /// Into VRF output.
@@ -109,30 +109,30 @@ impl<E: JubjubEngine> VRFOutput<E> {
     /// Acknoledge VRF transcript malleablity
     ///
     /// TODO: Verify that Point::rand is stable or find a stable alternative.
-    pub fn malleable<T>(&self, mut t: T, params: &Params<E>) -> VRFInOut<E>
+    pub fn attach_malleable<T>(&self, mut t: T, params: &Params<E>) -> VRFInOut<E>
     where T: SigningTranscript
     {
-        let input = VRFInput::malleable(t,params);
+        let input = VRFInput::new_malleable(t,params);
         VRFInOut { input, output: self.clone() }
     }
 
     /// Non-malleable VRF transcript.
     ///
     /// Incompatable with ring VRF however.
-    pub fn nonmalleable<T>(&self, mut t: T, publickey: &crate::PublicKey<E>, params: &Params<E>)
+    pub fn attach_nonmalleable<T>(&self, mut t: T, publickey: &crate::PublicKey<E>, params: &Params<E>)
      -> VRFInOut<E>
     where T: SigningTranscript
     {
-        let input = VRFInput::nonmalleable(t,publickey,params);
+        let input = VRFInput::new_nonmalleable(t,publickey,params);
         VRFInOut { input, output: self.clone() }
     }
 
     /// Semi-malleable VRF transcript
-    pub fn ring_malleable<T>(&self, mut t: T, auth_root: &crate::merkle::AuthRoot<E>, params: &Params<E>)
+    pub fn attach_ring_malleable<T>(&self, mut t: T, auth_root: &crate::merkle::AuthRoot<E>, params: &Params<E>)
      -> VRFInOut<E>
     where T: SigningTranscript
     {
-        let input = VRFInput::ring_malleable(t,auth_root,params);
+        let input = VRFInput::new_ring_malleable(t,auth_root,params);
         VRFInOut { input, output: self.clone() }
     }
 }

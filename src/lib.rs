@@ -84,7 +84,7 @@ mod tests {
         let pk = sk.to_public(&params);
 
         let t = signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
-        let vrf_input = VRFInput::<Bls12>::malleable(t, &params);
+        let vrf_input = VRFInput::<Bls12>::new_malleable(t, &params);
 
         let vrf_inout = vrf_input.to_inout(&sk, &params);
 
