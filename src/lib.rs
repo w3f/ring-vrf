@@ -25,8 +25,6 @@ pub use crate::context::{signing_context,SigningTranscript}; // SigningTranscrip
 pub use crate::circuit::RingVRF;
 pub use crate::merkle::{MerkleSelection, AuthPath, AuthRoot, AuthPathPoint, auth_hash};
 pub use crate::generator::generate_crs;
-pub use crate::prover::prove;
-pub use crate::verifier::{verify_unprepared, verify_prepared};
 pub use vrf::{VRFInOut, VRFInput, VRFOutput};
 
 
@@ -92,12 +90,12 @@ mod tests {
         let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);
 
         let proving = start_timer!(|| "proving");
-        let proof = prover::prove::<Bls12>(&crs, sk, vrf_input.clone(), auth_path.clone(), &params);
+        let proof = sk.ring_vrf_sign(vrf_input.clone(), auth_path.clone(), &crs, &params);
         end_timer!(proving);
         let proof = proof.unwrap();
 
         let verification = start_timer!(|| "verification");
-        let valid = verifier::verify_unprepared(&crs.vk, proof, vrf_inout, auth_root, &params);
+        let valid = auth_root.ring_vrf_verify_unprepared(vrf_inout, proof, &crs.vk, &params);
         end_timer!(verification);
         assert_eq!(valid.unwrap(), true);
     }
