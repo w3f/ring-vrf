@@ -20,6 +20,7 @@ mod generator;
 mod prover;
 mod verifier;
 mod vrf;
+mod schnorr;
 
 use crate::scalar::{Scalar,read_scalar,write_scalar};
 pub use crate::keys::{SecretKey,PublicKey,Keypair};

@@ -20,8 +20,7 @@ use rand_core::{RngCore,CryptoRng,SeedableRng};
 use ff::{Field, PrimeField, PrimeFieldRepr, ScalarEngine}; // ScalarEngine 
 use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, Unknown, edwards::Point};
 
-use crate::{Params, Scalar};  // use super::*;
-use crate::SigningTranscript;
+use crate::{SigningTranscript, Params, Scalar};  // use super::*;
 
 
 /// VRF input, always created locally from a `SigningTranscript`.
