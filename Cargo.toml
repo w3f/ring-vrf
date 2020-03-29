@@ -14,6 +14,10 @@ zcash_primitives = { git = "https://github.com/zcash/librustzcash" }
 zcash_proofs = { git = "https://github.com/zcash/librustzcash" }
 bench-utils = { git = "https://github.com/scipr-lab/zexe", features = ["print-trace"]}
 
+[dependencies.arrayref]
+version = "0.3.5"
+default-features = false
+
 [dependencies.digest] 
 version = "0.8"
 default-features = false

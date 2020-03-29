@@ -246,85 +246,75 @@ impl<E: JubjubEngine> VRFInOut<E> {
     }
 }
 
-/*
 
-fn challenge_scalar_128<T: SigningTranscript>(mut t: T) -> Scalar {
+/// Sample a 128 bit scalar for 
+///
+/// TODO: Improve this
+fn challenge_scalar_128<E,T>(mut t: T) -> Scalar<E> 
+where E: JubjubEngine, T: SigningTranscript
+{
     let mut s = [0u8; 16];
     t.challenge_bytes(b"", &mut s);
-    Scalar::from(u128::from_le_bytes(s))
+    let (x,y) = array_refs!(&s,8,8);
+    let mut x: <E::Fs as PrimeField>::Repr = u64::from_le_bytes(*x).into();
+    let y: <E::Fs as PrimeField>::Repr = u64::from_le_bytes(*y).into();
+    x.shl(64);
+    x.add_nocarry(&y);
+    <E::Fs as PrimeField>::from_repr(x).unwrap()
 }
 
-impl PublicKey {
-    /// Merge VRF input and output pairs from the same signer,
-    /// using variable time arithmetic
-    ///
-    /// You should use `vartime=true` when verifying VRF proofs batched
-    /// by the singer.  You could usually use `vartime=true` even when
-    /// producing proofs, provided the set being signed is not secret.
-    ///
-    /// There is sadly no constant time 128 bit multiplication in dalek,
-    /// making `vartime=false` somewhat slower than necessary.  It should
-    /// only impact signers in niche scenarios however, so the slower
-    /// variant should normally be unnecessary.
-    ///
-    /// Panics if given an empty points list.
-    ///
-    /// TODO: Add constant time 128 bit batched multiplication to dalek.
-    /// TODO: Is rand_chacha's `gen::<u128>()` standardizable enough to
-    /// prefer it over merlin for the output?  
-    pub fn vrfs_merge<B>(&self, ps: &[B], vartime: bool) -> VRFInOut
-    where
-        B: Borrow<VRFInOut>,
-    {
-        assert!( ps.len() > 0);
-        let mut t = ::merlin::Transcript::new(b"MergeVRFs");
-        t.commit_point(b"vrf:pk", self.as_compressed());
-        for p in ps.iter() {
-            p.borrow().commit(&mut t);
-        }
-
-        let zf = || ps.iter().map(|p| {
-            let mut t0 = t.clone();
-            p.borrow().commit(&mut t0);
-            challenge_scalar_128(t0)
-        });
-        #[cfg(any(feature = "alloc", feature = "std"))]
-        let zs: Vec<Scalar> = zf().collect();
-        #[cfg(any(feature = "alloc", feature = "std"))]
-        let zf = || zs.iter();
-
-        // We need actual fns here because closures cannot easily take
-        // closures as arguments, due to Rust lacking polymorphic
-        // closures but giving all closures unique types.
-        fn get_input(p: &VRFInOut) -> &RistrettoPoint { p.input.as_point() }
-        fn get_output(p: &VRFInOut) -> &RistrettoPoint { p.output.as_point() }
-        #[cfg(any(feature = "alloc", feature = "std"))]
-        let go = |io: fn(p: &VRFInOut) -> &RistrettoPoint| {
-            let ps = ps.iter().map( |p| io(p.borrow()) );
-            RistrettoBoth::from_point(if vartime {
-                RistrettoPoint::vartime_multiscalar_mul(zf(), ps)
-            } else {
-                RistrettoPoint::multiscalar_mul(zf(), ps)
-            })
-        };
-        #[cfg(not(any(feature = "alloc", feature = "std")))]
-        let go = |io: fn(p: &VRFInOut) -> &RistrettoPoint| {
-            use curve25519_dalek::traits::Identity;
-            let mut acc = RistrettoPoint::identity();
-            for (z,p) in zf().zip(ps) {
-                acc += z * io(p.borrow());
-            }
-            RistrettoBoth::from_point(acc)
-        };
-
-        let input = go( get_input );
-        let output = go( get_output );
-        VRFInOut { input, output }
+/// Merge VRF input and output pairs from the same signer,
+/// using variable time arithmetic
+///
+/// You should use `vartime=true` when verifying VRF proofs batched
+/// by the singer.  You could usually use `vartime=true` even when
+/// producing proofs, provided the set being signed is not secret.
+///
+/// There is sadly no constant time 128 bit multiplication in dalek,
+/// making `vartime=false` somewhat slower than necessary.  It should
+/// only impact signers in niche scenarios however, so the slower
+/// variant should normally be unnecessary.
+///
+/// Panics if given an empty points list.
+///
+/// TODO: Add constant time 128 bit batched multiplication to dalek.
+/// TODO: Is rand_chacha's `gen::<u128>()` standardizable enough to
+/// prefer it over merlin for the output?  
+pub fn vrfs_merge<E,T,B>(mut t: T, ps: &[B], vartime: bool, params: Params<E>) -> VRFInOut<E>
+where
+    E: JubjubEngine,
+    T: SigningTranscript+Clone,
+    B: ::core::borrow::Borrow<VRFInOut<E>>,
+{
+    assert!( ps.len() > 0);
+    for p in ps.iter() {
+        p.borrow().commit(&mut t);
     }
+
+    let go = |io: bool| {
+        let mut acc = Point::zero();
+        for p in ps {
+            let mut t0 = t.clone();
+            let p = p.borrow();
+            p.commit(&mut t0);
+            let z: Scalar<E> = challenge_scalar_128::<E,T>(t0);
+
+            let p = if io { p.input.0.clone() } else { p.output.0.clone() };
+            // acc += z * p;
+            let p = p.mul(z,&params.engine);
+            acc = acc.clone().add(&p, &params.engine);
+        }
+        acc
+    };
+
+    let input = VRFInput(go(true));
+    let output = VRFOutput(go(false));
+    VRFInOut { input, output }
 }
+
+
 
 #[cfg(test)]
 mod tests {
 }
 
-*/

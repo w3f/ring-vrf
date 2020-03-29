@@ -8,6 +8,9 @@
 
 //! ## Ring VRF
 
+#[macro_use]
+extern crate arrayref;
+
 mod scalar;
 mod keys;
 pub mod context;
