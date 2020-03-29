@@ -77,6 +77,12 @@ impl<E: JubjubEngine> VRFInput<E> {
     pub fn to_output(&self, sk: &crate::SecretKey<E>, params: &Params<E>) -> VRFOutput<E> {
         VRFOutput( self.0.mul(sk.key.clone(), &params.engine) )
     }
+
+    pub fn to_inout(&self, sk: &crate::SecretKey<E>, params: &Params<E>) -> VRFInOut<E> {
+        let output = self.to_output(sk,params);
+        VRFInOut { input: self.clone(), output }
+    }
+
 }
 
 

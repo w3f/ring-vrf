@@ -27,7 +27,7 @@ pub use crate::merkle::{MerkleSelection, AuthPath, AuthRoot, AuthPathPoint, auth
 pub use crate::generator::generate_crs;
 pub use crate::prover::prove;
 pub use crate::verifier::{verify_unprepared, verify_prepared};
-pub use vrf::{VRFInput,VRFOutput};
+pub use vrf::{VRFInOut, VRFInput, VRFOutput};
 
 
 // use ff::{Field, ScalarEngine};
@@ -84,7 +84,8 @@ mod tests {
 
         let t = signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
         let vrf_input = VRFInput::<Bls12>::malleable(t, &params);
-        let vrf_output = vrf_input.to_output(&sk, &params);
+
+        let vrf_inout = vrf_input.to_inout(&sk, &params);
 
         let auth_path = AuthPath::random(params.auth_depth, &mut rng);
         let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);
@@ -95,7 +96,7 @@ mod tests {
         let proof = proof.unwrap();
 
         let t = SystemTime::now();
-        let valid = verifier::verify_unprepared(&crs.vk, proof, vrf_input, vrf_output, auth_root, &params);
+        let valid = verifier::verify_unprepared(&crs.vk, proof, vrf_inout, auth_root, &params);
         println!("verification = {}", t.elapsed().unwrap().as_millis());
         assert_eq!(valid.unwrap(), true);
     }

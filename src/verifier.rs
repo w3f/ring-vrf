@@ -11,20 +11,19 @@ use bellman::groth16::{verify_proof, prepare_verifying_key, PreparedVerifyingKey
 use zcash_primitives::jubjub::JubjubEngine;
 use ff::Field;
 use bellman::SynthesisError;
-use crate::{Params, AuthRoot, VRFInput, VRFOutput};
+use crate::{Params, AuthRoot, VRFInOut};
 
 /// Verify a proof using the given CRS, VRF input and output, and
 /// authentication root.
 pub fn verify_unprepared<E: JubjubEngine>(
     verifying_key: &VerifyingKey<E>,
     zkproof: Proof<E>,
-    vrf_input: VRFInput<E>,
-    vrf_output: VRFOutput<E>,
+    vrf_inout: VRFInOut<E>,
     auth_root: AuthRoot<E>,
     params: &Params<E>,
 ) -> Result<bool, SynthesisError> {
     let pvk = prepare_verifying_key::<E>(verifying_key);
-    verify_prepared(&pvk, zkproof, vrf_input, vrf_output, auth_root, params)
+    verify_prepared(&pvk, zkproof, vrf_inout, auth_root, params)
 }
 
 // TODO: lifetime?
@@ -36,11 +35,9 @@ pub fn verify_prepared<E: JubjubEngine>(
     zkproof: Proof<E>,
     // Public inputs to check the proof against
     // in the order they should be assigned to the public inputs:
-    // 1. VRF input, a point on Jubjub
-    vrf_input: VRFInput<E>,
-    // 2. VRF output, a point on Jubjub
-    vrf_output: VRFOutput<E>,
-    // 3. x-coordinate of the aggreagte public key
+    // 1. VRF input and output points on Jubjub prepared togther
+    vrf_inout: VRFInOut<E>,
+    // 2. Signer set specified by a Merkle root, given as x-coordinate rom a Pederson hash
     auth_root: AuthRoot<E>,
     params: &Params<E>,
 ) -> Result<bool, SynthesisError> {
@@ -49,12 +46,12 @@ pub fn verify_prepared<E: JubjubEngine>(
     // Public inputs are elements of the main curve (BLS12-381) scalar field (that matches Jubjub base field, that's the thing)
     let mut public_input = [E::Fr::zero(); 5];
     {
-        let (x, y) = vrf_input.0.mul_by_cofactor(&params.engine).to_xy();
+        let (x, y) = vrf_inout.input.0.mul_by_cofactor(&params.engine).to_xy();
         public_input[0] = x;
         public_input[1] = y;
     }
     {
-        let (x, y) = vrf_output.0.mul_by_cofactor(&params.engine).to_xy();
+        let (x, y) = vrf_inout.output.0.mul_by_cofactor(&params.engine).to_xy();
         public_input[2] = x;
         public_input[3] = y;
     }
