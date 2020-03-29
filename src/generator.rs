@@ -23,6 +23,7 @@ pub fn generate_crs<E: JubjubEngine>(params: &Params<E>) -> Result<Parameters<E>
         params,
         sk: None,
         vrf_input: None,
+        extra: None,
         auth_path: None,
     };
     generate_random_parameters(circuit, rng)

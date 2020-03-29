@@ -21,7 +21,7 @@ use ff::{Field, PrimeField, PrimeFieldRepr, ScalarEngine}; // ScalarEngine
 use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, Unknown, edwards::Point};
 
 use crate::{Params, Scalar};  // use super::*;
-use crate::context::SigningTranscript;
+use crate::SigningTranscript;
 
 
 /// VRF input, always created locally from a `SigningTranscript`.

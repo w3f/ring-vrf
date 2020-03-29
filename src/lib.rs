@@ -89,13 +89,15 @@ mod tests {
         let auth_path = AuthPath::random(params.auth_depth, &mut rng);
         let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);
 
+        let extra = || ::merlin::Transcript::new(b"meh..");
+
         let proving = start_timer!(|| "proving");
-        let proof = sk.ring_vrf_sign(vrf_input.clone(), auth_path.clone(), &crs, &params);
+        let proof = sk.ring_vrf_sign(vrf_input.clone(), extra(), auth_path.clone(), &crs, &params);
         end_timer!(proving);
         let proof = proof.unwrap();
 
         let verification = start_timer!(|| "verification");
-        let valid = auth_root.ring_vrf_verify_unprepared(vrf_inout, proof, &crs.vk, &params);
+        let valid = auth_root.ring_vrf_verify_unprepared(vrf_inout, extra(), proof, &crs.vk, &params);
         end_timer!(verification);
         assert_eq!(valid.unwrap(), true);
     }

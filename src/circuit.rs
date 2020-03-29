@@ -13,6 +13,7 @@ use zcash_proofs::circuit::{ecc, pedersen_hash};
 use bellman::{Circuit, ConstraintSystem, SynthesisError};
 use bellman::gadgets::{boolean, num, Assignment};
 
+
 use crate::{MerkleSelection, AuthPath, Params, SecretKey, VRFInput};
 
 /// A circuit for proving that the given vrf_output is valid for the given vrf_input under
@@ -35,6 +36,9 @@ pub struct RingVRF<'a, E: JubjubEngine> { // TODO: name
 
     /// The VRF input, a point in Jubjub prime order subgroup.
     pub vrf_input: Option<Point<E, PrimeOrder>>,
+
+    /// An extra message to sign along with the 
+    pub extra: Option<E::Fr>,
 
     /// The authentication path of the public key x-coordinate in the Merkle tree,
     /// the element of Jubjub base field.
@@ -113,6 +117,15 @@ impl<'a, E: JubjubEngine> Circuit<E> for RingVRF<'a, E> {
         // And 2 more constraints to verify the output
         vrf.inputize(cs.namespace(|| "vrf")) ?;
 
+        // Add the extra message wire, which consists of one E::Fr scalar.
+        // see: https://docs.rs/zcash_proofs/0.2.0/src/zcash_proofs/circuit/ecc.rs.html#138-155
+        let owned_extra = self.extra;
+        let extra = num::AllocatedNum::alloc(
+            cs.namespace(|| "extra message"),
+            || Ok(*owned_extra.get()?)
+        ) ?;
+        extra.inputize(cs.namespace(|| "extra"))?;
+
         // So the circuit is 6 (public inputs) + 252 (sk booleanity) + 750 (fixed-base mul)
         //                 + 20 (on-curve + subgroup check) + 3252 (var-base mul)
         //                 = 4280 constraints
@@ -168,6 +181,7 @@ impl<'a, E: JubjubEngine> Circuit<E> for RingVRF<'a, E> {
             )?.get_x().clone(); // Injective encoding
         }
         cur.inputize(cs.namespace(|| "anchor"))?;
+
         Ok(())
     }
 }
@@ -199,6 +213,9 @@ mod tests {
         let t = crate::signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
         let vrf_input = VRFInput::<Bls12>::new_malleable(t, &params);
 
+        use crate::SigningTranscript;
+        let extra = ::merlin::Transcript::new(b"whatever").challenge_scalar(b"");
+
         let auth_path = AuthPath::random(params.auth_depth, &mut rng);
         let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);
 
@@ -206,6 +223,7 @@ mod tests {
             params: &params,
             sk: Some(sk.clone()),
             vrf_input: Some(vrf_input.0.mul_by_cofactor(&params.engine)),
+            extra: Some(extra),
             auth_path: Some(auth_path),
         };
 
