@@ -27,7 +27,7 @@ pub fn hash_to_scalar<E: JubjubEngine>(ctx: &[u8], a: &[u8], b: &[u8]) -> E::Fs 
 }
 */
 
-pub(crate) type Scalar<E: JubjubEngine> = E::Fs;
+pub(crate) type Scalar<E> = <E as JubjubEngine>::Fs;
 
 pub(crate) fn read_scalar<E: JubjubEngine, R: io::Read>(reader: R) -> io::Result<E::Fs> {
     let mut s_repr = <E::Fs as PrimeField>::Repr::default();
