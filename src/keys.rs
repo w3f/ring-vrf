@@ -27,7 +27,7 @@ pub struct PublicKey<E: JubjubEngine>(pub(crate) Point<E,Unknown>);
 
 impl<E: JubjubEngine> PublicKey<E> {
     fn from_secret_scalar(secret: &Scalar<E>, params: &Params<E>) -> PublicKey<E> {
-        PublicKey( params.scalar_to_point(secret).into() )
+        PublicKey( params.scalar_times_generator(secret).into() )
     }
     
     pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {

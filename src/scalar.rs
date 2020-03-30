@@ -1,16 +1,16 @@
 
 use std::io;
 
-use ff::{Field, PrimeField, PrimeFieldRepr}; // ScalarEngine
+use ff::{PrimeField, PrimeFieldRepr}; // Field, ScalarEngine
 use zcash_primitives::jubjub::{
     JubjubEngine, FixedGenerators, JubjubParams,
-    PrimeOrder, Unknown, edwards::Point, // ToUniform,
+    PrimeOrder, edwards::Point, // Unknown, ToUniform,
 };
 
 use crate::Params;
 
 impl<E: JubjubEngine> Params<E> {
-    pub(crate) fn scalar_to_point(&self, scalar: &Scalar<E>) -> Point<E,PrimeOrder> {
+    pub(crate) fn scalar_times_generator(&self, scalar: &Scalar<E>) -> Point<E,PrimeOrder> {
         // Jubjub generator point. TODO: prime or ---
         let base_point = self.engine.generator(FixedGenerators::SpendingKeyGenerator);
         base_point.mul(scalar.clone(), &self.engine)
