@@ -17,7 +17,7 @@ use std::io;
 
 use rand_core::{RngCore,CryptoRng,SeedableRng};
 
-use ff::{Field, PrimeField, PrimeFieldRepr, ScalarEngine}; // ScalarEngine 
+use ff::{PrimeField, PrimeFieldRepr, ScalarEngine}; // Field
 use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, Unknown, edwards::Point};
 
 use crate::{SigningTranscript, Params, Scalar};  // use super::*;
@@ -249,8 +249,8 @@ impl<E: JubjubEngine> VRFInOut<E> {
 /// Sample a 128 bit scalar for 
 ///
 /// TODO: Improve this
-fn challenge_scalar_128<E,T>(mut t: T) -> Scalar<E> 
-where E: JubjubEngine, T: SigningTranscript
+fn challenge_scalar_128<E>(mut t: ::merlin::Transcript) -> Scalar<E> 
+where E: JubjubEngine
 {
     let mut s = [0u8; 16];
     t.challenge_bytes(b"", &mut s);
@@ -279,13 +279,13 @@ where E: JubjubEngine, T: SigningTranscript
 /// TODO: Add constant time 128 bit batched multiplication to dalek.
 /// TODO: Is rand_chacha's `gen::<u128>()` standardizable enough to
 /// prefer it over merlin for the output?  
-pub fn vrfs_merge<E,T,B>(mut t: T, ps: &[B], vartime: bool, params: Params<E>) -> VRFInOut<E>
+pub fn vrfs_merge<E,B>(ps: &[B], vartime: bool, params: Params<E>) -> VRFInOut<E>
 where
     E: JubjubEngine,
-    T: SigningTranscript+Clone,
     B: ::core::borrow::Borrow<VRFInOut<E>>,
 {
     assert!( ps.len() > 0);
+    let mut t = ::merlin::Transcript::new(b"MergeVRFs");
     for p in ps.iter() {
         p.borrow().commit(&mut t);
     }
@@ -296,7 +296,7 @@ where
             let mut t0 = t.clone();
             let p = p.borrow();
             p.commit(&mut t0);
-            let z: Scalar<E> = challenge_scalar_128::<E,T>(t0);
+            let z: Scalar<E> = challenge_scalar_128::<E>(t0);
 
             let p = if io { p.input.0.clone() } else { p.output.0.clone() };
             // acc += z * p;
