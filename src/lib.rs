@@ -23,7 +23,7 @@ mod vrf;
 pub mod schnorr;
 
 use crate::scalar::{Scalar,read_scalar,write_scalar};
-pub use crate::keys::{SecretKey,PublicKey,Keypair};
+pub use crate::keys::{SecretKey,PublicKey};
 pub use crate::context::{signing_context,SigningTranscript}; // SigningTranscript
 
 pub use crate::circuit::RingVRF;
@@ -82,8 +82,8 @@ mod tests {
             },
         };
 
-        let sk = SecretKey::<Bls12>::from_rng(&mut rng);
-        let pk = sk.to_public(&params);
+        let sk = SecretKey::<Bls12>::from_rng(&mut rng, &params);
+        let pk = sk.to_public();
 
         let t = signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
         let vrf_input = VRFInput::<Bls12>::new_malleable(t, &params);

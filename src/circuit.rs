@@ -207,8 +207,8 @@ mod tests {
         // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
         let mut rng = ::rand_core::OsRng;
 
-        let sk = SecretKey::<Bls12>::from_rng(&mut rng);
-        let pk = sk.to_public(&params);
+        let sk = SecretKey::<Bls12>::from_rng(&mut rng, &params);
+        let pk = sk.to_public();
 
         let t = crate::signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
         let vrf_input = VRFInput::<Bls12>::new_malleable(t, &params);

@@ -19,19 +19,46 @@ use zeroize::Zeroize;
 use crate::{Params, Scalar};
 
 
+/// Public key consisting of a JubJub point
+#[derive(Clone)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
+pub struct PublicKey<E: JubjubEngine>(pub(crate) Point<E,Unknown>);
+
+// serde_boilerplate!(PublicKey);
+
+impl<E: JubjubEngine> PublicKey<E> {
+    fn from_secret_scalar(secret: &Scalar<E>, params: &Params<E>) -> PublicKey<E> {
+        PublicKey( params.scalar_to_point(secret).into() )
+    }
+    
+    pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {
+        Ok(PublicKey( Point::read(reader,params) ? ))
+    }
+
+    pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
+        self.0.write(writer)
+    }
+}
+
+
 /// Seceret key consisting of a JubJub scalar and a secret nonce seed.
-#[derive(Debug,Clone)]
+#[derive(Clone)] // Debug
 pub struct SecretKey<E: JubjubEngine> {
-    /// Actual public key represented as a scalar.
+    /// Secret key represented as a scalar.
     pub(crate) key: Scalar<E>,
+
     /// Seed for deriving the nonces used in Schnorr proofs.
     ///
     /// We require this be random and secret or else key compromise attacks will ensue.
     /// Any modificaiton here may dirupt some non-public key derivation techniques.
     pub(crate) nonce_seed: [u8; 32],
 
-    // /// 
-    // pub(crate) public: [u8; 32],
+    /// Public key represented as an alliptic curve point.
+    ///
+    /// We make our secret key into a keypair by retaining this because
+    /// we must hash it when doing schnorr DLEQ proof based VRF signatures.
+    ///
+    /// TODO: Replace this with serialized byte representation like [u8; 32]
+    pub(crate) public: PublicKey<E>,
 }
 
 // serde_boilerplate!(SecretKey);
@@ -73,45 +100,40 @@ impl<E: JubjubEngine> SecretKey<E> {
     /// Generate an "unbiased" `SecretKey` directly from a user
     /// suplied `csprng` uniformly, bypassing the `MiniSecretKey`
     /// layer.
-    pub fn from_rng<R>(mut rng: R) -> SecretKey<E> //  params: &Params<E>
+    pub fn from_rng<R>(mut rng: R, params: &Params<E>) -> SecretKey<E> //  params: &Params<E>
     where R: CryptoRng + RngCore,
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
         rng.fill_bytes(&mut nonce_seed);
         let key = <E::Fs as ::ff::Field>::random(&mut rng);
-        // let public = PublicKey::from_secret_scalar(&key,params);
-        SecretKey { key, nonce_seed, } // public
+        let public = PublicKey::from_secret_scalar(&key,params);
+        SecretKey { key, nonce_seed, public, }
     }
 
     /// Generate a JubJub `SecretKey` from a 32 byte seed.
-    pub fn from_seed(seed: [u8; 32]) -> SecretKey<E> {
+    pub fn from_seed(seed: [u8; 32], params: &Params<E>) -> SecretKey<E> {
         use rand_core::SeedableRng;
         let rng = ::rand_chacha::ChaChaRng::from_seed(seed);
-        SecretKey::from_rng(rng)
+        SecretKey::from_rng(rng,params)
     }
 
     /// Generate a JubJub `SecretKey` with the default randomness source.
     #[cfg(feature = "std")]
-    pub fn new() -> SecretKey<E> {
-        SecretKey::from_rng(::rand::thread_rng())
+    pub fn new(params: &Params<E>) -> SecretKey<E> {
+        SecretKey::from_rng(::rand::thread_rng(), params)
     }
 
     /// Derive the `PublicKey` corresponding to this `SecretKey`.
-    pub fn to_public(&self, params: &Params<E>) -> PublicKey<E> {
-        PublicKey::from_secret_scalar(&self.key,params)
+    pub fn to_public(&self) -> PublicKey<E> {
+        self.public.clone()
     }
 
-    /// Derive the `Keypair` corresponding to this `SecretKey`.
-    pub fn to_keypair(self, params: &Params<E>) -> Keypair<E> {
-        let public = self.to_public(params);
-        Keypair { secret: self, public }
-    }
-
-    pub fn read<R: io::Read>(reader: &mut R) -> io::Result<Self> {
+    pub fn read<R: io::Read>(reader: &mut R, params: &Params<E>) -> io::Result<Self> {
         let key = crate::read_scalar::<E, &mut R>(reader) ?;
         let mut nonce_seed = [0u8; 32];
         reader.read_exact(&mut nonce_seed) ?;
-        Ok(SecretKey { key, nonce_seed } )
+        let public = PublicKey::from_secret_scalar(&key,params);
+        Ok(SecretKey { key, nonce_seed, public, } )
     }
 
     pub fn write<W: io::Write>(&self, writer: &mut W) -> io::Result<()> {
@@ -123,67 +145,3 @@ impl<E: JubjubEngine> SecretKey<E> {
     // TODO:  Convert to/from zcash_primitives::redjubjub::PrivateKey
 }
 
-
-// was pub type PublicKey<E> = <E as ScalarEngine>::Fr;
-
-/// Public key consisting of a JubJub point
-#[derive(Clone)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct PublicKey<E: JubjubEngine>(pub(crate) Point<E,Unknown>);
-
-// serde_boilerplate!(PublicKey);
-
-impl<E: JubjubEngine> PublicKey<E> {
-    fn from_secret_scalar(secret: &Scalar<E>, params: &Params<E>) -> PublicKey<E> {
-        PublicKey( params.scalar_to_point(secret).into() )
-    }
-    
-    pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {
-        Ok(PublicKey( Point::read(reader,params) ? ))
-    }
-
-    pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
-        self.0.write(writer)
-    }
-}
-
-
-pub struct Keypair<E: JubjubEngine> {
-    /// The secret half of this keypair.
-    pub secret: SecretKey<E>,
-    /// The public half of this keypair.
-    pub public: PublicKey<E>,
-}
-
-impl<E: JubjubEngine> Zeroize for Keypair<E> {
-    fn zeroize(&mut self) {
-        self.secret.zeroize();
-    }
-}
-impl<E: JubjubEngine> Drop for Keypair<E> {
-    fn drop(&mut self) { self.zeroize() }
-}
-
-
-// serde_boilerplate!(Keypair);
-
-impl<E: JubjubEngine> Keypair<E> {
-    /// Generate a JubJub `Keypair` from a user suplied `Rng`.
-    pub fn from_rng<R>(csprng: R, params: &Params<E>) -> Keypair<E>
-    where R: CryptoRng + RngCore,
-    {
-        SecretKey::from_rng(csprng).to_keypair(params)
-    }
-
-    /// Generate a JubJub `SecretKey` from a 32 byte seed.
-    pub fn from_seed(seed: [u8; 32], params: &Params<E>) -> Keypair<E> {
-        use rand_core::SeedableRng;
-        let rng = ::rand_chacha::ChaChaRng::from_seed(seed);
-        Keypair::from_rng(rng, params)
-    }
-
-    /// Generate a JubJub `Keypair` with the default randomness source.
-    #[cfg(feature = "std")]
-    pub fn generate(params: &Params<E>) -> Keypair<E> {
-        Keypair::from_rng(::rand::thread_rng(), params)
-    }
-}
