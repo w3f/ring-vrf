@@ -284,7 +284,7 @@ where
     E: JubjubEngine,
     B: ::core::borrow::Borrow<VRFInOut<E>>,
 {
-    assert!( ps.len() > 01);
+    assert!( ps.len() > 0);
     let mut t = ::merlin::Transcript::new(b"MergeVRFs");
     for p in ps.iter() {
         p.borrow().commit(&mut t);
