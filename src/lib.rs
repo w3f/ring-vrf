@@ -33,7 +33,7 @@ pub use vrf::{VRFInOut, VRFInput, VRFOutput};
 
 
 // use ff::{Field, ScalarEngine};
-use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, Unknown, edwards::Point};
+use zcash_primitives::jubjub::{JubjubEngine};  // PrimeOrder, Unknown, edwards::Point
 
 #[macro_use]
 extern crate bench_utils;
