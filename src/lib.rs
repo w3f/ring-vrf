@@ -29,7 +29,7 @@ pub use crate::context::{signing_context,SigningTranscript}; // SigningTranscrip
 pub use crate::circuit::RingVRF;
 pub use crate::merkle::{MerkleSelection, AuthPath, AuthRoot, AuthPathPoint, auth_hash};
 pub use crate::generator::generate_crs;
-pub use vrf::{VRFInOut, VRFInput, VRFOutput};
+pub use vrf::{VRFInOut, VRFInput, VRFOutput, vrfs_merge};
 
 
 // use ff::{Field, ScalarEngine};

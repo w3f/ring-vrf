@@ -53,7 +53,7 @@ pub struct AuthPathPoint<E: JubjubEngine> {
 }
 
 impl<E: JubjubEngine> AuthPathPoint<E> {
-    pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {
+    pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
         let mut repr = <E::Fr as PrimeField>::Repr::default();
         repr.read_le(reader) ?;
 
@@ -229,7 +229,7 @@ impl<E: JubjubEngine> AuthRoot<E> {
         Self::from_list(iter, params)
     }
 
-    pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {
+    pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
         let mut repr = <E::Fr as PrimeField>::Repr::default();
         repr.read_le(reader) ?;
         let err = |_| io::Error::new(io::ErrorKind::InvalidInput, "auth path point is not in field" );

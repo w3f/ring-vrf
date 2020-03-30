@@ -108,7 +108,7 @@ impl<E: JubjubEngine> VRFOutput<E> {
     /// Acknoledge VRF transcript malleablity
     ///
     /// TODO: Verify that Point::rand is stable or find a stable alternative.
-    pub fn attach_malleable<T>(&self, mut t: T, params: &Params<E>) -> VRFInOut<E>
+    pub fn attach_malleable<T>(&self, t: T, params: &Params<E>) -> VRFInOut<E>
     where T: SigningTranscript
     {
         let input = VRFInput::new_malleable(t,params);
@@ -118,7 +118,7 @@ impl<E: JubjubEngine> VRFOutput<E> {
     /// Non-malleable VRF transcript.
     ///
     /// Incompatable with ring VRF however.
-    pub fn attach_nonmalleable<T>(&self, mut t: T, publickey: &crate::PublicKey<E>, params: &Params<E>)
+    pub fn attach_nonmalleable<T>(&self, t: T, publickey: &crate::PublicKey<E>, params: &Params<E>)
      -> VRFInOut<E>
     where T: SigningTranscript
     {
@@ -127,7 +127,7 @@ impl<E: JubjubEngine> VRFOutput<E> {
     }
 
     /// Semi-malleable VRF transcript
-    pub fn attach_ring_malleable<T>(&self, mut t: T, auth_root: &crate::merkle::AuthRoot<E>, params: &Params<E>)
+    pub fn attach_ring_malleable<T>(&self, t: T, auth_root: &crate::merkle::AuthRoot<E>, params: &Params<E>)
      -> VRFInOut<E>
     where T: SigningTranscript
     {
@@ -279,7 +279,7 @@ where E: JubjubEngine
 /// TODO: Add constant time 128 bit batched multiplication to dalek.
 /// TODO: Is rand_chacha's `gen::<u128>()` standardizable enough to
 /// prefer it over merlin for the output?  
-pub fn vrfs_merge<E,B>(ps: &[B], vartime: bool, params: Params<E>) -> VRFInOut<E>
+pub fn vrfs_merge<E,B>(ps: &[B], params: Params<E>) -> VRFInOut<E>
 where
     E: JubjubEngine,
     B: ::core::borrow::Borrow<VRFInOut<E>>,
