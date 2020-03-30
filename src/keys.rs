@@ -73,13 +73,14 @@ impl<E: JubjubEngine> SecretKey<E> {
     /// Generate an "unbiased" `SecretKey` directly from a user
     /// suplied `csprng` uniformly, bypassing the `MiniSecretKey`
     /// layer.
-    pub fn from_rng<R>(mut rng: R) -> SecretKey<E>
+    pub fn from_rng<R>(mut rng: R) -> SecretKey<E> //  params: &Params<E>
     where R: CryptoRng + RngCore,
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
         rng.fill_bytes(&mut nonce_seed);
         let key = <E::Fs as ::ff::Field>::random(&mut rng);
-        SecretKey { key, nonce_seed }
+        // let public = PublicKey::from_secret_scalar(&key,params);
+        SecretKey { key, nonce_seed, } // public
     }
 
     /// Generate a JubJub `SecretKey` from a 32 byte seed.
@@ -95,18 +96,14 @@ impl<E: JubjubEngine> SecretKey<E> {
         SecretKey::from_rng(::rand::thread_rng())
     }
 
-    pub(crate) fn to_public_point(&self, params: &Params<E>) -> Point<E,PrimeOrder> {
-        params.scalar_to_point(&self.key)
-    }
-
     /// Derive the `PublicKey` corresponding to this `SecretKey`.
     pub fn to_public(&self, params: &Params<E>) -> PublicKey<E> {
-        PublicKey( self.to_public_point(params).into() )
+        PublicKey::from_secret_scalar(&self.key,params)
     }
 
     /// Derive the `Keypair` corresponding to this `SecretKey`.
     pub fn to_keypair(self, params: &Params<E>) -> Keypair<E> {
-        let public = self.to_public_point(params);
+        let public = self.to_public(params);
         Keypair { secret: self, public }
     }
 
@@ -136,6 +133,10 @@ pub struct PublicKey<E: JubjubEngine>(pub(crate) Point<E,Unknown>);
 // serde_boilerplate!(PublicKey);
 
 impl<E: JubjubEngine> PublicKey<E> {
+    fn from_secret_scalar(secret: &Scalar<E>, params: &Params<E>) -> PublicKey<E> {
+        PublicKey( params.scalar_to_point(secret).into() )
+    }
+    
     pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {
         Ok(PublicKey( Point::read(reader,params) ? ))
     }
@@ -150,7 +151,7 @@ pub struct Keypair<E: JubjubEngine> {
     /// The secret half of this keypair.
     pub secret: SecretKey<E>,
     /// The public half of this keypair.
-    pub public: Point<E,PrimeOrder>, // PublicKey<E> 
+    pub public: PublicKey<E>,
 }
 
 impl<E: JubjubEngine> Zeroize for Keypair<E> {
@@ -170,9 +171,7 @@ impl<E: JubjubEngine> Keypair<E> {
     pub fn from_rng<R>(csprng: R, params: &Params<E>) -> Keypair<E>
     where R: CryptoRng + RngCore,
     {
-        let secret = SecretKey::from_rng(csprng);
-        let public = secret.to_public_point(params);
-        Keypair{ public, secret }
+        SecretKey::from_rng(csprng).to_keypair(params)
     }
 
     /// Generate a JubJub `SecretKey` from a 32 byte seed.
