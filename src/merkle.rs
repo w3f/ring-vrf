@@ -117,11 +117,14 @@ impl<E: JubjubEngineWithParams> AuthPath<E> {
 
             next.push(auth_hash::<E>(left.as_ref(), right.as_ref(), depth_to_bottom));
 
-            let (current_selection, sibling_index) = if tracked_index % 2 == 0 {
+            let (current_selection, mut sibling_index) = if tracked_index % 2 == 0 {
                 (MerkleSelection::Left, tracked_index + 1)
             } else {
                 (MerkleSelection::Right, tracked_index - 1)
             };
+            if depth_to_bottom % 2 == 1 {
+                sibling_index = next.len() - sibling_index - 1;
+            }
             path.push(AuthPathPoint {
                 current_selection,
                 sibling: next.get(sibling_index).cloned()
