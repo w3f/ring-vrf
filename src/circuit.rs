@@ -207,11 +207,11 @@ mod tests {
         // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
         let mut rng = ::rand_core::OsRng;
 
-        let sk = SecretKey::<Bls12>::from_rng(&mut rng, &params);
+        let sk = SecretKey::<Bls12>::from_rng(&mut rng);
         let pk = sk.to_public();
 
         let t = crate::signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
-        let vrf_input = VRFInput::<Bls12>::new_malleable(t, &params);
+        let vrf_input = VRFInput::<Bls12>::new_malleable(t);
 
         use crate::SigningTranscript;
         let extra = ::merlin::Transcript::new(b"whatever").challenge_scalar(b"");
@@ -239,7 +239,7 @@ mod tests {
         assert_eq!(cs.get_input(1, "VRF_BASE input/x/input variable"), vrf_input.0.to_xy().0);
         assert_eq!(cs.get_input(2, "VRF_BASE input/y/input variable"), vrf_input.0.to_xy().1);
 
-        let vrf_output = vrf_input.to_output(&sk, &params);
+        let vrf_output = vrf_input.to_output(&sk);
         assert_eq!(cs.get_input(3, "vrf/x/input variable"), vrf_output.0.to_xy().0);
         assert_eq!(cs.get_input(4, "vrf/y/input variable"), vrf_output.0.to_xy().1);
         assert_eq!(cs.get_input(5, "anchor/input variable"), auth_root.0);

@@ -9,6 +9,9 @@
 //! ## Ring VRF
 
 #[macro_use]
+extern crate lazy_static;
+
+#[macro_use]
 extern crate arrayref;
 
 mod scalar;
@@ -21,6 +24,7 @@ mod prover;
 mod verifier;
 mod vrf;
 pub mod schnorr;
+pub mod bls12_381;
 
 use crate::scalar::{Scalar,scalar_times_generator,read_scalar,write_scalar};
 pub use crate::keys::{SecretKey,PublicKey};
@@ -37,6 +41,11 @@ use zcash_primitives::jubjub::{JubjubEngine};  // PrimeOrder, Unknown, edwards::
 
 #[macro_use]
 extern crate bench_utils;
+
+/// Fix ZCash's curve paramater handling
+pub trait JubjubEngineWithParams : JubjubEngine {
+    fn params() -> &'static <Self as JubjubEngine>::Params;
+}
 
 /// Configuration parameters for the system.
 pub struct Params<E: JubjubEngine> {
@@ -82,13 +91,13 @@ mod tests {
             },
         };
 
-        let sk = SecretKey::<Bls12>::from_rng(&mut rng, &params.engine);
+        let sk = SecretKey::<Bls12>::from_rng(&mut rng);
         let pk = sk.to_public();
 
         let t = signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
-        let vrf_input = VRFInput::<Bls12>::new_malleable(t, &params);
+        let vrf_input = VRFInput::<Bls12>::new_malleable(t);
 
-        let vrf_inout = vrf_input.to_inout(&sk, &params);
+        let vrf_inout = vrf_input.to_inout(&sk);
 
         let auth_path = AuthPath::random(params.auth_depth, &mut rng);
         let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);

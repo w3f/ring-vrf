@@ -83,7 +83,7 @@ use merlin::Transcript;
 
 use rand_core::{RngCore,CryptoRng};
 
-use crate::{SigningTranscript, SecretKey, PublicKey, Scalar, VRFInOut};  // Params
+use crate::{JubjubEngineWithParams, SigningTranscript, SecretKey, PublicKey, Scalar, VRFInOut};  // Params
 
 
 /// Short proof of correctness for associated VRF output,
@@ -124,15 +124,20 @@ pub struct VRFProofBatchable<E: JubjubEngine> {
     s: Scalar<E>,
 }
 
-impl<E: JubjubEngine> VRFProofBatchable<E> {
+impl<E: JubjubEngineWithParams> VRFProofBatchable<E> {
     #[allow(non_snake_case)]
     pub fn read<R: io::Read>(mut reader: R, params: &E::Params) -> io::Result<Self> {
+        let params = E::params();
         let R = Point::read(&mut reader,params) ?;
         let Hr = Point::read(&mut reader,params) ?;
         let s = crate::read_scalar::<E, &mut R>(&mut reader) ?;
         Ok(VRFProofBatchable { R, Hr, s, })
     }
 
+// }
+// impl<E: JubjubEngine> VRFProofBatchable<E> {
+
+    // #[allow(non_snake_case)]
     pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
         self.R.write(&mut writer) ?;
         self.Hr.write(&mut writer) ?;
@@ -169,7 +174,7 @@ impl<E: JubjubEngine> VRFProofBatchable<E> {
 }
 
 
-impl<E: JubjubEngine> SecretKey<E> {
+impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// Produce Schnorr DLEQ proof.
     ///
     /// We assume the `VRFInOut` paramater has been computed correctly
@@ -177,12 +182,14 @@ impl<E: JubjubEngine> SecretKey<E> {
     /// using one of the `vrf_create_*` methods on `SecretKey`.
     /// If so, we produce a proof that this multiplication was done correctly.
     #[allow(non_snake_case)]
-    pub fn dleq_proove<T,R>(&self, mut t: T, p: &VRFInOut<E>, rng: R, params: &E::Params)
+    pub fn dleq_proove<T,R>(&self, mut t: T, p: &VRFInOut<E>, rng: R)
      -> (VRFProof<E>, VRFProofBatchable<E>)
     where
         T: SigningTranscript,
         R: RngCore+CryptoRng,
     {
+        let params = E::params();
+
         t.proto_name(b"DLEQProof");
         // t.commit_point(b"vrf:g",constants::RISTRETTO_BASEPOINT_TABLE.basepoint().compress());
         t.commit_point(b"vrf:h", &p.input.0);
@@ -191,7 +198,7 @@ impl<E: JubjubEngine> SecretKey<E> {
         // We compute R after adding pk and all h.
         let r : Scalar<E> = t.witness_scalar(b"proving\00",&[&self.nonce_seed], rng);
         // let R = (&r * &constants::RISTRETTO_BASEPOINT_TABLE).compress();
-        let R = crate::scalar_times_generator(&r,params).into();
+        let R = crate::scalar_times_generator(&r).into();
         t.commit_point(b"vrf:R=g^r", &R);
 
         // let Hr = (&r * p.input.0).compress();
@@ -318,7 +325,7 @@ impl<E: JubjubEngine> SecretKey<E> {
 
 }
 
-impl<E: JubjubEngine> PublicKey<E> {
+impl<E: JubjubEngineWithParams> PublicKey<E> {
     /// Verify DLEQ proof that `p.output = s * p.input` where `self`
     /// `s` times the basepoint.
     ///
@@ -335,11 +342,12 @@ impl<E: JubjubEngine> PublicKey<E> {
         mut t: T,
         p: &VRFInOut<E>,
         proof: &VRFProof<E>,
-        params: &E::Params,
     ) -> io::Result<VRFProofBatchable<E>>
     where
         T: SigningTranscript,
     {
+        let params = E::params();
+
         t.proto_name(b"DLEQProof");
         // t.commit_point(b"vrf:g",constants::RISTRETTO_BASEPOINT_TABLE.basepoint().compress());
         t.commit_point(b"vrf:h", &p.input.0);
@@ -348,7 +356,7 @@ impl<E: JubjubEngine> PublicKey<E> {
         // We recompute R aka u from the proof
         // let R = ( (&proof.c * &self.0) + (&proof.s * &constants::RISTRETTO_BASEPOINT_TABLE) ).compress();
         let R = self.0.clone().mul(proof.c,params)
-            .add(& crate::scalar_times_generator(&proof.s,params).into(), params)
+            .add(& crate::scalar_times_generator(&proof.s).into(), params)
             .into();
         t.commit_point(b"vrf:R=g^r", &R);
 
@@ -564,7 +572,10 @@ where
         Err(SignatureError::EquationFalse)
     }
 }
+*/
 
+
+/*
 #[cfg(test)]
 mod tests {
     #[cfg(feature = "alloc")]
@@ -576,23 +587,28 @@ mod tests {
 
     #[test]
     fn vrf_single() {
+        let params = Params::<Bls12> {
+            engine: JubjubBls12::new(),
+            auth_depth: 0,
+        };
+
         // #[cfg(feature = "getrandom")]
         let mut csprng = ::rand_core::OsRng;
 
-        let keypair1 = Keypair::generate_with(&mut csprng);
+        let sk1 = SecretKey::<Bls12>::from_rng(&mut rng, &params.engine);
 
         let ctx = signing_context(b"yo!");
         let msg = b"meow";
-        let (io1, proof1, proof1batchable) = keypair1.vrf_sign(ctx.bytes(msg));
+        let (io1, proof1, proof1batchable) = sk1.vrf_sign(ctx.bytes(msg));
         let out1 = &io1.to_output();
         assert_eq!(
             proof1,
             proof1batchable
-                .shorten_vrf(&keypair1.public, ctx.bytes(msg), &out1)
+                .shorten_vrf(&sk1.public, ctx.bytes(msg), &out1)
                 .unwrap(),
             "Oops `shorten_vrf` failed"
         );
-        let (io1too, proof1too) = keypair1.public.vrf_verify(ctx.bytes(msg), &out1, &proof1)
+        let (io1too, proof1too) = sk1.public.vrf_verify(ctx.bytes(msg), &out1, &proof1)
             .expect("Correct VRF verification failed!");
         assert_eq!(
             io1too, io1,
@@ -603,40 +619,45 @@ mod tests {
             "VRF verification yielded incorrect batchable proof"
         );
         assert_eq!(
-            keypair1.vrf_sign(ctx.bytes(msg)).0,
+            sk1.vrf_sign(ctx.bytes(msg)).0,
             io1,
             "Rerunning VRF gave different output"
         );
 
         assert!(
-            keypair1.public.vrf_verify(ctx.bytes(b"not meow"), &out1, &proof1).is_err(),
+            sk1.public.vrf_verify(ctx.bytes(b"not meow"), &out1, &proof1).is_err(),
             "VRF verification with incorrect message passed!"
         );
 
-        let keypair2 = Keypair::generate_with(&mut csprng);
+        let sk2 = SecretKey::<Bls12>::from_rng(&mut rng, &params.engine);
         assert!(
-            keypair2.public.vrf_verify(ctx.bytes(msg), &out1, &proof1).is_err(),
+            sk2.public.vrf_verify(ctx.bytes(msg), &out1, &proof1).is_err(),
             "VRF verification with incorrect signer passed!"
         );
     }
 
     #[test]
     fn vrf_malleable() {
+        let params = Params::<Bls12> {
+            engine: JubjubBls12::new(),
+            auth_depth: 0,
+        };
+
         // #[cfg(feature = "getrandom")]
         let mut csprng = ::rand_core::OsRng;
 
-        let keypair1 = Keypair::generate_with(&mut csprng);
+        let sk1 = SecretKey::<Bls12>::from_rng(&mut rng, &params.engine);
 
         let ctx = signing_context(b"yo!");
         let msg = b"meow";
-        let (io1, proof1, proof1batchable) = keypair1.vrf_sign(Malleable(ctx.bytes(msg)));
+        let (io1, proof1, proof1batchable) = sk1.vrf_sign(Malleable(ctx.bytes(msg)));
         let out1 = &io1.to_output();
         assert_eq!(
             proof1,
-            proof1batchable.shorten_vrf(&keypair1.public, Malleable(ctx.bytes(msg)), &out1).unwrap(),
+            proof1batchable.shorten_vrf(&sk1.public, Malleable(ctx.bytes(msg)), &out1).unwrap(),
             "Oops `shorten_vrf` failed"
         );
-        let (io1too, proof1too) = keypair1
+        let (io1too, proof1too) = sk1
             .public.vrf_verify(Malleable(ctx.bytes(msg)), &out1, &proof1)
             .expect("Correct VRF verification failed!");
         assert_eq!(
@@ -648,45 +669,45 @@ mod tests {
             "VRF verification yielded incorrect batchable proof"
         );
         assert_eq!(
-            keypair1.vrf_sign(Malleable(ctx.bytes(msg))).0,
+            sk1.vrf_sign(Malleable(ctx.bytes(msg))).0,
             io1,
             "Rerunning VRF gave different output"
         );
         assert!(
-            keypair1.public.vrf_verify(Malleable(ctx.bytes(b"not meow")), &out1, &proof1).is_err(),
+            sk1.public.vrf_verify(Malleable(ctx.bytes(b"not meow")), &out1, &proof1).is_err(),
             "VRF verification with incorrect message passed!"
         );
 
-        let keypair2 = Keypair::generate_with(&mut csprng);
+        let sk2 = SecretKey::<Bls12>::from_rng(&mut rng, &params.engine);
         assert!(
-            keypair2.public.vrf_verify(Malleable(ctx.bytes(msg)), &out1, &proof1).is_err(),
+            sk2.public.vrf_verify(Malleable(ctx.bytes(msg)), &out1, &proof1).is_err(),
             "VRF verification with incorrect signer passed!"
         );
-        let (io2, _proof2, _proof2batchable) = keypair2.vrf_sign(Malleable(ctx.bytes(msg)));
+        let (io2, _proof2, _proof2batchable) = sk2.vrf_sign(Malleable(ctx.bytes(msg)));
         let out2 = &io2.to_output();
 
         // Verified key exchange, aka sequential two party VRF.
         let t0 = Transcript::new(b"VRF");
-        let io21 = keypair2.secret.vrf_create_from_compressed_point(out1).unwrap();
-        let proofs21 = keypair2.dleq_proove(t0.clone(), &io21);
-        let io12 = keypair1.secret.vrf_create_from_compressed_point(out2).unwrap();
-        let proofs12 = keypair1.dleq_proove(t0.clone(), &io12);
+        let io21 = sk2.secret.vrf_create_from_compressed_point(out1).unwrap();
+        let proofs21 = sk2.dleq_proove(t0.clone(), &io21);
+        let io12 = sk1.secret.vrf_create_from_compressed_point(out2).unwrap();
+        let proofs12 = sk1.dleq_proove(t0.clone(), &io12);
         assert_eq!(io12.output, io21.output, "Sequential two-party VRF failed");
         assert_eq!(
             proofs21.0,
-            proofs21.1.shorten_dleq(t0.clone(), &keypair2.public, &io21),
+            proofs21.1.shorten_dleq(t0.clone(), &sk2.public, &io21),
             "Oops `shorten_dleq` failed"
         );
         assert_eq!(
             proofs12.0,
-            proofs12.1.shorten_dleq(t0.clone(), &keypair1.public, &io12),
+            proofs12.1.shorten_dleq(t0.clone(), &sk1.public, &io12),
             "Oops `shorten_dleq` failed"
         );
-        assert!(keypair1
+        assert!(sk1
             .public
             .dleq_verify(t0.clone(), &io12, &proofs12.0)
             .is_ok());
-        assert!(keypair2
+        assert!(sk2
             .public
             .dleq_verify(t0.clone(), &io21, &proofs21.0)
             .is_ok());
@@ -783,5 +804,4 @@ mod tests {
         );
     }
 }
-
 */

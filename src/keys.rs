@@ -15,7 +15,7 @@ use zcash_primitives::jubjub::{
 
 use zeroize::Zeroize;
 
-use crate::{Params, Scalar};
+use crate::{JubjubEngineWithParams, Scalar};
 
 
 /// Public key consisting of a JubJub point
@@ -24,14 +24,19 @@ pub struct PublicKey<E: JubjubEngine>(pub(crate) Point<E,Unknown>);
 
 // serde_boilerplate!(PublicKey);
 
-impl<E: JubjubEngine> PublicKey<E> {
-    fn from_secret_scalar(secret: &Scalar<E>, params: &Params<E>) -> PublicKey<E> {
-        PublicKey( crate::scalar_times_generator(secret,&params.engine).into() )
+
+
+impl<E: JubjubEngineWithParams> PublicKey<E> {
+    fn from_secret_scalar(secret: &Scalar<E>) -> PublicKey<E> {
+        PublicKey( crate::scalar_times_generator(secret).into() )
     }
     
-    pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {
-        Ok(PublicKey( Point::read(reader,params) ? ))
+    pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
+        Ok(PublicKey( Point::read(reader,E::params()) ? ))
     }
+
+// }
+// impl<E: JubjubEngine> PublicKey<E> {
 
     pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
         self.0.write(writer)
@@ -96,25 +101,25 @@ impl ConstantTimeEq for SecretKey {
 }
 */
 
-impl<E: JubjubEngine> SecretKey<E> {
+impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// Generate an "unbiased" `SecretKey` directly from a user
     /// suplied `csprng` uniformly, bypassing the `MiniSecretKey`
     /// layer.
-    pub fn from_rng<R>(mut rng: R, params: &E::Params) -> SecretKey<E> //  params: &Params<E>
+    pub fn from_rng<R>(mut rng: R) -> SecretKey<E>
     where R: CryptoRng + RngCore,
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
         rng.fill_bytes(&mut nonce_seed);
         let key = <E::Fs as ::ff::Field>::random(&mut rng);
-        let public = PublicKey::from_secret_scalar(&key,params);
+        let public = PublicKey::from_secret_scalar(&key);
         SecretKey { key, nonce_seed, public, }
     }
 
     /// Generate a JubJub `SecretKey` from a 32 byte seed.
-    pub fn from_seed(seed: [u8; 32], params: &E::Params) -> SecretKey<E> {
+    pub fn from_seed(seed: [u8; 32]) -> SecretKey<E> {
         use rand_core::SeedableRng;
         let rng = ::rand_chacha::ChaChaRng::from_seed(seed);
-        SecretKey::from_rng(rng,params)
+        SecretKey::from_rng(rng)
     }
 
     /// Generate a JubJub `SecretKey` with the default randomness source.
@@ -128,11 +133,11 @@ impl<E: JubjubEngine> SecretKey<E> {
         self.public.clone()
     }
 
-    pub fn read<R: io::Read>(reader: &mut R, params: &Params<E>) -> io::Result<Self> {
+    pub fn read<R: io::Read>(reader: &mut R) -> io::Result<Self> {
         let key = crate::read_scalar::<E, &mut R>(reader) ?;
         let mut nonce_seed = [0u8; 32];
         reader.read_exact(&mut nonce_seed) ?;
-        let public = PublicKey::from_secret_scalar(&key,params);
+        let public = PublicKey::from_secret_scalar(&key);
         Ok(SecretKey { key, nonce_seed, public, } )
     }
 
