@@ -88,6 +88,42 @@ impl<E: JubjubEngine> AuthPathPoint<E> {
     }
 }
 
+
+fn merkleize<E,F>(mut cur: Vec<E::Fr>, mut index: usize, mut f: F) -> Option<E::Fr> 
+where E: JubjubEngineWithParams, F: FnMut(AuthPathPoint<E>) -> ()
+{
+    let mut depth_to_bottom = 0;
+    let mut next = Vec::with_capacity(cur.len()/2);
+
+    while cur.len() > 1 {
+        let left = cur.pop();
+        let right = cur.pop();
+
+        next.push(auth_hash::<E>(left.as_ref(), right.as_ref(), depth_to_bottom));
+
+        let (current_selection, mut sibling_index) = if index % 2 == 0 {
+            (MerkleSelection::Left, index + 1)
+        } else {
+            (MerkleSelection::Right, index - 1)
+        };
+        if depth_to_bottom % 2 == 1 {
+            sibling_index = next.len() - sibling_index - 1;
+        }
+        f(AuthPathPoint {
+            current_selection,
+            sibling: next.get(sibling_index).cloned()
+        });
+
+        ::core::mem::swap(&mut cur,&mut next);
+        next.clear();
+        depth_to_bottom += 1;
+        index /= 2;
+    }
+
+    cur.pop()
+}
+
+
 /// The authentication path of the merkle tree.
 #[derive(Clone, Debug)]
 pub struct AuthPath<E: JubjubEngine>(pub Vec<AuthPathPoint<E>>);
@@ -103,40 +139,16 @@ impl<E: JubjubEngineWithParams> AuthPath<E> {
 
     /// Create a path from a given plain list, of target specified as `list_index`.
     /// Panic if `list_index` is out of bound.
-    pub fn from_list(list: &[E::Fr], list_index: usize) -> Self {
-        let mut depth_to_bottom = 0;
-        let mut tracked_index = list_index;
-        let mut cur = Vec::with_capacity(list.len());
-        cur.extend(list.iter().cloned());
-        let mut next = Vec::with_capacity(list.len()/2);
-        let mut path = <AuthPath<E>>::default();
-
-        while cur.len() > 1 {
-            let left = cur.pop();
-            let right = cur.pop();
-
-            next.push(auth_hash::<E>(left.as_ref(), right.as_ref(), depth_to_bottom));
-
-            let (current_selection, mut sibling_index) = if tracked_index % 2 == 0 {
-                (MerkleSelection::Left, tracked_index + 1)
-            } else {
-                (MerkleSelection::Right, tracked_index - 1)
-            };
-            if depth_to_bottom % 2 == 1 {
-                sibling_index = next.len() - sibling_index - 1;
-            }
-            path.push(AuthPathPoint {
-                current_selection,
-                sibling: next.get(sibling_index).cloned()
-            });
-
-            ::core::mem::swap(&mut cur,&mut next);
-            next.clear();
-            depth_to_bottom += 1;
-            tracked_index /= 2;
-        }
-
-        path
+    pub fn from_publickeys<B,I>(iter: I, list_index: usize) -> (AuthPath<E>,AuthRoot<E>) 
+    where B: Borrow<PublicKey<E>>, I: IntoIterator<Item=B>
+    {
+        let list = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 ).collect::<Vec<_>>();
+        let path_len = 0usize.leading_zeros() - list.len().leading_zeros();
+        let mut path = Vec::with_capacity(path_len as usize);
+        assert!(list.len() > 1);
+        let root = merkleize::<E,_>(list,0,|x| path.push(x))
+            .expect("initial list is not empty; qed");
+        (AuthPath(path), AuthRoot(root))
     }
 
     /*
@@ -198,39 +210,15 @@ impl<E: JubjubEngineWithParams> AuthRoot<E> {
         Self(cur)
     }
 
-    /// Get the merkle root from a plain list. Panic if length of the list is zero.
-    ///
-    /// TODO: Should this be public?
-    fn from_list<I>(iter: I) -> Self
-    where I: IntoIterator<Item=E::Fr>
-    // where I: IntoIterator<Item=impl Borrow<E::Fr>>
-    {
-        let mut depth_to_bottom = 0;
-        let mut cur = iter.into_iter().collect::<Vec<_>>();
-        let mut next = Vec::new();
-
-        while cur.len() > 1 {
-            let left = cur.pop();
-            let right = cur.pop();
-
-            next.push(auth_hash::<E>(left.as_ref(), right.as_ref(), depth_to_bottom));
-
-            ::core::mem::swap(&mut cur,&mut next);
-            next.clear();
-            depth_to_bottom += 1;
-        }
-
-        Self(cur.pop().expect("initial list is not empty; qed"))
-    }
-
     /// Get the merkle root from a list of public keys. Panic if length of the list is zero.
     ///
     /// TODO: We do no initial hashing here for the leaves, but maybe that's fine.
-    pub fn from_publickeys<B,I>(iter: I, params: &Params) -> Self
+    pub fn from_publickeys<B,I>(iter: I) -> Self
     where B: Borrow<PublicKey<E>>, I: IntoIterator<Item=B>
     {
-        let iter = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 );
-        Self::from_list(iter)
+        let list = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 ).collect::<Vec<_>>();
+        assert!(list.len() > 1);
+        AuthRoot( merkleize::<E,_>(list,0,|_| ()).expect("initial list is not empty; qed") )
     }
 
     pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
