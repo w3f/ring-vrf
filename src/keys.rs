@@ -58,6 +58,7 @@ pub struct SecretKey<E: JubjubEngine> {
     /// we must hash it when doing schnorr DLEQ proof based VRF signatures.
     ///
     /// TODO: Replace this with serialized byte representation like [u8; 32]
+    /// TODO: Compjute lazilty using usafe code and std::sync::Once
     pub(crate) public: PublicKey<E>,
 }
 
