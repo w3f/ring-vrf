@@ -17,8 +17,8 @@ use std::io;
 
 use rand_core::{RngCore,CryptoRng,SeedableRng};
 
-use ff::{PrimeField, PrimeFieldRepr, ScalarEngine}; // Field
-use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, Unknown, edwards::Point};
+use ff::{PrimeField, PrimeFieldRepr}; // Field, ScalarEngine
+use zcash_primitives::jubjub::{JubjubEngine, Unknown, edwards::Point}; // PrimeOrder
 
 use crate::{SigningTranscript, Params, Scalar};  // use super::*;
 
@@ -32,7 +32,7 @@ pub struct VRFInput<E: JubjubEngine>(pub(crate) Point<E, Unknown>);
 impl<E: JubjubEngine> VRFInput<E> {
     /// Create a new VRF input from an `RngCore`.
     #[inline(always)]
-    fn from_rng<R: RngCore>(mut rng: R, params: &Params<E>) -> Self {
+    fn from_rng<R: RngCore+CryptoRng>(mut rng: R, params: &Params<E>) -> Self {
         VRFInput( Point::rand(&mut rng, &params.engine).mul_by_cofactor(&params.engine).into() )
     }
 
@@ -225,7 +225,7 @@ impl<E: JubjubEngine> VRFInOut<E> {
     pub fn make_merlin_rng(&self, context: &[u8]) -> ::merlin::TranscriptRng {
         // Very insecure hack except for our commit_witness_bytes below
         struct ZeroFakeRng;
-        impl ::rand_core::RngCore for ZeroFakeRng {
+        impl RngCore for ZeroFakeRng {
             fn next_u32(&mut self) -> u32 {  panic!()  }
             fn next_u64(&mut self) -> u64 {  panic!()  }
             fn fill_bytes(&mut self, dest: &mut [u8]) {
@@ -236,7 +236,7 @@ impl<E: JubjubEngine> VRFInOut<E> {
                 Ok(())
             }
         }
-        impl ::rand_core::CryptoRng for ZeroFakeRng {}
+        impl CryptoRng for ZeroFakeRng {}
 
         let mut t = ::merlin::Transcript::new(b"VRFResult");
         t.append_message(b"",context);

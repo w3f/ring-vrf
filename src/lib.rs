@@ -22,11 +22,11 @@ mod verifier;
 mod vrf;
 pub mod schnorr;
 
-use crate::scalar::{Scalar,read_scalar,write_scalar};
+use crate::scalar::{Scalar,scalar_times_generator,read_scalar,write_scalar};
 pub use crate::keys::{SecretKey,PublicKey};
 pub use crate::context::{signing_context,SigningTranscript}; // SigningTranscript
 
-pub use crate::circuit::RingVRF;
+use crate::circuit::RingVRF;
 pub use crate::merkle::{MerkleSelection, AuthPath, AuthRoot, AuthPathPoint, auth_hash};
 pub use crate::generator::generate_crs;
 pub use vrf::{VRFInOut, VRFInput, VRFOutput, vrfs_merge};

@@ -9,11 +9,8 @@
 
 use rand_core::{RngCore,CryptoRng};
 
-use ff::{Field, PrimeField, PrimeFieldRepr}; // ScalarEngine 
-use zcash_primitives::jubjub::{
-    JubjubEngine, 
-    PrimeOrder, Unknown, edwards::Point
-};
+use ff::{Field}; // ScalarEngine, PrimeField, PrimeFieldRepr
+use zcash_primitives::jubjub::{JubjubEngine, edwards::Point};  // PrimeOrder, Unknown
 
 use merlin::Transcript;
 

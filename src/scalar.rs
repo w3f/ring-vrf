@@ -7,14 +7,13 @@ use zcash_primitives::jubjub::{
     PrimeOrder, edwards::Point, // Unknown, ToUniform,
 };
 
-use crate::Params;
 
-impl<E: JubjubEngine> Params<E> {
-    pub(crate) fn scalar_times_generator(&self, scalar: &Scalar<E>) -> Point<E,PrimeOrder> {
-        // Jubjub generator point. TODO: prime or ---
-        let base_point = self.engine.generator(FixedGenerators::SpendingKeyGenerator);
-        base_point.mul(scalar.clone(), &self.engine)
-    }
+pub(crate) fn scalar_times_generator<E>(scalar: &Scalar<E>, params: &E::Params)
+ -> Point<E,PrimeOrder> 
+where E: JubjubEngine,
+{
+    let base_point = params.generator(FixedGenerators::SpendingKeyGenerator);
+    base_point.mul(scalar.clone(), &params)
 }
 
 /*

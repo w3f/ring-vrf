@@ -8,10 +8,9 @@ use std::io;
 // use subtle::{Choice,ConstantTimeEq};
 use rand_core::{RngCore,CryptoRng};
 
-use ff::{ScalarEngine}; // Field
 use zcash_primitives::jubjub::{
     JubjubEngine, // FixedGenerators, JubjubParams,
-    PrimeOrder, Unknown, edwards::Point
+    edwards::Point, Unknown, // PrimeOrder
 };
 
 use zeroize::Zeroize;
@@ -27,7 +26,7 @@ pub struct PublicKey<E: JubjubEngine>(pub(crate) Point<E,Unknown>);
 
 impl<E: JubjubEngine> PublicKey<E> {
     fn from_secret_scalar(secret: &Scalar<E>, params: &Params<E>) -> PublicKey<E> {
-        PublicKey( params.scalar_times_generator(secret).into() )
+        PublicKey( crate::scalar_times_generator(secret,&params.engine).into() )
     }
     
     pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {

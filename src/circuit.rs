@@ -8,13 +8,13 @@
 //! ### Ring VRF zkSNARK circut
 
 use ff::Field;
-use zcash_primitives::jubjub::{FixedGenerators, JubjubEngine, PrimeOrder, Unknown, edwards::Point};
+use zcash_primitives::jubjub::{FixedGenerators, JubjubEngine, PrimeOrder, edwards::Point}; // Unknown
 use zcash_proofs::circuit::{ecc, pedersen_hash};
 use bellman::{Circuit, ConstraintSystem, SynthesisError};
 use bellman::gadgets::{boolean, num, Assignment};
 
 
-use crate::{MerkleSelection, AuthPath, Params, SecretKey, VRFInput};
+use crate::{MerkleSelection, AuthPath, Params, SecretKey};
 
 /// A circuit for proving that the given vrf_output is valid for the given vrf_input under
 /// a key from the predefined set. It formalizes the following language:
@@ -195,7 +195,7 @@ mod tests {
     use rand_core::{RngCore}; // CryptoRng
 
     use super::*;
-    use crate::{Params, AuthPath, AuthRoot};
+    use crate::{Params, VRFInput, AuthPath, AuthRoot};
 
     #[test]
     fn test_ring() {
