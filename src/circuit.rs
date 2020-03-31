@@ -14,7 +14,7 @@ use bellman::{Circuit, ConstraintSystem, SynthesisError};
 use bellman::gadgets::{boolean, num, Assignment};
 
 
-use crate::{MerkleSelection, AuthPath, Params, SecretKey};
+use crate::{JubjubEngineWithParams, MerkleSelection, AuthPath, Params, SecretKey};
 
 /// A circuit for proving that the given vrf_output is valid for the given vrf_input under
 /// a key from the predefined set. It formalizes the following language:
@@ -29,7 +29,7 @@ use crate::{MerkleSelection, AuthPath, Params, SecretKey};
 /// not the wires' assignments, so knowing the types is enough.
 pub struct RingVRF<'a, E: JubjubEngine> { // TODO: name
     /// Jubjub curve parameters.
-    pub params: &'a Params<E>,
+    pub params: &'a Params,
 
     /// The secret key, an element of Jubjub scalar field.
     pub sk: Option<SecretKey<E>>,
@@ -47,13 +47,15 @@ pub struct RingVRF<'a, E: JubjubEngine> { // TODO: name
     pub auth_path: Option<AuthPath<E>>,
 }
 
-impl<'a, E: JubjubEngine> Circuit<E> for RingVRF<'a, E> {
+impl<'a, E: JubjubEngineWithParams> Circuit<E> for RingVRF<'a, E> {
     fn synthesize<CS: ConstraintSystem<E>>(self, cs: &mut CS) -> Result<(), SynthesisError> {
         if let Some(auth_path) = self.auth_path.as_ref() {
             if auth_path.len() != self.params.auth_depth {
                 return Err(SynthesisError::Unsatisfiable)
             }
         }
+
+        let engine_params = E::params();
 
         // Binary representation of the secret key, a prover's private input.
         // fs_bits wires and fs_bits booleanity constraints, where fs_bits = 252 is Jubjub scalar field size.
@@ -75,7 +77,7 @@ impl<'a, E: JubjubEngine> Circuit<E> for RingVRF<'a, E> {
             cs.namespace(|| "PK = sk * G"),
             FixedGenerators::SpendingKeyGenerator, //TODO: any NUMS point of full order
             &sk_bits,
-            &self.params.engine,
+            engine_params,
         ) ?;
 
         // Defines first 2 public input wires for the coordinates of the public key in Jubjub base field (~ BLS scalar field)
@@ -89,7 +91,7 @@ impl<'a, E: JubjubEngine> Circuit<E> for RingVRF<'a, E> {
         let vrf_input = ecc::EdwardsPoint::witness(
             cs.namespace(|| "VRF_INPUT"),
             self.vrf_input,
-            &self.params.engine,
+            engine_params,
         ) ?;
 
         // Checks that VRF_BASE lies in a proper subgroup of Jubjub. Not strictly required as it is the point provided
@@ -98,7 +100,7 @@ impl<'a, E: JubjubEngine> Circuit<E> for RingVRF<'a, E> {
         // Moreover //TODO
         vrf_input.assert_not_small_order(
             cs.namespace(|| "VRF_BASE not small order"),
-            &self.params.engine,
+            engine_params,
         ) ?;
 
         // Defines the 3rd and the 4th input wires to be equal VRF_BASE coordinates,
@@ -111,7 +113,7 @@ impl<'a, E: JubjubEngine> Circuit<E> for RingVRF<'a, E> {
         let vrf = vrf_input.mul(
             cs.namespace(|| "vrf = sk * VRF_BASE"),
             &sk_bits,
-            &self.params.engine
+            engine_params
         ) ?;
 
         // And 2 more constraints to verify the output
@@ -177,7 +179,7 @@ impl<'a, E: JubjubEngine> Circuit<E> for RingVRF<'a, E> {
                 cs.namespace(|| "computation of pedersen hash"),
                 pedersen_hash::Personalization::MerkleTree(i),
                 &preimage,
-                &self.params.engine,
+                engine_params,
             )?.get_x().clone(); // Injective encoding
         }
         cur.inputize(cs.namespace(|| "anchor"))?;
@@ -195,14 +197,12 @@ mod tests {
     use rand_core::{RngCore}; // CryptoRng
 
     use super::*;
-    use crate::{Params, VRFInput, AuthPath, AuthRoot};
+    use crate::{JubjubEngineWithParams, Params, VRFInput, AuthPath, AuthRoot};
 
     #[test]
     fn test_ring() {
-        let params = Params::<Bls12> {
-            engine: JubjubBls12::new(),
-            auth_depth: 10,
-        };
+        let params = Params { auth_depth: 10, };
+        let engine_params = Bls12::params();
 
         // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
         let mut rng = ::rand_core::OsRng;
@@ -217,12 +217,12 @@ mod tests {
         let extra = ::merlin::Transcript::new(b"whatever").challenge_scalar(b"");
 
         let auth_path = AuthPath::random(params.auth_depth, &mut rng);
-        let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);
+        let auth_root = AuthRoot::from_proof(&auth_path, &pk);
 
         let instance = RingVRF {
             params: &params,
             sk: Some(sk.clone()),
-            vrf_input: Some(vrf_input.0.mul_by_cofactor(&params.engine)),
+            vrf_input: Some(vrf_input.0.mul_by_cofactor(engine_params)),
             extra: Some(extra),
             auth_path: Some(auth_path),
         };

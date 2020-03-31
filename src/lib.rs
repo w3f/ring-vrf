@@ -48,9 +48,7 @@ pub trait JubjubEngineWithParams : JubjubEngine {
 }
 
 /// Configuration parameters for the system.
-pub struct Params<E: JubjubEngine> {
-    /// Engine parameters.
-    pub engine: E::Params,
+pub struct Params { // <E: JubjubEngine>
     /// Authentication depth.
     pub auth_depth: usize,
 }
@@ -71,10 +69,8 @@ mod tests {
 
     #[test]
     fn test_completeness() {
-        let params = Params::<Bls12> {
-            engine: JubjubBls12::new(),
-            auth_depth: 10,
-        };
+        let params = Params { auth_depth: 10, };
+        let engine_params = Bls12::params();
 
         // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
         let mut rng = ::rand_core::OsRng;
@@ -100,7 +96,7 @@ mod tests {
         let vrf_inout = vrf_input.to_inout(&sk);
 
         let auth_path = AuthPath::random(params.auth_depth, &mut rng);
-        let auth_root = AuthRoot::from_proof(&auth_path, &pk, &params);
+        let auth_root = AuthRoot::from_proof(&auth_path, &pk);
 
         let extra = || ::merlin::Transcript::new(b"meh..");
 
@@ -110,7 +106,7 @@ mod tests {
         let proof = proof.unwrap();
 
         let verification = start_timer!(|| "verification");
-        let valid = auth_root.ring_vrf_verify_unprepared(vrf_inout, extra(), proof, &crs.vk, &params);
+        let valid = auth_root.ring_vrf_verify_unprepared(vrf_inout, extra(), proof, &crs.vk);
         end_timer!(verification);
         assert_eq!(valid.unwrap(), true);
     }

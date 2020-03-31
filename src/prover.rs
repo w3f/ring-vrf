@@ -13,11 +13,11 @@ use bellman::{
 use zcash_primitives::jubjub::JubjubEngine;
 use rand_core::{RngCore,CryptoRng,OsRng};
 
-use crate::{RingVRF, Params, AuthPath, VRFInput, SecretKey};
+use crate::{JubjubEngineWithParams, Params, RingVRF, AuthPath, VRFInput, SecretKey};
 use crate::SigningTranscript;
 
 
-impl<E: JubjubEngine> SecretKey<E> {
+impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// Create ring VRF signature using specified randomness source.
     pub fn ring_vrf_sign_with_rng<T,R,P>(
         &self,
@@ -25,7 +25,7 @@ impl<E: JubjubEngine> SecretKey<E> {
         mut extra: T,
         auth_path: AuthPath<E>,
         proving_key: P,
-        params: &Params<E>,
+        params: &Params,
         rng: &mut R,
     ) -> Result<Proof<E>, SynthesisError> 
     where
@@ -36,7 +36,7 @@ impl<E: JubjubEngine> SecretKey<E> {
         let instance = RingVRF {
             params,
             sk: Some(self.clone()),
-            vrf_input: Some(vrf_input.0.mul_by_cofactor(&params.engine)),
+            vrf_input: Some(vrf_input.0.mul_by_cofactor(E::params())),
             extra: Some(extra.challenge_scalar(b"extra-msg")),
             auth_path: Some(auth_path),
         };
@@ -50,7 +50,7 @@ impl<E: JubjubEngine> SecretKey<E> {
         extra: T,
         auth_path: AuthPath<E>,
         proving_key: &groth16::Parameters<E>,
-        params: &Params<E>,
+        params: &Params,
     ) -> Result<Proof<E>, SynthesisError> 
     {
         self.ring_vrf_sign_with_rng(vrf_input, extra, auth_path, proving_key, params, &mut OsRng)

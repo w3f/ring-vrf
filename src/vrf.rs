@@ -280,11 +280,13 @@ where E: JubjubEngine
 /// TODO: Add constant time 128 bit batched multiplication to dalek.
 /// TODO: Is rand_chacha's `gen::<u128>()` standardizable enough to
 /// prefer it over merlin for the output?  
-pub fn vrfs_merge<E,B>(ps: &[B], params: Params<E>) -> VRFInOut<E>
+pub fn vrfs_merge<E,B>(ps: &[B]) -> VRFInOut<E>
 where
     E: JubjubEngineWithParams,
     B: ::core::borrow::Borrow<VRFInOut<E>>,
 {
+    let engine_params = E::params();
+
     assert!( ps.len() > 0);
     let mut t = ::merlin::Transcript::new(b"MergeVRFs");
     for p in ps.iter() {
@@ -301,8 +303,8 @@ where
 
             let p = if io { p.input.0.clone() } else { p.output.0.clone() };
             // acc += z * p;
-            let p = p.mul(z,&params.engine);
-            acc = acc.clone().add(&p, &params.engine);
+            let p = p.mul(z, engine_params);
+            acc = acc.clone().add(&p, engine_params);
         }
         acc
     };

@@ -12,11 +12,10 @@ use zcash_primitives::jubjub::JubjubEngine;
 use ff::Field;
 use bellman::SynthesisError;
 
-use crate::{Params, AuthRoot, VRFInOut};
-use crate::SigningTranscript;
+use crate::{JubjubEngineWithParams, SigningTranscript, AuthRoot, VRFInOut};
 
 
-impl<E: JubjubEngine> AuthRoot<E> {
+impl<E: JubjubEngineWithParams> AuthRoot<E> {
     /// Verify a proof using the given authentication root, VRF input and output,
     /// verifying key aka CRS, and paramaters.
     ///
@@ -29,12 +28,11 @@ impl<E: JubjubEngine> AuthRoot<E> {
         extra: T,
         zkproof: Proof<E>,
         verifying_key: &groth16::VerifyingKey<E>,
-        params: &Params<E>,
     ) -> Result<bool, SynthesisError> 
     where T: SigningTranscript, 
     {
         let pvk = groth16::prepare_verifying_key::<E>(verifying_key);
-        self.ring_vrf_verify(vrf_inout, extra, zkproof, &pvk, params)
+        self.ring_vrf_verify(vrf_inout, extra, zkproof, &pvk)
     }
 
     /// Verify a proof using the given authentication root, VRF input and output,
@@ -58,22 +56,23 @@ impl<E: JubjubEngine> AuthRoot<E> {
         // Prepared means that 1 pairing e(alpha, beta) has been precomputed.
         // Makes sense, as we verify multiple proofs for the same circuit
         verifying_key: &groth16::PreparedVerifyingKey<E>,
-        params: &Params<E>,
     ) -> Result<bool, SynthesisError> 
     where T: SigningTranscript, 
     {
+        let params = E::params();
+
         // TODO: lifetime?
         // TODO: Check params.auth_depth perhaps?
         // TODO: subgroup checks
         // Public inputs are elements of the main curve (BLS12-381) scalar field (that matches Jubjub base field, that's the thing)
         let mut public_input = [E::Fr::zero(); 6];
         {
-            let (x, y) = vrf_inout.input.0.mul_by_cofactor(&params.engine).to_xy();
+            let (x, y) = vrf_inout.input.0.mul_by_cofactor(&params).to_xy();
             public_input[0] = x;
             public_input[1] = y;
         }
         {
-            let (x, y) = vrf_inout.output.0.mul_by_cofactor(&params.engine).to_xy();
+            let (x, y) = vrf_inout.output.0.mul_by_cofactor(&params).to_xy();
             public_input[2] = x;
             public_input[3] = y;
         }

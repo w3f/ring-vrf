@@ -19,7 +19,7 @@ use ff::{PrimeField, PrimeFieldRepr, BitIterator, Field}; // ScalarEngine
 use pairing::bls12_381::Fr;
 use zcash_primitives::jubjub::JubjubEngine;
 use zcash_primitives::pedersen_hash;
-use crate::{Params, PublicKey};
+use crate::{JubjubEngineWithParams, Params, PublicKey};
 
 
 /// Direction of the binary merkle path, either going left or right.
@@ -92,7 +92,7 @@ impl<E: JubjubEngine> AuthPathPoint<E> {
 #[derive(Clone, Debug)]
 pub struct AuthPath<E: JubjubEngine>(pub Vec<AuthPathPoint<E>>);
 
-impl<E: JubjubEngine> AuthPath<E> {
+impl<E: JubjubEngineWithParams> AuthPath<E> {
     /// Create a random path.
     pub fn random<R: rand_core::RngCore>(depth: usize, rng: &mut R) -> Self {
         Self(vec![AuthPathPoint {
@@ -103,19 +103,19 @@ impl<E: JubjubEngine> AuthPath<E> {
 
     /// Create a path from a given plain list, of target specified as `list_index`.
     /// Panic if `list_index` is out of bound.
-    pub fn from_list(list: &[E::Fr], list_index: usize, params: &Params<E>) -> Self {
+    pub fn from_list(list: &[E::Fr], list_index: usize) -> Self {
         let mut depth_to_bottom = 0;
         let mut tracked_index = list_index;
-        let mut cur = list.iter().cloned().collect::<Vec<_>>();
+        let mut cur = Vec::with_capacity(list.len());
+        cur.extend(list.iter().cloned());
+        let mut next = Vec::with_capacity(list.len()/2);
         let mut path = <AuthPath<E>>::default();
 
         while cur.len() > 1 {
-            let mut next = Vec::new();
-
             let left = cur.pop();
             let right = cur.pop();
 
-            next.push(auth_hash::<E>(left.as_ref(), right.as_ref(), depth_to_bottom, params));
+            next.push(auth_hash::<E>(left.as_ref(), right.as_ref(), depth_to_bottom));
 
             let (current_selection, sibling_index) = if tracked_index % 2 == 0 {
                 (MerkleSelection::Left, tracked_index + 1)
@@ -127,7 +127,8 @@ impl<E: JubjubEngine> AuthPath<E> {
                 sibling: next.get(sibling_index).cloned()
             });
 
-            cur = next;
+            ::core::mem::swap(&mut cur,&mut next);
+            next.clear();
             depth_to_bottom += 1;
             tracked_index /= 2;
         }
@@ -137,7 +138,7 @@ impl<E: JubjubEngine> AuthPath<E> {
 
     /*
     TODO:
-    pub fn read<R: io::Read>(reader: R, params: &E::Params) -> io::Result<Self> {
+    pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
     }
 
     pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
@@ -177,9 +178,9 @@ impl<E: JubjubEngine> DerefMut for AuthRoot<E> {
     fn deref_mut(&mut self) -> &mut E::Fr { &mut self.0 }
 }
 
-impl<E: JubjubEngine> AuthRoot<E> {
+impl<E: JubjubEngineWithParams> AuthRoot<E> {
     /// Get the merkle root from proof.
-    pub fn from_proof(path: &AuthPath<E>, target: &PublicKey<E>, params: &Params<E>) -> Self {
+    pub fn from_proof(path: &AuthPath<E>, target: &PublicKey<E>) -> Self {
         let mut cur = target.0.to_xy().0;
 
         for (depth_to_bottom, point) in path.iter().enumerate() {
@@ -188,7 +189,7 @@ impl<E: JubjubEngine> AuthRoot<E> {
                 MerkleSelection::Left => (Some(&cur), point.sibling.as_ref()),
             };
 
-            cur = auth_hash::<E>(left, right, depth_to_bottom, params);
+            cur = auth_hash::<E>(left, right, depth_to_bottom);
         }
 
         Self(cur)
@@ -197,7 +198,7 @@ impl<E: JubjubEngine> AuthRoot<E> {
     /// Get the merkle root from a plain list. Panic if length of the list is zero.
     ///
     /// TODO: Should this be public?
-    fn from_list<I>(iter: I, params: &Params<E>) -> Self
+    fn from_list<I>(iter: I) -> Self
     where I: IntoIterator<Item=E::Fr>
     // where I: IntoIterator<Item=impl Borrow<E::Fr>>
     {
@@ -209,7 +210,7 @@ impl<E: JubjubEngine> AuthRoot<E> {
             let left = cur.pop();
             let right = cur.pop();
 
-            next.push(auth_hash::<E>(left.as_ref(), right.as_ref(), depth_to_bottom, params));
+            next.push(auth_hash::<E>(left.as_ref(), right.as_ref(), depth_to_bottom));
 
             ::core::mem::swap(&mut cur,&mut next);
             next.clear();
@@ -222,11 +223,11 @@ impl<E: JubjubEngine> AuthRoot<E> {
     /// Get the merkle root from a list of public keys. Panic if length of the list is zero.
     ///
     /// TODO: We do no initial hashing here for the leaves, but maybe that's fine.
-    pub fn from_publickeys<B,I>(iter: I, params: &Params<E>) -> Self
+    pub fn from_publickeys<B,I>(iter: I, params: &Params) -> Self
     where B: Borrow<PublicKey<E>>, I: IntoIterator<Item=B>
     {
         let iter = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 );
-        Self::from_list(iter, params)
+        Self::from_list(iter)
     }
 
     pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
@@ -242,11 +243,10 @@ impl<E: JubjubEngine> AuthRoot<E> {
 }
 
 /// Hash function used to create the authentication merkle tree.
-pub fn auth_hash<E: JubjubEngine>(
+pub fn auth_hash<E: JubjubEngineWithParams>(
     left: Option<&E::Fr>,
     right: Option<&E::Fr>,
     depth_to_bottom: usize,
-    params: &Params<E>,
 ) -> E::Fr {
     let zero = <E::Fr>::zero();
 
@@ -261,7 +261,7 @@ pub fn auth_hash<E: JubjubEngine>(
         lhs.into_iter()
             .take(Fr::NUM_BITS as usize)
             .chain(rhs.into_iter().take(Fr::NUM_BITS as usize)),
-        &params.engine,
+        E::params(),
     ).to_xy().0
 }
 

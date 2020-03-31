@@ -587,15 +587,10 @@ mod tests {
 
     #[test]
     fn vrf_single() {
-        let params = Params::<Bls12> {
-            engine: JubjubBls12::new(),
-            auth_depth: 0,
-        };
-
         // #[cfg(feature = "getrandom")]
         let mut csprng = ::rand_core::OsRng;
 
-        let sk1 = SecretKey::<Bls12>::from_rng(&mut rng, &params.engine);
+        let sk1 = SecretKey::<Bls12>::from_rng(&mut rng);
 
         let ctx = signing_context(b"yo!");
         let msg = b"meow";
@@ -638,15 +633,10 @@ mod tests {
 
     #[test]
     fn vrf_malleable() {
-        let params = Params::<Bls12> {
-            engine: JubjubBls12::new(),
-            auth_depth: 0,
-        };
-
         // #[cfg(feature = "getrandom")]
         let mut csprng = ::rand_core::OsRng;
 
-        let sk1 = SecretKey::<Bls12>::from_rng(&mut rng, &params.engine);
+        let sk1 = SecretKey::<Bls12>::from_rng(&mut rng);
 
         let ctx = signing_context(b"yo!");
         let msg = b"meow";
