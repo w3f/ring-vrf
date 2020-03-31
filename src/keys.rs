@@ -100,7 +100,7 @@ impl<E: JubjubEngine> SecretKey<E> {
     /// Generate an "unbiased" `SecretKey` directly from a user
     /// suplied `csprng` uniformly, bypassing the `MiniSecretKey`
     /// layer.
-    pub fn from_rng<R>(mut rng: R, params: &Params<E>) -> SecretKey<E> //  params: &Params<E>
+    pub fn from_rng<R>(mut rng: R, params: &E::Params) -> SecretKey<E> //  params: &Params<E>
     where R: CryptoRng + RngCore,
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
@@ -111,7 +111,7 @@ impl<E: JubjubEngine> SecretKey<E> {
     }
 
     /// Generate a JubJub `SecretKey` from a 32 byte seed.
-    pub fn from_seed(seed: [u8; 32], params: &Params<E>) -> SecretKey<E> {
+    pub fn from_seed(seed: [u8; 32], params: &E::Params) -> SecretKey<E> {
         use rand_core::SeedableRng;
         let rng = ::rand_chacha::ChaChaRng::from_seed(seed);
         SecretKey::from_rng(rng,params)
@@ -119,7 +119,7 @@ impl<E: JubjubEngine> SecretKey<E> {
 
     /// Generate a JubJub `SecretKey` with the default randomness source.
     #[cfg(feature = "std")]
-    pub fn new(params: &Params<E>) -> SecretKey<E> {
+    pub fn new(params: &E::Params) -> SecretKey<E> {
         SecretKey::from_rng(::rand::thread_rng(), params)
     }
 

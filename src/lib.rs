@@ -82,7 +82,7 @@ mod tests {
             },
         };
 
-        let sk = SecretKey::<Bls12>::from_rng(&mut rng, &params);
+        let sk = SecretKey::<Bls12>::from_rng(&mut rng, &params.engine);
         let pk = sk.to_public();
 
         let t = signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
