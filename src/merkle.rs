@@ -156,14 +156,26 @@ impl<E: JubjubEngineWithParams> AuthPath<E> {
         (AuthPath(path), AuthRoot(root))
     }
 
-    /*
-    TODO:
-    pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
+    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
+        let mut len = [0u8; 4];
+        reader.read_exact(&mut len) ?;
+        let len = u32::from_le_bytes(len) as usize;
+        let mut path = Vec::with_capacity(len);
+        for _ in 0..len {
+            path.push( AuthPathPoint::read(&mut reader) ? );
+        }
+        Ok(AuthPath(path))
     }
 
-    pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
+    pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+        use core::convert::TryInto;
+        let len: u32 = self.0.len().try_into().unwrap();
+        writer.write_all(& len.to_le_bytes()) ?;
+        for app in self.0.iter() {
+            app.write(&mut writer) ?;
+        }
+        Ok(())
     }
-    */
 }
 
 impl<E: JubjubEngine> Default for AuthPath<E> {
