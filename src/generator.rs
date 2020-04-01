@@ -17,8 +17,9 @@ use crate::{JubjubEngineWithParams, Params, RingVRF};
 /// Generates structured (meaning circuit-depending) Groth16
 /// CRS (that comprises proving and verificaton keys) over BLS12-381
 /// for the circuit defined in circuit.rs using OS RNG.
-pub fn generate_crs<E: JubjubEngineWithParams>(params: &Params) -> Result<Parameters<E>, SynthesisError> {
-    let rng = &mut OsRng;
+pub fn generate_crs<E: JubjubEngineWithParams>(params: &Params)
+ -> Result<Parameters<E>, SynthesisError> 
+{
     let circuit = RingVRF {
         params,
         sk: None,
@@ -26,5 +27,5 @@ pub fn generate_crs<E: JubjubEngineWithParams>(params: &Params) -> Result<Parame
         extra: None,
         auth_path: None,
     };
-    generate_random_parameters(circuit, rng)
+    generate_random_parameters(circuit, &mut rand_hack())
 }
