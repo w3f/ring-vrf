@@ -15,7 +15,9 @@
 
 use std::io;
 
-use rand_core::{RngCore,CryptoRng,SeedableRng};
+use rand_core::{RngCore,CryptoRng,SeedableRng,OsRng};
+
+use merlin::Transcript;
 
 use ff::{PrimeField, PrimeFieldRepr}; // Field, ScalarEngine
 use zcash_primitives::jubjub::{JubjubEngine, Unknown, edwards::Point}; // PrimeOrder
@@ -78,11 +80,11 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
         VRFOutput( self.0.mul(sk.key.clone(), E::params()) )
     }
 
+    /// Into VRF output.
     pub fn to_inout(&self, sk: &crate::SecretKey<E>) -> VRFInOut<E> {
         let output = self.to_output(sk);
         VRFInOut { input: self.clone(), output }
     }
-
 }
 
 
@@ -148,6 +150,10 @@ pub struct VRFInOut<E: JubjubEngine> {
     pub input: VRFInput<E>,
     /// VRF output point
     pub output: VRFOutput<E>,
+}
+
+impl<E: JubjubEngine> From<VRFInOut<E>> for VRFInput<E> {
+    fn from(x: VRFInOut<E>) -> VRFInput<E> { x.input }
 }
 
 impl<E: JubjubEngineWithParams> VRFInOut<E> {
