@@ -149,7 +149,7 @@ impl<E: JubjubEngineWithParams> AuthPath<E> {
     where B: Borrow<PublicKey<E>>, I: IntoIterator<Item=B>
     {
         let mut list = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 ).collect::<Vec<_>>();
-        let path_len = 0usize.leading_zeros() - list.len().leading_zeros();
+        let path_len = 0usize.leading_zeros() - depth.leading_zeros();
         let mut path = Vec::with_capacity(path_len as usize);
         assert!(list.len() > 1);
         let root = merkleize( depth, list.as_mut_slice(), index, |x| path.push(x) );
