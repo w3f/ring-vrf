@@ -11,10 +11,13 @@ use bellman::{
     groth16::{self, Proof}, // create_random_proof, ParameterSource, Parameters
 };
 use zcash_primitives::jubjub::JubjubEngine;
-use rand_core::{RngCore,CryptoRng,OsRng};
+use rand_core::{RngCore,CryptoRng};
 
-use crate::{JubjubEngineWithParams, Params, RingVRF, AuthPath, VRFInput, SecretKey};
-use crate::SigningTranscript;
+use crate::{
+    rand_hack, JubjubEngineWithParams,
+    Params, SigningTranscript, 
+    RingVRF, AuthPath, VRFInput, SecretKey
+};
 
 
 impl<E: JubjubEngineWithParams> SecretKey<E> {
@@ -53,7 +56,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         params: &Params,
     ) -> Result<Proof<E>, SynthesisError> 
     {
-        self.ring_vrf_sign_with_rng(vrf_input, extra, auth_path, proving_key, params, &mut OsRng)
+        self.ring_vrf_sign_with_rng(vrf_input, extra, auth_path, proving_key, params, &mut rand_hack())
     } 
 }
 

@@ -8,11 +8,18 @@
 
 //! ## Ring VRF
 
+
+use rand_core::{RngCore,CryptoRng};
+
+// use ff::{Field, ScalarEngine};
+use zcash_primitives::jubjub::{JubjubEngine};  // PrimeOrder, Unknown, edwards::Point
+
 #[macro_use]
 extern crate lazy_static;
 
 #[macro_use]
 extern crate arrayref;
+
 
 mod scalar;
 mod keys;
@@ -36,11 +43,12 @@ pub use crate::generator::generate_crs;
 pub use vrf::{VRFInOut, VRFInput, VRFOutput, vrfs_merge};
 
 
-// use ff::{Field, ScalarEngine};
-use zcash_primitives::jubjub::{JubjubEngine};  // PrimeOrder, Unknown, edwards::Point
-
 #[macro_use]
 extern crate bench_utils;
+
+fn rand_hack() -> impl RngCore+CryptoRng {
+    ::rand_core::OsRng
+}
 
 /// Fix ZCash's curve paramater handling
 pub trait JubjubEngineWithParams : JubjubEngine {
