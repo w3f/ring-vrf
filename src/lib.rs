@@ -78,7 +78,6 @@ mod tests {
     #[test]
     fn test_completeness() {
         let params = Params { auth_depth: 10, };
-        let engine_params = Bls12::params();
 
         // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
         let mut rng = ::rand_core::OsRng;
