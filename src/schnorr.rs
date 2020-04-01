@@ -76,12 +76,12 @@ use core::borrow::Borrow;
 // #[cfg(feature = "std")]
 use std::{boxed::Box, vec::Vec};
 
-use ff::{Field}; // PrimeField, PrimeFieldRepr, ScalarEngine 
-use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, Unknown, edwards::Point};
+use rand_core::{RngCore,CryptoRng};
 
 use merlin::Transcript;
 
-use rand_core::{RngCore,CryptoRng};
+use ff::{Field}; // PrimeField, PrimeFieldRepr, ScalarEngine
+use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, Unknown, edwards::Point};
 
 use crate::{
     rand_hack, JubjubEngineWithParams, 
@@ -237,7 +237,6 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
      -> (VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)
     {
         self.vrf_sign_extra(input, Transcript::new(b"VRF"))
-        // We have context in t and another hear confuses batching
     }
 
     /// Run VRF on one single input transcript and an extra message transcript, 
