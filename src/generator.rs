@@ -12,7 +12,7 @@ use bellman::groth16::{generate_random_parameters, Parameters,};
 use bellman::SynthesisError;
 use zcash_primitives::jubjub::JubjubEngine;
 
-use crate::{JubjubEngineWithParams, Params, RingVRF};
+use crate::{rand_hack, JubjubEngineWithParams, Params, RingVRF};
 
 /// Generates structured (meaning circuit-depending) Groth16
 /// CRS (that comprises proving and verificaton keys) over BLS12-381

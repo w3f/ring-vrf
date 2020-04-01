@@ -87,7 +87,8 @@ use crate::{
     rand_hack, JubjubEngineWithParams, 
     SigningTranscript, Scalar,
     SecretKey, PublicKey,
-    VRFInput, VRFOutput, VRFInOut, vrf::{no_extra, VRFExtraMessage}
+    VRFInput, VRFOutput, VRFInOut, 
+    vrf::{no_extra, VRFExtraMessage},
 };  // Params
 
 

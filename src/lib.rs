@@ -98,7 +98,7 @@ mod tests {
         let pk = sk.to_public();
 
         let t = signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
-        let vrf_input = VRFInput::<Bls12>::new_malleable(t);
+        let vrf_input = VRFInput::<Bls12>::new_malleable(t.clone());
 
         let vrf_inout = vrf_input.to_inout(&sk);
 
@@ -108,12 +108,12 @@ mod tests {
         let extra = || ::merlin::Transcript::new(b"meh..");
 
         let proving = start_timer!(|| "proving");
-        let proof = sk.ring_vrf_sign(vrf_input.clone(), extra(), auth_path.clone(), &crs, &params);
+        let (vrf_output, proof) = sk.ring_vrf_sign_checked(vrf_inout, vrf::no_extra(), auth_path.clone(), &crs, &params).unwrap();
         end_timer!(proving);
-        let proof = proof.unwrap();
 
+        let vrf_inout = vrf_output.attach_malleable(t);
         let verification = start_timer!(|| "verification");
-        let valid = auth_root.ring_vrf_verify_unprepared(vrf_inout, extra(), proof, &crs.vk);
+        let valid = auth_root.ring_vrf_verify_unprepared(vrf_inout, vrf::no_extra(), proof, &crs.vk);
         end_timer!(verification);
         assert_eq!(valid.unwrap(), true);
     }

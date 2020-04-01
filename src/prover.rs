@@ -8,21 +8,29 @@
 
 use bellman::{
     SynthesisError,
-    groth16::{self, Proof}, // create_random_proof, ParameterSource, Parameters
+    groth16, // {create_random_proof, ParameterSource, Parameters}
 };
+pub use groth16::Proof as RingVRFProof;
+
 use zcash_primitives::jubjub::JubjubEngine;
 use rand_core::{RngCore,CryptoRng};
+
 
 use crate::{
     rand_hack, JubjubEngineWithParams,
     Params, SigningTranscript, 
-    RingVRF, AuthPath, VRFInput, SecretKey
+    SecretKey,
+    RingVRF, AuthPath, 
+    VRFInput, VRFOutput, VRFInOut,
+    vrf::{no_extra, VRFExtraMessage},
 };
 
 
+type PResult<T> = Result<T, SynthesisError>;
+
 impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// Create ring VRF signature using specified randomness source.
-    pub fn ring_vrf_sign_with_rng<T,R,P>(
+    pub fn ring_vrf_prove<T,R,P>(
         &self,
         vrf_input: VRFInput<E>,
         mut extra: T,
@@ -30,7 +38,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         proving_key: P,
         params: &Params,
         rng: &mut R,
-    ) -> Result<Proof<E>, SynthesisError> 
+    ) -> PResult<RingVRFProof<E>> 
     where
         T: SigningTranscript, 
         P: groth16::ParameterSource<E>, 
@@ -46,17 +54,88 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         groth16::create_random_proof(instance, proving_key, rng)
     } 
 
-    /// Create ring VRF signature using system randomness.
-    pub fn ring_vrf_sign<T: SigningTranscript>(
+
+
+    /// Run our Schnorr VRF on one single input, producing the output
+    /// and correspodning Schnorr proof.
+    /// You must extract the `VRFOutput` from the `VRFInOut` returned.
+    pub fn ring_vrf_sign_simple<P>(
+        &self, 
+        input: VRFInput<E>,
+        auth_path: AuthPath<E>,
+        proving_key: P,
+        params: &Params,
+    ) -> PResult<(VRFInOut<E>, RingVRFProof<E>)>
+    where P: groth16::ParameterSource<E>, 
+    {
+        self.ring_vrf_sign_first(input, no_extra(), auth_path, proving_key, params)
+    }
+
+    /// Run our Schnorr VRF on one single input and an extra message 
+    /// transcript, producing the output and correspodning Schnorr proof.
+    /// You must extract the `VRFOutput` from the `VRFInOut` returned.
+    ///
+    /// There are schemes like Ouroboros Praos in which nodes evaluate
+    /// VRFs repeatedly until they win some contest.  In these case,
+    /// you should probably use `vrf_sign_after_check` to gain access to
+    /// the `VRFInOut` from `vrf_create_hash` first, and then avoid
+    /// computing the proof whenever you do not win. 
+    pub fn ring_vrf_sign_first<T,P>(
         &self,
-        vrf_input: VRFInput<E>,
+        input: VRFInput<E>,
         extra: T,
         auth_path: AuthPath<E>,
-        proving_key: &groth16::Parameters<E>,
+        proving_key: P,
         params: &Params,
-    ) -> Result<Proof<E>, SynthesisError> 
+    ) -> PResult<(VRFInOut<E>, RingVRFProof<E>)>
+    where T: SigningTranscript,
+          P: groth16::ParameterSource<E>, 
     {
-        self.ring_vrf_sign_with_rng(vrf_input, extra, auth_path, proving_key, params, &mut rand_hack())
-    } 
+        let inout = input.to_inout(self);
+        let proof = self.ring_vrf_prove(input, extra, auth_path, proving_key, params, &mut rand_hack()) ?;
+        Ok((inout, proof))
+    }
+
+    /// Run our Schnorr VRF on one single input, producing the output
+    /// and correspodning Schnorr proof, but only if the result first
+    /// passes some check, which itself returns either a `bool` or else
+    /// an `Option` of an extra message transcript.
+    pub fn ring_vrf_sign_after_check<F,O,P>(
+        &self, 
+        input: VRFInput<E>,
+        mut check: F,
+        auth_path: AuthPath<E>,
+        proving_key: P,
+        params: &Params,
+    ) -> PResult<Option<(VRFOutput<E>, RingVRFProof<E>)>>
+    where F: FnOnce(&VRFInOut<E>) -> O,
+          O: VRFExtraMessage,
+          P: groth16::ParameterSource<E>, 
+    {
+        let inout = input.to_inout(self);
+        let extra = if let Some(e) = check(&inout).extra() { e } else { return Ok(None) };
+        Ok(Some(self.ring_vrf_sign_checked(inout, extra, auth_path, proving_key, params) ?))
+    }
+
+    /// Run our Schnorr VRF on the `VRFInOut` input-output pair,
+    /// producing its output component and and correspodning Schnorr
+    /// proof.
+    pub fn ring_vrf_sign_checked<T,P>(
+        &self, 
+        inout: VRFInOut<E>, 
+        extra: T,
+        auth_path: AuthPath<E>,
+        proving_key: P,
+        params: &Params,
+    ) -> PResult<(VRFOutput<E>, RingVRFProof<E>)>
+    where T: SigningTranscript,
+          P: groth16::ParameterSource<E>, 
+    {
+        let VRFInOut { input, output } = inout;
+        let proof = self.ring_vrf_prove(input, extra, auth_path, proving_key, params, &mut rand_hack()) ?;
+        Ok((output, proof))
+    }
+
+    // TODO: VRFs methods
 }
 

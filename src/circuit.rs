@@ -28,7 +28,8 @@ use crate::{JubjubEngineWithParams, MerkleSelection, AuthPath, Params, SecretKey
 /// They are defined as Options as for CRS generation only circuit structure is relevant,
 /// not the wires' assignments, so knowing the types is enough.
 pub struct RingVRF<'a, E: JubjubEngine> { // TODO: name
-    /// Jubjub curve parameters.
+    /// System parameters.
+    // TODO: Any reasons to include Jubjub curve paramters here?
     pub params: &'a Params,
 
     /// The secret key, an element of Jubjub scalar field.
