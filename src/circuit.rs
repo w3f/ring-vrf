@@ -136,14 +136,12 @@ impl<'a, E: JubjubEngineWithParams> Circuit<E> for RingVRF<'a, E> {
         // point in the prime order subgroup.
         let mut cur = pk.get_x().clone();
 
-        let auth_path = self.auth_path.map(|auth_path| {
-            auth_path.0.into_iter()
-                .map(|v| Some((v.current_selection, v.sibling.unwrap_or(<E::Fr>::zero()))))
-                .collect()
-        }).unwrap_or(vec![None; self.params.auth_depth]);
-
         // Ascend the merkle tree authentication path
-        for (i, e) in auth_path.into_iter().enumerate() {
+        for i in 0..self.params.auth_depth {
+            let e: Option<(_,_)> = self.auth_path.as_ref().map(
+                |v| ( v.0[i].current_selection, v.0[i].sibling.unwrap_or(<E::Fr>::zero()) )
+            );
+
             let cs = &mut cs.namespace(|| format!("merkle tree hash {}", i));
 
             // Determines if the current subtree is the "right" leaf at this
