@@ -131,7 +131,7 @@ pub struct VRFProofBatchable<E: JubjubEngine> {
 
 impl<E: JubjubEngineWithParams> VRFProofBatchable<E> {
     #[allow(non_snake_case)]
-    pub fn read<R: io::Read>(mut reader: R, params: &E::Params) -> io::Result<Self> {
+    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
         let params = E::params();
         let R = Point::read(&mut reader,params) ?;
         let Hr = Point::read(&mut reader,params) ?;

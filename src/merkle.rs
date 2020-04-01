@@ -139,14 +139,14 @@ impl<E: JubjubEngineWithParams> AuthPath<E> {
 
     /// Create a path from a given plain list, of target specified as `list_index`.
     /// Panic if `list_index` is out of bound.
-    pub fn from_publickeys<B,I>(iter: I, list_index: usize) -> (AuthPath<E>,AuthRoot<E>) 
+    pub fn from_publickeys<B,I>(iter: I, index: usize) -> (AuthPath<E>,AuthRoot<E>) 
     where B: Borrow<PublicKey<E>>, I: IntoIterator<Item=B>
     {
         let list = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 ).collect::<Vec<_>>();
         let path_len = 0usize.leading_zeros() - list.len().leading_zeros();
         let mut path = Vec::with_capacity(path_len as usize);
         assert!(list.len() > 1);
-        let root = merkleize::<E,_>(list,0,|x| path.push(x))
+        let root = merkleize::<E,_>(list,index,|x| path.push(x))
             .expect("initial list is not empty; qed");
         (AuthPath(path), AuthRoot(root))
     }
