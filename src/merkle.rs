@@ -89,40 +89,46 @@ impl<E: JubjubEngine> AuthPathPoint<E> {
 }
 
 
-fn merkleize<E,F>(mut cur: Vec<E::Fr>, mut index: usize, mut f: F) -> Option<E::Fr> 
-where E: JubjubEngineWithParams, F: FnMut(AuthPathPoint<E>) -> ()
+/// Compute Merkle root and path
+///
+/// Leaves list argument unusable
+fn merkleize<E>(
+    depth: usize,
+    mut list: &mut [E::Fr],
+    mut index: usize,
+    mut f: impl FnMut(AuthPathPoint<E>) -> (),
+) -> E::Fr
+where E: JubjubEngineWithParams,
 {
-    let mut depth_to_bottom = 0;
-    let mut next = Vec::with_capacity(cur.len()/2);
+    assert!( list.len() > 0 );
+    // let mut tail = 0usize;
+    // if list.len().count_ones() != 1 {
+    //    let s = 0usize.leadng_zeros() - list.len().leading_zeros() - 1;
+    //     tail = (1usize << s) - list.len();
+    // }
 
-    while cur.len() > 1 {
-        let left = cur.pop();
-        let right = cur.pop();
-
-        next.push(auth_hash::<E>(left.as_ref(), right.as_ref(), depth_to_bottom));
-
-        let (current_selection, mut sibling_index) = if index % 2 == 0 {
-            (MerkleSelection::Left, index + 1)
+    for depth_to_bottom in 0..depth {
+        let (current_selection, sibling) = if index % 2 == 0 {
+            (MerkleSelection::Left, list.get(index).cloned())
         } else {
-            (MerkleSelection::Right, index - 1)
+            (MerkleSelection::Right, list.get(index).cloned())
         };
-        if depth_to_bottom % 2 == 1 {
-            sibling_index = next.len() - sibling_index - 1;
+        f(AuthPathPoint { current_selection, sibling, });
+
+        for i in (0..list.len()).filter(|x| x % 2 == 0) { 
+            let left = list.get(i);
+            let right = list.get(i+1);
+            list[i/2] = auth_hash::<E>(left, right, depth_to_bottom);
         }
-        f(AuthPathPoint {
-            current_selection,
-            sibling: next.get(sibling_index).cloned()
-        });
 
-        ::core::mem::swap(&mut cur,&mut next);
-        next.clear();
-        depth_to_bottom += 1;
         index /= 2;
-    }
 
-    cur.pop()
+        let len = list.len() + (list.len() % 2);
+        list = &mut list[0..len/2]
+    }    
+
+    list[0].clone()
 }
-
 
 /// The authentication path of the merkle tree.
 #[derive(Clone, Debug)]
@@ -139,15 +145,14 @@ impl<E: JubjubEngineWithParams> AuthPath<E> {
 
     /// Create a path from a given plain list, of target specified as `list_index`.
     /// Panic if `list_index` is out of bound.
-    pub fn from_publickeys<B,I>(iter: I, index: usize) -> (AuthPath<E>,AuthRoot<E>) 
+    pub fn from_publickeys<B,I>(iter: I, index: usize, depth: usize) -> (AuthPath<E>,AuthRoot<E>) 
     where B: Borrow<PublicKey<E>>, I: IntoIterator<Item=B>
     {
-        let list = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 ).collect::<Vec<_>>();
+        let mut list = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 ).collect::<Vec<_>>();
         let path_len = 0usize.leading_zeros() - list.len().leading_zeros();
         let mut path = Vec::with_capacity(path_len as usize);
         assert!(list.len() > 1);
-        let root = merkleize::<E,_>(list,index,|x| path.push(x))
-            .expect("initial list is not empty; qed");
+        let root = merkleize( depth, list.as_mut_slice(), index, |x| path.push(x) );
         (AuthPath(path), AuthRoot(root))
     }
 
@@ -213,12 +218,12 @@ impl<E: JubjubEngineWithParams> AuthRoot<E> {
     /// Get the merkle root from a list of public keys. Panic if length of the list is zero.
     ///
     /// TODO: We do no initial hashing here for the leaves, but maybe that's fine.
-    pub fn from_publickeys<B,I>(iter: I) -> Self
+    pub fn from_publickeys<B,I>(iter: I, depth: usize) -> Self
     where B: Borrow<PublicKey<E>>, I: IntoIterator<Item=B>
     {
-        let list = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 ).collect::<Vec<_>>();
+        let mut list = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 ).collect::<Vec<_>>();
         assert!(list.len() > 1);
-        AuthRoot( merkleize::<E,_>(list,0,|_| ()).expect("initial list is not empty; qed") )
+        AuthRoot(merkleize( depth, list.as_mut_slice(), 0 , |_: AuthPathPoint<E>| () ))
     }
 
     pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
