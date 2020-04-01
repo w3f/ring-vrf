@@ -321,6 +321,38 @@ where
 }
 
 
+/// Almost all VRF methods support signing an extra message
+/// alongside the VRF, so `no_extra` provides a convenient
+/// default transcript when no extra message is desired.
+pub fn no_extra() -> Transcript {
+    Transcript::new(b"VRF")
+}
+
+/// We take closures like `F: FnMut(&VRFInOut<E>) -> impl VRFExtraMessage`
+/// in `vrf_sign_after_check` to avoid needing both 
+/// `-> bool` and `-> Option<Transcript>` versions.
+pub trait VRFExtraMessage {
+    type T: SigningTranscript;
+    fn extra(self) -> Option<Self::T>;
+}
+impl<T: SigningTranscript> VRFExtraMessage for Option<T> {
+    type T = T;
+    fn extra(self) -> Option<T> { self }
+}
+impl VRFExtraMessage for bool {
+    type T = Transcript;
+    fn extra(self) -> Option<Transcript> {
+        if self { Some(no_extra()) } else { None }
+    }
+}
+impl VRFExtraMessage for Transcript {
+    type T = Transcript;
+    fn extra(self) -> Option<Transcript> { Some(self) }
+}
+
+pub fn no_check_no_extra<E: JubjubEngineWithParams>(_: &VRFInOut<E>) -> bool { true }
+
+
 
 #[cfg(test)]
 mod tests {

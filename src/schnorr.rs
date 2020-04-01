@@ -87,7 +87,7 @@ use crate::{
     rand_hack, JubjubEngineWithParams, 
     SigningTranscript, Scalar,
     SecretKey, PublicKey,
-    VRFInput, VRFOutput, VRFInOut
+    VRFInput, VRFOutput, VRFInOut, vrf::{no_extra, VRFExtraMessage}
 };  // Params
 
 
@@ -225,6 +225,60 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         (VRFProof { c, s }, VRFProofBatchable { R, Hr, s })
     }
 
+    /// Run our Schnorr VRF on one single input, producing the output
+    /// and correspodning Schnorr proof.
+    /// You must extract the `VRFOutput` from the `VRFInOut` returned.
+    pub fn vrf_sign_simple(&self, input: VRFInput<E>)
+     -> (VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)
+    {
+        self.vrf_sign_first(input, no_extra())
+    }
+
+    /// Run our Schnorr VRF on one single input and an extra message 
+    /// transcript, producing the output and correspodning Schnorr proof.
+    /// You must extract the `VRFOutput` from the `VRFInOut` returned.
+    ///
+    /// There are schemes like Ouroboros Praos in which nodes evaluate
+    /// VRFs repeatedly until they win some contest.  In these case,
+    /// you should probably use `vrf_sign_after_check` to gain access to
+    /// the `VRFInOut` from `vrf_create_hash` first, and then avoid
+    /// computing the proof whenever you do not win. 
+    pub fn vrf_sign_first<T>(&self, input: VRFInput<E>, extra: T)
+     -> (VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)
+    where T: SigningTranscript,
+    {
+        let inout = input.to_inout(self);
+        let (proof, proof_batchable) = self.dleq_proove(extra, &inout, rand_hack());
+        (inout, proof, proof_batchable)
+    }
+
+    /// Run our Schnorr VRF on one single input, producing the output
+    /// and correspodning Schnorr proof, but only if the result first
+    /// passes some check, which itself returns either a `bool` or else
+    /// an `Option` of an extra message transcript.
+    pub fn vrf_sign_after_check<F,O>(&self, input: VRFInput<E>, mut check: F)
+     -> Option<(VRFOutput<E>, VRFProof<E>, VRFProofBatchable<E>)>
+    where F: FnOnce(&VRFInOut<E>) -> O,
+          O: VRFExtraMessage,
+    {
+        let inout = input.to_inout(self);
+        let extra = check(&inout).extra() ?;
+        Some(self.vrf_sign_checked(inout,extra))
+    }
+
+    /// Run our Schnorr VRF on the `VRFInOut` input-output pair,
+    /// producing its output component and and correspodning Schnorr
+    /// proof.
+    pub fn vrf_sign_checked<T>(&self, inout: VRFInOut<E>, extra: T) 
+     -> (VRFOutput<E>, VRFProof<E>, VRFProofBatchable<E>)
+    where T: SigningTranscript,
+    {
+        let (proof, proof_batchable) = self.dleq_proove(extra, &inout, rand_hack());
+        (inout.output, proof, proof_batchable)
+    }
+
+    /*
+
     /// Run VRF on one single input transcript, producing the outpus
     /// and correspodning short proof.
     ///
@@ -279,6 +333,8 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         Some((p, proof, proof_batchable))
     }
 
+    */
+    
     /// Run VRF on several input transcripts, producing their outputs
     /// and a common short proof.
     ///
@@ -286,7 +342,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// if even the hash of the message being signed is sensitive then
     /// you might reimplement some constant time variant.
     #[cfg(any(feature = "alloc", feature = "std"))]
-    pub fn vrfs_sign<R,T,B,I>(&self, ts: I)
+    pub fn vrfs_sign_simple<R,T,B,I>(&self, ts: I)
      -> (Box<[VRFInOut<E>]>, VRFProof<E>, VRFProofBatchable<E>)
     where B: Borrow<VRFInput<E>>,
           I: IntoIterator<Item=B>,
@@ -301,7 +357,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// if even the hash of the message being signed is sensitive then
     /// you might reimplement some constant time variant.
     #[cfg(any(feature = "alloc", feature = "std"))]
-    pub fn vrfs_sign_extra<T,B,I>(&self, ts: I, extra: T)
+    pub fn vrfs_sign<T,B,I>(&self, ts: I, extra: T)
      -> (Box<[VRFInOut<E>]>, VRFProof<E>, VRFProofBatchable<E>)
     where T: SigningTranscript,
           B: Borrow<VRFInput<E>>,

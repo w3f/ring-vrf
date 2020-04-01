@@ -29,7 +29,7 @@ mod circuit;
 mod generator;
 mod prover;
 mod verifier;
-mod vrf;
+pub mod vrf;
 pub mod schnorr;
 pub mod bls12_381;
 
@@ -40,7 +40,7 @@ pub use crate::context::{signing_context,SigningTranscript}; // SigningTranscrip
 use crate::circuit::RingVRF;
 pub use crate::merkle::{MerkleSelection, AuthPath, AuthRoot, AuthPathPoint, auth_hash};
 pub use crate::generator::generate_crs;
-pub use vrf::{VRFInOut, VRFInput, VRFOutput, vrfs_merge};
+pub use vrf::{VRFInOut, VRFInput, VRFOutput, vrfs_merge}; // no_extra, run_no_extra
 
 
 #[macro_use]
