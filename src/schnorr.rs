@@ -83,7 +83,12 @@ use merlin::Transcript;
 
 use rand_core::{RngCore,CryptoRng};
 
-use crate::{JubjubEngineWithParams, SigningTranscript, SecretKey, PublicKey, Scalar, VRFInOut};  // Params
+use crate::{
+    JubjubEngineWithParams, 
+    SigningTranscript, Scalar,
+    SecretKey, PublicKey,
+    VRFInput, VRFOutput, VRFInOut
+};  // Params
 
 
 /// Short proof of correctness for associated VRF output,
@@ -220,8 +225,6 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         (VRFProof { c, s }, VRFProofBatchable { R, Hr, s })
     }
 
-/*
-
     /// Run VRF on one single input transcript, producing the outpus
     /// and correspodning short proof.
     ///
@@ -230,26 +233,24 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// you should probably use vrf_sign_n_check to gain access to the
     /// `VRFInOut` from `vrf_create_hash` first, and then avoid computing
     /// the proof whenever you do not win. 
-    pub fn vrf_sign<T>(&self, t: T, params: &E::Params)
+    pub fn vrf_sign<R>(&self, input: VRFInput<E>, rng: R)
      -> (VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)
-    where T: VRFSigningTranscript,
+    where R: RngCore+CryptoRng,
     {
-        self.vrf_sign_extra(t,Transcript::new(b"VRF"),params)
+        self.vrf_sign_extra(input, Transcript::new(b"VRF"), rng)
         // We have context in t and another hear confuses batching
     }
 
     /// Run VRF on one single input transcript and an extra message transcript, 
     /// producing the outpus and correspodning short proof.
-    pub fn vrf_sign_extra<T,E>(&self, t: T, extra: E, params: &E::Params)
+    pub fn vrf_sign_extra<R,T>(&self, input: VRFInput<E>, extra: T, rng: R)
      -> (VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)
-    where T: VRFSigningTranscript,
-          E: SigningTranscript,
+    where R: RngCore+CryptoRng, T: SigningTranscript,
     {
-        let p = self.vrf_create_hash(t);
-        let (proof, proof_batchable) = self.dleq_proove(extra, &p, params);
+        let p = input.to_inout(self);
+        let (proof, proof_batchable) = self.dleq_proove(extra, &p, rng);
         (p, proof, proof_batchable)
     }
-
 
     /// Run VRF on one single input transcript, producing the outpus
     /// and correspodning short proof only if the result first passes
@@ -259,27 +260,28 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// VRFs repeatedly until they win some contest.  In these case,
     /// you might use this function to short circuit computing the full
     /// proof.
-    pub fn vrf_sign_after_check<T,F>(&self, t: T, mut check: F, params: &E::Params)
+    pub fn vrf_sign_after_check<R,F>(&self, input: VRFInput<E>, mut check: F, rng: R)
      -> Option<(VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)>
-    where T: VRFSigningTranscript,
+    where R: RngCore+CryptoRng,
           F: FnMut(&VRFInOut<E>) -> bool,
     {
-        let f = |io| if check(io) { Some(Transcript::new(b"VRF")) } else { None };
-        self.vrf_sign_extra_after_check(t,f,params)
+        self.vrf_sign_extra_after_check( input,
+            |io| if check(io) { Some(Transcript::new(b"VRF")) } else { None },
+            rng )
     }
 
     /// Run VRF on one single input transcript, producing the outpus
     /// and correspodning short proof only if the result first passes
     /// some check, which itself returns an extra message transcript.
-    pub fn vrf_sign_extra_after_check<T,E,F>(&self, t: T, mut check: F, params: &E::Params)
-     -> Option<(VRFInOut<E>, VRFProof, VRFProofBatchable)>
-    where T: VRFSigningTranscript,
-          E: SigningTranscript,
-          F: FnMut(&VRFInOut<E>) -> Option<E>,
+    pub fn vrf_sign_extra_after_check<R,T,F>(&self, input: VRFInput<E>, mut check: F, rng: R)
+     -> Option<(VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)>
+    where R: RngCore+CryptoRng,
+          T: SigningTranscript,
+          F: FnMut(&VRFInOut<E>) -> Option<T>,
     {
-        let p = self.vrf_create_hash(t);
+        let p = input.to_inout(self);
         let extra = check(&p) ?;
-        let (proof, proof_batchable) = self.dleq_proove(extra, &p, params);
+        let (proof, proof_batchable) = self.dleq_proove(extra, &p, rng);
         Some((p, proof, proof_batchable))
     }
 
@@ -290,13 +292,13 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// if even the hash of the message being signed is sensitive then
     /// you might reimplement some constant time variant.
     #[cfg(any(feature = "alloc", feature = "std"))]
-    pub fn vrfs_sign<T, I>(&self, ts: I, params: &E::Params)
+    pub fn vrfs_sign<R,T,B,I>(&self, ts: I, rng: R)
      -> (Box<[VRFInOut<E>]>, VRFProof<E>, VRFProofBatchable<E>)
-    where
-        T: VRFSigningTranscript,
-        I: IntoIterator<Item = T>,
+    where R: RngCore+CryptoRng,
+          B: Borrow<VRFInput<E>>,
+          I: IntoIterator<Item=B>,
     {
-        self.vrfs_sign_extra(ts, Transcript::new(b"VRF"), params)
+        self.vrfs_sign_extra(ts, Transcript::new(b"VRF"), rng)
     }
 
     /// Run VRF on several input transcripts and an extra message transcript,
@@ -306,23 +308,20 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// if even the hash of the message being signed is sensitive then
     /// you might reimplement some constant time variant.
     #[cfg(any(feature = "alloc", feature = "std"))]
-    pub fn vrfs_sign_extra<T,E,I>(&self, ts: I, extra: E, params: &E::Params)
+    pub fn vrfs_sign_extra<R,T,B,I>(&self, ts: I, extra: T, rng: R)
      -> (Box<[VRFInOut<E>]>, VRFProof<E>, VRFProofBatchable<E>)
-    where
-        T: VRFSigningTranscript,
-        E: SigningTranscript,
-        I: IntoIterator<Item = T>,
+    where R: RngCore+CryptoRng,
+          T: SigningTranscript,
+          B: Borrow<VRFInput<E>>,
+          I: IntoIterator<Item=B>,
     {
         let ps = ts.into_iter()
-            .map(|t| self.vrf_create_hash(t))
+            .map(|t| t.to_inout(self))
             .collect::<Vec<VRFInOut<E>>>();
-        let p = self.public.vrfs_merge(&ps,true);
-        let (proof, proof_batchable) = self.dleq_proove(extra, &p, params);
+        let p = vrfs_merge(&ps);
+        let (proof, proof_batchable) = self.dleq_proove(extra, &p,rng);
         (ps.into_boxed_slice(), proof, proof_batchable)
     }
-
-*/
-
 }
 
 impl<E: JubjubEngineWithParams> PublicKey<E> {

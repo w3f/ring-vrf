@@ -130,7 +130,7 @@ pub struct AuthPath<E: JubjubEngine>(pub Vec<AuthPathPoint<E>>);
 
 impl<E: JubjubEngineWithParams> AuthPath<E> {
     /// Create a random path.
-    pub fn random<R: rand_core::RngCore>(depth: usize, rng: &mut R) -> Self {
+    pub fn random<R: rand_core::RngCore>(depth: usize, rng: &mut R) -> AuthPath<E> {
         Self(vec![AuthPathPoint {
             current_selection: MerkleSelection::random(rng),
             sibling: Some(<E::Fr>::random(rng))
@@ -162,8 +162,8 @@ impl<E: JubjubEngineWithParams> AuthPath<E> {
 }
 
 impl<E: JubjubEngine> Default for AuthPath<E> {
-    fn default() -> Self {
-        Self(Default::default())
+    fn default() -> AuthPath<E> {
+        AuthPath(Default::default())
     }
 }
 
