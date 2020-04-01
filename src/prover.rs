@@ -14,42 +14,43 @@ use zcash_primitives::jubjub::JubjubEngine;
 use rand_core::{RngCore,CryptoRng};
 
 use crate::{
-    rand_hack, JubjubEngineWithParams,
+    JubjubEngineWithParams,
     Params, SigningTranscript, 
-    RingVRF, AuthPath, VRFInput, SecretKey
+    RingVRF, AuthPath, VRFInput, SecretKey,
+    vrf::GoVRF,
 };
 
 
 impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// Create ring VRF signature using specified randomness source.
-    pub fn ring_vrf_sign_with_rng<T,R,P>(
+    pub fn ring_vrf_sign<T,R,P>(
         &self,
-        vrf_input: VRFInput<E>,
-        mut extra: T,
+        vrf_input: impl Into<GoVRF<VRFInput<E>,T,R>>,
         auth_path: AuthPath<E>,
         proving_key: P,
         params: &Params,
-        rng: &mut R,
     ) -> Result<Proof<E>, SynthesisError> 
     where
         T: SigningTranscript, 
         P: groth16::ParameterSource<E>, 
         R: RngCore+CryptoRng,
     {
+        let GoVRF { vrf_io, mut extra, mut rng, } = vrf_input.into();
         let instance = RingVRF {
             params,
             sk: Some(self.clone()),
-            vrf_input: Some(vrf_input.0.mul_by_cofactor(E::params())),
+            vrf_input: Some(vrf_io.0.mul_by_cofactor(E::params())),
             extra: Some(extra.challenge_scalar(b"extra-msg")),
             auth_path: Some(auth_path),
         };
-        groth16::create_random_proof(instance, proving_key, rng)
+        groth16::create_random_proof(instance, proving_key, &mut rng)
     } 
 
+    /*
     /// Create ring VRF signature using system randomness.
     pub fn ring_vrf_sign<T: SigningTranscript>(
         &self,
-        vrf_input: VRFInput<E>,
+        vrf_input: impl Into<VRFInput<E>>,
         extra: T,
         auth_path: AuthPath<E>,
         proving_key: &groth16::Parameters<E>,
@@ -58,5 +59,6 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     {
         self.ring_vrf_sign_with_rng(vrf_input, extra, auth_path, proving_key, params, &mut rand_hack())
     } 
+    */
 }
 

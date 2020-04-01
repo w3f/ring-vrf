@@ -321,6 +321,49 @@ where
 }
 
 
+/// A convenient builder struct
+pub struct GoVRF<IO,T: SigningTranscript,R=OsRng> {
+    pub vrf_io: IO,
+    pub extra: T,
+    pub rng: R,
+}
+
+impl<E,T,R> From<GoVRF<VRFInOut<E>,T,R>> for GoVRF<VRFInput<E>,T,R> 
+where E: JubjubEngine, T: SigningTranscript, R: RngCore+CryptoRng,
+{
+    fn from(x: GoVRF<VRFInOut<E>,T,R>) -> GoVRF<VRFInput<E>,T,R> { 
+        let GoVRF { vrf_io, extra, rng } = x;
+        GoVRF { vrf_io: vrf_io.input, extra, rng } 
+    }
+}
+
+impl<E> From<VRFInOut<E>> for GoVRF<VRFInOut<E>,Transcript,OsRng> 
+where E: JubjubEngine, 
+{
+    fn from(vrf_io: VRFInOut<E>) -> Self { 
+        let extra = Transcript::new(b"VRF");
+        GoVRF { vrf_io, extra, rng: OsRng } 
+    }
+}
+
+impl<E> From<VRFInOut<E>> for GoVRF<VRFInput<E>,Transcript,OsRng> 
+where E: JubjubEngine,
+{
+    fn from(vrf_io: VRFInOut<E>) -> Self { 
+        let extra = Transcript::new(b"VRF");
+        GoVRF { vrf_io: vrf_io.input, extra, rng: OsRng } 
+    }
+}
+
+impl<E> From<VRFInput<E>> for GoVRF<VRFInput<E>,Transcript,OsRng> 
+where E: JubjubEngine,
+{
+    fn from(vrf_io: VRFInput<E>) -> Self { 
+        let extra = Transcript::new(b"VRF");
+        GoVRF { vrf_io, extra, rng: OsRng } 
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
