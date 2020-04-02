@@ -366,7 +366,7 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
             Ok(VRFProofBatchable { R, Hr, s }) // Scalar: Copy ?!?
         } else {
             // Err(SignatureError::EquationFalse)
-            Err( io::Error::new(io::ErrorKind::InvalidInput, "VRF signature validation failed" ) )
+            Err( io::Error::new(io::ErrorKind::InvalidInput, "VRF signature validation failed") )
         }
     }
 
