@@ -277,6 +277,64 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         let (proof, proof_batchable) = self.dleq_proove(extra, &inout, rand_hack());
         (inout.output, proof, proof_batchable)
     }
+
+    /*
+
+    /// Run VRF on one single input transcript, producing the outpus
+    /// and correspodning short proof.
+    ///
+    /// There are schemes like Ouroboros Praos in which nodes evaluate
+    /// VRFs repeatedly until they win some contest.  In these case,
+    /// you should probably use vrf_sign_n_check to gain access to the
+    /// `VRFInOut` from `vrf_create_hash` first, and then avoid computing
+    /// the proof whenever you do not win. 
+    pub fn vrf_sign(&self, input: VRFInput<E>)
+     -> (VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)
+    {
+        self.vrf_sign_extra(input, Transcript::new(b"VRF"))
+    }
+
+    /// Run VRF on one single input transcript and an extra message transcript, 
+    /// producing the outpus and correspodning short proof.
+    pub fn vrf_sign_extra<T>(&self, input: VRFInput<E>, extra: T)
+     -> (VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)
+    where T: SigningTranscript,
+    {
+        let p = input.to_inout(self);
+        let (proof, proof_batchable) = self.dleq_proove(extra, &p, rand_hack());
+        (p, proof, proof_batchable)
+    }
+
+    /// Run VRF on one single input transcript, producing the outpus
+    /// and correspodning short proof only if the result first passes
+    /// some check.
+    ///
+    /// There are schemes like Ouroboros Praos in which nodes evaluate
+    /// VRFs repeatedly until they win some contest.  In these case,
+    /// you might use this function to short circuit computing the full
+    /// proof.
+    pub fn vrf_sign_after_check<F>(&self, input: VRFInput<E>, mut check: F)
+     -> Option<(VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)>
+    where F: FnMut(&VRFInOut<E>) -> bool,
+    {
+        self.vrf_sign_extra_after_check( input, |io| if check(io) { Some(Transcript::new(b"VRF")) } else { None })
+    }
+
+    /// Run VRF on one single input transcript, producing the outpus
+    /// and correspodning short proof only if the result first passes
+    /// some check, which itself returns an extra message transcript.
+    pub fn vrf_sign_extra_after_check<T,F>(&self, input: VRFInput<E>, mut check: F)
+     -> Option<(VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)>
+    where T: SigningTranscript,
+          F: FnMut(&VRFInOut<E>) -> Option<T>,
+    {
+        let p = input.to_inout(self);
+        let extra = check(&p) ?;
+        let (proof, proof_batchable) = self.dleq_proove(extra, &p, rand_hack());
+        Some((p, proof, proof_batchable))
+    }
+
+    */
     
     /// Run VRF on several input transcripts, producing their outputs
     /// and a common short proof.
