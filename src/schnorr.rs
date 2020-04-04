@@ -16,42 +16,6 @@
 //! outputs per input.  There is another even later variant at
 //! https://datatracker.ietf.org/doc/draft-irtf-cfrg-vrf/
 //!
-//! We support individual signers merging numerous VRF outputs created
-//! with the same keypair, which follows the "DLEQ Proofs" and "Batching
-//! the Proofs" sections of "Privacy Pass - The Math" by Alex Davidson,
-//! https://new.blog.cloudflare.com/privacy-pass-the-math/#dleqproofs
-//! and "Privacy Pass: Bypassing Internet Challenges Anonymously"
-//! by Alex Davidson, Ian Goldberg, Nick Sullivan, George Tankersley,
-//! and Filippo Valsorda.
-//! https://www.petsymposium.org/2018/files/papers/issue3/popets-2018-0026.pdf
-//!
-//! As noted there, our merging technique's soundness appeals to
-//! Theorem 3.17 on page 74 of Ryan Henry's PhD thesis
-//! "Efficient Zero-Knowledge Proofs and Applications"
-//! https://uwspace.uwaterloo.ca/bitstream/handle/10012/8621/Henry_Ryan.pdf
-//! See also the attack on Peng and Bao’s batch proof protocol in
-//! "Batch Proofs of Partial Knowledge" by Ryan Henry and Ian Goldberg
-//! https://www.cypherpunks.ca/~iang/pubs/batchzkp-acns.pdf
-//!
-//! We might reasonably ask if the VRF signer's public key should
-//! really be hashed when creating the scalars in `vrfs_merge*`.
-//! After all, there is no similar requirement when the values being
-//! hashed are BLS public keys in say
-//! https://crypto.stanford.edu/~dabo/pubs/papers/BLSmultisig.html
-//! In fact, we expect the public key could be dropped both in
-//! Privacy Pass' case, due to using randomness in the messages,
-//! and in the VRF case, provided the message depends upon shared
-//! randomness created after the public key.  Yet, there are VRF
-//! applications outside these two cases, and DLEQ proof applications
-//! where the points are not even hashes.  At minimum, we expect
-//! hashing the public key prevents malicious signers from choosing
-//! their key to cancel out the blinding of a particular point,
-//! which might become important in a some anonymity applications.
-//! In any case, there is no cost to hashing the public key for VRF
-//! applications, but important such an approach cannot yield a
-//! verifiable shuffle.
-//! TODO: Explain better!
-//!
 //! We also implement verifier side batching analogous to batched
 //! verification of Schnorr signatures, but note this requires an
 //! extra curve point, which enlarges the VRF proofs from 64 bytes

@@ -270,22 +270,33 @@ where E: JubjubEngine
 }
 
 /// Merge VRF input and output pairs from the same signer,
-/// using variable time arithmetic
+/// probably using variable time arithmetic
 ///
-/// You should use `vartime=true` when verifying VRF proofs batched
-/// by the singer.  You could usually use `vartime=true` even when
-/// producing proofs, provided the set being signed is not secret.
-///
-/// There is sadly no constant time 128 bit multiplication in dalek,
-/// making `vartime=false` somewhat slower than necessary.  It should
-/// only impact signers in niche scenarios however, so the slower
-/// variant should normally be unnecessary.
-///
-/// Panics if given an empty points list.
-///
-/// TODO: Add constant time 128 bit batched multiplication to dalek.
-/// TODO: Is rand_chacha's `gen::<u128>()` standardizable enough to
-/// prefer it over merlin for the output?  
+//! We merge VRF input-outputs pairs by a single signer using the same
+//! technique as the "DLEQ Proofs" and "Batching the Proofs" sections
+//! of "Privacy Pass - The Math" by Alex Davidson,
+//! https://new.blog.cloudflare.com/privacy-pass-the-math/#dleqproofs
+//! and "Privacy Pass: Bypassing Internet Challenges Anonymously"
+//! by Alex Davidson, Ian Goldberg, Nick Sullivan, George Tankersley,
+//! and Filippo Valsorda.
+//! https://www.petsymposium.org/2018/files/papers/issue3/popets-2018-0026.pdf
+//!
+//! As noted there, our merging technique's soundness appeals to
+//! Theorem 3.17 on page 74 of Ryan Henry's PhD thesis
+//! "Efficient Zero-Knowledge Proofs and Applications"
+//! https://uwspace.uwaterloo.ca/bitstream/handle/10012/8621/Henry_Ryan.pdf
+//! See also the attack on Peng and Bao’s batch proof protocol in
+//! "Batch Proofs of Partial Knowledge" by Ryan Henry and Ian Goldberg
+//! https://www.cypherpunks.ca/~iang/pubs/batchzkp-acns.pdf
+//!
+//! We could reasonably ask if the VRF signer's public key or the
+//! ring's merkle root should be hashed when creating the scalars in
+//! `vrfs_merge*`, as Privacy Pass does.  In principle, one could
+//! dicover relationships among the delinearizing scalars using
+//! k-sum attacks, but not among distinct VRF inputs because they're
+//! hashed to the curve.  TODO: Cite Wagner.
+//! We also note no such requirement when the values being hashed are
+//! BLS public keys as in https://crypto.stanford.edu/~dabo/pubs/papers/BLSmultisig.html
 pub fn vrfs_merge<E,B>(ps: &[B]) -> VRFInOut<E>
 where
     E: JubjubEngineWithParams,
