@@ -299,7 +299,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     }
 
     */
-    
+
     /// Run VRF on several input transcripts, producing their outputs
     /// and a common short proof.
     ///
@@ -392,81 +392,59 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
         }
     }
 
-    /*
-    
     /// Verify VRF proof for one single input transcript and corresponding output.
-    pub fn vrf_verify<T: VRFSigningTranscript>(
+    pub fn vrf_verify_simple(
         &self,
-        t: T,
-        out: &VRFOutput<E>,
+        inout: VRFInOut<E>,
         proof: &VRFProof<E>,
-    ) -> SignatureResult<(VRFInOut<E>, VRFProofBatchable<E>)> {
-        self.vrf_verify_extra(t,out,proof,Transcript::new(b"VRF"))
-    }
-
-    /// Verify VRF proof for one single input transcript and corresponding output.
-    pub fn vrf_verify_extra<T,E>(
-        &self,
-        t: T,
-        out: &VRFOutput<E>,
-        proof: &VRFProof<E>,
-        extra: E,
     ) -> SignatureResult<(VRFInOut<E>, VRFProofBatchable<E>)> 
-    where T: VRFSigningTranscript,
-          E: SigningTranscript,
     {
-        let p = out.attach_input_hash(self,t) ?;
-        let proof_batchable = self.dleq_verify(extra, &p, proof) ?;
-        Ok((p, proof_batchable))
+        self.vrf_verify_extra(inout, proof, no_extra())
     }
 
-    /// Verify a common VRF short proof for several input transcripts and corresponding outputs.
-    #[cfg(any(feature = "alloc", feature = "std"))]
-    pub fn vrfs_verify<T,I,O>(
+    /// Verify VRF proof for one single input transcript and corresponding output.
+    pub fn vrf_verify<T>(
         &self,
-        transcripts: I,
-        outs: &[O],
+        inout: VRFInOut<E>,
         proof: &VRFProof<E>,
-    ) -> SignatureResult<(Box<[VRFInOut<E>]>, VRFProofBatchable<E>)>
-    where
-        T: VRFSigningTranscript,
-        I: IntoIterator<Item = T>,
-        O: Borrow<VRFOutput>,
+        extra: T,
+    ) -> SignatureResult<(VRFInOut<E>, VRFProofBatchable<E>)> 
+    where T: SigningTranscript,
     {
-        self.vrfs_verify_extra(transcripts,outs,proof,Transcript::new(b"VRF"))
+        let proof_batchable = self.dleq_verify(extra, &inout, proof) ?;
+        Ok((inout, proof_batchable))
     }
 
     /// Verify a common VRF short proof for several input transcripts and corresponding outputs.
     #[cfg(any(feature = "alloc", feature = "std"))]
-    pub fn vrfs_verify_extra<T,E,I,O>(
+    pub fn vrfs_verify_simple<T,O>(
         &self,
-        transcripts: I,
-        outs: &[O],
-        proof: &VRFProof,
-        extra: E,
-    ) -> SignatureResult<(Box<[VRFInOut<E>]>, VRFProofBatchable<E>)>
+        inouts: &[O],
+        proof: &VRFProof<E>,
+    ) -> SignatureResult<VRFProofBatchable<E>>
     where
         T: VRFSigningTranscript,
-        E: SigningTranscript,
-        I: IntoIterator<Item = T>,
-        O: Borrow<VRFOutput>,
+        O: Borrow<VRFInOut<E>>,
     {
-        let mut ts = transcripts.into_iter();
-        let ps = ts.by_ref().zip(outs)
-            .map(|(t, out)| out.borrow().attach_input_hash(self,t))
-            .collect::<SignatureResult<Vec<VRFInOut<E>>>>() ?;
-        assert!(ts.next().is_none(), "Too few VRF outputs for VRF inputs.");
-        assert!(
-            ps.len() == outs.len(),
-            "Too few VRF inputs for VRF outputs."
-        );
-        let p = self.vrfs_merge(&ps[..],true);
-        let proof_batchable = self.dleq_verify(extra, &p, proof) ?;
-        Ok((ps.into_boxed_slice(), proof_batchable))
+        self.vrfs_verify(inouts, proof, no_extra())
     }
 
-*/
-    
+    /// Verify a common VRF short proof for several input transcripts and corresponding outputs.
+    #[cfg(any(feature = "alloc", feature = "std"))]
+    pub fn vrfs_verify<T,O>(
+        &self,
+        inouts: &[O],
+        proof: &VRFProof,
+        extra: T,
+    ) -> SignatureResult<VRFProofBatchable<E>>
+    where
+        T: SigningTranscript,
+        O: Borrow<VRFInOut<E>>,
+    {
+        let p = self.vrfs_merge(&ps[..]);
+        let proof_batchable = self.dleq_verify(extra, &p, proof) ?;
+        Ok(proof_batchable)
+    }    
 }
 
 /*
@@ -492,7 +470,8 @@ pub fn dleq_verify_batch(
     ps: &[VRFInOut<E>],
     proofs: &[VRFProofBatchable<E>],
     public_keys: &[PublicKey<E>],
-) -> SignatureResult<()> {
+) -> SignatureResult<()> 
+{
     const ASSERT_MESSAGE: &'static str = "The number of messages/transcripts / input points, output points, proofs, and public keys must be equal.";
     assert!(ps.len() == proofs.len(), ASSERT_MESSAGE);
     assert!(proofs.len() == public_keys.len(), ASSERT_MESSAGE);
@@ -585,7 +564,6 @@ where
     }
 }
 */
-
 
 /*
 #[cfg(test)]
