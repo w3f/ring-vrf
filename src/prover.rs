@@ -17,7 +17,7 @@ use rand_core::{RngCore,CryptoRng};
 
 
 use crate::{
-    rand_hack, JubjubEngineWithParams,
+    SynthesisResult, rand_hack, JubjubEngineWithParams,
     Params, SigningTranscript, 
     SecretKey,
     RingVRF, AuthPath, 
@@ -25,8 +25,6 @@ use crate::{
     vrf::{no_extra, VRFExtraMessage},
 };
 
-
-type PResult<T> = Result<T, SynthesisError>;
 
 impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// Create ring VRF signature using specified randomness source.
@@ -38,7 +36,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         proving_key: P,
         params: &Params,
         rng: &mut R,
-    ) -> PResult<RingVRFProof<E>> 
+    ) -> SynthesisResult<RingVRFProof<E>> 
     where
         T: SigningTranscript, 
         P: groth16::ParameterSource<E>, 
@@ -65,7 +63,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         auth_path: AuthPath<E>,
         proving_key: P,
         params: &Params,
-    ) -> PResult<(VRFInOut<E>, RingVRFProof<E>)>
+    ) -> SynthesisResult<(VRFInOut<E>, RingVRFProof<E>)>
     where P: groth16::ParameterSource<E>, 
     {
         self.ring_vrf_sign_first(input, no_extra(), auth_path, proving_key, params)
@@ -87,7 +85,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         auth_path: AuthPath<E>,
         proving_key: P,
         params: &Params,
-    ) -> PResult<(VRFInOut<E>, RingVRFProof<E>)>
+    ) -> SynthesisResult<(VRFInOut<E>, RingVRFProof<E>)>
     where T: SigningTranscript,
           P: groth16::ParameterSource<E>, 
     {
@@ -107,7 +105,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         auth_path: AuthPath<E>,
         proving_key: P,
         params: &Params,
-    ) -> PResult<Option<(VRFOutput<E>, RingVRFProof<E>)>>
+    ) -> SynthesisResult<Option<(VRFOutput<E>, RingVRFProof<E>)>>
     where F: FnOnce(&VRFInOut<E>) -> O,
           O: VRFExtraMessage,
           P: groth16::ParameterSource<E>, 
@@ -127,7 +125,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         auth_path: AuthPath<E>,
         proving_key: P,
         params: &Params,
-    ) -> PResult<(VRFOutput<E>, RingVRFProof<E>)>
+    ) -> SynthesisResult<(VRFOutput<E>, RingVRFProof<E>)>
     where T: SigningTranscript,
           P: groth16::ParameterSource<E>, 
     {

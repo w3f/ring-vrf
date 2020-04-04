@@ -20,6 +20,9 @@ extern crate lazy_static;
 #[macro_use]
 extern crate arrayref;
 
+#[macro_use]
+extern crate bench_utils;
+
 
 mod scalar;
 mod keys;
@@ -33,6 +36,7 @@ pub mod vrf;
 pub mod schnorr;
 pub mod bls12_381;
 
+
 use crate::scalar::{Scalar,scalar_times_generator,read_scalar,write_scalar};
 pub use crate::keys::{SecretKey,PublicKey};
 pub use crate::context::{signing_context,SigningTranscript}; // SigningTranscript
@@ -43,8 +47,8 @@ pub use crate::generator::generate_crs;
 pub use vrf::{VRFInOut, VRFInput, VRFOutput, vrfs_merge}; // no_extra, run_no_extra
 
 
-#[macro_use]
-extern crate bench_utils;
+/// Ugly hack until we can unify error handling
+pub type SynthesisResult<T> = Result<T, ::bellman::SynthesisError>;
 
 fn rand_hack() -> impl RngCore+CryptoRng {
     ::rand_core::OsRng

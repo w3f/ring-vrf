@@ -56,6 +56,11 @@ use crate::{
 };  // Params
 
 
+// TODO: Avoid std::io entirely after switching to ZEXE
+pub type SignatureError = ::std::io::Error;
+pub type SignatureResult<T> = ::std::io::Result<T>;
+
+
 /// Short proof of correctness for associated VRF output,
 /// for which no batched verification works.
 #[derive(Debug, Clone)] // PartialEq, Eq // PartialOrd, Ord, Hash
@@ -354,7 +359,7 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
         mut t: T,
         p: &VRFInOut<E>,
         proof: &VRFProof<E>,
-    ) -> io::Result<VRFProofBatchable<E>>
+    ) -> SignatureResult<VRFProofBatchable<E>>
     where
         T: SigningTranscript,
     {
@@ -399,7 +404,7 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
         proof: &VRFProof<E>,
     ) -> SignatureResult<(VRFInOut<E>, VRFProofBatchable<E>)> 
     {
-        self.vrf_verify_extra(inout, proof, no_extra())
+        self.vrf_verify(inout, proof, no_extra())
     }
 
     /// Verify VRF proof for one single input transcript and corresponding output.
@@ -529,7 +534,11 @@ pub fn dleq_verify_batch(
             .chain(ps.iter().map(|p| Some(*p.input.as_point()))),
     ).map(|id| id.is_identity()).unwrap_or(false);
 
-    if b { Ok(()) } else { Err(SignatureError::EquationFalse) }
+    if b { Ok(()) } else {
+        // Err(SignatureError::EquationFalse) 
+        Err( io::Error::new(io::ErrorKind::InvalidInput, "VRF signature validation failed") )
+
+    }
 }
 
 /// Batch verify VRFs by different signers

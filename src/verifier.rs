@@ -12,7 +12,10 @@ use zcash_primitives::jubjub::JubjubEngine;
 use ff::Field;
 use bellman::SynthesisError;
 
-use crate::{JubjubEngineWithParams, SigningTranscript, AuthRoot, VRFInOut};
+use crate::{
+    SynthesisResult, JubjubEngineWithParams, 
+    SigningTranscript, AuthRoot, VRFInOut
+};
 
 
 impl<E: JubjubEngineWithParams> AuthRoot<E> {
