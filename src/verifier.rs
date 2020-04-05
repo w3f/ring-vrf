@@ -68,22 +68,13 @@ impl<E: JubjubEngineWithParams> RingRoot<E> {
         // TODO: Check params.auth_depth perhaps?
         // TODO: subgroup checks
         // Public inputs are elements of the main curve (BLS12-381) scalar field (that matches Jubjub base field, that's the thing)
-        let mut public_input = [E::Fr::zero(); 6];
-        {
-            let (x, y) = vrf_inout.input.0.mul_by_cofactor(&params).to_xy();
-            public_input[0] = x;
-            public_input[1] = y;
-        }
-        {
-            let (x, y) = vrf_inout.output.0.mul_by_cofactor(&params).to_xy();
-            public_input[2] = x;
-            public_input[3] = y;
-        }
+        let (x1, y1) = vrf_inout.input.0.mul_by_cofactor(&params).to_xy();
+        let (x2, y2) = vrf_inout.output.0.mul_by_cofactor(&params).to_xy();
         // We employ the challenge_scalar method since it hashes into a field,
         // but we're hashing into the jubjub base field not the scalar field
         // here, so maybe the method should be renamed.
-        public_input[4] = extra.challenge_scalar(b"extra-msg");
-        public_input[5] = self.0.clone();
+        let extra = extra.challenge_scalar(b"extra-msg");
+        let mut public_input: [E::Fr; 6] = [ x1, y1, x2, y2, extra, self.0.clone() ];
         // Verify the proof
         groth16::verify_proof(verifying_key, &zkproof, &public_input[..])
     }
