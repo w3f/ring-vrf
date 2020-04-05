@@ -172,8 +172,9 @@ impl<E: JubjubEngineWithParams> VRFInOut<E> {
     /// We use this construction both for the VRF usage methods
     /// `VRFInOut::make_*` as well as for signer side batching.
     pub fn commit<T: SigningTranscript>(&self, t: &mut T) {
-        t.commit_point(b"vrf-in", &self.input.0);
-        t.commit_point(b"vrf-out", &self.output.0);
+        let params = E::params();
+        t.commit_point(b"vrf-in", &self.input.0.mul_by_cofactor(&params));
+        t.commit_point(b"vrf-out", &self.output.0.mul_by_cofactor(&params));
     }
 
     /// Raw bytes output from the VRF.
