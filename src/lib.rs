@@ -42,7 +42,7 @@ pub use crate::keys::{SecretKey,PublicKey};
 pub use crate::context::{signing_context,SigningTranscript}; // SigningTranscript
 
 use crate::circuit::RingVRF;
-pub use crate::merkle::{MerkleSelection, AuthPath, AuthRoot, AuthPathPoint, auth_hash};
+pub use crate::merkle::{MerkleSelection, RingSecretPath, RingRoot, RingSecretPathPoint, auth_hash};
 pub use crate::generator::generate_crs;
 pub use vrf::{VRFInOut, VRFInput, VRFOutput, vrfs_merge}; // no_extra, run_no_extra
 
@@ -106,8 +106,8 @@ mod tests {
 
         let vrf_inout = vrf_input.to_inout(&sk);
 
-        let auth_path = AuthPath::random(params.auth_depth, &mut rng);
-        let auth_root = AuthRoot::from_proof(&auth_path, &pk);
+        let auth_path = RingSecretPath::random(params.auth_depth, &mut rng);
+        let auth_root = RingRoot::from_proof(&auth_path, &pk);
 
         let extra = || ::merlin::Transcript::new(b"meh..");
 

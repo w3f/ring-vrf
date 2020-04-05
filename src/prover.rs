@@ -20,7 +20,7 @@ use crate::{
     SynthesisResult, rand_hack, JubjubEngineWithParams,
     Params, SigningTranscript, 
     SecretKey,
-    RingVRF, AuthPath, 
+    RingVRF, RingSecretPath, 
     VRFInput, VRFOutput, VRFInOut,
     vrf::{no_extra, VRFExtraMessage},
 };
@@ -32,7 +32,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         &self,
         vrf_input: VRFInput<E>,
         mut extra: T,
-        auth_path: AuthPath<E>,
+        auth_path: RingSecretPath<E>,
         proving_key: P,
         params: &Params,
         rng: &mut R,
@@ -60,7 +60,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     pub fn ring_vrf_sign_simple<P>(
         &self, 
         input: VRFInput<E>,
-        auth_path: AuthPath<E>,
+        auth_path: RingSecretPath<E>,
         proving_key: P,
         params: &Params,
     ) -> SynthesisResult<(VRFInOut<E>, RingVRFProof<E>)>
@@ -82,7 +82,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         &self,
         input: VRFInput<E>,
         extra: T,
-        auth_path: AuthPath<E>,
+        auth_path: RingSecretPath<E>,
         proving_key: P,
         params: &Params,
     ) -> SynthesisResult<(VRFInOut<E>, RingVRFProof<E>)>
@@ -102,7 +102,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         &self, 
         input: VRFInput<E>,
         mut check: F,
-        auth_path: AuthPath<E>,
+        auth_path: RingSecretPath<E>,
         proving_key: P,
         params: &Params,
     ) -> SynthesisResult<Option<(VRFOutput<E>, RingVRFProof<E>)>>
@@ -122,7 +122,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         &self, 
         inout: VRFInOut<E>, 
         extra: T,
-        auth_path: AuthPath<E>,
+        auth_path: RingSecretPath<E>,
         proving_key: P,
         params: &Params,
     ) -> SynthesisResult<(VRFOutput<E>, RingVRFProof<E>)>

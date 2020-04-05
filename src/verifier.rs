@@ -14,11 +14,11 @@ use bellman::SynthesisError;
 
 use crate::{
     SynthesisResult, JubjubEngineWithParams, 
-    SigningTranscript, AuthRoot, VRFInOut
+    SigningTranscript, RingRoot, VRFInOut
 };
 
 
-impl<E: JubjubEngineWithParams> AuthRoot<E> {
+impl<E: JubjubEngineWithParams> RingRoot<E> {
     /// Verify a proof using the given authentication root, VRF input and output,
     /// verifying key aka CRS, and paramaters.
     ///

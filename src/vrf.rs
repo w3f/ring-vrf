@@ -63,7 +63,7 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
     }
 
     /// Semi-malleable VRF transcript
-    pub fn new_ring_malleable<T>(mut t: T, auth_root: &crate::merkle::AuthRoot<E>)
+    pub fn new_ring_malleable<T>(mut t: T, auth_root: &crate::merkle::RingRoot<E>)
      -> VRFInput<E>
     where T: SigningTranscript
     {
@@ -130,7 +130,7 @@ impl<E: JubjubEngineWithParams> VRFOutput<E> {
     }
 
     /// Semi-malleable VRF transcript
-    pub fn attach_ring_malleable<T>(&self, t: T, auth_root: &crate::merkle::AuthRoot<E>)
+    pub fn attach_ring_malleable<T>(&self, t: T, auth_root: &crate::merkle::RingRoot<E>)
      -> VRFInOut<E>
     where T: SigningTranscript
     {

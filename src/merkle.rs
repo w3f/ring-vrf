@@ -45,14 +45,14 @@ impl MerkleSelection {
 
 /// A point in the authentication path.
 #[derive(Clone, Debug)]
-pub struct AuthPathPoint<E: JubjubEngine> {
+pub struct RingSecretPathPoint<E: JubjubEngine> {
     /// The current selection. That is, the opposite of sibling.
     pub current_selection: MerkleSelection,
     /// Sibling value, if it exists.
     pub sibling: Option<E::Fr>,
 }
 
-impl<E: JubjubEngine> AuthPathPoint<E> {
+impl<E: JubjubEngine> RingSecretPathPoint<E> {
     pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
         let mut repr = <E::Fr as PrimeField>::Repr::default();
         repr.read_le(reader) ?;
@@ -69,7 +69,7 @@ impl<E: JubjubEngine> AuthPathPoint<E> {
             Some(E::Fr::from_repr(repr).map_err(err) ?)
         } else { None };
 
-        Ok(AuthPathPoint { current_selection, sibling })
+        Ok(RingSecretPathPoint { current_selection, sibling })
     }
 
     pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
@@ -96,7 +96,7 @@ fn merkleize<E>(
     depth: usize,
     mut list: &mut [E::Fr],
     mut index: usize,
-    mut f: impl FnMut(AuthPathPoint<E>) -> (),
+    mut f: impl FnMut(RingSecretPathPoint<E>) -> (),
 ) -> E::Fr
 where E: JubjubEngineWithParams,
 {
@@ -113,7 +113,7 @@ where E: JubjubEngineWithParams,
         } else {
             (MerkleSelection::Right, list.get(index).cloned())
         };
-        f(AuthPathPoint { current_selection, sibling, });
+        f(RingSecretPathPoint { current_selection, sibling, });
 
         for i in (0..list.len()).filter(|x| x % 2 == 0) { 
             let left = list.get(i);
@@ -132,12 +132,12 @@ where E: JubjubEngineWithParams,
 
 /// The authentication path of the merkle tree.
 #[derive(Clone, Debug)]
-pub struct AuthPath<E: JubjubEngine>(pub Vec<AuthPathPoint<E>>);
+pub struct RingSecretPath<E: JubjubEngine>(pub Vec<RingSecretPathPoint<E>>);
 
-impl<E: JubjubEngineWithParams> AuthPath<E> {
+impl<E: JubjubEngineWithParams> RingSecretPath<E> {
     /// Create a random path.
-    pub fn random<R: rand_core::RngCore>(depth: usize, rng: &mut R) -> AuthPath<E> {
-        Self(vec![AuthPathPoint {
+    pub fn random<R: rand_core::RngCore>(depth: usize, rng: &mut R) -> RingSecretPath<E> {
+        Self(vec![RingSecretPathPoint {
             current_selection: MerkleSelection::random(rng),
             sibling: Some(<E::Fr>::random(rng))
         }; depth])
@@ -145,7 +145,7 @@ impl<E: JubjubEngineWithParams> AuthPath<E> {
 
     /// Create a path from a given plain list, of target specified as `list_index`.
     /// Panic if `list_index` is out of bound.
-    pub fn from_publickeys<B,I>(iter: I, index: usize, depth: usize) -> (AuthPath<E>,AuthRoot<E>) 
+    pub fn from_publickeys<B,I>(iter: I, index: usize, depth: usize) -> (RingSecretPath<E>,RingRoot<E>) 
     where B: Borrow<PublicKey<E>>, I: IntoIterator<Item=B>
     {
         let mut list = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 ).collect::<Vec<_>>();
@@ -153,7 +153,7 @@ impl<E: JubjubEngineWithParams> AuthPath<E> {
         let mut path = Vec::with_capacity(path_len as usize);
         assert!(list.len() > 1);
         let root = merkleize( depth, list.as_mut_slice(), index, |x| path.push(x) );
-        (AuthPath(path), AuthRoot(root))
+        (RingSecretPath(path), RingRoot(root))
     }
 
     pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
@@ -162,9 +162,9 @@ impl<E: JubjubEngineWithParams> AuthPath<E> {
         let len = u32::from_le_bytes(len) as usize;
         let mut path = Vec::with_capacity(len);
         for _ in 0..len {
-            path.push( AuthPathPoint::read(&mut reader) ? );
+            path.push( RingSecretPathPoint::read(&mut reader) ? );
         }
-        Ok(AuthPath(path))
+        Ok(RingSecretPath(path))
     }
 
     pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
@@ -178,41 +178,41 @@ impl<E: JubjubEngineWithParams> AuthPath<E> {
     }
 }
 
-impl<E: JubjubEngine> Default for AuthPath<E> {
-    fn default() -> AuthPath<E> {
-        AuthPath(Default::default())
+impl<E: JubjubEngine> Default for RingSecretPath<E> {
+    fn default() -> RingSecretPath<E> {
+        RingSecretPath(Default::default())
     }
 }
 
-impl<E: JubjubEngine> Deref for AuthPath<E> {
-    type Target = Vec<AuthPathPoint<E>>;
+impl<E: JubjubEngine> Deref for RingSecretPath<E> {
+    type Target = Vec<RingSecretPathPoint<E>>;
 
-    fn deref(&self) -> &Vec<AuthPathPoint<E>> {
+    fn deref(&self) -> &Vec<RingSecretPathPoint<E>> {
         &self.0
     }
 }
 
-impl<E: JubjubEngine> DerefMut for AuthPath<E> {
-    fn deref_mut(&mut self) -> &mut Vec<AuthPathPoint<E>> {
+impl<E: JubjubEngine> DerefMut for RingSecretPath<E> {
+    fn deref_mut(&mut self) -> &mut Vec<RingSecretPathPoint<E>> {
         &mut self.0
     }
 }
 
 /// The authentication root / merkle root of a given tree.
-pub struct AuthRoot<E: JubjubEngine>(pub E::Fr);
+pub struct RingRoot<E: JubjubEngine>(pub E::Fr);
 
-impl<E: JubjubEngine> Deref for AuthRoot<E> {
+impl<E: JubjubEngine> Deref for RingRoot<E> {
     type Target = E::Fr;
     fn deref(&self) -> &E::Fr { &self.0 }
 }
 
-impl<E: JubjubEngine> DerefMut for AuthRoot<E> {
+impl<E: JubjubEngine> DerefMut for RingRoot<E> {
     fn deref_mut(&mut self) -> &mut E::Fr { &mut self.0 }
 }
 
-impl<E: JubjubEngineWithParams> AuthRoot<E> {
+impl<E: JubjubEngineWithParams> RingRoot<E> {
     /// Get the merkle root from proof.
-    pub fn from_proof(path: &AuthPath<E>, target: &PublicKey<E>) -> Self {
+    pub fn from_proof(path: &RingSecretPath<E>, target: &PublicKey<E>) -> Self {
         let mut cur = target.0.to_xy().0;
 
         for (depth_to_bottom, point) in path.iter().enumerate() {
@@ -235,14 +235,14 @@ impl<E: JubjubEngineWithParams> AuthRoot<E> {
     {
         let mut list = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 ).collect::<Vec<_>>();
         assert!(list.len() > 1);
-        AuthRoot(merkleize( depth, list.as_mut_slice(), 0 , |_: AuthPathPoint<E>| () ))
+        RingRoot(merkleize( depth, list.as_mut_slice(), 0 , |_: RingSecretPathPoint<E>| () ))
     }
 
     pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
         let mut repr = <E::Fr as PrimeField>::Repr::default();
         repr.read_le(reader) ?;
         let err = |_| io::Error::new(io::ErrorKind::InvalidInput, "auth path point is not in field" );
-        Ok(AuthRoot( E::Fr::from_repr(repr).map_err(err) ? ))
+        Ok(RingRoot( E::Fr::from_repr(repr).map_err(err) ? ))
     }
 
     pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
