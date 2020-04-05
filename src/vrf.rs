@@ -28,7 +28,7 @@ use crate::{JubjubEngineWithParams, SigningTranscript, Scalar};  // use super::*
 /// VRF input, always created locally from a `SigningTranscript`.
 ///
 /// All creation methods require the developer acknoledge their VRF output malleability.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone)] // PartialEq, Eq
 pub struct VRFInput<E: JubjubEngine>(pub(crate) Point<E, Unknown>);
 
 impl<E: JubjubEngineWithParams> VRFInput<E> {

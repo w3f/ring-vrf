@@ -400,9 +400,9 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
     /// Verify VRF proof for one single input transcript and corresponding output.
     pub fn vrf_verify_simple(
         &self,
-        inout: VRFInOut<E>,
+        inout: &VRFInOut<E>,
         proof: &VRFProof<E>,
-    ) -> SignatureResult<(VRFInOut<E>, VRFProofBatchable<E>)> 
+    ) -> SignatureResult<VRFProofBatchable<E>> 
     {
         self.vrf_verify(inout, proof, no_extra())
     }
@@ -410,14 +410,13 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
     /// Verify VRF proof for one single input transcript and corresponding output.
     pub fn vrf_verify<T>(
         &self,
-        inout: VRFInOut<E>,
+        inout: &VRFInOut<E>,
         proof: &VRFProof<E>,
         extra: T,
-    ) -> SignatureResult<(VRFInOut<E>, VRFProofBatchable<E>)> 
+    ) -> SignatureResult<VRFProofBatchable<E>> 
     where T: SigningTranscript,
     {
-        let proof_batchable = self.dleq_verify(extra, &inout, proof) ?;
-        Ok((inout, proof_batchable))
+        self.dleq_verify(extra, &inout, proof)
     }
 
     /// Verify a common VRF short proof for several input transcripts and corresponding outputs.
@@ -574,62 +573,71 @@ pub fn vrf_verify_batch(
 }
 */
 
-/*
+
 #[cfg(test)]
 mod tests {
+    /*
     #[cfg(feature = "alloc")]
     use alloc::vec::Vec;
     #[cfg(feature = "std")]
     use std::vec::Vec;
+    */
 
-    use super::*;
+    use pairing::bls12_381::Bls12;
+
+    use crate::*;
 
     #[test]
     fn vrf_single() {
         // #[cfg(feature = "getrandom")]
         let mut csprng = ::rand_core::OsRng;
 
-        let sk1 = SecretKey::<Bls12>::from_rng(&mut rng);
+        let sk1 = SecretKey::<Bls12>::from_rng(&mut csprng);
 
         let ctx = signing_context(b"yo!");
-        let msg = b"meow";
-        let (io1, proof1, proof1batchable) = sk1.vrf_sign(ctx.bytes(msg));
-        let out1 = &io1.to_output();
+        let input1 = VRFInput::new_nonmalleable(ctx.bytes(b"meow"),&sk1.to_public());
+        let input2 = VRFInput::new_nonmalleable(ctx.bytes(b"woof"),&sk1.to_public());
+        
+        let (io1, proof1, proof1batchable) = sk1.vrf_sign_simple(input1.clone());
+        /*
+        TODO: Fix zcash's crapy lack of traits
         assert_eq!(
             proof1,
             proof1batchable
-                .shorten_vrf(&sk1.public, ctx.bytes(msg), &out1)
-                .unwrap(),
+                .shorten_vrf(&sk1.public, &io1)
             "Oops `shorten_vrf` failed"
         );
-        let (io1too, proof1too) = sk1.public.vrf_verify(ctx.bytes(msg), &out1, &proof1)
+        */
+        let io1v = io1.output.attach_nonmalleable(ctx.bytes(b"meow"),&sk1.to_public());
+        let proof1too = sk1.public.vrf_verify_simple(&io1v, &proof1)
             .expect("Correct VRF verification failed!");
-        assert_eq!(
-            io1too, io1,
-            "Output differs between signing and verification!"
-        );
+        /*
+        TODO: Fix zcash's crapy lack of traits
         assert_eq!(
             proof1batchable, proof1too,
             "VRF verification yielded incorrect batchable proof"
         );
+        */
         assert_eq!(
-            sk1.vrf_sign(ctx.bytes(msg)).0,
-            io1,
+            sk1.vrf_sign_simple(input1).0.make_bytes::<[u8;16]>(b""),
+            io1.make_bytes::<[u8;16]>(b""),
             "Rerunning VRF gave different output"
         );
 
+        let io2v = io1.output.attach_nonmalleable(ctx.bytes(b"woof"),&sk1.to_public());
         assert!(
-            sk1.public.vrf_verify(ctx.bytes(b"not meow"), &out1, &proof1).is_err(),
+            sk1.public.vrf_verify_simple(&io2v, &proof1).is_err(),
             "VRF verification with incorrect message passed!"
         );
 
-        let sk2 = SecretKey::<Bls12>::from_rng(&mut rng, &params.engine);
+        let sk2 = SecretKey::<Bls12>::from_rng(&mut csprng);
         assert!(
-            sk2.public.vrf_verify(ctx.bytes(msg), &out1, &proof1).is_err(),
+            sk2.public.vrf_verify_simple(&io1v, &proof1).is_err(),
             "VRF verification with incorrect signer passed!"
         );
     }
 
+    /*
     #[test]
     fn vrf_malleable() {
         // #[cfg(feature = "getrandom")]
@@ -639,7 +647,9 @@ mod tests {
 
         let ctx = signing_context(b"yo!");
         let msg = b"meow";
-        let (io1, proof1, proof1batchable) = sk1.vrf_sign(Malleable(ctx.bytes(msg)));
+        let input1 = VRFInput::new_malleable(ctx.bytes(msg));
+        
+        let (io1, proof1, proof1batchable) = sk1.vrf_sign_first(Malleable(ctx.bytes(msg)));
         let out1 = &io1.to_output();
         assert_eq!(
             proof1,
@@ -658,7 +668,7 @@ mod tests {
             "VRF verification yielded incorrect batchable proof"
         );
         assert_eq!(
-            sk1.vrf_sign(Malleable(ctx.bytes(msg))).0,
+            sk1.vrf_sign_first(Malleable(ctx.bytes(msg))).0,
             io1,
             "Rerunning VRF gave different output"
         );
@@ -672,7 +682,7 @@ mod tests {
             sk2.public.vrf_verify(Malleable(ctx.bytes(msg)), &out1, &proof1).is_err(),
             "VRF verification with incorrect signer passed!"
         );
-        let (io2, _proof2, _proof2batchable) = sk2.vrf_sign(Malleable(ctx.bytes(msg)));
+        let (io2, _proof2, _proof2batchable) = sk2.vrf_sign_first(Malleable(ctx.bytes(msg)));
         let out2 = &io2.to_output();
 
         // Verified key exchange, aka sequential two party VRF.
@@ -701,7 +711,9 @@ mod tests {
             .dleq_verify(t0.clone(), &io21, &proofs21.0)
             .is_ok());
     }
+    */
 
+    /*
     #[cfg(any(feature = "alloc", feature = "std"))]
     #[test]
     fn vrfs_merged_and_batched() {
@@ -792,5 +804,6 @@ mod tests {
             "Batch verification with incorrect points passed!"
         );
     }
+    */
 }
-*/
+
