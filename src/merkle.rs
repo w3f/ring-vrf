@@ -182,11 +182,13 @@ impl<E: JubjubEngineWithParams> RingSecretCopath<E> {
     }
 }
 
+/*
 impl<E: JubjubEngine> Default for RingSecretCopath<E> {
     fn default() -> RingSecretCopath<E> {
         RingSecretCopath(Default::default())
     }
 }
+*/
 
 /*
 impl<E: JubjubEngine> Deref for RingSecretCopath<E> {
