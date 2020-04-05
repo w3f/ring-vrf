@@ -42,7 +42,7 @@ pub use crate::keys::{SecretKey,PublicKey};
 pub use crate::context::{signing_context,SigningTranscript}; // SigningTranscript
 
 use crate::circuit::RingVRF;
-pub use crate::merkle::{MerkleSelection, RingSecretPath, RingRoot, RingSecretPathPoint, auth_hash};
+pub use crate::merkle::{RingSecretPath, RingRoot, auth_hash};
 pub use crate::generator::generate_crs;
 pub use vrf::{VRFInOut, VRFInput, VRFOutput, vrfs_merge}; // no_extra, run_no_extra
 

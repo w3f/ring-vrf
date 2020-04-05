@@ -24,7 +24,7 @@ use crate::{JubjubEngineWithParams, Params, PublicKey};
 
 /// Direction of the binary merkle path, either going left or right.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub enum MerkleSelection {
+pub(crate) enum MerkleSelection {
     /// Move left to the sub-node.
     Left,
     /// Move right to the sub-node.
@@ -45,14 +45,14 @@ impl MerkleSelection {
 
 /// A point in the authentication path.
 #[derive(Clone, Debug)]
-pub struct RingSecretPathPoint<E: JubjubEngine> {
+pub(crate) struct CopathPoint<E: JubjubEngine> {
     /// The current selection. That is, the opposite of sibling.
     pub current_selection: MerkleSelection,
     /// Sibling value, if it exists.
     pub sibling: Option<E::Fr>,
 }
 
-impl<E: JubjubEngine> RingSecretPathPoint<E> {
+impl<E: JubjubEngine> CopathPoint<E> {
     pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
         let mut repr = <E::Fr as PrimeField>::Repr::default();
         repr.read_le(reader) ?;
@@ -69,7 +69,7 @@ impl<E: JubjubEngine> RingSecretPathPoint<E> {
             Some(E::Fr::from_repr(repr).map_err(err) ?)
         } else { None };
 
-        Ok(RingSecretPathPoint { current_selection, sibling })
+        Ok(CopathPoint { current_selection, sibling })
     }
 
     pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
@@ -96,7 +96,7 @@ fn merkleize<E>(
     depth: usize,
     mut list: &mut [E::Fr],
     mut index: usize,
-    mut f: impl FnMut(RingSecretPathPoint<E>) -> (),
+    mut f: impl FnMut(CopathPoint<E>) -> (),
 ) -> E::Fr
 where E: JubjubEngineWithParams,
 {
@@ -113,7 +113,7 @@ where E: JubjubEngineWithParams,
         } else {
             (MerkleSelection::Right, list.get(index).cloned())
         };
-        f(RingSecretPathPoint { current_selection, sibling, });
+        f(CopathPoint { current_selection, sibling, });
 
         for i in (0..list.len()).filter(|x| x % 2 == 0) { 
             let left = list.get(i);
@@ -125,22 +125,27 @@ where E: JubjubEngineWithParams,
 
         let len = list.len() + (list.len() % 2);
         list = &mut list[0..len/2]
-    }    
+    }
 
     list[0].clone()
 }
 
 /// The authentication path of the merkle tree.
 #[derive(Clone, Debug)]
-pub struct RingSecretPath<E: JubjubEngine>(pub Vec<RingSecretPathPoint<E>>);
+pub struct RingSecretPath<E: JubjubEngine>(pub(crate) Vec<CopathPoint<E>>);
 
 impl<E: JubjubEngineWithParams> RingSecretPath<E> {
     /// Create a random path.
     pub fn random<R: rand_core::RngCore>(depth: usize, rng: &mut R) -> RingSecretPath<E> {
-        Self(vec![RingSecretPathPoint {
+        RingSecretPath(vec![CopathPoint {
             current_selection: MerkleSelection::random(rng),
             sibling: Some(<E::Fr>::random(rng))
         }; depth])
+    }
+
+    pub fn depth(&self) -> u32 {
+        use core::convert::TryInto;
+        self.0.len().try_into().unwrap()
     }
 
     /// Create a path from a given plain list, of target specified as `list_index`.
@@ -150,26 +155,25 @@ impl<E: JubjubEngineWithParams> RingSecretPath<E> {
     {
         let mut list = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 ).collect::<Vec<_>>();
         let path_len = 0usize.leading_zeros() - depth.leading_zeros();
-        let mut path = Vec::with_capacity(path_len as usize);
+        let mut copath = Vec::with_capacity(path_len as usize);
         assert!(list.len() > 1);
-        let root = merkleize( depth, list.as_mut_slice(), index, |x| path.push(x) );
-        (RingSecretPath(path), RingRoot(root))
+        let root = merkleize( depth, list.as_mut_slice(), index, |x| copath.push(x) );
+        (RingSecretPath(copath), RingRoot(root))
     }
 
     pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
         let mut len = [0u8; 4];
         reader.read_exact(&mut len) ?;
         let len = u32::from_le_bytes(len) as usize;
-        let mut path = Vec::with_capacity(len);
+        let mut copath = Vec::with_capacity(len);
         for _ in 0..len {
-            path.push( RingSecretPathPoint::read(&mut reader) ? );
+            copath.push( CopathPoint::read(&mut reader) ? );
         }
-        Ok(RingSecretPath(path))
+        Ok(RingSecretPath(copath))
     }
 
     pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
-        use core::convert::TryInto;
-        let len: u32 = self.0.len().try_into().unwrap();
+        let len: u32 = self.depth();
         writer.write_all(& len.to_le_bytes()) ?;
         for app in self.0.iter() {
             app.write(&mut writer) ?;
@@ -184,19 +188,21 @@ impl<E: JubjubEngine> Default for RingSecretPath<E> {
     }
 }
 
+/*
 impl<E: JubjubEngine> Deref for RingSecretPath<E> {
-    type Target = Vec<RingSecretPathPoint<E>>;
+    type Target = Vec<CopathPoint<E>>;
 
-    fn deref(&self) -> &Vec<RingSecretPathPoint<E>> {
+    fn deref(&self) -> &Vec<CopathPoint<E>> {
         &self.0
     }
 }
 
 impl<E: JubjubEngine> DerefMut for RingSecretPath<E> {
-    fn deref_mut(&mut self) -> &mut Vec<RingSecretPathPoint<E>> {
+    fn deref_mut(&mut self) -> &mut Vec<CopathPoint<E>> {
         &mut self.0
     }
 }
+*/
 
 /// The authentication root / merkle root of a given tree.
 pub struct RingRoot<E: JubjubEngine>(pub E::Fr);
@@ -215,7 +221,7 @@ impl<E: JubjubEngineWithParams> RingRoot<E> {
     pub fn from_proof(path: &RingSecretPath<E>, target: &PublicKey<E>) -> Self {
         let mut cur = target.0.to_xy().0;
 
-        for (depth_to_bottom, point) in path.iter().enumerate() {
+        for (depth_to_bottom, point) in path.0.iter().enumerate() {
             let (left, right) = match point.current_selection {
                 MerkleSelection::Right => (point.sibling.as_ref(), Some(&cur)),
                 MerkleSelection::Left => (Some(&cur), point.sibling.as_ref()),
@@ -235,7 +241,7 @@ impl<E: JubjubEngineWithParams> RingRoot<E> {
     {
         let mut list = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 ).collect::<Vec<_>>();
         assert!(list.len() > 1);
-        RingRoot(merkleize( depth, list.as_mut_slice(), 0 , |_: RingSecretPathPoint<E>| () ))
+        RingRoot(merkleize( depth, list.as_mut_slice(), 0 , |_: CopathPoint<E>| () ))
     }
 
     pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {

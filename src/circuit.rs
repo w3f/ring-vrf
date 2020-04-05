@@ -14,7 +14,7 @@ use bellman::{Circuit, ConstraintSystem, SynthesisError};
 use bellman::gadgets::{boolean, num, Assignment};
 
 
-use crate::{JubjubEngineWithParams, MerkleSelection, RingSecretPath, Params, SecretKey};
+use crate::{JubjubEngineWithParams, merkle::MerkleSelection, RingSecretPath, Params, SecretKey};
 
 /// A circuit for proving that the given vrf_output is valid for the given vrf_input under
 /// a key from the predefined set. It formalizes the following language:
@@ -51,7 +51,7 @@ pub struct RingVRF<'a, E: JubjubEngine> { // TODO: name
 impl<'a, E: JubjubEngineWithParams> Circuit<E> for RingVRF<'a, E> {
     fn synthesize<CS: ConstraintSystem<E>>(self, cs: &mut CS) -> Result<(), SynthesisError> {
         if let Some(auth_path) = self.auth_path.as_ref() {
-            if auth_path.len() != self.params.auth_depth {
+            if auth_path.depth() as usize != self.params.auth_depth {
                 return Err(SynthesisError::Unsatisfiable)
             }
         }
