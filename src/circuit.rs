@@ -14,7 +14,7 @@ use bellman::{Circuit, ConstraintSystem, SynthesisError};
 use bellman::gadgets::{boolean, num, Assignment};
 
 
-use crate::{JubjubEngineWithParams, merkle::MerkleSelection, RingSecretPath, Params, SecretKey};
+use crate::{JubjubEngineWithParams, merkle::MerkleSelection, RingSecretCopath, Params, SecretKey};
 
 /// A circuit for proving that the given vrf_output is valid for the given vrf_input under
 /// a key from the predefined set. It formalizes the following language:
@@ -45,7 +45,7 @@ pub struct RingVRF<'a, E: JubjubEngine> { // TODO: name
     /// the element of Jubjub base field.
     /// This is enough to build the root as the base point is hardcoded in the circuit in the lookup tables,
     /// so we can restore the public key from the secret key.
-    pub auth_path: Option<RingSecretPath<E>>,
+    pub auth_path: Option<RingSecretCopath<E>>,
 }
 
 impl<'a, E: JubjubEngineWithParams> Circuit<E> for RingVRF<'a, E> {
@@ -196,7 +196,7 @@ mod tests {
     use rand_core::{RngCore}; // CryptoRng
 
     use super::*;
-    use crate::{JubjubEngineWithParams, Params, VRFInput, RingSecretPath, RingRoot};
+    use crate::{JubjubEngineWithParams, Params, VRFInput, RingSecretCopath, RingRoot};
 
     #[test]
     fn test_ring() {
@@ -215,7 +215,7 @@ mod tests {
         use crate::SigningTranscript;
         let extra = ::merlin::Transcript::new(b"whatever").challenge_scalar(b"");
 
-        let auth_path = RingSecretPath::random(params.auth_depth, &mut rng);
+        let auth_path = RingSecretCopath::random(params.auth_depth, &mut rng);
         let auth_root = RingRoot::from_proof(&auth_path, &pk);
 
         let instance = RingVRF {

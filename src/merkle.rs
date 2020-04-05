@@ -132,12 +132,12 @@ where E: JubjubEngineWithParams,
 
 /// The authentication path of the merkle tree.
 #[derive(Clone, Debug)]
-pub struct RingSecretPath<E: JubjubEngine>(pub(crate) Vec<CopathPoint<E>>);
+pub struct RingSecretCopath<E: JubjubEngine>(pub(crate) Vec<CopathPoint<E>>);
 
-impl<E: JubjubEngineWithParams> RingSecretPath<E> {
+impl<E: JubjubEngineWithParams> RingSecretCopath<E> {
     /// Create a random path.
-    pub fn random<R: rand_core::RngCore>(depth: usize, rng: &mut R) -> RingSecretPath<E> {
-        RingSecretPath(vec![CopathPoint {
+    pub fn random<R: rand_core::RngCore>(depth: usize, rng: &mut R) -> RingSecretCopath<E> {
+        RingSecretCopath(vec![CopathPoint {
             current_selection: MerkleSelection::random(rng),
             sibling: Some(<E::Fr>::random(rng))
         }; depth])
@@ -150,7 +150,7 @@ impl<E: JubjubEngineWithParams> RingSecretPath<E> {
 
     /// Create a path from a given plain list, of target specified as `list_index`.
     /// Panic if `list_index` is out of bound.
-    pub fn from_publickeys<B,I>(iter: I, index: usize, depth: usize) -> (RingSecretPath<E>,RingRoot<E>) 
+    pub fn from_publickeys<B,I>(iter: I, index: usize, depth: usize) -> (RingSecretCopath<E>,RingRoot<E>) 
     where B: Borrow<PublicKey<E>>, I: IntoIterator<Item=B>
     {
         let mut list = iter.into_iter().map( |pk| pk.borrow().0.to_xy().0 ).collect::<Vec<_>>();
@@ -158,7 +158,7 @@ impl<E: JubjubEngineWithParams> RingSecretPath<E> {
         let mut copath = Vec::with_capacity(path_len as usize);
         assert!(list.len() > 1);
         let root = merkleize( depth, list.as_mut_slice(), index, |x| copath.push(x) );
-        (RingSecretPath(copath), RingRoot(root))
+        (RingSecretCopath(copath), RingRoot(root))
     }
 
     pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
@@ -169,7 +169,7 @@ impl<E: JubjubEngineWithParams> RingSecretPath<E> {
         for _ in 0..len {
             copath.push( CopathPoint::read(&mut reader) ? );
         }
-        Ok(RingSecretPath(copath))
+        Ok(RingSecretCopath(copath))
     }
 
     pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
@@ -182,14 +182,14 @@ impl<E: JubjubEngineWithParams> RingSecretPath<E> {
     }
 }
 
-impl<E: JubjubEngine> Default for RingSecretPath<E> {
-    fn default() -> RingSecretPath<E> {
-        RingSecretPath(Default::default())
+impl<E: JubjubEngine> Default for RingSecretCopath<E> {
+    fn default() -> RingSecretCopath<E> {
+        RingSecretCopath(Default::default())
     }
 }
 
 /*
-impl<E: JubjubEngine> Deref for RingSecretPath<E> {
+impl<E: JubjubEngine> Deref for RingSecretCopath<E> {
     type Target = Vec<CopathPoint<E>>;
 
     fn deref(&self) -> &Vec<CopathPoint<E>> {
@@ -197,7 +197,7 @@ impl<E: JubjubEngine> Deref for RingSecretPath<E> {
     }
 }
 
-impl<E: JubjubEngine> DerefMut for RingSecretPath<E> {
+impl<E: JubjubEngine> DerefMut for RingSecretCopath<E> {
     fn deref_mut(&mut self) -> &mut Vec<CopathPoint<E>> {
         &mut self.0
     }
@@ -218,7 +218,7 @@ impl<E: JubjubEngine> DerefMut for RingRoot<E> {
 
 impl<E: JubjubEngineWithParams> RingRoot<E> {
     /// Get the merkle root from proof.
-    pub fn from_proof(path: &RingSecretPath<E>, target: &PublicKey<E>) -> Self {
+    pub fn from_proof(path: &RingSecretCopath<E>, target: &PublicKey<E>) -> Self {
         let mut cur = target.0.to_xy().0;
 
         for (depth_to_bottom, point) in path.0.iter().enumerate() {
