@@ -25,7 +25,7 @@ pub fn generate_crs<E: JubjubEngineWithParams>(params: &Params)
         sk: None,
         vrf_input: None,
         extra: None,
-        auth_path: None,
+        copath: None,
     };
     generate_random_parameters(circuit, &mut rand_hack())
 }

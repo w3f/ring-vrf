@@ -45,13 +45,13 @@ pub struct RingVRF<'a, E: JubjubEngine> { // TODO: name
     /// the element of Jubjub base field.
     /// This is enough to build the root as the base point is hardcoded in the circuit in the lookup tables,
     /// so we can restore the public key from the secret key.
-    pub auth_path: Option<RingSecretCopath<E>>,
+    pub copath: Option<RingSecretCopath<E>>,
 }
 
 impl<'a, E: JubjubEngineWithParams> Circuit<E> for RingVRF<'a, E> {
     fn synthesize<CS: ConstraintSystem<E>>(self, cs: &mut CS) -> Result<(), SynthesisError> {
-        if let Some(auth_path) = self.auth_path.as_ref() {
-            if auth_path.depth() as usize != self.params.auth_depth {
+        if let Some(copath) = self.copath.as_ref() {
+            if copath.depth() as usize != self.params.auth_depth {
                 return Err(SynthesisError::Unsatisfiable)
             }
         }
@@ -139,7 +139,7 @@ impl<'a, E: JubjubEngineWithParams> Circuit<E> for RingVRF<'a, E> {
 
         // Ascend the merkle tree authentication path
         for i in 0..self.params.auth_depth {
-            let e: Option<(_,_)> = self.auth_path.as_ref().map(
+            let e: Option<(_,_)> = self.copath.as_ref().map(
                 |v| ( v.0[i].current_selection, v.0[i].sibling.unwrap_or(<E::Fr>::zero()) )
             );
 
@@ -215,15 +215,15 @@ mod tests {
         use crate::SigningTranscript;
         let extra = ::merlin::Transcript::new(b"whatever").challenge_scalar(b"");
 
-        let auth_path = RingSecretCopath::random(params.auth_depth, &mut rng);
-        let auth_root = RingRoot::from_proof(&auth_path, &pk);
+        let copath = RingSecretCopath::random(params.auth_depth, &mut rng);
+        let auth_root = RingRoot::from_proof(&copath, &pk);
 
         let instance = RingVRF {
             params: &params,
             sk: Some(sk.clone()),
             vrf_input: Some(vrf_input.0.mul_by_cofactor(engine_params)),
             extra: Some(extra),
-            auth_path: Some(auth_path),
+            copath: Some(copath),
         };
 
         let mut cs = TestConstraintSystem::<Bls12>::new();

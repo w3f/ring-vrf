@@ -106,13 +106,13 @@ mod tests {
 
         let vrf_inout = vrf_input.to_inout(&sk);
 
-        let auth_path = RingSecretCopath::random(params.auth_depth, &mut rng);
-        let auth_root = RingRoot::from_proof(&auth_path, &pk);
+        let copath = RingSecretCopath::random(params.auth_depth, &mut rng);
+        let auth_root = RingRoot::from_proof(&copath, &pk);
 
         let extra = || ::merlin::Transcript::new(b"meh..");
 
         let proving = start_timer!(|| "proving");
-        let (vrf_output, proof) = sk.ring_vrf_sign_checked(vrf_inout, vrf::no_extra(), auth_path.clone(), &crs, &params).unwrap();
+        let (vrf_output, proof) = sk.ring_vrf_sign_checked(vrf_inout, vrf::no_extra(), copath.clone(), &crs, &params).unwrap();
         end_timer!(proving);
 
         let vrf_inout = vrf_output.attach_malleable(t);
