@@ -13,8 +13,8 @@ use zcash_proofs::circuit::{ecc, pedersen_hash};
 use bellman::{Circuit, ConstraintSystem, SynthesisError};
 use bellman::gadgets::{boolean, num, Assignment};
 
+use crate::{JubjubEngineWithParams, merkle::MerkleSelection, RingSecretCopath, SecretKey};
 
-use crate::{JubjubEngineWithParams, merkle::MerkleSelection, RingSecretCopath, Params, SecretKey};
 
 /// A circuit for proving that the given vrf_output is valid for the given vrf_input under
 /// a key from the predefined set. It formalizes the following language:
@@ -27,10 +27,9 @@ use crate::{JubjubEngineWithParams, merkle::MerkleSelection, RingSecretCopath, P
 /// These are the values that are required to construct the circuit and populate all the wires.
 /// They are defined as Options as for CRS generation only circuit structure is relevant,
 /// not the wires' assignments, so knowing the types is enough.
-pub struct RingVRF<'a, E: JubjubEngine> { // TODO: name
-    /// System parameters.
-    // TODO: Any reasons to include Jubjub curve paramters here?
-    pub params: &'a Params,
+pub struct RingVRF<E: JubjubEngine> { // TODO: name
+    /// Merkle tree depth
+    pub depth: u32,
 
     /// The secret key, an element of Jubjub scalar field.
     pub sk: Option<SecretKey<E>>,
@@ -48,10 +47,10 @@ pub struct RingVRF<'a, E: JubjubEngine> { // TODO: name
     pub copath: Option<RingSecretCopath<E>>,
 }
 
-impl<'a, E: JubjubEngineWithParams> Circuit<E> for RingVRF<'a, E> {
+impl<E: JubjubEngineWithParams> Circuit<E> for RingVRF<E> {
     fn synthesize<CS: ConstraintSystem<E>>(self, cs: &mut CS) -> Result<(), SynthesisError> {
         if let Some(copath) = self.copath.as_ref() {
-            if copath.depth() as usize != self.params.auth_depth {
+            if copath.depth() != self.depth {
                 return Err(SynthesisError::Unsatisfiable)
             }
         }
@@ -138,7 +137,7 @@ impl<'a, E: JubjubEngineWithParams> Circuit<E> for RingVRF<'a, E> {
         let mut cur = pk.get_x().clone();
 
         // Ascend the merkle tree authentication path
-        for i in 0..self.params.auth_depth {
+        for i in 0..(self.depth as usize) {
             let e: Option<(_,_)> = self.copath.as_ref().map(
                 |v| ( v.0[i].current_selection, v.0[i].sibling.unwrap_or(<E::Fr>::zero()) )
             );
@@ -196,11 +195,11 @@ mod tests {
     use rand_core::{RngCore}; // CryptoRng
 
     use super::*;
-    use crate::{JubjubEngineWithParams, Params, VRFInput, RingSecretCopath, RingRoot};
+    use crate::{JubjubEngineWithParams, VRFInput, RingSecretCopath, RingRoot};
 
     #[test]
     fn test_ring() {
-        let params = Params { auth_depth: 10, };
+        let depth = 10;
         let engine_params = Bls12::params();
 
         // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
@@ -215,11 +214,11 @@ mod tests {
         use crate::SigningTranscript;
         let extra = ::merlin::Transcript::new(b"whatever").challenge_scalar(b"");
 
-        let copath = RingSecretCopath::random(params.auth_depth, &mut rng);
+        let copath = RingSecretCopath::random(depth, &mut rng);
         let auth_root = copath.to_root(&pk);
 
         let instance = RingVRF {
-            params: &params,
+            depth,
             sk: Some(sk.clone()),
             vrf_input: Some(vrf_input.0.mul_by_cofactor(engine_params)),
             extra: Some(extra),

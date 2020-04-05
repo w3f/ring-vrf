@@ -18,9 +18,8 @@ use rand_core::{RngCore,CryptoRng};
 
 use crate::{
     SynthesisResult, rand_hack, JubjubEngineWithParams,
-    Params, SigningTranscript, 
-    SecretKey,
-    RingVRF, RingSecretCopath, 
+    RingSRS, SigningTranscript, 
+    SecretKey, RingSecretCopath, 
     VRFInput, VRFOutput, VRFInOut,
     vrf::{no_extra, VRFExtraMessage},
 };
@@ -33,8 +32,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         vrf_input: VRFInput<E>,
         mut extra: T,
         copath: RingSecretCopath<E>,
-        proving_key: P,
-        params: &Params,
+        proving_key: RingSRS<P>,
         rng: &mut R,
     ) -> SynthesisResult<RingVRFProof<E>> 
     where
@@ -42,14 +40,14 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         P: groth16::ParameterSource<E>, 
         R: RngCore+CryptoRng,
     {
-        let instance = RingVRF {
-            params,
+        let instance = crate::circuit::RingVRF {
+            depth: proving_key.depth,
             sk: Some(self.clone()),
             vrf_input: Some(vrf_input.0.mul_by_cofactor(E::params())),
             extra: Some(extra.challenge_scalar(b"extra-msg")),
             copath: Some(copath),
         };
-        groth16::create_random_proof(instance, proving_key, rng)
+        groth16::create_random_proof(instance, proving_key.srs, rng)
     } 
 
 
@@ -61,12 +59,11 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         &self, 
         input: VRFInput<E>,
         copath: RingSecretCopath<E>,
-        proving_key: P,
-        params: &Params,
+        proving_key: RingSRS<P>,
     ) -> SynthesisResult<(VRFInOut<E>, RingVRFProof<E>)>
     where P: groth16::ParameterSource<E>, 
     {
-        self.ring_vrf_sign_first(input, no_extra(), copath, proving_key, params)
+        self.ring_vrf_sign_first(input, no_extra(), copath, proving_key)
     }
 
     /// Run our Schnorr VRF on one single input and an extra message 
@@ -83,14 +80,13 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         input: VRFInput<E>,
         extra: T,
         copath: RingSecretCopath<E>,
-        proving_key: P,
-        params: &Params,
+        proving_key: RingSRS<P>,
     ) -> SynthesisResult<(VRFInOut<E>, RingVRFProof<E>)>
     where T: SigningTranscript,
           P: groth16::ParameterSource<E>, 
     {
         let inout = input.to_inout(self);
-        let proof = self.ring_vrf_prove(input, extra, copath, proving_key, params, &mut rand_hack()) ?;
+        let proof = self.ring_vrf_prove(input, extra, copath, proving_key, &mut rand_hack()) ?;
         Ok((inout, proof))
     }
 
@@ -103,8 +99,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         input: VRFInput<E>,
         mut check: F,
         copath: RingSecretCopath<E>,
-        proving_key: P,
-        params: &Params,
+        proving_key: RingSRS<P>,
     ) -> SynthesisResult<Option<(VRFOutput<E>, RingVRFProof<E>)>>
     where F: FnOnce(&VRFInOut<E>) -> O,
           O: VRFExtraMessage,
@@ -112,7 +107,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     {
         let inout = input.to_inout(self);
         let extra = if let Some(e) = check(&inout).extra() { e } else { return Ok(None) };
-        Ok(Some(self.ring_vrf_sign_checked(inout, extra, copath, proving_key, params) ?))
+        Ok(Some(self.ring_vrf_sign_checked(inout, extra, copath, proving_key) ?))
     }
 
     /// Run our Schnorr VRF on the `VRFInOut` input-output pair,
@@ -123,14 +118,13 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         inout: VRFInOut<E>, 
         extra: T,
         copath: RingSecretCopath<E>,
-        proving_key: P,
-        params: &Params,
+        proving_key: RingSRS<P>,
     ) -> SynthesisResult<(VRFOutput<E>, RingVRFProof<E>)>
     where T: SigningTranscript,
           P: groth16::ParameterSource<E>, 
     {
         let VRFInOut { input, output } = inout;
-        let proof = self.ring_vrf_prove(input, extra, copath, proving_key, params, &mut rand_hack()) ?;
+        let proof = self.ring_vrf_prove(input, extra, copath, proving_key, &mut rand_hack()) ?;
         Ok((output, proof))
     }
 

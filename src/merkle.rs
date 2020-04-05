@@ -19,7 +19,7 @@ use ff::{PrimeField, PrimeFieldRepr, BitIterator, Field}; // ScalarEngine
 use pairing::bls12_381::Fr;
 use zcash_primitives::jubjub::JubjubEngine;
 use zcash_primitives::pedersen_hash;
-use crate::{JubjubEngineWithParams, Params, PublicKey};
+use crate::{JubjubEngineWithParams, PublicKey};
 
 
 /// Direction of the binary merkle path, either going left or right.
@@ -136,11 +136,11 @@ pub struct RingSecretCopath<E: JubjubEngine>(pub(crate) Vec<CopathPoint<E>>);
 
 impl<E: JubjubEngineWithParams> RingSecretCopath<E> {
     /// Create a random path.
-    pub fn random<R: rand_core::RngCore>(depth: usize, rng: &mut R) -> RingSecretCopath<E> {
+    pub fn random<R: rand_core::RngCore>(depth: u32, rng: &mut R) -> RingSecretCopath<E> {
         RingSecretCopath(vec![CopathPoint {
             current_selection: MerkleSelection::random(rng),
             sibling: Some(<E::Fr>::random(rng))
-        }; depth])
+        }; depth as usize])
     }
 
     pub fn depth(&self) -> u32 {

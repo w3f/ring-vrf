@@ -22,7 +22,7 @@ use merlin::Transcript;
 use ff::{PrimeField, PrimeFieldRepr}; // Field, ScalarEngine
 use zcash_primitives::jubjub::{JubjubEngine, Unknown, edwards::Point}; // PrimeOrder
 
-use crate::{JubjubEngineWithParams, SigningTranscript, Params, Scalar};  // use super::*;
+use crate::{JubjubEngineWithParams, SigningTranscript, Scalar};  // use super::*;
 
 
 /// VRF input, always created locally from a `SigningTranscript`.

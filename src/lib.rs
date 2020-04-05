@@ -41,7 +41,6 @@ use crate::scalar::{Scalar,scalar_times_generator,read_scalar,write_scalar};
 pub use crate::keys::{SecretKey,PublicKey};
 pub use crate::context::{signing_context,SigningTranscript}; // SigningTranscript
 
-use crate::circuit::RingVRF;
 pub use crate::merkle::{RingSecretCopath, RingRoot, auth_hash};
 pub use crate::generator::generate_crs;
 pub use vrf::{VRFInOut, VRFInput, VRFOutput, vrfs_merge}; // no_extra, run_no_extra
@@ -59,11 +58,24 @@ pub trait JubjubEngineWithParams : JubjubEngine {
     fn params() -> &'static <Self as JubjubEngine>::Params;
 }
 
-/// Configuration parameters for the system.
-pub struct Params { // <E: JubjubEngine>
-    /// Authentication depth.
-    pub auth_depth: usize,
+/// RingVRF SRS consisting of the Merkle tree depth, our only runtime 
+/// configuration parameters for the system, attached to an appropirate
+/// `&'a Parameters<E>` or some other `P: groth16::ParameterSource<E>`.
+#[derive(Clone,Copy)]
+pub struct RingSRS<SRS> {
+    pub srs: SRS,
+    pub depth: u32,
 }
+/*
+We could make it clone if SRS is Copy, but we'd rather make up for zcash's limited impls here.
+impl<SRS: Copy+Clone> Copy for RingSRS<SRS> { }
+impl<SRS: Copy+Clone> Clone for RingSRS<SRS> {
+    fn clone(&self) -> RingSRS<SRS> {
+        let RingSRS { srs, depth } = self;
+        RingSRS { srs: *srs, depth: *depth }
+    }
+}
+*/
 
 
 #[cfg(test)]
@@ -81,22 +93,23 @@ mod tests {
 
     #[test]
     fn test_completeness() {
-        let params = Params { auth_depth: 10, };
+        let depth = 4;
 
         // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
         let mut rng = ::rand_core::OsRng;
 
-        let crs = match File::open("crs") {
+        let srs = match File::open("crs") {
             Ok(f) => Parameters::<Bls12>::read(f, false).expect("can't read CRS"),
             Err(_) => {
                 let f = File::create("crs").unwrap();
                 let generation = start_timer!(|| "generation");
-                let c = generator::generate_crs(&params).expect("can't generate CRS");
+                let c = generator::generate_crs(depth).expect("can't generate CRS");
                 end_timer!(generation);
                 c.write(&f).unwrap();
                 c
             },
         };
+        let srs = RingSRS { srs: &srs, depth, };
 
         let sk = SecretKey::<Bls12>::from_rng(&mut rng);
         let pk = sk.to_public();
@@ -106,18 +119,18 @@ mod tests {
 
         let vrf_inout = vrf_input.to_inout(&sk);
 
-        let copath = RingSecretCopath::random(params.auth_depth, &mut rng);
+        let copath = RingSecretCopath::random(depth, &mut rng);
         let auth_root = copath.to_root(&pk);
 
         let extra = || ::merlin::Transcript::new(b"meh..");
 
         let proving = start_timer!(|| "proving");
-        let (vrf_output, proof) = sk.ring_vrf_sign_checked(vrf_inout, vrf::no_extra(), copath.clone(), &crs, &params).unwrap();
+        let (vrf_output, proof) = sk.ring_vrf_sign_checked(vrf_inout, vrf::no_extra(), copath.clone(), srs).unwrap();
         end_timer!(proving);
 
         let vrf_inout = vrf_output.attach_malleable(t);
         let verification = start_timer!(|| "verification");
-        let valid = auth_root.ring_vrf_verify_unprepared(vrf_inout, vrf::no_extra(), proof, &crs.vk);
+        let valid = auth_root.ring_vrf_verify_unprepared(vrf_inout, vrf::no_extra(), proof, &srs.srs.vk);
         end_timer!(verification);
         assert_eq!(valid.unwrap(), true);
     }
