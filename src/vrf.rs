@@ -253,22 +253,6 @@ impl<E: JubjubEngineWithParams> VRFInOut<E> {
 }
 
 
-/// Sample a 128 bit scalar for 
-///
-/// TODO: Improve this
-fn challenge_scalar_128<E>(mut t: ::merlin::Transcript) -> Scalar<E> 
-where E: JubjubEngine
-{
-    let mut s = [0u8; 16];
-    t.challenge_bytes(b"", &mut s);
-    let (x,y) = array_refs!(&s,8,8);
-    let mut x: <E::Fs as PrimeField>::Repr = u64::from_le_bytes(*x).into();
-    let y: <E::Fs as PrimeField>::Repr = u64::from_le_bytes(*y).into();
-    x.shl(64);
-    x.add_nocarry(&y);
-    <E::Fs as PrimeField>::from_repr(x).unwrap()
-}
-
 /// Merge VRF input and output pairs from the same signer,
 /// probably using variable time arithmetic
 ///
@@ -316,7 +300,11 @@ where
             let mut t0 = t.clone();
             let p = p.borrow();
             p.commit(&mut t0);
-            let z: Scalar<E> = challenge_scalar_128::<E>(t0);
+
+            // Sample a 128bit scalar
+            let mut s = [0u8; 16];
+            t0.challenge_bytes(b"", &mut s);
+            let z: Scalar<E> = crate::scalar::scalar_from_u128::<E>(s);
 
             let p = if io { p.input.0.clone() } else { p.output.0.clone() };
             // acc += z * p;

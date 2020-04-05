@@ -10,6 +10,22 @@ use zcash_primitives::jubjub::{
 use crate::JubjubEngineWithParams;
 
 
+/// Create a 128 bit `Scalar` for delinearization
+///
+/// TODO: Improve this
+pub(crate) fn scalar_from_u128<E>(s: [u8; 16]) -> Scalar<E> 
+where E: JubjubEngine
+{
+    let (x,y) = array_refs!(&s,8,8);
+    let mut x: <E::Fs as PrimeField>::Repr = u64::from_le_bytes(*x).into();
+    let y: <E::Fs as PrimeField>::Repr = u64::from_le_bytes(*y).into();
+    x.shl(64);
+    x.add_nocarry(&y);
+    <E::Fs as PrimeField>::from_repr(x).unwrap()
+    // Scalar::from(u128::from_le_bytes(s))  ?dalek?
+}
+
+
 pub(crate) fn scalar_times_generator<E>(scalar: &Scalar<E>)
  -> Point<E,PrimeOrder> 
 where E: JubjubEngineWithParams,

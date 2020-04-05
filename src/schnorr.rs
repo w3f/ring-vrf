@@ -452,6 +452,7 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
     }    
 }
 
+
 /*
 /// Batch verify DLEQ proofs where the public keys were held by
 /// different parties.
@@ -471,22 +472,23 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
 /// seperate calls.
 #[cfg(any(feature = "alloc", feature = "std"))]
 #[allow(non_snake_case)]
-pub fn dleq_verify_batch(
-    ps: &[VRFInOut<E>],
+pub fn vrf_verify_batch(
+    inouts: &[VRFInOut<E>],
     proofs: &[VRFProofBatchable<E>],
     public_keys: &[PublicKey<E>],
 ) -> SignatureResult<()> 
 {
     const ASSERT_MESSAGE: &'static str = "The number of messages/transcripts / input points, output points, proofs, and public keys must be equal.";
-    assert!(ps.len() == proofs.len(), ASSERT_MESSAGE);
+    assert!(inouts.len() == proofs.len(), ASSERT_MESSAGE);
     assert!(proofs.len() == public_keys.len(), ASSERT_MESSAGE);
 
-    // Use a random number generator keyed by the publidc keys, the
-    // inout and putput points, and the system randomn number gnerator.
+    // Use a random number generator keyed by the public keys, the
+    // inout and output points, and the system randomn number gnerator.
+    // TODO: Use proofs too?
     let mut csprng = {
         let mut t = Transcript::new(b"VB-RNG");
-        for (pk,p) in public_keys.iter().zip(ps) {
-            t.commit_point(b"",pk.as_compressed());
+        for (pk,p) in public_keys.iter().zip(inouts) {
+            t.commit_point(b"",&pk.0);
             p.commit(&mut t);
         }
         t.build_rng().finalize(&mut rand_hack())
@@ -498,7 +500,7 @@ pub fn dleq_verify_batch(
     let rnd_128bit_scalar = |_| {
         let mut r = [0u8; 16];
         csprng.fill_bytes(&mut r);
-        Scalar::from(u128::from_le_bytes(r))
+        let z: Scalar<E> = crate::scalar::scalar_from_u128::<E>(r);
     };
     let zz: Vec<Scalar> = proofs.iter().map(rnd_128bit_scalar).collect();
 
@@ -509,6 +511,7 @@ pub fn dleq_verify_batch(
     // Compute the basepoint coefficient, ∑ s[i] z[i] (mod l)
     let B_coefficient: Scalar = z_s.iter().sum();
 
+    // TODO: Support extra messages and DLEQ proofs by handling this differently.
     let t0 = Transcript::new(b"VRF");
     let z_c: Vec<Scalar> = zz.iter().enumerate()
         .map( |(i, z)| z * proofs[i].shorten_dleq(t0.clone(), &public_keys[i], &ps[i]).c )
@@ -530,30 +533,27 @@ pub fn dleq_verify_batch(
             .chain(z_c)
             .chain(z_s),
         proofs.iter().map(|proof| proof.Hr.decompress())
-            .chain(ps.iter().map(|p| Some(*p.output.as_point())))
-            .chain(ps.iter().map(|p| Some(*p.input.as_point()))),
+            .chain(inouts.iter().map(|p| Some(*p.output.as_point())))
+            .chain(inouts.iter().map(|p| Some(*p.input.as_point()))),
     ).map(|id| id.is_identity()).unwrap_or(false);
 
     if b { Ok(()) } else {
         // Err(SignatureError::EquationFalse) 
         Err( io::Error::new(io::ErrorKind::InvalidInput, "VRF signature validation failed") )
-
     }
 }
+*/
 
+/*
 /// Batch verify VRFs by different signers
 ///
 ///
 #[cfg(any(feature = "alloc", feature = "std"))]
-pub fn vrf_verify_batch<T, I>(
-    transcripts: I,
-    outs: &[VRFOutput],
-    proofs: &[VRFProofBatchable],
-    publickeys: &[PublicKey],
-) -> SignatureResult<Box<[VRFInOut<E>]>>
-where
-    T: VRFSigningTranscript,
-    I: IntoIterator<Item = T>,
+pub fn vrf_verify_batch(
+    inouts: &[VRFInOut<E>],
+    proofs: &[VRFProofBatchable<E>],
+    publickeys: &[PublicKey<E>],
+) -> SignatureResult<()>
 {
     let mut ts = transcripts.into_iter();
     let ps = ts.by_ref()
