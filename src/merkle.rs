@@ -180,6 +180,23 @@ impl<E: JubjubEngineWithParams> RingSecretCopath<E> {
         }
         Ok(())
     }
+
+    /// Get the merkle root from proof.
+    pub fn to_root(&self, leaf: &PublicKey<E>) -> RingRoot<E> {
+        let mut cur = leaf.0.to_xy().0;
+
+        for (depth_to_bottom, point) in self.0.iter().enumerate() {
+            let (left, right) = match point.current_selection {
+                MerkleSelection::Right => (point.sibling.as_ref(), Some(&cur)),
+                MerkleSelection::Left => (Some(&cur), point.sibling.as_ref()),
+            };
+
+            cur = auth_hash::<E>(left, right, depth_to_bottom);
+        }
+
+        RingRoot(cur)
+    }
+   
 }
 
 /*
@@ -219,22 +236,6 @@ impl<E: JubjubEngine> DerefMut for RingRoot<E> {
 }
 
 impl<E: JubjubEngineWithParams> RingRoot<E> {
-    /// Get the merkle root from proof.
-    pub fn from_proof(path: &RingSecretCopath<E>, target: &PublicKey<E>) -> Self {
-        let mut cur = target.0.to_xy().0;
-
-        for (depth_to_bottom, point) in path.0.iter().enumerate() {
-            let (left, right) = match point.current_selection {
-                MerkleSelection::Right => (point.sibling.as_ref(), Some(&cur)),
-                MerkleSelection::Left => (Some(&cur), point.sibling.as_ref()),
-            };
-
-            cur = auth_hash::<E>(left, right, depth_to_bottom);
-        }
-
-        Self(cur)
-    }
-
     /// Get the merkle root from a list of public keys. Panic if length of the list is zero.
     ///
     /// TODO: We do no initial hashing here for the leaves, but maybe that's fine.

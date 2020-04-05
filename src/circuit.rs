@@ -216,7 +216,7 @@ mod tests {
         let extra = ::merlin::Transcript::new(b"whatever").challenge_scalar(b"");
 
         let copath = RingSecretCopath::random(params.auth_depth, &mut rng);
-        let auth_root = RingRoot::from_proof(&copath, &pk);
+        let auth_root = copath.to_root(&pk);
 
         let instance = RingVRF {
             params: &params,

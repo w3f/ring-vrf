@@ -107,7 +107,7 @@ mod tests {
         let vrf_inout = vrf_input.to_inout(&sk);
 
         let copath = RingSecretCopath::random(params.auth_depth, &mut rng);
-        let auth_root = RingRoot::from_proof(&copath, &pk);
+        let auth_root = copath.to_root(&pk);
 
         let extra = || ::merlin::Transcript::new(b"meh..");
 
