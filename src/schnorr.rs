@@ -45,7 +45,7 @@ use rand_core::{RngCore,CryptoRng};
 use merlin::Transcript;
 
 use ff::{Field}; // PrimeField, PrimeFieldRepr, ScalarEngine
-use zcash_primitives::jubjub::{JubjubEngine, PrimeOrder, Unknown, edwards::Point};
+use zcash_primitives::jubjub::{JubjubEngine, Unknown, edwards::Point}; // PrimeOrder
 
 use crate::{
     rand_hack, JubjubEngineWithParams, 
@@ -226,7 +226,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// and correspodning Schnorr proof, but only if the result first
     /// passes some check, which itself returns either a `bool` or else
     /// an `Option` of an extra message transcript.
-    pub fn vrf_sign_after_check<F,O>(&self, input: VRFInput<E>, mut check: F)
+    pub fn vrf_sign_after_check<F,O>(&self, input: VRFInput<E>, check: F)
      -> Option<(VRFOutput<E>, VRFProof<E>, VRFProofBatchable<E>)>
     where F: FnOnce(&VRFInOut<E>) -> O,
           O: VRFExtraMessage,
@@ -596,7 +596,6 @@ mod tests {
 
         let ctx = signing_context(b"yo!");
         let input1 = VRFInput::new_nonmalleable(ctx.bytes(b"meow"),&sk1.to_public());
-        let input2 = VRFInput::new_nonmalleable(ctx.bytes(b"woof"),&sk1.to_public());
         
         let (io1, proof1, proof1batchable) = sk1.vrf_sign_simple(input1.clone());
         /*

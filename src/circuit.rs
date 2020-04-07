@@ -229,17 +229,20 @@ mod tests {
 
         instance.synthesize(&mut cs).unwrap();
         assert!(cs.is_satisfied());
-        assert_eq!(cs.num_inputs(), 5 + 1); // the 1st public input predefined to be = 1
+        assert_eq!(cs.num_inputs(), 6 + 1); // the 1st public input predefined to be = 1
         //    assert_eq!(cs.num_constraints(), 4280 + 13); //TODO: 13
 
         println!("{}", cs.num_constraints() - 4293);
 
-        assert_eq!(cs.get_input(1, "VRF_BASE input/x/input variable"), vrf_input.0.to_xy().0);
-        assert_eq!(cs.get_input(2, "VRF_BASE input/y/input variable"), vrf_input.0.to_xy().1);
+        let vrf_output = vrf_input.to_output(&sk).0.mul_by_cofactor(engine_params);
+        let vrf_input = vrf_input.0.mul_by_cofactor(engine_params);
 
-        let vrf_output = vrf_input.to_output(&sk);
-        assert_eq!(cs.get_input(3, "vrf/x/input variable"), vrf_output.0.to_xy().0);
-        assert_eq!(cs.get_input(4, "vrf/y/input variable"), vrf_output.0.to_xy().1);
-        assert_eq!(cs.get_input(5, "anchor/input variable"), auth_root.0);
+        assert_eq!(cs.get_input(1, "VRF_BASE input/x/input variable"), vrf_input.to_xy().0);
+        assert_eq!(cs.get_input(2, "VRF_BASE input/y/input variable"), vrf_input.to_xy().1);
+
+        assert_eq!(cs.get_input(3, "vrf/x/input variable"), vrf_output.to_xy().0);
+        assert_eq!(cs.get_input(4, "vrf/y/input variable"), vrf_output.to_xy().1);
+        assert_eq!(cs.get_input(5, "extra/input variable"), extra );
+        assert_eq!(cs.get_input(6, "anchor/input variable"), auth_root.0);
     }
 }

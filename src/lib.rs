@@ -122,8 +122,6 @@ mod tests {
         let copath = RingSecretCopath::random(depth, &mut rng);
         let auth_root = copath.to_root(&pk);
 
-        let extra = || ::merlin::Transcript::new(b"meh..");
-
         let proving = start_timer!(|| "proving");
         let (vrf_output, proof) = sk.ring_vrf_sign_checked(vrf_inout, vrf::no_extra(), copath.clone(), srs).unwrap();
         end_timer!(proving);

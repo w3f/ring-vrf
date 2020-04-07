@@ -15,7 +15,7 @@
 
 use std::io;
 
-use rand_core::{RngCore,CryptoRng,SeedableRng,OsRng};
+use rand_core::{RngCore,CryptoRng,SeedableRng}; // OsRng
 
 use merlin::Transcript;
 

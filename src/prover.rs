@@ -12,7 +12,6 @@ use bellman::{
 };
 pub use groth16::Proof as RingVRFProof;
 
-use zcash_primitives::jubjub::JubjubEngine;
 use rand_core::{RngCore,CryptoRng};
 
 
@@ -97,7 +96,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     pub fn ring_vrf_sign_after_check<F,O,P>(
         &self, 
         input: VRFInput<E>,
-        mut check: F,
+        check: F,
         copath: RingSecretCopath<E>,
         proving_key: RingSRS<P>,
     ) -> SynthesisResult<Option<(VRFOutput<E>, RingVRFProof<E>)>>

@@ -8,9 +8,6 @@
 //! ### Ring VRF zk SNARK verifier
 
 use bellman::groth16::{self, Proof}; // verify_proof, prepare_verifying_key, PreparedVerifyingKey, VerifyingKey
-use zcash_primitives::jubjub::JubjubEngine;
-use ff::Field;
-use bellman::SynthesisError;
 
 use crate::{
     SynthesisResult, JubjubEngineWithParams, 
@@ -31,7 +28,7 @@ impl<E: JubjubEngineWithParams> RingRoot<E> {
         extra: T,
         zkproof: Proof<E>,
         verifying_key: &groth16::VerifyingKey<E>,
-    ) -> Result<bool, SynthesisError> 
+    ) -> SynthesisResult<bool> 
     where T: SigningTranscript, 
     {
         let pvk = groth16::prepare_verifying_key::<E>(verifying_key);
@@ -59,7 +56,7 @@ impl<E: JubjubEngineWithParams> RingRoot<E> {
         // Prepared means that 1 pairing e(alpha, beta) has been precomputed.
         // Makes sense, as we verify multiple proofs for the same circuit
         verifying_key: &groth16::PreparedVerifyingKey<E>,
-    ) -> Result<bool, SynthesisError> 
+    ) -> SynthesisResult<bool> 
     where T: SigningTranscript, 
     {
         let params = E::params();
@@ -74,7 +71,7 @@ impl<E: JubjubEngineWithParams> RingRoot<E> {
         // but we're hashing into the jubjub base field not the scalar field
         // here, so maybe the method should be renamed.
         let extra = extra.challenge_scalar(b"extra-msg");
-        let mut public_input: [E::Fr; 6] = [ x1, y1, x2, y2, extra, self.0.clone() ];
+        let public_input: [E::Fr; 6] = [ x1, y1, x2, y2, extra, self.0.clone() ];
         // Verify the proof
         groth16::verify_proof(verifying_key, &zkproof, &public_input[..])
     }
