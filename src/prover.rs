@@ -6,10 +6,7 @@
 
 //! ### Ring VRF zk SNARK prover
 
-use bellman::{
-    SynthesisError,
-    groth16, // {create_random_proof, ParameterSource, Parameters}
-};
+use bellman::groth16;
 pub use groth16::Proof as RingVRFProof;
 
 use rand_core::{RngCore,CryptoRng};

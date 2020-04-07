@@ -84,7 +84,7 @@ mod tests {
 
     use rand_core::{RngCore}; // CryptoRng
 
-    use bellman::groth16::Parameters;
+    use bellman::groth16;
     use zcash_primitives::jubjub::JubjubBls12;
     use pairing::bls12_381::Bls12;
     // use rand_core::SeedableRng;
@@ -93,23 +93,34 @@ mod tests {
 
     #[test]
     fn test_completeness() {
-        let depth = 4;
+        let depth = 10;
 
         // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
         let mut rng = ::rand_core::OsRng;
 
-        let srs = match File::open("crs") {
-            Ok(f) => Parameters::<Bls12>::read(f, false).expect("can't read CRS"),
+        let filename = format!("srs{}.pk", depth);
+        let srs = match File::open(&filename) {
+            Ok(f) => groth16::Parameters::<Bls12>::read(f, false).expect("can't read SRS prover key"),
             Err(_) => {
-                let f = File::create("crs").unwrap();
+                let f = File::create(filename).unwrap();
                 let generation = start_timer!(|| "generation");
-                let c = generator::generate_crs(depth).expect("can't generate CRS");
+                let c = generator::generate_crs(depth).expect("can't generate SRS");
                 end_timer!(generation);
                 c.write(&f).unwrap();
                 c
             },
         };
         let srs = RingSRS { srs: &srs, depth, };
+
+        let filename = format!("srs{}.vk", depth);
+        let vk = match File::open(&filename) {
+            Ok(f) => groth16::VerifyingKey::<Bls12>::read(f).expect("can't read SRS verifier key"),
+            Err(_) => {
+                let f = File::create(filename).unwrap();
+                srs.srs.vk.write(&f).unwrap();
+                srs.srs.vk.clone()
+            },
+        };
 
         let sk = SecretKey::<Bls12>::from_rng(&mut rng);
         let pk = sk.to_public();
@@ -128,7 +139,7 @@ mod tests {
 
         let vrf_inout = vrf_output.attach_malleable(t);
         let verification = start_timer!(|| "verification");
-        let valid = auth_root.ring_vrf_verify_unprepared(vrf_inout, vrf::no_extra(), proof, &srs.srs.vk);
+        let valid = auth_root.ring_vrf_verify_unprepared(vrf_inout, vrf::no_extra(), proof, &vk);
         end_timer!(verification);
         assert_eq!(valid.unwrap(), true);
     }

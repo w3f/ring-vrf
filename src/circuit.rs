@@ -195,7 +195,7 @@ mod tests {
     use rand_core::{RngCore}; // CryptoRng
 
     use super::*;
-    use crate::{JubjubEngineWithParams, VRFInput, RingSecretCopath, RingRoot};
+    use crate::{JubjubEngineWithParams, VRFInput, RingSecretCopath};
 
     #[test]
     fn test_ring() {

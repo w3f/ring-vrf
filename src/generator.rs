@@ -6,20 +6,17 @@
 
 //! ### Ring VRF zkSNARK SRS generator
 
-use rand_core::{OsRng}; // RngCore
 
-use bellman::groth16::{generate_random_parameters, Parameters,};
-use bellman::SynthesisError;
-use zcash_primitives::jubjub::JubjubEngine;
+use bellman::groth16;
 
-use crate::{rand_hack, JubjubEngineWithParams, RingSRS};
+use crate::{rand_hack, JubjubEngineWithParams, SynthesisResult, RingSRS};
 
 
 /// Generates structured (meaning circuit-depending) Groth16
 /// CRS (that comprises proving and verificaton keys) over BLS12-381
 /// for the circuit defined in circuit.rs using OS RNG.
 pub fn generate_crs<E: JubjubEngineWithParams>(depth: u32)
- -> Result<Parameters<E>, SynthesisError> 
+ -> SynthesisResult<groth16::Parameters<E>> 
 {
     let circuit = crate::circuit::RingVRF {
         depth,
@@ -28,5 +25,5 @@ pub fn generate_crs<E: JubjubEngineWithParams>(depth: u32)
         extra: None,
         copath: None,
     };
-    generate_random_parameters(circuit, &mut rand_hack())
+    groth16::generate_random_parameters(circuit, &mut rand_hack())
 }
