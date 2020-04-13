@@ -39,7 +39,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         let instance = crate::circuit::RingVRF {
             depth: proving_key.depth,
             sk: Some(self.clone()),
-            vrf_input: Some(vrf_input.0.mul_by_cofactor(E::params())),
+            vrf_input: Some(vrf_input.as_point().mul_by_cofactor(E::params())),
             extra: Some(extra.challenge_scalar(b"extra-msg")),
             copath: Some(copath),
         };

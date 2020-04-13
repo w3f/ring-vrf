@@ -29,9 +29,11 @@ use crate::{JubjubEngineWithParams, SigningTranscript, Scalar};  // use super::*
 ///
 /// All creation methods require the developer acknoledge their VRF output malleability.
 #[derive(Debug, Clone)] // PartialEq, Eq
-pub struct VRFInput<E: JubjubEngine>(pub(crate) Point<E, Unknown>);
+pub struct VRFInput<E: JubjubEngine>(Point<E, Unknown>);
 
 impl<E: JubjubEngineWithParams> VRFInput<E> {
+    pub(crate) fn as_point(&self) -> &Point<E, Unknown> { &self.0 }
+
     /// Create a new VRF input from an `RngCore`.
     #[inline(always)]
     fn from_rng<R: RngCore+CryptoRng>(mut rng: R) -> Self {
@@ -90,9 +92,11 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
 
 /// VRF output, possibly unverified.
 #[derive(Debug, Clone)] // Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct VRFOutput<E: JubjubEngine>(pub Point<E, Unknown>);
+pub struct VRFOutput<E: JubjubEngine>(Point<E, Unknown>);
 
 impl<E: JubjubEngineWithParams> VRFOutput<E> {
+    pub(crate) fn as_point(&self) -> &Point<E, Unknown> { &self.0 }
+    
     pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
         let p = Point::read(reader,E::params()) ?;
         // ZCash has not method to check for a JubJub point being the identity,
@@ -173,8 +177,8 @@ impl<E: JubjubEngineWithParams> VRFInOut<E> {
     /// `VRFInOut::make_*` as well as for signer side batching.
     pub fn commit<T: SigningTranscript>(&self, t: &mut T) {
         let params = E::params();
-        t.commit_point(b"vrf-in", &self.input.0.mul_by_cofactor(&params));
-        t.commit_point(b"vrf-out", &self.output.0.mul_by_cofactor(&params));
+        t.commit_point(b"vrf-in", &self.input.as_point().mul_by_cofactor(&params));
+        t.commit_point(b"vrf-out", &self.output.as_point().mul_by_cofactor(&params));
     }
 
     /// Raw bytes output from the VRF.
@@ -307,7 +311,7 @@ where
             t0.challenge_bytes(b"", &mut s);
             let z: Scalar<E> = crate::scalar::scalar_from_u128::<E>(s);
 
-            let p = if io { p.input.0.clone() } else { p.output.0.clone() };
+            let p = if io { p.input.as_point().clone() } else { p.output.as_point().clone() };
             // acc += z * p;
             let p = p.mul(z, engine_params);
             acc = acc.clone().add(&p, engine_params);

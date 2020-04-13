@@ -127,13 +127,13 @@ impl<E: JubjubEngineWithParams> VRFProofBatchable<E> {
     {
         t.proto_name(b"DLEQProof");
         // t.commit_point(b"vrf:g",constants::RISTRETTO_BASEPOINT_TABLE.basepoint().compress());
-        t.commit_point(b"vrf:h", &p.input.0);
+        t.commit_point(b"vrf:h", p.input.as_point());
         t.commit_point(b"vrf:pk", &public.0);
 
         t.commit_point(b"vrf:R=g^r", &self.R);
         t.commit_point(b"vrf:h^r", &self.Hr);
 
-        t.commit_point(b"vrf:h^sk", &p.output.0);
+        t.commit_point(b"vrf:h^sk", p.output.as_point());
 
         VRFProof {
             c: t.challenge_scalar(b"prove"), // context, message, A/public_key, R=rG
@@ -167,7 +167,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
 
         t.proto_name(b"DLEQProof");
         // t.commit_point(b"vrf:g",constants::RISTRETTO_BASEPOINT_TABLE.basepoint().compress());
-        t.commit_point(b"vrf:h", &p.input.0);
+        t.commit_point(b"vrf:h", p.input.as_point());
         t.commit_point(b"vrf:pk", &self.public.0);
 
         // We compute R after adding pk and all h.
@@ -176,12 +176,12 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         let R = crate::scalar_times_generator(&r).into();
         t.commit_point(b"vrf:R=g^r", &R);
 
-        // let Hr = (&r * p.input.0).compress();
-        let Hr = p.input.0.mul(r.clone(), params);
+        // let Hr = (&r * p.input.as_point()).compress();
+        let Hr = p.input.as_point().mul(r.clone(), params);
         t.commit_point(b"vrf:h^r", &Hr);
 
         // We add h^sk last to save an allocation if we ever need to hash multiple h together.
-        t.commit_point(b"vrf:h^sk", &p.output.0);
+        t.commit_point(b"vrf:h^sk", p.output.as_point());
 
         let c = t.challenge_scalar(b"prove"); // context, message, A/public_key, R=rG
         // let s = &r - &(&c * &self.key);
@@ -367,7 +367,7 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
 
         t.proto_name(b"DLEQProof");
         // t.commit_point(b"vrf:g",constants::RISTRETTO_BASEPOINT_TABLE.basepoint().compress());
-        t.commit_point(b"vrf:h", &p.input.0);
+        t.commit_point(b"vrf:h", p.input.as_point());
         t.commit_point(b"vrf:pk", &self.0);
 
         // We recompute R aka u from the proof
@@ -378,14 +378,14 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
         t.commit_point(b"vrf:R=g^r", &R);
 
         // We also recompute h^r aka u using the proof
-        // let Hr = (&proof.c * &p.output.0) + (&proof.s * &p.input.0);
+        // let Hr = (&proof.c * p.output.as_point()) + (&proof.s * p.input.as_point());
         // let Hr = Hr.compress();
-        let Hr = p.output.0.clone().mul(proof.c,params)
-             .add(& p.input.0.clone().mul(proof.s,params), params);
+        let Hr = p.output.as_point().clone().mul(proof.c,params)
+             .add(& p.input.as_point().clone().mul(proof.s,params), params);
         t.commit_point(b"vrf:h^r", &Hr);
 
         // We add h^sk last to save an allocation if we ever need to hash multiple h together.
-        t.commit_point(b"vrf:h^sk", &p.output.0);
+        t.commit_point(b"vrf:h^sk", p.output.as_point());
 
         // We need not check that h^pk lies on the curve because Ristretto ensures this.
         let VRFProof { c, s } = *proof;

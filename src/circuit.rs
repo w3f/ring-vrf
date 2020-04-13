@@ -220,7 +220,7 @@ mod tests {
         let instance = RingVRF {
             depth,
             sk: Some(sk.clone()),
-            vrf_input: Some(vrf_input.0.mul_by_cofactor(engine_params)),
+            vrf_input: Some(vrf_input.as_point().mul_by_cofactor(engine_params)),
             extra: Some(extra),
             copath: Some(copath),
         };
@@ -234,8 +234,8 @@ mod tests {
 
         println!("{}", cs.num_constraints() - 4293);
 
-        let vrf_output = vrf_input.to_output(&sk).0.mul_by_cofactor(engine_params);
-        let vrf_input = vrf_input.0.mul_by_cofactor(engine_params);
+        let vrf_output = vrf_input.to_output(&sk).as_point().mul_by_cofactor(engine_params);
+        let vrf_input = vrf_input.as_point().mul_by_cofactor(engine_params);
 
         assert_eq!(cs.get_input(1, "VRF_BASE input/x/input variable"), vrf_input.to_xy().0);
         assert_eq!(cs.get_input(2, "VRF_BASE input/y/input variable"), vrf_input.to_xy().1);
