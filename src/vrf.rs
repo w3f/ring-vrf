@@ -55,12 +55,14 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
 
     /// Non-malleable VRF transcript.
     ///
-    /// Incompatable with ring VRF however.
+    /// Incompatable with ring VRF however.  We avoid malleability within the
+    /// small order subgroup here by multiplying by the cofactor.
     pub fn new_nonmalleable<T>(mut t: T, publickey: &crate::PublicKey<E>)
      -> VRFInput<E>
     where T: SigningTranscript
     {
-        t.commit_point(b"vrf-nm-pk", &publickey.0);
+        let params = E::params();
+        t.commit_point(b"vrf-nm-pk", &publickey.0.mul_by_cofactor(params));
         VRFInput::new_malleable(t)
     }
 
