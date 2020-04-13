@@ -24,6 +24,13 @@ pub struct PublicKey<E: JubjubEngine>(pub(crate) Point<E,Unknown>);
 
 // serde_boilerplate!(PublicKey);
 
+impl<E: JubjubEngineWithParams> PartialEq for PublicKey<E> {
+    fn eq(&self, other: &PublicKey<E>) -> bool {
+        let params = E::params();
+        self.0.mul_by_cofactor(params) == other.0.mul_by_cofactor(params) 
+    }
+}
+impl<E: JubjubEngineWithParams> Eq for PublicKey<E> { }
 
 
 impl<E: JubjubEngineWithParams> PublicKey<E> {
