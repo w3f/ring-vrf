@@ -1,13 +1,15 @@
-use crypto_primitives::{crh::{
-    pedersen::{constraints::PedersenCRHGadget, PedersenCRH, PedersenWindow},
-    FixedLengthCRH, FixedLengthCRHGadget,
-}, merkle_tree::{MerkleTreePath, MerkleHashTree, MerkleTreeConfig}, MerkleTreePathGadget};
 use algebra::jubjub::{Fq, JubJubAffine as JubJub};
-use r1cs_core::{ConstraintSystem, SynthesisError, ConstraintSynthesizer};
+use algebra_core::{BitIterator, Group, UniformRand};
+use algebra_core::fields::PrimeField;
+use crypto_primitives::crh::{FixedLengthCRH,FixedLengthCRHGadget};
+use crypto_primitives::crh::pedersen::{PedersenParameters, PedersenCRH, PedersenWindow};
+use crypto_primitives::crh::pedersen::constraints::PedersenCRHGadget;
+use crypto_primitives::merkle_tree::{MerkleHashTree, MerkleTreeConfig, MerkleTreePath};
+use crypto_primitives::merkle_tree::constraints::MerkleTreePathGadget;
+use r1cs_core::{ConstraintSynthesizer, ConstraintSystem, SynthesisError};
 use r1cs_std::prelude::*;
 use r1cs_std::{jubjub::JubJubGadget};
-use crypto_primitives::crh::pedersen::PedersenParameters;
-
+use r1cs_std::groups::GroupGadget;
 
 #[derive(Clone)]
 struct Window4x256;
@@ -30,44 +32,118 @@ impl MerkleTreeConfig for JubJubMerkleTreeParams {
 type JubJubMerkleTree = MerkleHashTree<JubJubMerkleTreeParams>;
 type JubJubMerklePath = MerkleTreePath<JubJubMerkleTreeParams>;
 
+type Scalar = <JubJub as Group>::ScalarField;
 
-struct RingVRF<'a> {
+// TODO: make it a gadget?
+#[derive(Clone)]
+struct RingVRF {
+    sk: Scalar,
+    base_point: JubJub,
+    vrf_input: JubJub,
     crh_params: PedersenParameters<JubJub>,
     auth_path: JubJubMerklePath,
     root: <PedersenCRH<JubJub, Window4x256> as FixedLengthCRH>::Output,
-    leaf: &'a [u8; 30]
 }
 
-impl<'a> ConstraintSynthesizer<Fq> for RingVRF<'a> {
+impl ConstraintSynthesizer<Fq> for RingVRF {
     fn generate_constraints<CS: ConstraintSystem<Fq>>(
         self,
         cs: &mut CS,
     ) -> Result<(), SynthesisError> {
+        let mut constraint_count = cs.num_constraints();
+
+        // witness signer's secret key as a sequence of bits starting from the least significant one
+        let mut sk_bits: Vec<bool> = BitIterator::new(self.sk.into_repr()).collect();
+        sk_bits.reverse();
+        let sk_bits = Vec::<Boolean>::alloc(
+            cs.ns(|| "sk_bits"),
+            || Ok(sk_bits)
+        )?;
+
+        // constraint_count = <Scalar as PrimeField>::Params::MODULUS_BITS as usize;
+        // though Jujubjub scalar field element fits 252 bits, Zexe represents it in 256 bits
+        constraint_count += 256;  // 256 booleanity constraints
+        assert_eq!(cs.num_constraints(), constraint_count);
+
+        let vrf_input = JubJubGadget::alloc_input(
+            &mut cs.ns(|| "vrf_input"),
+            || Ok(self.vrf_input)
+        )?;
+        constraint_count += 3; // to check that the point lies on Jubjub
+        assert_eq!(cs.num_constraints(), constraint_count);
+        // TODO: subgroup check
+
+        // addition law for Jubjub is complete, see comment fro GroupGadget::mul_bits
+        let zero = <JubJubGadget as GroupGadget<JubJub, Fq>>::zero(cs.ns(|| "zero1"))?;
+        // TODO: why doesn't infer?
+        // let computed_vrf_output = vrf_input.mul_bits(cs.ns(|| "computed_vrf_output"), &zero, sk_bits.iter())?;
+        let computed_vrf_output = <JubJubGadget as GroupGadget<JubJub, Fq>>::mul_bits(
+            &vrf_input,
+            cs.ns(|| "computed_vrf_output"),
+            &zero,
+            sk_bits.iter()
+        )?;
+        constraint_count += 256 * (2 + 5 + 6);
+        // for each bit:
+        // 2 constraints -- point selection (x and y)
+        // 5 constraints -- doubling
+        // 6 constraints -- addition
+        assert_eq!(cs.num_constraints(), constraint_count);
+
+        let expected_vrf_output = JubJubGadget::alloc_input(
+            &mut cs.ns(|| "expected_vrf_output"),
+            || Ok( <JubJubGadget as GroupGadget<JubJub, Fq>>::get_value(&computed_vrf_output).unwrap_or_default()) //wtf
+        )?;
+        constraint_count += 3; // (redundant) subgroup check
+        assert_eq!(cs.num_constraints(), constraint_count);
+
+        computed_vrf_output.enforce_equal(
+            &mut cs.ns(|| "computed_vrf_output = expected_vrf_output"),
+            &expected_vrf_output,
+        )?;
+        constraint_count += 2; // coordinates equality
+        assert_eq!(cs.num_constraints(), constraint_count);
+
+        // TODO: precomputed_base_scalar_mul
+        let base_point = JubJubGadget::alloc_input(
+            &mut cs.ns(|| "base_point"),
+            || Ok(self.base_point)
+        )?;
+        constraint_count += 3; // to check that the point lies on Jubjub
+        assert_eq!(cs.num_constraints(), constraint_count);
+        // TODO: subgroup check
+
+        let zero = <JubJubGadget as GroupGadget<JubJub, Fq>>::zero(cs.ns(|| "zero2"))?;
+        let pk = <JubJubGadget as GroupGadget<JubJub, Fq>>::mul_bits(
+            &base_point,
+            cs.ns(|| "pk"),
+            &zero,
+            sk_bits.iter()
+        )?;
+        constraint_count += 256 * (2 + 5 + 6);
+        assert_eq!(cs.num_constraints(), constraint_count);
+
         let crh_params = <HG as FixedLengthCRHGadget<H, Fq>>::ParametersGadget::alloc(
             &mut cs.ns(|| "crh_params"),
             || Ok(self.crh_params.clone())
-        ).unwrap();
-
-
+        )?;
 
         let root = <HG as FixedLengthCRHGadget<H, _>>::OutputGadget::alloc_input(
             &mut cs.ns(|| "root"),
             || Ok(self.root.clone())
-        ).unwrap();
+        )?;
 
         let path = MerkleTreePathGadget::<_, HG, _>::alloc(
             &mut cs.ns(|| "path"),
             || Ok(self.auth_path.clone())
-        ).unwrap();
-
-        let leaf = UInt8::constant_vec(self.leaf);
+        )?;
 
         path.check_membership(
             &mut cs.ns(|| "path verification"),
             &crh_params,
             &root,
-            &leaf.as_slice()
-        );
+            &pk
+        )?;
 
         Ok(())
     }
@@ -80,41 +156,49 @@ fn test_tree() {
     use groth16::{
         create_random_proof, generate_random_parameters, prepare_verifying_key, verify_proof,
     };
+    use r1cs_std::test_constraint_system::TestConstraintSystem;
 
     let rng = &mut test_rng();
 
-    let mut leaves = Vec::new();
-    for i in 0..4u8 {
-        let input = [i; 30];
-        leaves.push(input);
-    }
+    let sk: <JubJub as Group>::ScalarField = UniformRand::rand(rng);
+    let base_point: JubJub = UniformRand::rand(rng);
+    let vrf_input: JubJub = UniformRand::rand(rng);
+
+    let vrf_output = vrf_input.mul(&sk);
+    let pk = base_point.mul(&sk);
+
+    let mut leaves = vec![];
+    leaves.resize_with(4, || UniformRand::rand(rng));
 
     let i = 2;
-    let leaf = leaves[i];
+    leaves[i] = pk;
 
     let crh_params = H::setup(rng).unwrap();
     let tree = JubJubMerkleTree::new(crh_params.clone(), &leaves).unwrap();
     let root = tree.root();
 
-
-    let proof = tree.generate_proof(i, &leaf).unwrap();
-    assert!(proof.verify(&crh_params, &root, &leaf).unwrap());
-
-    let c = RingVRF {
-        crh_params: crh_params.clone(),
-        auth_path: proof.clone(),
-        root,
-        leaf: &leaf
-    };
-    let params = generate_random_parameters::<Bls12_381, _, _>(c, rng).unwrap();
+    let auth_path = tree.generate_proof(i, &pk).unwrap();
+    assert!(auth_path.verify(&crh_params, &root, &pk).unwrap());
 
     let c = RingVRF {
+        sk,
+        vrf_input,
+        base_point,
         crh_params,
-        auth_path: proof,
-        root,
-        leaf: &leaf
+        auth_path,
+        root
     };
+
+    let mut cs = TestConstraintSystem::<Fq>::new();
+    assert!(c.clone().generate_constraints(&mut cs).is_ok());
+    if !cs.is_satisfied() {
+        println!("{:?}", cs.which_is_unsatisfied().unwrap());
+    }
+    assert!(cs.is_satisfied());
+
+    let params = generate_random_parameters::<Bls12_381, _, _>(c.clone(), rng).unwrap();
     let pvk = prepare_verifying_key(&params.vk);
     let proof = create_random_proof(c, &params, rng).unwrap();
-    assert!(verify_proof(&pvk, &proof, &[root.x, root.y]).unwrap());
+
+    assert!(verify_proof(&pvk, &proof, &[vrf_input.x, vrf_input.y, vrf_output.x, vrf_output.y, base_point.x, base_point.y, root.x, root.y]).unwrap());
 }
