@@ -220,7 +220,7 @@ mod tests {
         let instance = RingVRF {
             depth,
             sk: Some(sk.clone()),
-            vrf_input: Some(vrf_input.as_point().mul_by_cofactor(engine_params)),
+            vrf_input: Some(vrf_input.as_point().clone()),
             extra: Some(extra),
             copath: Some(copath),
         };
@@ -234,14 +234,13 @@ mod tests {
 
         println!("{}", cs.num_constraints() - 4293);
 
-        let vrf_output = vrf_input.to_output(&sk).as_point().mul_by_cofactor(engine_params);
-        let vrf_input = vrf_input.as_point().mul_by_cofactor(engine_params);
+        let vrf_output = vrf_input.to_output(&sk); 
 
-        assert_eq!(cs.get_input(1, "VRF_BASE input/x/input variable"), vrf_input.to_xy().0);
-        assert_eq!(cs.get_input(2, "VRF_BASE input/y/input variable"), vrf_input.to_xy().1);
+        assert_eq!(cs.get_input(1, "VRF_BASE input/x/input variable"), vrf_input.as_point().to_xy().0);
+        assert_eq!(cs.get_input(2, "VRF_BASE input/y/input variable"), vrf_input.as_point().to_xy().1);
 
-        assert_eq!(cs.get_input(3, "vrf/x/input variable"), vrf_output.to_xy().0);
-        assert_eq!(cs.get_input(4, "vrf/y/input variable"), vrf_output.to_xy().1);
+        assert_eq!(cs.get_input(3, "vrf/x/input variable"), vrf_output.as_point().to_xy().0);
+        assert_eq!(cs.get_input(4, "vrf/y/input variable"), vrf_output.as_point().to_xy().1);
         assert_eq!(cs.get_input(5, "extra/input variable"), extra );
         assert_eq!(cs.get_input(6, "anchor/input variable"), auth_root.0);
     }

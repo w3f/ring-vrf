@@ -177,7 +177,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         t.commit_point(b"vrf:R=g^r", &R);
 
         // let Hr = (&r * p.input.as_point()).compress();
-        let Hr = p.input.as_point().mul(r.clone(), params);
+        let Hr = p.input.as_point().mul(r.clone(), params).into();
         t.commit_point(b"vrf:h^r", &Hr);
 
         // We add h^sk last to save an allocation if we ever need to hash multiple h together.
@@ -378,10 +378,10 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
         t.commit_point(b"vrf:R=g^r", &R);
 
         // We also recompute h^r aka u using the proof
-        // let Hr = (&proof.c * p.output.as_point()) + (&proof.s * p.input.as_point());
+        // let Hr = (&proof.c * p.output.as_point()) + (&proof.s * p.input.as_point().into());
         // let Hr = Hr.compress();
         let Hr = p.output.as_point().clone().mul(proof.c,params)
-             .add(& p.input.as_point().clone().mul(proof.s,params), params);
+             .add(& p.input.as_point().clone().mul(proof.s,params).into(), params);
         t.commit_point(b"vrf:h^r", &Hr);
 
         // We add h^sk last to save an allocation if we ever need to hash multiple h together.

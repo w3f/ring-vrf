@@ -20,7 +20,7 @@ use rand_core::{RngCore,CryptoRng,SeedableRng}; // OsRng
 use merlin::Transcript;
 
 use ff::{PrimeField, PrimeFieldRepr}; // Field, ScalarEngine
-use zcash_primitives::jubjub::{JubjubEngine, Unknown, edwards::Point}; // PrimeOrder
+use zcash_primitives::jubjub::{JubjubEngine, edwards::Point, PrimeOrder, Unknown};
 
 use crate::{JubjubEngineWithParams, SigningTranscript, Scalar};  // use super::*;
 
@@ -29,16 +29,16 @@ use crate::{JubjubEngineWithParams, SigningTranscript, Scalar};  // use super::*
 ///
 /// All creation methods require the developer acknoledge their VRF output malleability.
 #[derive(Debug, Clone)] // PartialEq, Eq
-pub struct VRFInput<E: JubjubEngine>(Point<E, Unknown>);
+pub struct VRFInput<E: JubjubEngine>(Point<E, PrimeOrder>);
 
 impl<E: JubjubEngineWithParams> VRFInput<E> {
-    pub(crate) fn as_point(&self) -> &Point<E, Unknown> { &self.0 }
+    pub(crate) fn as_point(&self) -> &Point<E, PrimeOrder> { &self.0 }
 
     /// Create a new VRF input from an `RngCore`.
     #[inline(always)]
     fn from_rng<R: RngCore+CryptoRng>(mut rng: R) -> Self {
         let params = E::params();
-        VRFInput( Point::rand(&mut rng, params).mul_by_cofactor(params).into() )
+        VRFInput( Point::rand(&mut rng, params).mul_by_cofactor(params) )
     }
 
     /// Acknoledge VRF transcript malleablity
@@ -81,7 +81,8 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
 
     /// Into VRF output.
     pub fn to_output(&self, sk: &crate::SecretKey<E>) -> VRFOutput<E> {
-        VRFOutput( self.0.mul(sk.key.clone(), E::params()) )
+        let p: Point<E, Unknown> = self.0.clone().into();
+        VRFOutput( p.mul(sk.key.clone(), E::params()) )
     }
 
     /// Into VRF output.
@@ -179,7 +180,7 @@ impl<E: JubjubEngineWithParams> VRFInOut<E> {
     /// `VRFInOut::make_*` as well as for signer side batching.
     pub fn commit<T: SigningTranscript>(&self, t: &mut T) {
         let params = E::params();
-        t.commit_point(b"vrf-in", &self.input.as_point().mul_by_cofactor(&params));
+        t.commit_point(b"vrf-in", &self.input.as_point()); // .mul_by_cofactor(&params);
         t.commit_point(b"vrf-out", &self.output.as_point().mul_by_cofactor(&params));
     }
 
@@ -297,32 +298,27 @@ where
 
     assert!( ps.len() > 0);
     let mut t = ::merlin::Transcript::new(b"MergeVRFs");
-    for p in ps.iter() {
-        p.borrow().commit(&mut t);
-    }
+    for p in ps {  p.borrow().commit(&mut t);  }
 
-    let go = |io: bool| {
-        let mut acc = Point::zero();
-        for p in ps {
-            let mut t0 = t.clone();
-            let p = p.borrow();
-            p.commit(&mut t0);
+    // We'd do accumulation here, but rust lacks polymorphic closures.
+    let psz = || ps.iter().map( |p| { 
+        let mut t0 = t.clone();
+        let p = p.borrow();
+        p.commit(&mut t0);
 
-            // Sample a 128bit scalar
-            let mut s = [0u8; 16];
-            t0.challenge_bytes(b"", &mut s);
-            let z: Scalar<E> = crate::scalar::scalar_from_u128::<E>(s);
+        // Sample a 128bit scalar
+        let mut s = [0u8; 16];
+        t0.challenge_bytes(b"", &mut s);
+        let z: Scalar<E> = crate::scalar::scalar_from_u128::<E>(s);
+        (p,z)
+    } );
 
-            let p = if io { p.input.as_point().clone() } else { p.output.as_point().clone() };
-            // acc += z * p;
-            let p = p.mul(z, engine_params);
-            acc = acc.clone().add(&p, engine_params);
-        }
-        acc
-    };
-
-    let input = VRFInput(go(true));
-    let output = VRFOutput(go(false));
+    let input = VRFInput( psz().fold(Point::zero(), |acc,(p,z)| { 
+        acc.add(&p.input.as_point().mul(z, engine_params), engine_params)
+    } ) );
+    let output = VRFOutput( psz().fold(Point::zero(), |acc,(p,z)| { 
+        acc.add(&p.output.as_point().mul(z, engine_params), engine_params)
+    } ) );
     VRFInOut { input, output }
 }
 

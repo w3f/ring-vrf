@@ -65,8 +65,8 @@ impl<E: JubjubEngineWithParams> RingRoot<E> {
         // TODO: Check params.auth_depth perhaps?
         // TODO: subgroup checks
         // Public inputs are elements of the main curve (BLS12-381) scalar field (that matches Jubjub base field, that's the thing)
-        let (x1, y1) = vrf_inout.input.as_point().mul_by_cofactor(&params).to_xy();
-        let (x2, y2) = vrf_inout.output.as_point().mul_by_cofactor(&params).to_xy();
+        let (x1, y1) = vrf_inout.input.as_point().to_xy();
+        let (x2, y2) = vrf_inout.output.as_point().to_xy();
         // We employ the challenge_scalar method since it hashes into a field,
         // but we're hashing into the jubjub base field not the scalar field
         // here, so maybe the method should be renamed.
