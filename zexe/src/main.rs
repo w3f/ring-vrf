@@ -1,6 +1,6 @@
 use algebra::jubjub::{Fq, JubJubAffine as JubJub};
 use algebra_core::{BitIterator, Group, UniformRand};
-use algebra_core::fields::PrimeField;
+use algebra_core::fields::{FpParameters, PrimeField};
 use crypto_primitives::crh::{FixedLengthCRH,FixedLengthCRHGadget};
 use crypto_primitives::crh::pedersen::{PedersenParameters, PedersenCRH, PedersenWindow};
 use crypto_primitives::crh::pedersen::constraints::PedersenCRHGadget;
@@ -38,7 +38,7 @@ type Scalar = <JubJub as Group>::ScalarField;
 #[derive(Clone)]
 struct RingVRF {
     sk: Scalar,
-    base_point: JubJub,
+    base_point_powers: Vec<JubJub>,
     vrf_input: JubJub,
     crh_params: PedersenParameters<JubJub>,
     auth_path: JubJubMerklePath,
@@ -62,6 +62,7 @@ impl ConstraintSynthesizer<Fq> for RingVRF {
 
         // constraint_count = <Scalar as PrimeField>::Params::MODULUS_BITS as usize;
         // though Jujubjub scalar field element fits 252 bits, Zexe represents it in 256 bits
+        // TODO:  constraint redundant bits to zero?
         constraint_count += 256;  // 256 booleanity constraints
         assert_eq!(cs.num_constraints(), constraint_count);
 
@@ -73,7 +74,7 @@ impl ConstraintSynthesizer<Fq> for RingVRF {
         assert_eq!(cs.num_constraints(), constraint_count);
         // TODO: subgroup check
 
-        // addition law for Jubjub is complete, see comment fro GroupGadget::mul_bits
+        // addition law for Jubjub is complete, see comment for GroupGadget::mul_bits
         let zero = <JubJubGadget as GroupGadget<JubJub, Fq>>::zero(cs.ns(|| "zero1"))?;
         // TODO: why doesn't infer?
         // let computed_vrf_output = vrf_input.mul_bits(cs.ns(|| "computed_vrf_output"), &zero, sk_bits.iter())?;
@@ -92,7 +93,7 @@ impl ConstraintSynthesizer<Fq> for RingVRF {
 
         let expected_vrf_output = JubJubGadget::alloc_input(
             &mut cs.ns(|| "expected_vrf_output"),
-            || Ok( <JubJubGadget as GroupGadget<JubJub, Fq>>::get_value(&computed_vrf_output).unwrap_or_default()) //wtf
+            || Ok(<JubJubGadget as GroupGadget<JubJub, Fq>>::get_value(&computed_vrf_output).unwrap_or_default())
         )?;
         constraint_count += 3; // (redundant) subgroup check
         assert_eq!(cs.num_constraints(), constraint_count);
@@ -104,23 +105,33 @@ impl ConstraintSynthesizer<Fq> for RingVRF {
         constraint_count += 2; // coordinates equality
         assert_eq!(cs.num_constraints(), constraint_count);
 
-        // TODO: precomputed_base_scalar_mul
-        let base_point = JubJubGadget::alloc_input(
-            &mut cs.ns(|| "base_point"),
-            || Ok(self.base_point)
-        )?;
-        constraint_count += 3; // to check that the point lies on Jubjub
-        assert_eq!(cs.num_constraints(), constraint_count);
-        // TODO: subgroup check
+//        Varial base scalar multiplication for PK = sk * BP
+//
+//        let base_point = JubJubGadget::alloc_input(
+//            &mut cs.ns(|| "base_point"),
+//            || Ok(self.base_point)
+//        )?;
+//        constraint_count += 3; // to check that the point lies on Jubjub
+//        assert_eq!(cs.num_constraints(), constraint_count);
+//
+//        let zero = <JubJubGadget as GroupGadget<JubJub, Fq>>::zero(cs.ns(|| "zero2"))?;
+//        let pk = <JubJubGadget as GroupGadget<JubJub, Fq>>::mul_bits(
+//            &base_point,
+//            cs.ns(|| "pk"),
+//            &zero,
+//            sk_bits.iter()
+//        )?;
+//        constraint_count += 256 * (2 + 5 + 6);
+//        assert_eq!(cs.num_constraints(), constraint_count);
 
-        let zero = <JubJubGadget as GroupGadget<JubJub, Fq>>::zero(cs.ns(|| "zero2"))?;
-        let pk = <JubJubGadget as GroupGadget<JubJub, Fq>>::mul_bits(
-            &base_point,
-            cs.ns(|| "pk"),
-            &zero,
-            sk_bits.iter()
+//        assert_eq!(sk_bits.len(), self.base_point_powers.len());
+        let mut pk = <JubJubGadget as GroupGadget<JubJub, Fq>>::zero(cs.ns(|| "pk"))?;
+        <JubJubGadget as GroupGadget<JubJub, Fq>>::precomputed_base_scalar_mul(
+            &mut pk,
+            cs.ns(|| "pk = sk * G"),
+            sk_bits.iter().zip(&self.base_point_powers)
         )?;
-        constraint_count += 256 * (2 + 5 + 6);
+        constraint_count += 252 * 5;
         assert_eq!(cs.num_constraints(), constraint_count);
 
         let crh_params = <HG as FixedLengthCRHGadget<H, Fq>>::ParametersGadget::alloc(
@@ -145,6 +156,8 @@ impl ConstraintSynthesizer<Fq> for RingVRF {
             &pk
         )?;
 
+        //TODO: add Jeffs magic wire
+
         Ok(())
     }
 }
@@ -161,8 +174,11 @@ fn test_tree() {
     let rng = &mut test_rng();
 
     let sk: <JubJub as Group>::ScalarField = UniformRand::rand(rng);
-    let base_point: JubJub = UniformRand::rand(rng);
     let vrf_input: JubJub = UniformRand::rand(rng);
+
+    let num_powers = <Scalar as PrimeField>::Params::MODULUS_BITS as usize;
+    let base_point_powers= PedersenCRH::<_, Window4x256>::generator_powers(num_powers, rng);
+    let base_point: JubJub = base_point_powers[0];
 
     let vrf_output = vrf_input.mul(&sk);
     let pk = base_point.mul(&sk);
@@ -183,7 +199,7 @@ fn test_tree() {
     let c = RingVRF {
         sk,
         vrf_input,
-        base_point,
+        base_point_powers,
         crh_params,
         auth_path,
         root
@@ -200,5 +216,5 @@ fn test_tree() {
     let pvk = prepare_verifying_key(&params.vk);
     let proof = create_random_proof(c, &params, rng).unwrap();
 
-    assert!(verify_proof(&pvk, &proof, &[vrf_input.x, vrf_input.y, vrf_output.x, vrf_output.y, base_point.x, base_point.y, root.x, root.y]).unwrap());
+    assert!(verify_proof(&pvk, &proof, &[vrf_input.x, vrf_input.y, vrf_output.x, vrf_output.y, root.x, root.y]).unwrap());
 }
