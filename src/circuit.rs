@@ -190,7 +190,7 @@ impl<E: JubjubEngineWithParams> Circuit<E> for RingVRF<E> {
 mod tests {
     use bellman::gadgets::test::TestConstraintSystem;
     use pairing::bls12_381::Bls12;
-    use zcash_primitives::jubjub::JubjubBls12;
+    // use zcash_primitives::jubjub::JubjubBls12;
 
     use rand_core::{RngCore}; // CryptoRng
 
@@ -200,7 +200,6 @@ mod tests {
     #[test]
     fn test_ring() {
         let depth = 10;
-        let engine_params = Bls12::params();
 
         // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
         let mut rng = ::rand_core::OsRng;
@@ -234,7 +233,7 @@ mod tests {
 
         println!("{}", cs.num_constraints() - 4293);
 
-        let vrf_preout = vrf_input.to_output(&sk); 
+        let vrf_preout = vrf_input.to_preout(&sk); 
 
         assert_eq!(cs.get_input(1, "VRF_BASE input/x/input variable"), vrf_input.as_point().to_xy().0);
         assert_eq!(cs.get_input(2, "VRF_BASE input/y/input variable"), vrf_input.as_point().to_xy().1);

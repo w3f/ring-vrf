@@ -80,14 +80,14 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
     }
 
     /// Into VRF output.
-    pub fn to_output(&self, sk: &crate::SecretKey<E>) -> VRFPreOut<E> {
+    pub fn to_preout(&self, sk: &crate::SecretKey<E>) -> VRFPreOut<E> {
         let p: Point<E, Unknown> = self.0.clone().into();
         VRFPreOut( p.mul(sk.key.clone(), E::params()) )
     }
 
     /// Into VRF output.
     pub fn to_inout(&self, sk: &crate::SecretKey<E>) -> VRFInOut<E> {
-        let output = self.to_output(sk);
+        let output = self.to_preout(sk);
         VRFInOut { input: self.clone(), output }
     }
 }

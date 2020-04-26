@@ -649,7 +649,7 @@ mod tests {
         let input1 = VRFInput::new_malleable(ctx.bytes(msg));
         
         let (io1, proof1, proof1batchable) = sk1.vrf_sign_first(Malleable(ctx.bytes(msg)));
-        let out1 = &io1.to_output();
+        let out1 = &io1.to_preout();
         assert_eq!(
             proof1,
             proof1batchable.shorten_vrf(&sk1.public, Malleable(ctx.bytes(msg)), &out1).unwrap(),
@@ -682,7 +682,7 @@ mod tests {
             "VRF verification with incorrect signer passed!"
         );
         let (io2, _proof2, _proof2batchable) = sk2.vrf_sign_first(Malleable(ctx.bytes(msg)));
-        let out2 = &io2.to_output();
+        let out2 = &io2.to_preout();
 
         // Verified key exchange, aka sequential two party VRF.
         let t0 = Transcript::new(b"VRF");
@@ -734,7 +734,7 @@ mod tests {
         for (k, (ios, proof, proof_batchable)) in keypairs.iter().zip(&ios_n_proofs) {
             let outs = ios
                 .iter()
-                .map(|io| io.to_output())
+                .map(|io| io.to_preout())
                 .collect::<Vec<VRFPreOut>>();
             let (ios_too, proof_too) = k
                 .public
@@ -752,7 +752,7 @@ mod tests {
         for (k, (ios, proof, _proof_batchable)) in keypairs.iter().zip(&ios_n_proofs) {
             let outs = ios.iter()
                 .rev()
-                .map(|io| io.to_output())
+                .map(|io| io.to_preout())
                 .collect::<Vec<VRFPreOut<_>>>();
             assert!(
                 k.public.vrfs_verify(ts(), &outs, &proof).is_err(),
@@ -761,7 +761,7 @@ mod tests {
         }
         for (k, (ios, proof, _proof_batchable)) in keypairs.iter().rev().zip(&ios_n_proofs) {
             let outs = ios.iter()
-                .map(|io| io.to_output())
+                .map(|io| io.to_preout())
                 .collect::<Vec<VRFPreOut<_>>>();
             assert!(
                 k.public.vrfs_verify(ts(), &outs, &proof).is_err(),
