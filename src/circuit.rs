@@ -16,7 +16,7 @@ use bellman::gadgets::{boolean, num, Assignment};
 use crate::{JubjubEngineWithParams, merkle::MerkleSelection, RingSecretCopath, SecretKey};
 
 
-/// A circuit for proving that the given vrf_output is valid for the given vrf_input under
+/// A circuit for proving that the given vrf_preout is valid for the given vrf_input under
 /// a key from the predefined set. It formalizes the following language:
 ///
 /// {(VRF_INPUT, VRF_OUTPUT, set) | VRF_OUTPUT = vrf(sk, VRF_INPUT), PK = derive(sk) and PK is in set }, where:
@@ -234,13 +234,13 @@ mod tests {
 
         println!("{}", cs.num_constraints() - 4293);
 
-        let vrf_output = vrf_input.to_output(&sk); 
+        let vrf_preout = vrf_input.to_output(&sk); 
 
         assert_eq!(cs.get_input(1, "VRF_BASE input/x/input variable"), vrf_input.as_point().to_xy().0);
         assert_eq!(cs.get_input(2, "VRF_BASE input/y/input variable"), vrf_input.as_point().to_xy().1);
 
-        assert_eq!(cs.get_input(3, "vrf/x/input variable"), vrf_output.as_point().to_xy().0);
-        assert_eq!(cs.get_input(4, "vrf/y/input variable"), vrf_output.as_point().to_xy().1);
+        assert_eq!(cs.get_input(3, "vrf/x/input variable"), vrf_preout.as_point().to_xy().0);
+        assert_eq!(cs.get_input(4, "vrf/y/input variable"), vrf_preout.as_point().to_xy().1);
         assert_eq!(cs.get_input(5, "extra/input variable"), extra );
         assert_eq!(cs.get_input(6, "anchor/input variable"), auth_root.0);
     }
