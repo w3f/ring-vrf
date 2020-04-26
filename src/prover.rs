@@ -16,7 +16,7 @@ use crate::{
     SynthesisResult, rand_hack, JubjubEngineWithParams,
     RingSRS, SigningTranscript, 
     SecretKey, RingSecretCopath, 
-    VRFInput, VRFOutput, VRFInOut,
+    VRFInput, VRFPreOut, VRFInOut,
     vrf::{no_extra, VRFExtraMessage},
 };
 
@@ -50,7 +50,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
 
     /// Run our Schnorr VRF on one single input, producing the output
     /// and correspodning Schnorr proof.
-    /// You must extract the `VRFOutput` from the `VRFInOut` returned.
+    /// You must extract the `VRFPreOut` from the `VRFInOut` returned.
     pub fn ring_vrf_sign_simple<P>(
         &self, 
         input: VRFInput<E>,
@@ -64,7 +64,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
 
     /// Run our Schnorr VRF on one single input and an extra message 
     /// transcript, producing the output and correspodning Schnorr proof.
-    /// You must extract the `VRFOutput` from the `VRFInOut` returned.
+    /// You must extract the `VRFPreOut` from the `VRFInOut` returned.
     ///
     /// There are schemes like Ouroboros Praos in which nodes evaluate
     /// VRFs repeatedly until they win some contest.  In these case,
@@ -96,7 +96,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         check: F,
         copath: RingSecretCopath<E>,
         proving_key: RingSRS<P>,
-    ) -> SynthesisResult<Option<(VRFOutput<E>, RingVRFProof<E>)>>
+    ) -> SynthesisResult<Option<(VRFPreOut<E>, RingVRFProof<E>)>>
     where F: FnOnce(&VRFInOut<E>) -> O,
           O: VRFExtraMessage,
           P: groth16::ParameterSource<E>, 
@@ -115,7 +115,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         extra: T,
         copath: RingSecretCopath<E>,
         proving_key: RingSRS<P>,
-    ) -> SynthesisResult<(VRFOutput<E>, RingVRFProof<E>)>
+    ) -> SynthesisResult<(VRFPreOut<E>, RingVRFProof<E>)>
     where T: SigningTranscript,
           P: groth16::ParameterSource<E>, 
     {

@@ -51,7 +51,7 @@ use crate::{
     rand_hack, JubjubEngineWithParams, 
     SigningTranscript, Scalar,
     SecretKey, PublicKey,
-    VRFInput, VRFOutput, VRFInOut, 
+    VRFInput, VRFPreOut, VRFInOut, 
     vrf::{no_extra, VRFExtraMessage},
 };  // Params
 
@@ -197,7 +197,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
 
     /// Run our Schnorr VRF on one single input, producing the output
     /// and correspodning Schnorr proof.
-    /// You must extract the `VRFOutput` from the `VRFInOut` returned.
+    /// You must extract the `VRFPreOut` from the `VRFInOut` returned.
     pub fn vrf_sign_simple(&self, input: VRFInput<E>)
      -> (VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)
     {
@@ -206,7 +206,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
 
     /// Run our Schnorr VRF on one single input and an extra message 
     /// transcript, producing the output and correspodning Schnorr proof.
-    /// You must extract the `VRFOutput` from the `VRFInOut` returned.
+    /// You must extract the `VRFPreOut` from the `VRFInOut` returned.
     ///
     /// There are schemes like Ouroboros Praos in which nodes evaluate
     /// VRFs repeatedly until they win some contest.  In these case,
@@ -227,7 +227,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// passes some check, which itself returns either a `bool` or else
     /// an `Option` of an extra message transcript.
     pub fn vrf_sign_after_check<F,O>(&self, input: VRFInput<E>, check: F)
-     -> Option<(VRFOutput<E>, VRFProof<E>, VRFProofBatchable<E>)>
+     -> Option<(VRFPreOut<E>, VRFProof<E>, VRFProofBatchable<E>)>
     where F: FnOnce(&VRFInOut<E>) -> O,
           O: VRFExtraMessage,
     {
@@ -240,7 +240,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// producing its output component and and correspodning Schnorr
     /// proof.
     pub fn vrf_sign_checked<T>(&self, inout: VRFInOut<E>, extra: T) 
-     -> (VRFOutput<E>, VRFProof<E>, VRFProofBatchable<E>)
+     -> (VRFPreOut<E>, VRFProof<E>, VRFProofBatchable<E>)
     where T: SigningTranscript,
     {
         let (proof, proof_batchable) = self.dleq_proove(extra, &inout, rand_hack());
@@ -735,7 +735,7 @@ mod tests {
             let outs = ios
                 .iter()
                 .map(|io| io.to_output())
-                .collect::<Vec<VRFOutput>>();
+                .collect::<Vec<VRFPreOut>>();
             let (ios_too, proof_too) = k
                 .public
                 .vrfs_verify(ts(), &outs, &proof)
@@ -753,7 +753,7 @@ mod tests {
             let outs = ios.iter()
                 .rev()
                 .map(|io| io.to_output())
-                .collect::<Vec<VRFOutput<_>>>();
+                .collect::<Vec<VRFPreOut<_>>>();
             assert!(
                 k.public.vrfs_verify(ts(), &outs, &proof).is_err(),
                 "Incorrect VRF output verification passed!"
@@ -762,7 +762,7 @@ mod tests {
         for (k, (ios, proof, _proof_batchable)) in keypairs.iter().rev().zip(&ios_n_proofs) {
             let outs = ios.iter()
                 .map(|io| io.to_output())
-                .collect::<Vec<VRFOutput<_>>>();
+                .collect::<Vec<VRFPreOut<_>>>();
             assert!(
                 k.public.vrfs_verify(ts(), &outs, &proof).is_err(),
                 "VRF output verification by a different signer passed!"

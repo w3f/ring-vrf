@@ -80,9 +80,9 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
     }
 
     /// Into VRF output.
-    pub fn to_output(&self, sk: &crate::SecretKey<E>) -> VRFOutput<E> {
+    pub fn to_output(&self, sk: &crate::SecretKey<E>) -> VRFPreOut<E> {
         let p: Point<E, Unknown> = self.0.clone().into();
-        VRFOutput( p.mul(sk.key.clone(), E::params()) )
+        VRFPreOut( p.mul(sk.key.clone(), E::params()) )
     }
 
     /// Into VRF output.
@@ -95,9 +95,9 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
 
 /// VRF output, possibly unverified.
 #[derive(Debug, Clone)] // Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct VRFOutput<E: JubjubEngine>(Point<E, Unknown>);
+pub struct VRFPreOut<E: JubjubEngine>(Point<E, Unknown>);
 
-impl<E: JubjubEngineWithParams> VRFOutput<E> {
+impl<E: JubjubEngineWithParams> VRFPreOut<E> {
     pub(crate) fn as_point(&self) -> &Point<E, Unknown> { &self.0 }
     
     pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
@@ -108,7 +108,7 @@ impl<E: JubjubEngineWithParams> VRFOutput<E> {
         // if p.is_identity() {
         //     return Err( io::Error::new(io::ErrorKind::InvalidInput, "Identity point provided as VRF output" ) );
         // }
-        Ok(VRFOutput(p))
+        Ok(VRFPreOut(p))
     }
 
     pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
@@ -156,7 +156,7 @@ pub struct VRFInOut<E: JubjubEngine> {
     /// VRF input point
     pub input: VRFInput<E>,
     /// VRF output point
-    pub output: VRFOutput<E>,
+    pub output: VRFPreOut<E>,
 }
 
 impl<E: JubjubEngine> From<VRFInOut<E>> for VRFInput<E> {
@@ -316,7 +316,7 @@ where
     let input = VRFInput( psz().fold(Point::zero(), |acc,(p,z)| { 
         acc.add(&p.input.as_point().mul(z, engine_params), engine_params)
     } ) );
-    let output = VRFOutput( psz().fold(Point::zero(), |acc,(p,z)| { 
+    let output = VRFPreOut( psz().fold(Point::zero(), |acc,(p,z)| { 
         acc.add(&p.output.as_point().mul(z, engine_params), engine_params)
     } ) );
     VRFInOut { input, output }
