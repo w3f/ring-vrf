@@ -59,8 +59,6 @@ impl<E: JubjubEngineWithParams> RingRoot<E> {
     ) -> SynthesisResult<bool> 
     where T: SigningTranscript, 
     {
-        let params = E::params();
-
         // TODO: lifetime?
         // TODO: Check params.auth_depth perhaps?
         // TODO: subgroup checks
