@@ -8,8 +8,8 @@ use crypto_primitives::merkle_tree::{MerkleHashTree, MerkleTreeConfig, MerkleTre
 use crypto_primitives::merkle_tree::constraints::MerkleTreePathGadget;
 use r1cs_core::{ConstraintSynthesizer, ConstraintSystem, SynthesisError};
 use r1cs_std::prelude::*;
-use r1cs_std::{jubjub::JubJubGadget};
-use r1cs_std::groups::GroupGadget;
+use r1cs_std::jubjub::JubJubGadget;
+use r1cs_std::fields::fp::FpGadget;
 
 #[derive(Clone)]
 struct Window4x256;
@@ -25,7 +25,7 @@ type HG = PedersenCRHGadget<JubJub, Fq, JubJubGadget>;
 struct JubJubMerkleTreeParams;
 
 impl MerkleTreeConfig for JubJubMerkleTreeParams {
-    const HEIGHT: usize = 4;
+    const HEIGHT: usize = 3;
     type H = H;
 }
 
@@ -43,6 +43,7 @@ struct RingVRF {
     crh_params: PedersenParameters<JubJub>,
     auth_path: JubJubMerklePath,
     root: <PedersenCRH<JubJub, Window4x256> as FixedLengthCRH>::Output,
+    extra: Fq
 }
 
 impl ConstraintSynthesizer<Fq> for RingVRF {
@@ -156,7 +157,9 @@ impl ConstraintSynthesizer<Fq> for RingVRF {
             &pk
         )?;
 
-        //TODO: add Jeffs magic wire
+        let extra_aux = FpGadget::<Fq>::alloc(cs.ns(|| "extra_aux"), || Ok(self.extra))?;
+        let extra_inp = FpGadget::<Fq>::alloc_input(cs.ns(|| "extra_inp"), || Ok(self.extra))?;
+        extra_aux.enforce_equal(cs.ns(|| "extra_aux = extra_inp"), &extra_inp)?;
 
         Ok(())
     }
@@ -175,6 +178,7 @@ fn test_tree() {
 
     let sk: <JubJub as Group>::ScalarField = UniformRand::rand(rng);
     let vrf_input: JubJub = UniformRand::rand(rng);
+    let extra: Fq = UniformRand::rand(rng);
 
     let num_powers = <Scalar as PrimeField>::Params::MODULUS_BITS as usize;
     let base_point_powers= PedersenCRH::<_, Window4x256>::generator_powers(num_powers, rng);
@@ -184,9 +188,9 @@ fn test_tree() {
     let pk = base_point.mul(&sk);
 
     let mut leaves = vec![];
-    leaves.resize_with(4, || UniformRand::rand(rng));
+    leaves.resize_with(2, || UniformRand::rand(rng));
 
-    let i = 2;
+    let i = 1;
     leaves[i] = pk;
 
     let crh_params = H::setup(rng).unwrap();
@@ -202,7 +206,8 @@ fn test_tree() {
         base_point_powers,
         crh_params,
         auth_path,
-        root
+        root,
+        extra
     };
 
     let mut cs = TestConstraintSystem::<Fq>::new();
@@ -216,5 +221,6 @@ fn test_tree() {
     let pvk = prepare_verifying_key(&params.vk);
     let proof = create_random_proof(c, &params, rng).unwrap();
 
-    assert!(verify_proof(&pvk, &proof, &[vrf_input.x, vrf_input.y, vrf_output.x, vrf_output.y, root.x, root.y]).unwrap());
+    assert!(verify_proof(&pvk, &proof, &[vrf_input.x, vrf_input.y, vrf_output.x, vrf_output.y, root.x, root.y, extra]).unwrap());
+    assert!(!verify_proof(&pvk, &proof, &[vrf_input.x, vrf_input.y, vrf_output.x, vrf_output.y, root.x, root.y, UniformRand::rand(rng)]).unwrap());
 }
