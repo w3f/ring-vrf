@@ -37,7 +37,11 @@ pub mod schnorr;
 pub mod bls12_381;
 
 
-use crate::scalar::{Scalar,scalar_times_generator,read_scalar,write_scalar};
+use crate::scalar::{
+    Scalar,
+    scalar_times_generator,scalar_times_blinding_generator,
+    read_scalar,write_scalar
+};
 pub use crate::keys::{SecretKey,PublicKey};
 pub use crate::context::{signing_context,SigningTranscript}; // SigningTranscript
 

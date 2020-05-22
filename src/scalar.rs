@@ -35,6 +35,16 @@ where E: JubjubEngineWithParams,
     base_point.mul(scalar.clone(), params)
 }
 
+pub(crate) fn scalar_times_blinding_generator<E>(scalar: &Scalar<E>)
+ -> Point<E,PrimeOrder> 
+where E: JubjubEngineWithParams,
+{
+    let params = E::params();
+    let base_point = params.generator(FixedGenerators::NullifierPosition);
+    base_point.mul(scalar.clone(), params)
+}
+
+
 /*
 pub fn hash_to_scalar<E: JubjubEngine>(ctx: &[u8], a: &[u8], b: &[u8]) -> E::Fs {
     let mut hasher = Params::new().hash_length(64).personal(ctx).to_state();
