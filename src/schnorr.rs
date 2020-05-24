@@ -157,7 +157,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// using one of the `vrf_create_*` methods on `SecretKey`.
     /// If so, we produce a proof that this multiplication was done correctly.
     #[allow(non_snake_case)]
-    pub fn dleq_proove<T,R>(&self, mut t: T, p: &VRFInOut<E>, rng: R)
+    pub fn dleq_proove<T,R>(&self, mut t: T, p: &VRFInOut<E>, rng: R) // blinded: bool
      -> (VRFProof<E>, VRFProofBatchable<E>)
     where
         T: SigningTranscript,
@@ -171,7 +171,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         t.commit_point(b"vrf:pk", &self.public.0);
 
         // We compute R after adding pk and all h.
-        let r : Scalar<E> = t.witness_scalar(b"proving\00",&[&self.nonce_seed], rng);
+        let [r] : [Scalar<E>;1] = t.witness_scalars(b"proving\00",&[&self.nonce_seed], rng);
         // let R = (&r * &constants::RISTRETTO_BASEPOINT_TABLE).compress();
         let R = crate::scalar_times_generator(&r).into();
         t.commit_point(b"vrf:R=g^r", &R);

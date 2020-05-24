@@ -7,6 +7,8 @@
 
 //! ### Schnorr signature contexts and configuration, adaptable to most Schnorr signature schemes.
 
+use arrayvec::{Array,ArrayVec};
+
 use rand_core::{RngCore,CryptoRng};
 
 use ff::{Field}; // ScalarEngine, PrimeField, PrimeFieldRepr
@@ -84,8 +86,8 @@ pub trait SigningTranscript {
 
     /// Produce a secret witness scalar `k`, aka nonce, from the protocol
     /// transcript and any "nonce seeds" kept with the secret keys.
-    fn witness_scalar<R,Fs>(&self, label: &'static [u8], nonce_seeds: &[&[u8]], rng: R) -> Fs 
-    where  R: RngCore+CryptoRng,  Fs: Field;
+    fn witness_scalars<R,Fs,B>(&self, label: &'static [u8], nonce_seeds: &[&[u8]], rng: R) -> B 
+    where  R: RngCore+CryptoRng,  Fs: Field, B: Array<Item=Fs>;
     // similar to challenge_scalar using witness_bytes
 
     /*  ZCash Foundation way: https://github.com/zcash-hackworks/sapling-crypto/blob/master/src/jubjub/mod.rs
@@ -131,9 +133,10 @@ where T: SigningTranscript + ?Sized,
     where  Fs: Field
         {  (**self).challenge_scalar(label)  }
     #[inline(always)]
-    fn witness_scalar<R,Fs>(&self, label: &'static [u8], nonce_seeds: &[&[u8]], rng: R) -> Fs 
-    where  R: RngCore+CryptoRng,  Fs: Field,  // PrimeField + SqrtField + ToUniform,
-        {  (**self).witness_scalar(label,nonce_seeds,rng)  }
+    fn witness_scalars<R,Fs,B>(&self, label: &'static [u8], nonce_seeds: &[&[u8]], rng: R) -> B 
+    where  R: RngCore+CryptoRng,  Fs: Field, B: Array<Item=Fs>   // PrimeField + SqrtField + ToUniform,
+        {  (**self).witness_scalars(label,nonce_seeds,rng)  }
+
     // #[inline(always)]
     // fn witness_bytes<R>(&self, label: &'static [u8], dest: &mut [u8], nonce_seeds: &[&[u8]], rng: R)
     // where R: RngCore+CryptoRng
@@ -153,10 +156,11 @@ impl SigningTranscript for Transcript {
         Transcript::challenge_bytes(self, label, dest)
     }
 
-    fn witness_scalar<R,Fs>(&self, label: &'static [u8], nonce_seeds: &[&[u8]], mut rng: R) -> Fs 
+    fn witness_scalars<R,Fs,B>(&self, label: &'static [u8], nonce_seeds: &[&[u8]], mut rng: R) -> B 
     where
         R: RngCore+CryptoRng,
         Fs: Field,  // PrimeField + SqrtField + ToUniform,
+        B: Array<Item=Fs>
     {
         let mut br = self.build_rng();
         for ns in nonce_seeds {
@@ -169,7 +173,8 @@ impl SigningTranscript for Transcript {
 
         // ZCash ECC's way using zcash_primitives::jubjub
         // What the fuck are they thinking?
-        <Fs as ::ff::Field>::random(&mut rng)
+        ::core::iter::repeat_with(|| <Fs as ::ff::Field>::random(&mut rng))
+        .collect::<ArrayVec<B>>().into_inner().unwrap()
     }
 
     /*
