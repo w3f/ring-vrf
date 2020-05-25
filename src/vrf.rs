@@ -99,7 +99,7 @@ pub struct VRFPreOut<E: JubjubEngine>(Point<E, Unknown>);
 
 impl<E: JubjubEngineWithParams> VRFPreOut<E> {
     pub(crate) fn as_point(&self) -> &Point<E, Unknown> { &self.0 }
-    
+
     pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
         let p = Point::read(reader,E::params()) ?;
         // ZCash has not method to check for a JubJub point being the identity,

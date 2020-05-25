@@ -72,15 +72,15 @@ pub struct VRFProof<E: JubjubEngine> {
 }
 
 impl<E: JubjubEngine> VRFProof<E> {
-    pub fn read<R: io::Read>(reader: &mut R) -> io::Result<Self> {
-        let c = crate::read_scalar::<E, &mut R>(reader) ?;
-        let s = crate::read_scalar::<E, &mut R>(reader) ?;
+    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
+        let c = crate::read_scalar::<E, &mut R>(&mut reader) ?;
+        let s = crate::read_scalar::<E, &mut R>(&mut reader) ?;
         Ok(VRFProof { c, s, })
     }
 
-    pub fn write<W: io::Write>(&self, writer: &mut W) -> io::Result<()> {
-        crate::write_scalar::<E, &mut W>(&self.c, writer) ?;
-        crate::write_scalar::<E, &mut W>(&self.s, writer) ?;
+    pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+        crate::write_scalar::<E, &mut W>(&self.c, &mut writer) ?;
+        crate::write_scalar::<E, &mut W>(&self.s, &mut writer) ?;
         Ok(())
     }
 
@@ -108,9 +108,6 @@ impl<E: JubjubEngineWithParams> VRFProofBatchable<E> {
         let s = crate::read_scalar::<E, &mut R>(&mut reader) ?;
         Ok(VRFProofBatchable { R, Hr, s, })
     }
-
-// }
-// impl<E: JubjubEngine> VRFProofBatchable<E> {
 
     // #[allow(non_snake_case)]
     pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {

@@ -172,16 +172,16 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         self.public.clone()
     }
 
-    pub fn read<R: io::Read>(reader: &mut R) -> io::Result<Self> {
-        let key = crate::read_scalar::<E, &mut R>(reader) ?;
+    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
+        let key = crate::read_scalar::<E, &mut R>(&mut reader) ?;
         let mut nonce_seed = [0u8; 32];
         reader.read_exact(&mut nonce_seed) ?;
         let public = PublicKey::from_secret_scalar(&key);
         Ok(SecretKey { key, nonce_seed, public, } )
     }
 
-    pub fn write<W: io::Write>(&self, writer: &mut W) -> io::Result<()> {
-        crate::write_scalar::<E, &mut W>(&self.key, writer) ?;
+    pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+        crate::write_scalar::<E, &mut W>(&self.key, &mut writer) ?;
         writer.write_all(&self.nonce_seed) ?;
         Ok(())
     }
