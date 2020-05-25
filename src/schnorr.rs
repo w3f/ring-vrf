@@ -169,20 +169,22 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
 
         let mut pk = self.to_public();
 
-        // TODO: Compute R after adding pk and all h.
-        let [r] : [Scalar<E>;1] = t.witness_scalars(b"proving\00",&[&self.nonce_seed], &mut rng);
-        // let R = (&r * &constants::RISTRETTO_BASEPOINT_TABLE).compress();
-        let mut R: Point<E,Unknown> = crate::scalar_times_generator(&r).into();
-
         let blinded = if blinded {
             // let R = crate::scalar_times_blinding_generator(&r).into();
-            let [b_pk,b_R] : [Scalar<E>;2] = t.witness_scalars(b"blinding\00",&[&self.nonce_seed], rng);
+            let [b_pk,b_R] : [Scalar<E>;2]
+              = t.witness_scalars(b"blinding\00",&[&self.nonce_seed], &mut rng);
             pk.0 = pk.0.add(& crate::scalar_times_blinding_generator(&b_pk).into(), params);
-            R = R.add(& crate::scalar_times_blinding_generator(&b_R).into(), params);
             Some((b_pk,b_R))
         } else { None };
         t.commit_point(b"vrf:pk", &pk.0);
 
+        // let R = (&r * &constants::RISTRETTO_BASEPOINT_TABLE).compress();
+        // Compute R after adding pk and all h.
+        let [r] : [Scalar<E>;1] = t.witness_scalars(b"proving\00",&[&self.nonce_seed], rng);
+        let mut R: Point<E,Unknown> = crate::scalar_times_generator(&r).into();
+        if let Some((_,b_R)) = blinded {
+            *&mut R = R.add(& crate::scalar_times_blinding_generator(&b_R).into(), params);
+        }
         t.commit_point(b"vrf:R=g^r", &R);
 
         // let Hr = (&r * p.input.as_point()).compress();
