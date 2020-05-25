@@ -42,8 +42,8 @@ use crate::scalar::{
     scalar_times_generator,scalar_times_blinding_generator,
     read_scalar,write_scalar
 };
-pub use crate::keys::{SecretKey,PublicKey};
-pub use crate::context::{signing_context,SigningTranscript}; // SigningTranscript
+pub use crate::keys::{SecretKey, PublicKey, BlindedPublicKey};
+pub use crate::context::{signing_context, SigningTranscript}; // SigningTranscript
 
 pub use crate::merkle::{RingSecretCopath, RingRoot, auth_hash};
 pub use crate::generator::generate_crs;

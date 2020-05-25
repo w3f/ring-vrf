@@ -50,7 +50,7 @@ use zcash_primitives::jubjub::{JubjubEngine, Unknown, edwards::Point}; // PrimeO
 use crate::{
     rand_hack, JubjubEngineWithParams, 
     SigningTranscript, Scalar,
-    SecretKey, PublicKey,
+    SecretKey, PublicKey, BlindedPublicKey,
     VRFInput, VRFPreOut, VRFInOut, 
     vrf::{no_extra, VRFExtraMessage},
 };  // Params
@@ -154,24 +154,35 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// using one of the `vrf_create_*` methods on `SecretKey`.
     /// If so, we produce a proof that this multiplication was done correctly.
     #[allow(non_snake_case)]
-    pub fn dleq_proove<T,R>(&self, mut t: T, p: &VRFInOut<E>, rng: R) // blinded: bool
-     -> (VRFProof<E>, VRFProofBatchable<E>)
+    pub fn dleq_proove<T,R>(&self, mut t: T, p: &VRFInOut<E>, mut rng: R) // blinded: bool
+     -> (VRFProof<E>, VRFProofBatchable<E>) // Option<BlindedPublicKey<E>>
     where
         T: SigningTranscript,
         R: RngCore+CryptoRng,
     {
+        let blinded: bool = false;
         let params = E::params();
 
         t.proto_name(b"DLEQProof");
         // t.commit_point(b"vrf:g",constants::RISTRETTO_BASEPOINT_TABLE.basepoint().compress());
         t.commit_point(b"vrf:h", p.input.as_point());
-        let pk = self.to_public();
+
+        let mut pk = self.to_public();
+
+        // TODO: Compute R after adding pk and all h.
+        let [r] : [Scalar<E>;1] = t.witness_scalars(b"proving\00",&[&self.nonce_seed], &mut rng);
+        // let R = (&r * &constants::RISTRETTO_BASEPOINT_TABLE).compress();
+        let mut R: Point<E,Unknown> = crate::scalar_times_generator(&r).into();
+
+        let blinded = if blinded {
+            // let R = crate::scalar_times_blinding_generator(&r).into();
+            let [b_pk,b_R] : [Scalar<E>;2] = t.witness_scalars(b"blinding\00",&[&self.nonce_seed], rng);
+            pk.0 = pk.0.add(& crate::scalar_times_blinding_generator(&b_pk).into(), params);
+            R = R.add(& crate::scalar_times_blinding_generator(&b_R).into(), params);
+            Some((b_pk,b_R))
+        } else { None };
         t.commit_point(b"vrf:pk", &pk.0);
 
-        // We compute R after adding pk and all h.
-        let [r] : [Scalar<E>;1] = t.witness_scalars(b"proving\00",&[&self.nonce_seed], rng);
-        // let R = (&r * &constants::RISTRETTO_BASEPOINT_TABLE).compress();
-        let R = crate::scalar_times_generator(&r).into();
         t.commit_point(b"vrf:R=g^r", &R);
 
         // let Hr = (&r * p.input.as_point()).compress();
@@ -188,9 +199,19 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         tmp.mul_assign(&c);
         s.sub_assign(&tmp);
 
+        let blinded = if let Some((b_pk,b_R)) = blinded {
+            // let blinding = b_R - c * b_pk;
+            let mut blinding = b_R;
+            let mut tmp = b_pk;
+            tmp.mul_assign(&c);
+            blinding.sub_assign(&tmp);
+            Some(BlindedPublicKey { key: pk, blinding, })
+        } else { None }; // Scalar<E>::zero()
+
         // ::zeroize::Zeroize::zeroize(&mut r);
 
-        (VRFProof { c, s }, VRFProofBatchable { R, Hr, s })
+        (VRFProof { c, s, }, VRFProofBatchable { R, Hr, s, })
+        // (VRFProof { c, s, blinding }, VRFProofBatchable { R, Hr, s, blinding }, blinded)
     }
 
     /// Run our Schnorr VRF on one single input, producing the output
