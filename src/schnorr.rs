@@ -373,7 +373,7 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
 
         // We recompute R aka u from the proof
         // let R = ( (&proof.c * &self.0) + (&proof.s * &constants::RISTRETTO_BASEPOINT_TABLE) ).compress();
-        let R = self.0.clone().mul(proof.c,params)
+        let R = self.0.mul(proof.c,params)
             .add(& crate::scalar_times_generator(&proof.s).into(), params)
             .into();
         t.commit_point(b"vrf:R=g^r", &R);
