@@ -168,7 +168,8 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         t.proto_name(b"DLEQProof");
         // t.commit_point(b"vrf:g",constants::RISTRETTO_BASEPOINT_TABLE.basepoint().compress());
         t.commit_point(b"vrf:h", p.input.as_point());
-        t.commit_point(b"vrf:pk", &self.public.0);
+        let pk = self.to_public();
+        t.commit_point(b"vrf:pk", &pk.0);
 
         // We compute R after adding pk and all h.
         let [r] : [Scalar<E>;1] = t.witness_scalars(b"proving\00",&[&self.nonce_seed], rng);
@@ -608,7 +609,7 @@ mod tests {
         );
         */
         let io1v = io1.output.attach_nonmalleable(ctx.bytes(b"meow"),&sk1.to_public());
-        let proof1too = sk1.public.vrf_verify_simple(&io1v, &proof1)
+        let proof1too = sk1.to_public().vrf_verify_simple(&io1v, &proof1)
             .expect("Correct VRF verification failed!");
         /*
         TODO: Fix zcash's crapy lack of traits
@@ -625,13 +626,13 @@ mod tests {
 
         let io2v = io1.output.attach_nonmalleable(ctx.bytes(b"woof"),&sk1.to_public());
         assert!(
-            sk1.public.vrf_verify_simple(&io2v, &proof1).is_err(),
+            sk1.to_public().vrf_verify_simple(&io2v, &proof1).is_err(),
             "VRF verification with incorrect message passed!"
         );
 
         let sk2 = SecretKey::<Bls12>::from_rng(&mut csprng);
         assert!(
-            sk2.public.vrf_verify_simple(&io1v, &proof1).is_err(),
+            sk2.to_public().vrf_verify_simple(&io1v, &proof1).is_err(),
             "VRF verification with incorrect signer passed!"
         );
     }

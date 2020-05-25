@@ -70,7 +70,7 @@ pub struct SecretKey<E: JubjubEngine> {
     ///
     /// TODO: Replace this with serialized byte representation like [u8; 32]
     /// TODO: Compjute lazilty using usafe code and std::sync::Once
-    pub(crate) public: PublicKey<E>,
+    public: PublicKey<E>,
 }
 
 // serde_boilerplate!(SecretKey);
