@@ -42,11 +42,43 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
         Ok(PublicKey( Point::read(reader,E::params()) ? ))
     }
 
-// }
-// impl<E: JubjubEngine> PublicKey<E> {
-
     pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
         self.0.write(writer)
+    }
+
+    pub fn blind(&self, blinding: Scalar<E>) -> BlindedPublicKey<E> {
+        let params = E::params();
+        let key = PublicKey( self.0.add(& crate::scalar_times_generator(&blinding).into(), params) );
+        BlindedPublicKey { key, blinding, }
+    }
+}
+
+
+/// Public key consisting of a JubJub point
+#[derive(Clone)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
+pub struct BlindedPublicKey<E: JubjubEngine> {
+    pub(crate) key: PublicKey<E>,
+    pub(crate) blinding: Scalar<E>,
+}
+
+impl<E: JubjubEngine> From<PublicKey<E>> for BlindedPublicKey<E> {
+    fn from(key: PublicKey<E>) -> BlindedPublicKey<E> {
+        use ff::Field;
+        BlindedPublicKey { key, blinding: Scalar::<E>::zero(), }
+    }
+}
+
+impl<E: JubjubEngineWithParams> BlindedPublicKey<E> {
+    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
+        let blinding = crate::read_scalar::<E, &mut R>(&mut reader) ?;
+        let key = PublicKey::read(reader) ?;
+        Ok(BlindedPublicKey { key, blinding, })
+    }
+
+    pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+        crate::write_scalar::<E, &mut W>(&self.blinding, &mut writer) ?;
+        self.key.write(writer) ?;
+        Ok(())
     }
 }
 
