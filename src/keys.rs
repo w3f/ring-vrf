@@ -45,40 +45,31 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
     pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
         self.0.write(writer)
     }
-
-    pub fn blind(&self, blinding: Scalar<E>) -> BlindedPublicKey<E> {
-        let params = E::params();
-        let key = PublicKey( self.0.add(& crate::scalar_times_generator(&blinding).into(), params) );
-        BlindedPublicKey { key, blinding, }
-    }
 }
 
 
-/// Public key consisting of a JubJub point
+/// Pederson commitment openning for a public key, consisting of a scalar
+/// that reveals the difference ebtween two public keys.
 #[derive(Clone)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct BlindedPublicKey<E: JubjubEngine> {
-    pub(crate) key: PublicKey<E>,
-    pub(crate) blinding: Scalar<E>,
-}
+pub struct PublicKeyUnblinding<E: JubjubEngine>(Scalar<E>)
 
-impl<E: JubjubEngine> From<PublicKey<E>> for BlindedPublicKey<E> {
-    fn from(key: PublicKey<E>) -> BlindedPublicKey<E> {
-        use ff::Field;
-        BlindedPublicKey { key, blinding: Scalar::<E>::zero(), }
+impl<E: JubjubEngineWithParams> PublicKeyUnblinding<E> {
+    pub fn is_blinded(&self) -> bool {
+        self.0 != Scalar::<E>::zero()
     }
-}
 
-impl<E: JubjubEngineWithParams> BlindedPublicKey<E> {
+    pub fn verify(blinded: PublicKey<E>, unblinded: PublicKey<E>) -> bool {
+        let params = E::params();
+        unblinded.0.add(& crate::scalar_times_generator(&self.0).into(), params).mul_by_cofactor(params)
+        == unblinded.mul_by_cofactor(params)
+    }
+
     pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
-        let blinding = crate::read_scalar::<E, &mut R>(&mut reader) ?;
-        let key = PublicKey::read(reader) ?;
-        Ok(BlindedPublicKey { key, blinding, })
+        Ok(PublicKeyUnblinding( crate::read_scalar::<E, &mut R>(&mut reader) ? ))
     }
 
     pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
-        crate::write_scalar::<E, &mut W>(&self.blinding, &mut writer) ?;
-        self.key.write(writer) ?;
-        Ok(())
+        crate::write_scalar::<E, &mut W>(&self.0, &mut writer)
     }
 }
 
