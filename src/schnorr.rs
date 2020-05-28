@@ -168,14 +168,17 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         t.commit_point(b"vrf:h", p.input.as_point());
 
         let mut pk = self.to_public();
-
-        let blinded = if blinded {
+        let mut delta = Scalar::<E>::zero();
+        let mut unblinding = PublicKeyUnblinding(Scalar::<E>::zero());
+        if blinded {
             // let R = crate::scalar_times_blinding_generator(&r).into();
             let [b_pk,b_R] : [Scalar<E>;2]
               = t.witness_scalars(b"blinding\00",&[&self.nonce_seed], &mut rng);
+            // pk = pk.blind(&b_pk);
             pk.0 = pk.0.add(& crate::scalar_times_blinding_generator(&b_pk).into(), params);
-            Some((b_pk,b_R))
-        } else { None };
+            unblinding.0 = b_pk;
+            delta = b_R;  // we subtract c * b_pk below
+        }
         t.commit_point(b"vrf:pk", &pk.0);
 
         // let R = (&r * &constants::RISTRETTO_BASEPOINT_TABLE).compress();
@@ -201,14 +204,12 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         tmp.mul_assign(&c);
         s.sub_assign(&tmp);
 
-        let blinded = if let Some((b_pk,b_R)) = blinded {
-            // let blinding = b_R - c * b_pk;
-            let mut blinding = b_R;
-            let mut tmp = b_pk;
+        if blinded {
+            // let delta = b_R - c * b_pk;
+            let mut tmp = unblinding.0.clone();
             tmp.mul_assign(&c);
-            blinding.sub_assign(&tmp);
-            Some(BlindedPublicKey { key: pk, blinding, })
-        } else { None }; // Scalar<E>::zero()
+            delta.sub_assign(&tmp);
+        }
 
         // ::zeroize::Zeroize::zeroize(&mut r);
 
