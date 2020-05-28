@@ -51,17 +51,18 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
 /// Pederson commitment openning for a public key, consisting of a scalar
 /// that reveals the difference ebtween two public keys.
 #[derive(Clone)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct PublicKeyUnblinding<E: JubjubEngine>(Scalar<E>)
+pub struct PublicKeyUnblinding<E: JubjubEngine>(pub(crate) Scalar<E>);
 
 impl<E: JubjubEngineWithParams> PublicKeyUnblinding<E> {
     pub fn is_blinded(&self) -> bool {
+        use ff::Field;
         self.0 != Scalar::<E>::zero()
     }
 
-    pub fn verify(blinded: PublicKey<E>, unblinded: PublicKey<E>) -> bool {
+    pub fn verify(&self, blinded: PublicKey<E>, unblinded: PublicKey<E>) -> bool {
         let params = E::params();
         unblinded.0.add(& crate::scalar_times_generator(&self.0).into(), params).mul_by_cofactor(params)
-        == unblinded.mul_by_cofactor(params)
+        == unblinded.0.mul_by_cofactor(params)
     }
 
     pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {

@@ -50,7 +50,7 @@ use zcash_primitives::jubjub::{JubjubEngine, Unknown, edwards::Point}; // PrimeO
 use crate::{
     rand_hack, JubjubEngineWithParams, 
     SigningTranscript, Scalar,
-    SecretKey, PublicKey, BlindedPublicKey,
+    SecretKey, PublicKey, PublicKeyUnblinding,
     VRFInput, VRFPreOut, VRFInOut, 
     vrf::{no_extra, VRFExtraMessage},
 };  // Params
@@ -169,7 +169,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
 
         let mut pk = self.to_public();
         let mut delta = Scalar::<E>::zero();
-        let mut unblinding = PublicKeyUnblinding(Scalar::<E>::zero());
+        let mut unblinding : PublicKeyUnblinding<E> = PublicKeyUnblinding(Scalar::<E>::zero());
         if blinded {
             // let R = crate::scalar_times_blinding_generator(&r).into();
             let [b_pk,b_R] : [Scalar<E>;2]
@@ -185,8 +185,9 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         // Compute R after adding pk and all h.
         let [r] : [Scalar<E>;1] = t.witness_scalars(b"proving\00",&[&self.nonce_seed], rng);
         let mut R: Point<E,Unknown> = crate::scalar_times_generator(&r).into();
-        if let Some((_,b_R)) = blinded {
-            *&mut R = R.add(& crate::scalar_times_blinding_generator(&b_R).into(), params);
+        if blinded {
+            // We abuse delta's mutability here
+            *&mut R = R.add(& crate::scalar_times_blinding_generator(&delta).into(), params);
         }
         t.commit_point(b"vrf:R=g^r", &R);
 
