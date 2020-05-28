@@ -56,21 +56,21 @@ use crate::{
 };  // Params
 
 
-pub struct DeltaPublicKey<E: JubjubEngine> {
+pub struct PedersenDelta<E: JubjubEngine> {
     delta: Scalar<E>,
-    key: PublicKey<E>,
+    publickey: PublicKey<E>,
 }
 
-impl<E: JubjubEngineWithParams> ReadWrite for DeltaPublicKey<E> {
+impl<E: JubjubEngineWithParams> ReadWrite for PedersenDelta<E> {
     fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
         let delta = crate::read_scalar::<E, &mut R>(&mut reader) ?;
-        let key = PublicKey::read(reader) ?;
-        Ok(DeltaPublicKey { delta, key, })
+        let publickey = PublicKey::read(reader) ?;
+        Ok(PedersenDelta { delta, publickey, })
     }
 
     fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
         crate::write_scalar::<E, &mut W>(&self.delta, &mut writer) ?;
-        self.key.write(writer) ?;
+        self.publickey.write(writer) ?;
         Ok(())
     }
 }
@@ -149,7 +149,7 @@ impl<E: JubjubEngineWithParams> ReadWrite for VRFProofBatchable<E> {
         let params = E::params();
         let R = Point::read(&mut reader,params) ?;
         let Hr = Point::read(&mut reader,params) ?;
-        let s = crate::read_scalar::<E, &mut R>(&mut reader) ?;
+        let s = crate::read_scalar::<E, R>(reader) ?;
         Ok(VRFProofBatchable { R, Hr, s, })
     }
 
@@ -157,7 +157,7 @@ impl<E: JubjubEngineWithParams> ReadWrite for VRFProofBatchable<E> {
     fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
         self.R.write(&mut writer) ?;
         self.Hr.write(&mut writer) ?;
-        crate::write_scalar::<E, &mut W>(&self.s, &mut writer) ?;
+        crate::write_scalar::<E, W>(&self.s, writer) ?;
         Ok(())
     }
 }
@@ -184,22 +184,21 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         // t.commit_point(b"vrf:g",constants::RISTRETTO_BASEPOINT_TABLE.basepoint().compress());
         t.commit_point(b"vrf:h", p.input.as_point());
 
-        let mut pk = self.to_public();
+        let mut publickey = self.to_public();
         let mut delta = Scalar::<E>::zero();
         let mut unblinding : PublicKeyUnblinding<E> = PublicKeyUnblinding(Scalar::<E>::zero());
         if blinded {
             // let R = crate::scalar_times_blinding_generator(&r).into();
             let [b_pk,b_R] : [Scalar<E>;2]
               = t.witness_scalars(b"blinding\00",&[&self.nonce_seed], &mut rng);
-            // pk = pk.blind(&b_pk);
-            pk.0 = pk.0.add(& crate::scalar_times_blinding_generator(&b_pk).into(), params);
+            publickey.0 = publickey.0.add(& crate::scalar_times_blinding_generator(&b_pk).into(), params);
             unblinding.0 = b_pk;
             delta = b_R;  // we subtract c * b_pk below
         }
-        t.commit_point(b"vrf:pk", &pk.0);
+        t.commit_point(b"vrf:pk", &publickey.0);
 
         // let R = (&r * &constants::RISTRETTO_BASEPOINT_TABLE).compress();
-        // Compute R after adding pk and all h.
+        // Compute R after adding publickey and all h.
         let [r] : [Scalar<E>;1] = t.witness_scalars(b"proving\00",&[&self.nonce_seed], rng);
         let mut R: Point<E,Unknown> = crate::scalar_times_generator(&r).into();
         if blinded {
@@ -228,6 +227,8 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
             tmp.mul_assign(&c);
             delta.sub_assign(&tmp);
         }
+
+PedersenDelta { delta, publickey, };
 
         // ::zeroize::Zeroize::zeroize(&mut r);
 

@@ -68,12 +68,12 @@ impl<E: JubjubEngineWithParams> PublicKeyUnblinding<E> {
 }
 
 impl<E: JubjubEngine> ReadWrite for PublicKeyUnblinding<E>  {
-    fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
-        Ok(PublicKeyUnblinding( crate::read_scalar::<E, &mut R>(&mut reader) ? ))
+    fn read<R: io::Read>(reader: R) -> io::Result<Self> {
+        Ok(PublicKeyUnblinding( crate::read_scalar::<E, R>(reader) ? ))
     }
 
-    fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
-        crate::write_scalar::<E, &mut W>(&self.0, &mut writer)
+    fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
+        crate::write_scalar::<E, W>(&self.0, writer)
     }
 }
 
