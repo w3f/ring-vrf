@@ -56,6 +56,26 @@ use crate::{
 };  // Params
 
 
+pub struct DeltaPublicKey<E: JubjubEngine> {
+    delta: Scalar<E>,
+    key: PublicKey<E>,
+}
+
+impl<E: JubjubEngineWithParams> ReadWrite for DeltaPublicKey<E> {
+    fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
+        let delta = crate::read_scalar::<E, &mut R>(&mut reader) ?;
+        let key = PublicKey::read(reader) ?;
+        Ok(DeltaPublicKey { delta, key, })
+    }
+
+    fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+        crate::write_scalar::<E, &mut W>(&self.delta, &mut writer) ?;
+        self.key.write(writer) ?;
+        Ok(())
+    }
+}
+
+
 /// Short proof of correctness for associated VRF output,
 /// for which no batched verification works.
 #[derive(Debug, Clone)] // PartialEq, Eq // PartialOrd, Ord, Hash

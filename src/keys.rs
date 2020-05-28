@@ -63,11 +63,11 @@ impl<E: JubjubEngineWithParams> PublicKeyUnblinding<E> {
     pub fn verify(&self, blinded: PublicKey<E>, unblinded: PublicKey<E>) -> bool {
         let params = E::params();
         unblinded.0.add(& crate::scalar_times_generator(&self.0).into(), params).mul_by_cofactor(params)
-        == unblinded.0.mul_by_cofactor(params)
+        == blinded.0.mul_by_cofactor(params)
     }
 }
 
-impl<E: JubjubEngineWithParams> ReadWrite for PublicKeyUnblinding<E>  {
+impl<E: JubjubEngine> ReadWrite for PublicKeyUnblinding<E>  {
     fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
         Ok(PublicKeyUnblinding( crate::read_scalar::<E, &mut R>(&mut reader) ? ))
     }
