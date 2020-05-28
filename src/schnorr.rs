@@ -28,8 +28,8 @@
 //! multiple public keys because such constructions sound more the
 //! domain of zero-knowledge proof libraries.
 
-use std::io;
 
+use std::io;
 use core::borrow::Borrow;
 
 // #[cfg(any(feature = "alloc", feature = "std"))]
@@ -48,17 +48,12 @@ use ff::{Field}; // PrimeField, PrimeFieldRepr, ScalarEngine
 use zcash_primitives::jubjub::{JubjubEngine, Unknown, edwards::Point}; // PrimeOrder
 
 use crate::{
-    rand_hack, JubjubEngineWithParams, 
+    rand_hack, JubjubEngineWithParams, ReadWrite, SignatureResult, signature_error,
     SigningTranscript, Scalar,
     SecretKey, PublicKey, PublicKeyUnblinding,
     VRFInput, VRFPreOut, VRFInOut, 
     vrf::{no_extra, VRFExtraMessage},
 };  // Params
-
-
-// TODO: Avoid std::io entirely after switching to ZEXE
-pub type SignatureError = ::std::io::Error;
-pub type SignatureResult<T> = ::std::io::Result<T>;
 
 
 /// Short proof of correctness for associated VRF output,
@@ -71,20 +66,20 @@ pub struct VRFProof<E: JubjubEngine> {
     s: Scalar<E>,
 }
 
-impl<E: JubjubEngine> VRFProof<E> {
-    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
+impl<E: JubjubEngine> ReadWrite for VRFProof<E> {
+    fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
         let c = crate::read_scalar::<E, &mut R>(&mut reader) ?;
         let s = crate::read_scalar::<E, &mut R>(&mut reader) ?;
         Ok(VRFProof { c, s, })
     }
 
-    pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+    fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
         crate::write_scalar::<E, &mut W>(&self.c, &mut writer) ?;
         crate::write_scalar::<E, &mut W>(&self.s, &mut writer) ?;
         Ok(())
     }
-
 }
+
 
 /// Longer proof of correctness for associated VRF output,
 /// which supports batching.
@@ -100,23 +95,6 @@ pub struct VRFProofBatchable<E: JubjubEngine> {
 }
 
 impl<E: JubjubEngineWithParams> VRFProofBatchable<E> {
-    #[allow(non_snake_case)]
-    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
-        let params = E::params();
-        let R = Point::read(&mut reader,params) ?;
-        let Hr = Point::read(&mut reader,params) ?;
-        let s = crate::read_scalar::<E, &mut R>(&mut reader) ?;
-        Ok(VRFProofBatchable { R, Hr, s, })
-    }
-
-    // #[allow(non_snake_case)]
-    pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
-        self.R.write(&mut writer) ?;
-        self.Hr.write(&mut writer) ?;
-        crate::write_scalar::<E, &mut W>(&self.s, &mut writer) ?;
-        Ok(())
-    }
-
     /// Return the shortened `VRFProof` for retransmitting in not batched situations
     #[allow(non_snake_case)]
     pub fn shorten_dleq<T>(&self, mut t: T, public: &PublicKey<E>, p: &VRFInOut<E>) -> VRFProof<E>
@@ -142,6 +120,25 @@ impl<E: JubjubEngineWithParams> VRFProofBatchable<E> {
     pub fn shorten_vrf<T>( &self, public: &PublicKey<E>, p: &VRFInOut<E>) -> VRFProof<E> {
         let t0 = Transcript::new(b"VRF");  // We have context in t and another hear confuses batching
         self.shorten_dleq(t0, public, &p)
+    }
+}
+
+impl<E: JubjubEngineWithParams> ReadWrite for VRFProofBatchable<E> {
+    #[allow(non_snake_case)]
+    fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
+        let params = E::params();
+        let R = Point::read(&mut reader,params) ?;
+        let Hr = Point::read(&mut reader,params) ?;
+        let s = crate::read_scalar::<E, &mut R>(&mut reader) ?;
+        Ok(VRFProofBatchable { R, Hr, s, })
+    }
+
+    // #[allow(non_snake_case)]
+    fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+        self.R.write(&mut writer) ?;
+        self.Hr.write(&mut writer) ?;
+        crate::write_scalar::<E, &mut W>(&self.s, &mut writer) ?;
+        Ok(())
     }
 }
 
@@ -416,7 +413,7 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
             Ok(VRFProofBatchable { R, Hr, s }) // Scalar: Copy ?!?
         } else {
             // Err(SignatureError::EquationFalse)
-            Err( io::Error::new(io::ErrorKind::InvalidInput, "VRF signature validation failed") )
+            Err( signature_error("VRF signature validation failed") )
         }
     }
 
@@ -561,7 +558,7 @@ pub fn vrf_verify_batch(
 
     if b { Ok(()) } else {
         // Err(SignatureError::EquationFalse) 
-        Err( io::Error::new(io::ErrorKind::InvalidInput, "VRF signature validation failed") )
+        Err( signature_error("VRF signature validation failed") )
     }
 }
 */

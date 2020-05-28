@@ -10,6 +10,40 @@ use zcash_primitives::jubjub::{
 use crate::JubjubEngineWithParams;
 
 
+// TODO: Avoid std::io entirely after switching to ZEXE
+pub type SignatureError = io::Error;
+pub type SignatureResult<T> = io::Result<T>;
+
+pub fn signature_error(msg: &'static str) -> SignatureError {
+    io::Error::new(io::ErrorKind::InvalidInput, msg)
+}
+
+
+
+/// Serializtaion
+///
+/// ZCash types require `std` for all (de)serializtaion, which sucks but hey.
+pub trait ReadWrite : Sized {
+    fn read<R: io::Read>(reader: R) -> io::Result<Self>;
+    fn write<W: io::Write>(&self, writer: W) -> io::Result<()>;
+}
+
+
+pub(crate) type Scalar<E> = <E as JubjubEngine>::Fs;
+
+pub fn read_scalar<E: JubjubEngine, R: io::Read>(reader: R) -> io::Result<E::Fs> {
+    let mut s_repr = <E::Fs as PrimeField>::Repr::default();
+    s_repr.read_le(reader) ?;
+
+    E::Fs::from_repr(s_repr)
+        .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "scalar is not in field"))
+}
+
+pub fn write_scalar<E: JubjubEngine, W: io::Write>(s: &E::Fs, writer: W) -> io::Result<()> {
+    s.into_repr().write_le(writer)
+}
+
+
 /// Create a 128 bit `Scalar` for delinearization
 ///
 /// TODO: Improve this
@@ -55,19 +89,6 @@ pub fn hash_to_scalar<E: JubjubEngine>(ctx: &[u8], a: &[u8], b: &[u8]) -> E::Fs 
 }
 */
 
-pub(crate) type Scalar<E> = <E as JubjubEngine>::Fs;
-
-pub(crate) fn read_scalar<E: JubjubEngine, R: io::Read>(reader: R) -> io::Result<E::Fs> {
-    let mut s_repr = <E::Fs as PrimeField>::Repr::default();
-    s_repr.read_le(reader) ?;
-
-    E::Fs::from_repr(s_repr)
-        .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "scalar is not in field"))
-}
-
-pub(crate) fn write_scalar<E: JubjubEngine, W: io::Write>(s: &E::Fs, writer: W) -> io::Result<()> {
-    s.into_repr().write_le(writer)
-}
 
 /*
 pub(crate) fn scalar_to_bytes<E: JubjubEngine>(s: &E::Fs)

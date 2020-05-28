@@ -22,7 +22,7 @@ use merlin::Transcript;
 use ff::{PrimeField, PrimeFieldRepr}; // Field, ScalarEngine
 use zcash_primitives::jubjub::{JubjubEngine, edwards::Point, PrimeOrder, Unknown};
 
-use crate::{JubjubEngineWithParams, SigningTranscript, Scalar};  // use super::*;
+use crate::{JubjubEngineWithParams, ReadWrite, SigningTranscript, Scalar};  // use super::*;
 
 
 /// VRF input, always created locally from a `SigningTranscript`.
@@ -99,21 +99,6 @@ pub struct VRFPreOut<E: JubjubEngine>(Point<E, Unknown>);
 
 impl<E: JubjubEngineWithParams> VRFPreOut<E> {
     pub(crate) fn as_point(&self) -> &Point<E, Unknown> { &self.0 }
-
-    pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
-        let p = Point::read(reader,E::params()) ?;
-        // ZCash has not method to check for a JubJub point being the identity,
-        // but so long as the VRFInput can only be created by hashing, then this
-        // sounds okay.
-        // if p.is_identity() {
-        //     return Err( io::Error::new(io::ErrorKind::InvalidInput, "Identity point provided as VRF output" ) );
-        // }
-        Ok(VRFPreOut(p))
-    }
-
-    pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
-        self.0.write(writer)
-    }
 
     /// Acknoledge VRF transcript malleablity
     ///
@@ -260,6 +245,23 @@ impl<E: JubjubEngineWithParams> VRFInOut<E> {
     }
 }
 
+impl<E: JubjubEngineWithParams> ReadWrite for VRFPreOut<E>  {
+    fn read<R: io::Read>(reader: R) -> io::Result<Self> {
+        let p = Point::read(reader,E::params()) ?;
+        // ZCash has not method to check for a JubJub point being the identity,
+        // but so long as the VRFInput can only be created by hashing, then this
+        // sounds okay.
+        // if p.is_identity() {
+        //     return Err( io::Error::new(io::ErrorKind::InvalidInput, "Identity point provided as VRF output" ) );
+        // }
+        Ok(VRFPreOut(p))
+    }
+
+    fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
+        self.0.write(writer)
+    }
+}
+
 
 /// Merge VRF input and output pairs from the same signer,
 /// probably using variable time arithmetic
@@ -309,7 +311,7 @@ where
         // Sample a 128bit scalar
         let mut s = [0u8; 16];
         t0.challenge_bytes(b"", &mut s);
-        let z: Scalar<E> = crate::scalar::scalar_from_u128::<E>(s);
+        let z: Scalar<E> = crate::misc::scalar_from_u128::<E>(s);
         (p,z)
     } );
 

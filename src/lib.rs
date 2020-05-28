@@ -24,7 +24,7 @@ extern crate arrayref;
 extern crate bench_utils;
 
 
-mod scalar;
+mod misc;
 mod keys;
 pub mod context;
 mod merkle;
@@ -37,10 +37,10 @@ pub mod schnorr;
 pub mod bls12_381;
 
 
-use crate::scalar::{
-    Scalar,
+use crate::misc::{
+    SignatureError,SignatureResult,signature_error,ReadWrite,
+    Scalar, read_scalar, write_scalar,
     scalar_times_generator,scalar_times_blinding_generator,
-    read_scalar,write_scalar
 };
 pub use crate::keys::{SecretKey, PublicKey, PublicKeyUnblinding};
 pub use crate::context::{signing_context, SigningTranscript}; // SigningTranscript
