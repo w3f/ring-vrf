@@ -19,7 +19,7 @@ use crate::{JubjubEngineWithParams, ReadWrite, Scalar};
 
 
 /// Public key consisting of a JubJub point
-#[derive(Clone)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
+#[derive(Debug,Clone)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
 pub struct PublicKey<E: JubjubEngine>(pub(crate) Point<E,Unknown>);
 
 // serde_boilerplate!(PublicKey);

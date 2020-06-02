@@ -56,7 +56,9 @@ use crate::{
 };  // Params
 
 
-pub struct PedersenDelta<E: JubjubEngine> {
+/// Delta of Pederson commitments
+#[derive(Debug, Clone)]
+pub struct PedersenDelta<E: JubjubEngineWithParams> {
     delta: Scalar<E>,
     publickey: PublicKey<E>,
 }
@@ -75,27 +77,92 @@ impl<E: JubjubEngineWithParams> ReadWrite for PedersenDelta<E> {
     }
 }
 
+/// Rough public key for verifier
+/// TODO: make sealed trait
+pub trait PedersenDeltaOrPublicKey<E: JubjubEngineWithParams> {
+    fn delta(&self) -> Scalar<E> { Scalar::<E>::zero() }
+    fn publickey(&self) -> &PublicKey<E>;
+}
+impl<E,B> PedersenDeltaOrPublicKey<E> for B 
+where E: JubjubEngineWithParams, B: Borrow<PublicKey<E>>
+{
+    fn publickey(&self) -> &PublicKey<E> { self.borrow() }
+}
+impl<E: JubjubEngineWithParams> PedersenDeltaOrPublicKey<E> for PedersenDelta<E> {
+    fn delta(&self) -> Scalar<E> { self.delta.clone() }
+    fn publickey(&self) -> &PublicKey<E> { &self.publickey }
+}
+
+pub trait NewPedersenDeltaOrPublicKey<E: JubjubEngineWithParams> : Sized+Clone { 
+    const BLINDED: bool = false;
+    type Unblinding : Sized;
+    fn new(pd: PedersenDelta<E>, unblinding: PublicKeyUnblinding<E>) -> (Self, Self::Unblinding);
+}
+impl<E: JubjubEngineWithParams> NewPedersenDeltaOrPublicKey<E> for () {
+    type Unblinding = ();
+    fn new(pd: PedersenDelta<E>, unblinding: PublicKeyUnblinding<E>) -> (Self, Self::Unblinding)
+      { assert!( !unblinding.is_blinded() );  ((),()) }
+}
+impl<E: JubjubEngineWithParams> NewPedersenDeltaOrPublicKey<E> for PublicKey<E> {
+    type Unblinding = ();
+    fn new(pd: PedersenDelta<E>, unblinding: PublicKeyUnblinding<E>) -> (Self, Self::Unblinding)
+      { assert!( !unblinding.is_blinded() );  (pd.publickey,()) }
+}
+impl<E: JubjubEngineWithParams> NewPedersenDeltaOrPublicKey<E> for PedersenDelta<E> {
+    const BLINDED: bool = true;
+    type Unblinding = PublicKeyUnblinding<E>;
+    fn new(pd: PedersenDelta<E>, unblinding: PublicKeyUnblinding<E>) -> (Self, Self::Unblinding)
+      { (pd,unblinding) }
+}
+
 
 /// Short proof of correctness for associated VRF output,
 /// for which no batched verification works.
 #[derive(Debug, Clone)] // PartialEq, Eq // PartialOrd, Ord, Hash
-pub struct VRFProof<E: JubjubEngine> {
+pub struct VRFProof<E: JubjubEngine, PD> {
     /// Challenge
     c: Scalar<E>,
     /// Schnorr proof
     s: Scalar<E>,
+    /// Delta of Pederson commitments
+    pd: PD,
 }
 
-impl<E: JubjubEngine> ReadWrite for VRFProof<E> {
+impl<E,B> VRFProof<E,B> 
+where E: JubjubEngineWithParams, B: Borrow<PublicKey<E>>
+{
+    pub fn publickey(&self) -> &PublicKey<E> { self.pd.publickey().borrow() }
+}
+
+impl<E: JubjubEngineWithParams> VRFProof<E,()> {
+    pub fn attach_publickey<B: Borrow<PublicKey<E>>>(self, pd: B) -> VRFProof<E,B> {
+        let VRFProof { c, s, .. } = self;
+        VRFProof { c, s, pd }
+    }
+}
+
+impl<E: JubjubEngineWithParams> VRFProof<E,PublicKey<E>> {
+    pub fn remove_publickey(self) -> VRFProof<E,()> {
+        let VRFProof { c, s, .. } = self;
+        VRFProof { c, s, pd: () }
+    }
+    pub fn check_publickey<B: Borrow<PublicKey<E>>>(self, pk: B) -> bool {
+        pk.borrow() == &self.pd
+    }
+}
+
+impl<E: JubjubEngine,PD: ReadWrite> ReadWrite for VRFProof<E,PD> {
     fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
         let c = crate::read_scalar::<E, &mut R>(&mut reader) ?;
         let s = crate::read_scalar::<E, &mut R>(&mut reader) ?;
-        Ok(VRFProof { c, s, })
+        let pd = PD::read(reader) ?;
+        Ok(VRFProof { c, s, pd })
     }
 
     fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
         crate::write_scalar::<E, &mut W>(&self.c, &mut writer) ?;
         crate::write_scalar::<E, &mut W>(&self.s, &mut writer) ?;
+        self.pd.write(writer) ?;
         Ok(())
     }
 }
@@ -105,25 +172,55 @@ impl<E: JubjubEngine> ReadWrite for VRFProof<E> {
 /// which supports batching.
 #[derive(Debug, Clone)] // PartialEq, Eq // PartialOrd, Ord, Hash
 #[allow(non_snake_case)]
-pub struct VRFProofBatchable<E: JubjubEngine> {
+pub struct VRFProofBatchable<E: JubjubEngine, PD> {
     /// Our nonce R = r G to permit batching the first verification equation
     R: Point<E,Unknown>,
     /// Our input hashed and raised to r to permit batching the second verification equation
     Hr: Point<E,Unknown>,
     /// Schnorr proof
     s: Scalar<E>,
+    /// Delta of Pederson commitments
+    pd: PD,
 }
 
-impl<E: JubjubEngineWithParams> VRFProofBatchable<E> {
+impl<E,B> VRFProofBatchable<E,B> 
+where E: JubjubEngineWithParams, B: Borrow<PublicKey<E>>
+{
+    pub fn publickey(&self) -> &PublicKey<E> { self.pd.publickey().borrow() }
+}
+
+
+impl<E: JubjubEngineWithParams> VRFProofBatchable<E,()> {
+    #[allow(non_snake_case)]
+    pub fn attach_publickey<B: Borrow<PublicKey<E>>>(self, pd: B) -> VRFProofBatchable<E,B> {
+        let VRFProofBatchable { R, Hr, s, .. } = self;
+        VRFProofBatchable { R, Hr, s, pd }
+    }
+}
+
+impl<E: JubjubEngineWithParams> VRFProofBatchable<E,PublicKey<E>> {
+    pub fn remove_publickey(self) -> VRFProofBatchable<E,()> {
+        #[allow(non_snake_case)]
+        let VRFProofBatchable { R, Hr, s, .. } = self;
+        VRFProofBatchable { R, Hr, s, pd: () }
+    }
+    pub fn check_publickey<B: Borrow<PublicKey<E>>>(self, pk: B) -> bool {
+        pk.borrow() == &self.pd
+    }
+}
+
+impl<E,PD> VRFProofBatchable<E,PD> 
+where E: JubjubEngineWithParams, PD: PedersenDeltaOrPublicKey<E>+Clone
+{
     /// Return the shortened `VRFProof` for retransmitting in not batched situations
     #[allow(non_snake_case)]
-    pub fn shorten_dleq<T>(&self, mut t: T, public: &PublicKey<E>, p: &VRFInOut<E>) -> VRFProof<E>
+    pub fn shorten_dleq<T>(&self, mut t: T, p: &VRFInOut<E>) -> VRFProof<E,PD>
     where T: SigningTranscript,
     {
         t.proto_name(b"DLEQProof");
         // t.commit_point(b"vrf:g",constants::RISTRETTO_BASEPOINT_TABLE.basepoint().compress());
         t.commit_point(b"vrf:h", p.input.as_point());
-        t.commit_point(b"vrf:pk", &public.0);
+        t.commit_point(b"vrf:pk", &self.pd.publickey().0);
 
         t.commit_point(b"vrf:R=g^r", &self.R);
         t.commit_point(b"vrf:h^r", &self.Hr);
@@ -133,37 +230,51 @@ impl<E: JubjubEngineWithParams> VRFProofBatchable<E> {
         VRFProof {
             c: t.challenge_scalar(b"prove"), // context, message, A/public_key, R=rG
             s: self.s,
+            pd: self.pd.clone(),
         }
     }
 
     /// Return the shortened `VRFProof` for retransmitting in non-batched situations
-    pub fn shorten_vrf<T>( &self, public: &PublicKey<E>, p: &VRFInOut<E>) -> VRFProof<E> {
+    pub fn shorten_vrf<T>( &self, public: &PublicKey<E>, p: &VRFInOut<E>) -> VRFProof<E,PD> {
         let t0 = Transcript::new(b"VRF");  // We have context in t and another hear confuses batching
-        self.shorten_dleq(t0, public, &p)
+        self.shorten_dleq(t0, &p)
     }
 }
 
-impl<E: JubjubEngineWithParams> ReadWrite for VRFProofBatchable<E> {
+impl<E: JubjubEngineWithParams,PD: ReadWrite> ReadWrite for VRFProofBatchable<E,PD> {
     #[allow(non_snake_case)]
     fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
         let params = E::params();
         let R = Point::read(&mut reader,params) ?;
         let Hr = Point::read(&mut reader,params) ?;
-        let s = crate::read_scalar::<E, R>(reader) ?;
-        Ok(VRFProofBatchable { R, Hr, s, })
+        let s = crate::read_scalar::<E, &mut R>(&mut reader) ?;
+        let pd = PD::read(reader) ?;
+        Ok(VRFProofBatchable { R, Hr, s, pd, })
     }
 
     // #[allow(non_snake_case)]
     fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
         self.R.write(&mut writer) ?;
         self.Hr.write(&mut writer) ?;
-        crate::write_scalar::<E, W>(&self.s, writer) ?;
+        crate::write_scalar::<E, &mut W>(&self.s, &mut writer) ?;
+        self.pd.write(writer) ?;
         Ok(())
     }
 }
 
 
-impl<E: JubjubEngineWithParams> SecretKey<E> {
+/*
+pub trait ProverOutput {
+    const BLINDED : bool = false;
+    fn make(VRFProof<E,()>, VRFProofBatchable<E,()>, PedersenDelta<E>, PublicKeyUnblinding<E>) -> Self;
+}
+impl<E: JubjubEngineWithParams> ProverOutput for (VRFProof<E,()>, VRFProofBatchable<E,()>) {
+    make()
+}
+*/
+
+
+impl<E: JubjubEngineWithParams> SecretKey<E>  {
     /// Produce Schnorr DLEQ proof.
     ///
     /// We assume the `VRFInOut` paramater has been computed correctly
@@ -171,13 +282,13 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// using one of the `vrf_create_*` methods on `SecretKey`.
     /// If so, we produce a proof that this multiplication was done correctly.
     #[allow(non_snake_case)]
-    pub fn dleq_proove<T,R>(&self, mut t: T, p: &VRFInOut<E>, mut rng: R) // blinded: bool
-     -> (VRFProof<E>, VRFProofBatchable<E>) // Option<BlindedPublicKey<E>>
+    pub fn dleq_proove<T,PD,RNG>(&self, mut t: T, p: &VRFInOut<E>, mut rng: RNG) // blinded: bool
+     -> (VRFProof<E,PD>, VRFProofBatchable<E,PD>, PD::Unblinding)
     where
+        PD: NewPedersenDeltaOrPublicKey<E>+Clone,
         T: SigningTranscript,
-        R: RngCore+CryptoRng,
+        RNG: RngCore+CryptoRng,
     {
-        let blinded: bool = false;
         let params = E::params();
 
         t.proto_name(b"DLEQProof");
@@ -187,7 +298,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         let mut publickey = self.to_public();
         let mut delta = Scalar::<E>::zero();
         let mut unblinding : PublicKeyUnblinding<E> = PublicKeyUnblinding(Scalar::<E>::zero());
-        if blinded {
+        if PD::BLINDED {
             // let R = crate::scalar_times_blinding_generator(&r).into();
             let [b_pk,b_R] : [Scalar<E>;2]
               = t.witness_scalars(b"blinding\00",&[&self.nonce_seed], &mut rng);
@@ -201,7 +312,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         // Compute R after adding publickey and all h.
         let [r] : [Scalar<E>;1] = t.witness_scalars(b"proving\00",&[&self.nonce_seed], rng);
         let mut R: Point<E,Unknown> = crate::scalar_times_generator(&r).into();
-        if blinded {
+        if PD::BLINDED {
             // We abuse delta's mutability here
             *&mut R = R.add(& crate::scalar_times_blinding_generator(&delta).into(), params);
         }
@@ -221,26 +332,25 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
         tmp.mul_assign(&c);
         s.sub_assign(&tmp);
 
-        if blinded {
+        if PD::BLINDED {
             // let delta = b_R - c * b_pk;
             let mut tmp = unblinding.0.clone();
             tmp.mul_assign(&c);
             delta.sub_assign(&tmp);
         }
 
-PedersenDelta { delta, publickey, };
-
         // ::zeroize::Zeroize::zeroize(&mut r);
 
-        (VRFProof { c, s, }, VRFProofBatchable { R, Hr, s, })
-        // (VRFProof { c, s, blinding }, VRFProofBatchable { R, Hr, s, blinding }, blinded)
+        let (pd,unblinding) = PD::new(PedersenDelta { delta, publickey, }, unblinding);
+        (VRFProof { c, s, pd: pd.clone(), }, VRFProofBatchable { R, Hr, s, pd, }, unblinding)
     }
 
     /// Run our Schnorr VRF on one single input, producing the output
     /// and correspodning Schnorr proof.
     /// You must extract the `VRFPreOut` from the `VRFInOut` returned.
-    pub fn vrf_sign_simple(&self, input: VRFInput<E>)
-     -> (VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)
+    pub fn vrf_sign_simple<PD>(&self, input: VRFInput<E>)
+     -> (VRFInOut<E>, VRFProof<E,PD>, VRFProofBatchable<E,PD>, PD::Unblinding)
+    where PD: NewPedersenDeltaOrPublicKey<E>+Clone,
     {
         self.vrf_sign_first(input, no_extra())
     }
@@ -254,22 +364,23 @@ PedersenDelta { delta, publickey, };
     /// you should probably use `vrf_sign_after_check` to gain access to
     /// the `VRFInOut` from `vrf_create_hash` first, and then avoid
     /// computing the proof whenever you do not win. 
-    pub fn vrf_sign_first<T>(&self, input: VRFInput<E>, extra: T)
-     -> (VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)
-    where T: SigningTranscript,
+    pub fn vrf_sign_first<T,PD>(&self, input: VRFInput<E>, extra: T)
+     -> (VRFInOut<E>, VRFProof<E,PD>, VRFProofBatchable<E,PD>, PD::Unblinding)
+    where T: SigningTranscript, PD: NewPedersenDeltaOrPublicKey<E>+Clone,
     {
         let inout = input.to_inout(self);
-        let (proof, proof_batchable) = self.dleq_proove(extra, &inout, rand_hack());
-        (inout, proof, proof_batchable)
+        let (proof, proof_batchable, pd) = self.dleq_proove(extra, &inout, rand_hack());
+        (inout, proof, proof_batchable, pd)
     }
 
     /// Run our Schnorr VRF on one single input, producing the output
     /// and correspodning Schnorr proof, but only if the result first
     /// passes some check, which itself returns either a `bool` or else
     /// an `Option` of an extra message transcript.
-    pub fn vrf_sign_after_check<F,O>(&self, input: VRFInput<E>, check: F)
-     -> Option<(VRFPreOut<E>, VRFProof<E>, VRFProofBatchable<E>)>
-    where F: FnOnce(&VRFInOut<E>) -> O,
+    pub fn vrf_sign_after_check<PD,F,O>(&self, input: VRFInput<E>, check: F)
+     -> Option<(VRFPreOut<E>, VRFProof<E,PD>, VRFProofBatchable<E,PD>, PD::Unblinding)>
+    where PD: NewPedersenDeltaOrPublicKey<E>+Clone,
+          F: FnOnce(&VRFInOut<E>) -> O,
           O: VRFExtraMessage,
     {
         let inout = input.to_inout(self);
@@ -280,12 +391,12 @@ PedersenDelta { delta, publickey, };
     /// Run our Schnorr VRF on the `VRFInOut` input-output pair,
     /// producing its output component and and correspodning Schnorr
     /// proof.
-    pub fn vrf_sign_checked<T>(&self, inout: VRFInOut<E>, extra: T) 
-     -> (VRFPreOut<E>, VRFProof<E>, VRFProofBatchable<E>)
-    where T: SigningTranscript,
+    pub fn vrf_sign_checked<T,PD>(&self, inout: VRFInOut<E>, extra: T) 
+     -> (VRFPreOut<E>, VRFProof<E,PD>, VRFProofBatchable<E,PD>, PD::Unblinding)     
+    where T: SigningTranscript, PD: NewPedersenDeltaOrPublicKey<E>+Clone,
     {
-        let (proof, proof_batchable) = self.dleq_proove(extra, &inout, rand_hack());
-        (inout.output, proof, proof_batchable)
+        let (proof, proof_batchable, pd) = self.dleq_proove(extra, &inout, rand_hack());
+        (inout.output, proof, proof_batchable, pd)
     }
 
     /*
@@ -299,7 +410,7 @@ PedersenDelta { delta, publickey, };
     /// `VRFInOut` from `vrf_create_hash` first, and then avoid computing
     /// the proof whenever you do not win. 
     pub fn vrf_sign(&self, input: VRFInput<E>)
-     -> (VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)
+     -> (VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E,PD>)
     {
         self.vrf_sign_extra(input, Transcript::new(b"VRF"))
     }
@@ -307,7 +418,7 @@ PedersenDelta { delta, publickey, };
     /// Run VRF on one single input transcript and an extra message transcript, 
     /// producing the outpus and correspodning short proof.
     pub fn vrf_sign_extra<T>(&self, input: VRFInput<E>, extra: T)
-     -> (VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)
+     -> (VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E,PD>)
     where T: SigningTranscript,
     {
         let p = input.to_inout(self);
@@ -324,7 +435,7 @@ PedersenDelta { delta, publickey, };
     /// you might use this function to short circuit computing the full
     /// proof.
     pub fn vrf_sign_after_check<F>(&self, input: VRFInput<E>, mut check: F)
-     -> Option<(VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)>
+     -> Option<(VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E,PD>)>
     where F: FnMut(&VRFInOut<E>) -> bool,
     {
         self.vrf_sign_extra_after_check( input, |io| if check(io) { Some(Transcript::new(b"VRF")) } else { None })
@@ -334,7 +445,7 @@ PedersenDelta { delta, publickey, };
     /// and correspodning short proof only if the result first passes
     /// some check, which itself returns an extra message transcript.
     pub fn vrf_sign_extra_after_check<T,F>(&self, input: VRFInput<E>, mut check: F)
-     -> Option<(VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E>)>
+     -> Option<(VRFInOut<E>, VRFProof<E>, VRFProofBatchable<E,PD>)>
     where T: SigningTranscript,
           F: FnMut(&VRFInOut<E>) -> Option<T>,
     {
@@ -354,7 +465,7 @@ PedersenDelta { delta, publickey, };
     /// you might reimplement some constant time variant.
     #[cfg(any(feature = "alloc", feature = "std"))]
     pub fn vrfs_sign_simple<R,T,B,I>(&self, ts: I)
-     -> (Box<[VRFInOut<E>]>, VRFProof<E>, VRFProofBatchable<E>)
+     -> (Box<[VRFInOut<E>]>, VRFProof<E,PD>, VRFProofBatchable<E,PD>)
     where B: Borrow<VRFInput<E>>,
           I: IntoIterator<Item=B>,
     {
@@ -369,8 +480,9 @@ PedersenDelta { delta, publickey, };
     /// you might reimplement some constant time variant.
     #[cfg(any(feature = "alloc", feature = "std"))]
     pub fn vrfs_sign<T,B,I>(&self, ts: I, extra: T)
-     -> (Box<[VRFInOut<E>]>, VRFProof<E>, VRFProofBatchable<E>)
+     -> (Box<[VRFInOut<E>]>, VRFProof<E,PD>, VRFProofBatchable<E,PD>, PD::Unblinding)
     where T: SigningTranscript,
+          PD: NewPedersenDeltaOrPublicKey<E>+Clone,
           B: Borrow<VRFInput<E>>,
           I: IntoIterator<Item=B>,
     {
@@ -378,12 +490,15 @@ PedersenDelta { delta, publickey, };
             .map(|t| t.to_inout(self))
             .collect::<Vec<VRFInOut<E>>>();
         let p = vrfs_merge(&ps);
-        let (proof, proof_batchable) = self.dleq_proove(extra, &p, rand_hack());
-        (ps.into_boxed_slice(), proof, proof_batchable)
+        let (proof, proof_batchable, pd) = self.dleq_proove(extra, &p, rand_hack());
+        (ps.into_boxed_slice(), proof, proof_batchable, pd)
     }
 }
 
-impl<E: JubjubEngineWithParams> PublicKey<E> {
+
+impl<E,PD> VRFProof<E,PD> 
+where E: JubjubEngineWithParams, PD: PedersenDeltaOrPublicKey<E>+Clone,
+{
     /// Verify DLEQ proof that `p.output = s * p.input` where `self`
     /// `s` times the basepoint.
     ///
@@ -399,39 +514,40 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
         &self,
         mut t: T,
         p: &VRFInOut<E>,
-        proof: &VRFProof<E>,
-    ) -> SignatureResult<VRFProofBatchable<E>>
+    ) -> SignatureResult<VRFProofBatchable<E,PD>>
     where
         T: SigningTranscript,
     {
         let params = E::params();
+        let VRFProof { c, s, pd } = self.clone();
 
         t.proto_name(b"DLEQProof");
         // t.commit_point(b"vrf:g",constants::RISTRETTO_BASEPOINT_TABLE.basepoint().compress());
         t.commit_point(b"vrf:h", p.input.as_point());
-        t.commit_point(b"vrf:pk", &self.0);
+        t.commit_point(b"vrf:pk", &pd.publickey().0);
 
         // We recompute R aka u from the proof
-        // let R = ( (&proof.c * &self.0) + (&proof.s * &constants::RISTRETTO_BASEPOINT_TABLE) ).compress();
-        let R = self.0.mul(proof.c,params)
-            .add(& crate::scalar_times_generator(&proof.s).into(), params)
-            .into();
+        // let R = ( (&proof.c * &pk.0) + (&proof.s * &constants::RISTRETTO_BASEPOINT_TABLE) ).compress();
+        let R: Point<E,Unknown> = pd.publickey().0.mul(c,params)
+            .add(& crate::scalar_times_generator(&s).into(), params);
+        let R: Point<E,Unknown> = if pd.delta() == Scalar::<E>::zero() { R } else {
+            R.add(& crate::scalar_times_blinding_generator(&pd.delta()).into(), params)
+        };
         t.commit_point(b"vrf:R=g^r", &R);
 
         // We also recompute h^r aka u using the proof
         // let Hr = (&proof.c * p.output.as_point()) + (&proof.s * p.input.as_point().into());
         // let Hr = Hr.compress();
-        let Hr = p.output.as_point().clone().mul(proof.c,params)
-             .add(& p.input.as_point().clone().mul(proof.s,params).into(), params);
+        let Hr = p.output.as_point().clone().mul(c,params)
+             .add(& p.input.as_point().clone().mul(s,params).into(), params);
         t.commit_point(b"vrf:h^r", &Hr);
 
         // We add h^sk last to save an allocation if we ever need to hash multiple h together.
         t.commit_point(b"vrf:h^sk", p.output.as_point());
 
-        // We need not check that h^pk lies on the curve because Ristretto ensures this.
-        let VRFProof { c, s } = *proof;
+        // We need not check that h^pk lies on the curve
         if c == t.challenge_scalar(b"prove") {
-            Ok(VRFProofBatchable { R, Hr, s }) // Scalar: Copy ?!?
+            Ok(VRFProofBatchable { R, Hr, s, pd }) // Scalar: Copy ?!?
         } else {
             // Err(SignatureError::EquationFalse)
             Err( signature_error("VRF signature validation failed") )
@@ -442,22 +558,20 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
     pub fn vrf_verify_simple(
         &self,
         inout: &VRFInOut<E>,
-        proof: &VRFProof<E>,
-    ) -> SignatureResult<VRFProofBatchable<E>> 
+    ) -> SignatureResult<VRFProofBatchable<E,PD>> 
     {
-        self.vrf_verify(inout, proof, no_extra())
+        self.vrf_verify(inout, no_extra())
     }
 
     /// Verify VRF proof for one single input transcript and corresponding output.
     pub fn vrf_verify<T>(
         &self,
         inout: &VRFInOut<E>,
-        proof: &VRFProof<E>,
         extra: T,
-    ) -> SignatureResult<VRFProofBatchable<E>> 
+    ) -> SignatureResult<VRFProofBatchable<E,PD>> 
     where T: SigningTranscript,
     {
-        self.dleq_verify(extra, &inout, proof)
+        self.dleq_verify(extra, &inout)
     }
 
     /// Verify a common VRF short proof for several input transcripts and corresponding outputs.
@@ -465,8 +579,8 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
     pub fn vrfs_verify_simple<T,O>(
         &self,
         inouts: &[O],
-        proof: &VRFProof<E>,
-    ) -> SignatureResult<VRFProofBatchable<E>>
+        proof: &VRFProof<E,PD>,
+    ) -> SignatureResult<VRFProofBatchable<E,PD>>
     where
         T: VRFSigningTranscript,
         O: Borrow<VRFInOut<E>>,
@@ -479,15 +593,14 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
     pub fn vrfs_verify<T,O>(
         &self,
         inouts: &[O],
-        proof: &VRFProof,
         extra: T,
-    ) -> SignatureResult<VRFProofBatchable<E>>
+    ) -> SignatureResult<VRFProofBatchable<E,PD>>
     where
         T: SigningTranscript,
         O: Borrow<VRFInOut<E>>,
     {
         let p = self.vrfs_merge(&ps[..]);
-        let proof_batchable = self.dleq_verify(extra, &p, proof) ?;
+        let proof_batchable = self.dleq_verify(extra, &p) ?;
         Ok(proof_batchable)
     }    
 }
@@ -514,7 +627,7 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
 #[allow(non_snake_case)]
 pub fn vrf_verify_batch(
     inouts: &[VRFInOut<E>],
-    proofs: &[VRFProofBatchable<E>],
+    proofs: &[VRFProofBatchable<E,PD>],
     public_keys: &[PublicKey<E>],
 ) -> SignatureResult<()> 
 {
@@ -591,7 +704,7 @@ pub fn vrf_verify_batch(
 #[cfg(any(feature = "alloc", feature = "std"))]
 pub fn vrf_verify_batch(
     inouts: &[VRFInOut<E>],
-    proofs: &[VRFProofBatchable<E>],
+    proofs: &[VRFProofBatchable<E,PD>],
     publickeys: &[PublicKey<E>],
 ) -> SignatureResult<()>
 {
@@ -638,7 +751,11 @@ mod tests {
         let ctx = signing_context(b"yo!");
         let input1 = VRFInput::new_nonmalleable(ctx.bytes(b"meow"),&sk1.to_public());
         
-        let (io1, proof1, proof1batchable) = sk1.vrf_sign_simple(input1.clone());
+        let (io1, proof1, proof1batchable, ()) = sk1.vrf_sign_simple(input1.clone());
+        let proof1 = proof1.remove_publickey();
+        let sk2 = SecretKey::<Bls12>::from_rng(&mut csprng);
+        let proof1bad = proof1.clone().attach_publickey(sk2.to_public());
+        let proof1 = proof1.attach_publickey(sk1.to_public());
         /*
         TODO: Fix zcash's crapy lack of traits
         assert_eq!(
@@ -649,7 +766,7 @@ mod tests {
         );
         */
         let io1v = io1.output.attach_nonmalleable(ctx.bytes(b"meow"),&sk1.to_public());
-        let proof1too = sk1.to_public().vrf_verify_simple(&io1v, &proof1)
+        let proof1too = proof1.vrf_verify_simple(&io1v)
             .expect("Correct VRF verification failed!");
         /*
         TODO: Fix zcash's crapy lack of traits
@@ -659,20 +776,20 @@ mod tests {
         );
         */
         assert_eq!(
-            sk1.vrf_sign_simple(input1).0.make_bytes::<[u8;16]>(b""),
+            sk1.vrf_sign_simple::<()>(input1).0.make_bytes::<[u8;16]>(b""),
             io1.make_bytes::<[u8;16]>(b""),
             "Rerunning VRF gave different output"
         );
 
         let io2v = io1.output.attach_nonmalleable(ctx.bytes(b"woof"),&sk1.to_public());
         assert!(
-            sk1.to_public().vrf_verify_simple(&io2v, &proof1).is_err(),
+            proof1.vrf_verify_simple(&io2v).is_err(),
             "VRF verification with incorrect message passed!"
         );
 
         let sk2 = SecretKey::<Bls12>::from_rng(&mut csprng);
         assert!(
-            sk2.to_public().vrf_verify_simple(&io1v, &proof1).is_err(),
+            proof1bad.vrf_verify_simple(&io1v).is_err(),
             "VRF verification with incorrect signer passed!"
         );
     }

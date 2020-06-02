@@ -28,6 +28,11 @@ pub trait ReadWrite : Sized {
     fn write<W: io::Write>(&self, writer: W) -> io::Result<()>;
 }
 
+impl ReadWrite for () {
+    fn read<R: io::Read>(reader: R) -> io::Result<Self> { Ok(()) }
+    fn write<W: io::Write>(&self, writer: W) -> io::Result<()> { Ok(()) }
+}
+
 
 pub(crate) type Scalar<E> = <E as JubjubEngine>::Fs;
 
