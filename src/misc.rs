@@ -29,8 +29,8 @@ pub trait ReadWrite : Sized {
 }
 
 impl ReadWrite for () {
-    fn read<R: io::Read>(reader: R) -> io::Result<Self> { Ok(()) }
-    fn write<W: io::Write>(&self, writer: W) -> io::Result<()> { Ok(()) }
+    fn read<R: io::Read>(_reader: R) -> io::Result<Self> { Ok(()) }
+    fn write<W: io::Write>(&self, _writer: W) -> io::Result<()> { Ok(()) }
 }
 
 
