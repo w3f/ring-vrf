@@ -93,6 +93,9 @@ impl<E: JubjubEngineWithParams> PedersenDeltaOrPublicKey<E> for PedersenDelta<E>
     fn publickey(&self) -> &PublicKey<E> { &self.publickey }
 }
 
+/// Rough public key output by VRF signer, either the public key,
+/// nothing if verifier supplied, or blinded use with the ring VRF prover.
+/// TODO: make sealed trait
 pub trait NewPedersenDeltaOrPublicKey<E: JubjubEngineWithParams> : Sized+Clone { 
     const BLINDED: bool = false;
     type Unblinding : Sized;
