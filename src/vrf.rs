@@ -103,7 +103,7 @@ impl<E: JubjubEngineWithParams> VRFPreOut<E> {
     /// Acknoledge VRF transcript malleablity
     ///
     /// TODO: Verify that Point::rand is stable or find a stable alternative.
-    pub fn attach_malleable<T>(&self, t: T) -> VRFInOut<E>
+    pub fn attach_input_malleable<T>(&self, t: T) -> VRFInOut<E>
     where T: SigningTranscript
     {
         let input = VRFInput::new_malleable(t);
@@ -113,7 +113,7 @@ impl<E: JubjubEngineWithParams> VRFPreOut<E> {
     /// Non-malleable VRF transcript.
     ///
     /// Incompatable with ring VRF however.
-    pub fn attach_nonmalleable<T>(&self, t: T, publickey: &crate::PublicKey<E>)
+    pub fn attach_input_nonmalleable<T>(&self, t: T, publickey: &crate::PublicKey<E>)
      -> VRFInOut<E>
     where T: SigningTranscript
     {
@@ -122,7 +122,7 @@ impl<E: JubjubEngineWithParams> VRFPreOut<E> {
     }
 
     /// Semi-malleable VRF transcript
-    pub fn attach_ring_malleable<T>(&self, t: T, auth_root: &crate::merkle::RingRoot<E>)
+    pub fn attach_input_ring_malleable<T>(&self, t: T, auth_root: &crate::merkle::RingRoot<E>)
      -> VRFInOut<E>
     where T: SigningTranscript
     {
