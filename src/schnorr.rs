@@ -683,7 +683,7 @@ where E: JubjubEngineWithParams, PD: PedersenDeltaOrPublicKey<E>+Clone,
     {
         let p = self.vrfs_merge(&ps[..]);
         let proof_batchable = self.clone().attach_inout(p).dleq_verify(extra) ?;
-        Ok( proof_batchable.attach_inout(()) )
+        Ok( proof_batchable.remove_inout() )
     }    
 }
 
@@ -833,8 +833,8 @@ mod tests {
         let ctx = signing_context(b"yo!");
         let input1 = VRFInput::new_nonmalleable(ctx.bytes(b"meow"),&sk1.to_public());
 
-        let (io1, proof1, proof1batchable, ()) = sk1.vrf_sign_simple(input1.clone());
-        let proof1 = proof1.remove_publickey();
+        let (io1, proof1, ()) = sk1.vrf_sign_simple::<_,PublicKey<_>>(input1.clone());
+        let (proof1, _proof1batchable) = proof1.remove_publickey().seperate();
         let sk2 = SecretKey::<Bls12>::from_rng(&mut csprng);
         let proof1bad = proof1.clone().attach_publickey(sk2.to_public());
         let proof1 = proof1.attach_publickey(sk1.to_public());
@@ -847,8 +847,11 @@ mod tests {
             "Oops `shorten_vrf` failed"
         );
         */
-        let io1v = io1.output.attach_nonmalleable(ctx.bytes(b"meow"),&sk1.to_public());
-        let proof1too = proof1.vrf_verify_simple(&io1v)
+        let proof1too = proof1.clone().attach_input_nonmalleable(ctx.bytes(b"meow")).vrf_verify_simple()
+            .expect("Correct VRF verification failed!");
+        let io1v = io1.output.attach_input_nonmalleable(ctx.bytes(b"meow"),&sk1.to_public());
+        let proof1 = proof1.remove_inout().attach_inout(io1v.clone());
+        let proof1tooo = proof1.vrf_verify_simple()
             .expect("Correct VRF verification failed!");
         /*
         TODO: Fix zcash's crapy lack of traits
@@ -858,20 +861,20 @@ mod tests {
         );
         */
         assert_eq!(
-            sk1.vrf_sign_simple::<()>(input1).0.make_bytes::<[u8;16]>(b""),
+            sk1.vrf_sign_simple::<super::Individual<_>,()>(input1).0.make_bytes::<[u8;16]>(b""),
             io1.make_bytes::<[u8;16]>(b""),
             "Rerunning VRF gave different output"
         );
 
-        let io2v = io1.output.attach_nonmalleable(ctx.bytes(b"woof"),&sk1.to_public());
+        let io2v = io1.output.attach_input_nonmalleable(ctx.bytes(b"woof"),&sk1.to_public());
+        let proof1 = proof1.remove_inout().attach_inout(io2v);
         assert!(
-            proof1.vrf_verify_simple(&io2v).is_err(),
+            proof1.vrf_verify_simple().is_err(),
             "VRF verification with incorrect message passed!"
         );
-
-        let sk2 = SecretKey::<Bls12>::from_rng(&mut csprng);
         assert!(
-            proof1bad.vrf_verify_simple(&io1v).is_err(),
+            proof1bad.attach_input_nonmalleable(ctx.bytes(b"meow"))
+            .vrf_verify_simple().is_err(),
             "VRF verification with incorrect signer passed!"
         );
     }

@@ -141,7 +141,7 @@ mod tests {
         let (vrf_preout, proof) = sk.ring_vrf_sign_checked(vrf_inout, vrf::no_extra(), copath.clone(), srs).unwrap();
         end_timer!(proving);
 
-        let vrf_inout = vrf_preout.attach_malleable(t);
+        let vrf_inout = vrf_preout.attach_input_malleable(t);
         let verification = start_timer!(|| "verification");
         let valid = auth_root.ring_vrf_verify_unprepared(vrf_inout, vrf::no_extra(), proof, &vk);
         end_timer!(verification);
