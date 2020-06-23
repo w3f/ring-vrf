@@ -15,11 +15,11 @@ use zcash_primitives::jubjub::{
 
 use zeroize::Zeroize;
 
-use crate::{JubjubEngineWithParams, Scalar};
+use crate::{JubjubEngineWithParams, ReadWrite, Scalar};
 
 
 /// Public key consisting of a JubJub point
-#[derive(Clone)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
+#[derive(Debug,Clone)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
 pub struct PublicKey<E: JubjubEngine>(pub(crate) Point<E,Unknown>);
 
 // serde_boilerplate!(PublicKey);
@@ -32,21 +32,48 @@ impl<E: JubjubEngineWithParams> PartialEq for PublicKey<E> {
 }
 impl<E: JubjubEngineWithParams> Eq for PublicKey<E> { }
 
-
 impl<E: JubjubEngineWithParams> PublicKey<E> {
     fn from_secret_scalar(secret: &Scalar<E>) -> PublicKey<E> {
         PublicKey( crate::scalar_times_generator(secret).into() )
     }
-    
-    pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
+}
+
+impl<E: JubjubEngineWithParams> ReadWrite for PublicKey<E>  {
+    fn read<R: io::Read>(reader: R) -> io::Result<Self> {
         Ok(PublicKey( Point::read(reader,E::params()) ? ))
     }
 
-// }
-// impl<E: JubjubEngine> PublicKey<E> {
-
-    pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
+    fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
         self.0.write(writer)
+    }
+}
+
+
+/// Pederson commitment openning for a public key, consisting of a scalar
+/// that reveals the difference ebtween two public keys.
+#[derive(Clone)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
+pub struct PublicKeyUnblinding<E: JubjubEngine>(pub(crate) Scalar<E>);
+
+impl<E: JubjubEngineWithParams> PublicKeyUnblinding<E> {
+    pub fn is_blinded(&self) -> bool {
+        use ff::Field;
+        self.0 != Scalar::<E>::zero()
+    }
+
+    pub fn verify(&self, blinded: PublicKey<E>, unblinded: PublicKey<E>) -> bool {
+        let params = E::params();
+        unblinded.0.add(& crate::scalar_times_generator(&self.0).into(), params).mul_by_cofactor(params)
+        == blinded.0.mul_by_cofactor(params)
+    }
+}
+
+impl<E: JubjubEngine> ReadWrite for PublicKeyUnblinding<E>  {
+    fn read<R: io::Read>(reader: R) -> io::Result<Self> {
+        Ok(PublicKeyUnblinding( crate::read_scalar::<E, R>(reader) ? ))
+    }
+
+    fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
+        crate::write_scalar::<E, W>(&self.0, writer)
     }
 }
 
@@ -70,7 +97,7 @@ pub struct SecretKey<E: JubjubEngine> {
     ///
     /// TODO: Replace this with serialized byte representation like [u8; 32]
     /// TODO: Compjute lazilty using usafe code and std::sync::Once
-    pub(crate) public: PublicKey<E>,
+    public: PublicKey<E>,
 }
 
 // serde_boilerplate!(SecretKey);
@@ -139,21 +166,22 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     pub fn to_public(&self) -> PublicKey<E> {
         self.public.clone()
     }
+}
+// TODO:  Convert to/from zcash_primitives::redjubjub::PrivateKey
 
-    pub fn read<R: io::Read>(reader: &mut R) -> io::Result<Self> {
-        let key = crate::read_scalar::<E, &mut R>(reader) ?;
+impl<E: JubjubEngineWithParams> ReadWrite for SecretKey<E>  {
+    fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
+        let key = crate::read_scalar::<E, &mut R>(&mut reader) ?;
         let mut nonce_seed = [0u8; 32];
         reader.read_exact(&mut nonce_seed) ?;
         let public = PublicKey::from_secret_scalar(&key);
         Ok(SecretKey { key, nonce_seed, public, } )
     }
 
-    pub fn write<W: io::Write>(&self, writer: &mut W) -> io::Result<()> {
-        crate::write_scalar::<E, &mut W>(&self.key, writer) ?;
+    fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+        crate::write_scalar::<E, &mut W>(&self.key, &mut writer) ?;
         writer.write_all(&self.nonce_seed) ?;
         Ok(())
     }
-
-    // TODO:  Convert to/from zcash_primitives::redjubjub::PrivateKey
 }
 

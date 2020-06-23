@@ -10,6 +10,45 @@ use zcash_primitives::jubjub::{
 use crate::JubjubEngineWithParams;
 
 
+// TODO: Avoid std::io entirely after switching to ZEXE
+pub type SignatureError = io::Error;
+pub type SignatureResult<T> = io::Result<T>;
+
+pub fn signature_error(msg: &'static str) -> SignatureError {
+    io::Error::new(io::ErrorKind::InvalidInput, msg)
+}
+
+
+
+/// Serializtaion
+///
+/// ZCash types require `std` for all (de)serializtaion, which sucks but hey.
+pub trait ReadWrite : Sized {
+    fn read<R: io::Read>(reader: R) -> io::Result<Self>;
+    fn write<W: io::Write>(&self, writer: W) -> io::Result<()>;
+}
+
+impl ReadWrite for () {
+    fn read<R: io::Read>(_reader: R) -> io::Result<Self> { Ok(()) }
+    fn write<W: io::Write>(&self, _writer: W) -> io::Result<()> { Ok(()) }
+}
+
+
+pub(crate) type Scalar<E> = <E as JubjubEngine>::Fs;
+
+pub fn read_scalar<E: JubjubEngine, R: io::Read>(reader: R) -> io::Result<E::Fs> {
+    let mut s_repr = <E::Fs as PrimeField>::Repr::default();
+    s_repr.read_le(reader) ?;
+
+    E::Fs::from_repr(s_repr)
+        .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "scalar is not in field"))
+}
+
+pub fn write_scalar<E: JubjubEngine, W: io::Write>(s: &E::Fs, writer: W) -> io::Result<()> {
+    s.into_repr().write_le(writer)
+}
+
+
 /// Create a 128 bit `Scalar` for delinearization
 ///
 /// TODO: Improve this
@@ -35,6 +74,16 @@ where E: JubjubEngineWithParams,
     base_point.mul(scalar.clone(), params)
 }
 
+pub(crate) fn scalar_times_blinding_generator<E>(scalar: &Scalar<E>)
+ -> Point<E,PrimeOrder> 
+where E: JubjubEngineWithParams,
+{
+    let params = E::params();
+    let base_point = params.generator(FixedGenerators::NullifierPosition);
+    base_point.mul(scalar.clone(), params)
+}
+
+
 /*
 pub fn hash_to_scalar<E: JubjubEngine>(ctx: &[u8], a: &[u8], b: &[u8]) -> E::Fs {
     let mut hasher = Params::new().hash_length(64).personal(ctx).to_state();
@@ -45,19 +94,6 @@ pub fn hash_to_scalar<E: JubjubEngine>(ctx: &[u8], a: &[u8], b: &[u8]) -> E::Fs 
 }
 */
 
-pub(crate) type Scalar<E> = <E as JubjubEngine>::Fs;
-
-pub(crate) fn read_scalar<E: JubjubEngine, R: io::Read>(reader: R) -> io::Result<E::Fs> {
-    let mut s_repr = <E::Fs as PrimeField>::Repr::default();
-    s_repr.read_le(reader) ?;
-
-    E::Fs::from_repr(s_repr)
-        .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "scalar is not in field"))
-}
-
-pub(crate) fn write_scalar<E: JubjubEngine, W: io::Write>(s: &E::Fs, writer: W) -> io::Result<()> {
-    s.into_repr().write_le(writer)
-}
 
 /*
 pub(crate) fn scalar_to_bytes<E: JubjubEngine>(s: &E::Fs)

@@ -24,7 +24,7 @@ extern crate arrayref;
 extern crate bench_utils;
 
 
-mod scalar;
+mod misc;
 mod keys;
 pub mod context;
 mod merkle;
@@ -37,9 +37,13 @@ pub mod schnorr;
 pub mod bls12_381;
 
 
-use crate::scalar::{Scalar,scalar_times_generator,read_scalar,write_scalar};
-pub use crate::keys::{SecretKey,PublicKey};
-pub use crate::context::{signing_context,SigningTranscript}; // SigningTranscript
+use crate::misc::{
+    SignatureError,SignatureResult,signature_error,ReadWrite,
+    Scalar, read_scalar, write_scalar,
+    scalar_times_generator,scalar_times_blinding_generator,
+};
+pub use crate::keys::{SecretKey, PublicKey, PublicKeyUnblinding};
+pub use crate::context::{signing_context, SigningTranscript}; // SigningTranscript
 
 pub use crate::merkle::{RingSecretCopath, RingRoot, auth_hash};
 pub use crate::generator::generate_crs;
@@ -137,7 +141,7 @@ mod tests {
         let (vrf_preout, proof) = sk.ring_vrf_sign_checked(vrf_inout, vrf::no_extra(), copath.clone(), srs).unwrap();
         end_timer!(proving);
 
-        let vrf_inout = vrf_preout.attach_malleable(t);
+        let vrf_inout = vrf_preout.attach_input_malleable(t);
         let verification = start_timer!(|| "verification");
         let valid = auth_root.ring_vrf_verify_unprepared(vrf_inout, vrf::no_extra(), proof, &vk);
         end_timer!(verification);

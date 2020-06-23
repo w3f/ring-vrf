@@ -18,6 +18,10 @@ bench-utils = { git = "https://github.com/scipr-lab/zexe", features = ["print-tr
 version = "0.3.5"
 default-features = false
 
+[dependencies.arrayvec]
+version = "0.5.1"
+default-features = false
+
 [dependencies.digest] 
 version = "0.8"
 default-features = false
