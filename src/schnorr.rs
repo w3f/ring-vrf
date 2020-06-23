@@ -40,7 +40,9 @@ use core::borrow::Borrow;
 // #[cfg(feature = "std")]
 use std::{boxed::Box, vec::Vec};
 
-use rand_core::{RngCore,CryptoRng};
+use std::ops::{SubAssign, MulAssign};
+
+use rand_core::{RngCore, CryptoRng};
 
 use merlin::Transcript;
 
