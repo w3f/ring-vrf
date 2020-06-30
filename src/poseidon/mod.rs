@@ -2,11 +2,13 @@
 use ff::{Field, PrimeField, PrimeFieldRepr};
 use pairing::{Engine};
 use std::marker::PhantomData;
-use super::group_hash::GroupHasher;
+use group_hash::GroupHasher;
 
 use rand::{Rand, Rng};
 
 pub mod bn256;
+mod constants;
+mod group_hash;
 
 pub trait SBox<E: Engine>: Sized {
     fn apply(elements: &mut [E::Fr]);
