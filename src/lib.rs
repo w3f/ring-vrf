@@ -35,6 +35,7 @@ mod verifier;
 pub mod vrf;
 pub mod schnorr;
 pub mod bls12_381;
+pub mod poseidon;
 
 
 use crate::misc::{
