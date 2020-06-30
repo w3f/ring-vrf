@@ -4,7 +4,7 @@ use pairing::{Engine};
 use std::marker::PhantomData;
 use group_hash::GroupHasher;
 
-use rand::{Rand, Rng};
+use rand::Rng;
 
 pub mod bn256;
 mod constants;

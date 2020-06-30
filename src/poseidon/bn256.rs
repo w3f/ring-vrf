@@ -109,8 +109,8 @@ impl Bn256PoseidonParams {
         };
 
         let mds_matrix = {
-            use rand::{SeedableRng};
-            use rand::chacha::ChaChaRng;
+            use rand_core::SeedableRng;
+            use rand_chacha::ChaChaRng;
             // Create an RNG based on the outcome of the random beacon
             let mut rng = {
                 let tag = b"Hadesmds";
