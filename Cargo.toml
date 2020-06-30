@@ -53,6 +53,10 @@ version = "1.0.0"
 default-features = false
 features = ["zeroize_derive"]
 
+[dependencies.blake2-rfc]
+version = "0.2.18"
+default-features = false
+
 [dev-dependencies]
 rand_xorshift = "0.2"
 rand_chacha = "0.2"
