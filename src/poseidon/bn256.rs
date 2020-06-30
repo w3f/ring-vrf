@@ -118,12 +118,12 @@ impl Bn256PoseidonParams {
                 h.update(constants::GH_FIRST_BLOCK);
                 let h = h.finalize();
                 assert!(h.len() == 32);
-                let mut seed = [0u32; 8];
-                for i in 0..8 {
-                    seed[i] = (&h[..]).read_u32::<BigEndian>().expect("digest is large enough for this to work");
+                let mut seed = [0u8; 32];
+                for i in 0..32 {
+                    seed[i] = (&h[..]).read_u8().expect("digest is large enough for this to work");
                 }
 
-                ChaChaRng::from_seed(&seed)
+                ChaChaRng::from_seed(seed)
             };
 
             generate_mds_matrix::<bls12_381::Bls12, _>(t, &mut rng)

@@ -263,8 +263,8 @@ fn scalar_product<E: Engine> (input: &[E::Fr], by: &[E::Fr]) -> E::Fr {
 // an element with some zero MSBs and instead just sample and retry
 fn generate_mds_matrix<E: PoseidonEngine, R: Rng>(t: u32, rng: &mut R) -> Vec<E::Fr> {
     loop {
-        let x: Vec<E::Fr> = (0..t).map(|_| rng.gen()).collect();
-        let y: Vec<E::Fr> = (0..t).map(|_| rng.gen()).collect();
+        let x: Vec<_> = (0..t).map(|_| E::Fr::random(rng)).collect();
+        let y: Vec<_> = (0..t).map(|_| E::Fr::random(rng)).collect();
 
         let mut invalid = false;
 
