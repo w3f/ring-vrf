@@ -1,6 +1,6 @@
 /// Initial implementation of https://eprint.iacr.org/2019/458.pdf
-use bellman::pairing::ff::{Field, PrimeField, PrimeFieldRepr};
-use bellman::pairing::{Engine};
+use ff::{Field, PrimeField, PrimeFieldRepr};
+use pairing::{Engine};
 use std::marker::PhantomData;
 use super::group_hash::GroupHasher;
 

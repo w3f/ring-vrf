@@ -1,18 +1,18 @@
-use bellman::pairing::bn256;
+use pairing::bls12_381;
 use super::*;
 
-impl PoseidonEngine for bn256::Bn256 {
+impl PoseidonEngine for bls12_381::Bls12 {
     type Params = Bn256PoseidonParams;
-    type SBox = QuinticSBox<bn256::Bn256>;
+    type SBox = QuinticSBox<bls12_381::Bls12>;
 }
 
 pub struct Bn256PoseidonParams {
     t: u32,
     r_f: u32,
     r_p: u32,
-    full_round_keys: Vec<bn256::Fr>,
-    partial_round_keys: Vec<bn256::Fr>,
-    mds_matrix: Vec<bn256::Fr>,
+    full_round_keys: Vec<bls12_381::Fr>,
+    partial_round_keys: Vec<bls12_381::Fr>,
+    mds_matrix: Vec<bls12_381::Fr>,
     security_level: u32,
 }
 
@@ -55,10 +55,10 @@ impl Bn256PoseidonParams {
                 let h = h.finalize();
                 assert!(h.len() == 32);
 
-                let mut constant_repr = <bn256::Fr as PrimeField>::Repr::default();
+                let mut constant_repr = <bls12_381::Fr as PrimeField>::Repr::default();
                 constant_repr.read_le(&h[..]).unwrap();
 
-                if let Ok(constant) = bn256::Fr::from_repr(constant_repr) {
+                if let Ok(constant) = bls12_381::Fr::from_repr(constant_repr) {
                     if !constant.is_zero() {
                         round_constants.push(constant);
                     }
@@ -89,10 +89,10 @@ impl Bn256PoseidonParams {
                 let h = h.finalize();
                 assert!(h.len() == 32);
 
-                let mut constant_repr = <bn256::Fr as PrimeField>::Repr::default();
+                let mut constant_repr = <bls12_381::Fr as PrimeField>::Repr::default();
                 constant_repr.read_le(&h[..]).unwrap();
 
-                if let Ok(constant) = bn256::Fr::from_repr(constant_repr) {
+                if let Ok(constant) = bls12_381::Fr::from_repr(constant_repr) {
                     if !constant.is_zero() {
                         round_constants.push(constant);
                     }
@@ -126,7 +126,7 @@ impl Bn256PoseidonParams {
                 ChaChaRng::from_seed(&seed)
             };
 
-            generate_mds_matrix::<bn256::Bn256, _>(t, &mut rng)
+            generate_mds_matrix::<bls12_381::Bls12, _>(t, &mut rng)
         };
 
         Self {
@@ -141,7 +141,7 @@ impl Bn256PoseidonParams {
     }
 }
 
-impl PoseidonHashParams<bn256::Bn256> for Bn256PoseidonParams {
+impl PoseidonHashParams<bls12_381::Bls12> for Bn256PoseidonParams {
     fn t(&self) -> u32 {
         self.t
     }
@@ -151,21 +151,21 @@ impl PoseidonHashParams<bn256::Bn256> for Bn256PoseidonParams {
     fn r_p(&self) -> u32 {
         self.r_p
     }
-    fn full_round_key(&self, round: u32) -> &[bn256::Fr] {
+    fn full_round_key(&self, round: u32) -> &[bls12_381::Fr] {
         let t = self.t;
         let start = (t*round) as usize;
         let end = (t*(round+1)) as usize;
 
         &self.full_round_keys[start..end]
     }
-    fn partial_round_key(&self, round: u32) -> &[bn256::Fr] {
+    fn partial_round_key(&self, round: u32) -> &[bls12_381::Fr] {
         let t = self.t;
         let start = (t*round) as usize;
         let end = (t*(round+1)) as usize;
         
         &self.partial_round_keys[start..end]
     }
-    fn mds_matrix_row(&self, row: u32) -> &[bn256::Fr] {
+    fn mds_matrix_row(&self, row: u32) -> &[bls12_381::Fr] {
         let t = self.t;
         let start = (t*row) as usize;
         let end = (t*(row+1)) as usize;
@@ -181,9 +181,8 @@ impl PoseidonHashParams<bn256::Bn256> for Bn256PoseidonParams {
 #[cfg(test)]
 mod test {
     use rand::{Rand, Rng, thread_rng};
-    use bellman::pairing::bn256::{Bn256, Fr};
-    use bellman::pairing::ff::PrimeField;
-    use bellman::pairing::ff::Field;
+    use pairing::bls12_381::{Bls12, Fr};
+    use ff::{Field, PrimeField};
     use super::Bn256PoseidonParams;
     use crate::poseidon::{poseidon_hash, PoseidonHashParams, PoseidonEngine};
     use crate::group_hash::BlakeHasher;
