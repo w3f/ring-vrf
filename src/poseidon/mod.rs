@@ -4,6 +4,8 @@ use pairing::{Engine};
 use std::marker::PhantomData;
 use group_hash::GroupHasher;
 
+use std::ops::{AddAssign, SubAssign, MulAssign};
+
 use rand::Rng;
 
 pub mod bn256;
