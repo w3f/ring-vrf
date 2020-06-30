@@ -68,7 +68,7 @@ fn batch_inversion<E: Engine>(v: &mut [E::Fr]) {
     }
 
     // Invert `tmp`.
-    tmp = tmp.inverse().unwrap(); // Guaranteed to be nonzero.
+    tmp = tmp.invert().unwrap(); // Guaranteed to be nonzero.
 
     // Second pass: iterate backwards to compute inverses
     for (g, s) in v.iter_mut()
