@@ -180,12 +180,12 @@ impl PoseidonHashParams<bls12_381::Bls12> for Bn256PoseidonParams {
 
 #[cfg(test)]
 mod test {
-    use rand::{Rand, Rng, thread_rng};
+    use rand::{Rng, thread_rng};
     use pairing::bls12_381::{Bls12, Fr};
     use ff::{Field, PrimeField};
     use super::Bn256PoseidonParams;
     use crate::poseidon::{poseidon_hash, PoseidonHashParams, PoseidonEngine};
-    use crate::group_hash::BlakeHasher;
+    use super::group_hash::BlakeHasher;
 
     #[test]
     fn test_generate_bn256_poseidon_params() {
@@ -196,8 +196,8 @@ mod test {
     fn test_bn256_poseidon_hash() {
         let rng = &mut thread_rng();
         let params = Bn256PoseidonParams::new::<BlakeHasher>();
-        let input: Vec<Fr> = (0..params.t()).map(|_| rng.gen()).collect();
-        let output = poseidon_hash::<Bn256>(&params, &input[..]);
+        let input: Vec<Fr> = (0..params.t()).map(|_| Fr::random(rng)).collect();
+        let output = poseidon_hash::<Bls12>(&params, &input[..]);
         assert!(output.len() == 1);
     }
 
@@ -222,7 +222,7 @@ mod test {
     fn test_print_bn256_poseidon_params_for_quartic_tree_hash_empty_input() {
         let params = Bn256PoseidonParams::new_for_quartic_tree::<BlakeHasher>();
         let input = vec![Fr::zero(); 4];
-        let output = poseidon_hash::<Bn256>(&params, &input);
+        let output = poseidon_hash::<Bls12>(&params, &input);
         println!("{}", output[0]);
     }
 }
