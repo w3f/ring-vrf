@@ -23,6 +23,9 @@ extern crate arrayref;
 #[macro_use]
 extern crate bench_utils;
 
+#[cfg(test)]
+#[macro_use]
+extern crate hex_literal;
 
 mod misc;
 mod keys;

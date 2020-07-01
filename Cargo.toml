@@ -69,6 +69,8 @@ default-features = false
 [dev-dependencies]
 rand_xorshift = "0.2"
 rand_chacha = "0.2"
+hex-literal = "0.2"
+
 
 [features]
 default = ["rand_chacha"] # "std", 
