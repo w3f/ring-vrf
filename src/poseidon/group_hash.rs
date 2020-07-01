@@ -1,4 +1,4 @@
-use blake2_rfc::blake2s::Blake2s;
+use blake2_rfc_bellman_edition::blake2s::Blake2s;
 use super::constants;
 
 pub trait GroupHasher {
