@@ -47,8 +47,8 @@ pub struct RingVRF<E: JubjubEngine> { // TODO: name
     pub copath: Option<RingSecretCopath<E>>,
 }
 
-impl<E: JubjubEngineWithParams> Circuit<E> for RingVRF<E> {
-    fn synthesize<CS: ConstraintSystem<E>>(self, cs: &mut CS) -> Result<(), SynthesisError> {
+impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
+    fn synthesize<CS: ConstraintSystem<E::Fr>>(self, cs: &mut CS) -> Result<(), SynthesisError> {
         if let Some(copath) = self.copath.as_ref() {
             if copath.depth() != self.depth {
                 return Err(SynthesisError::Unsatisfiable)
@@ -73,7 +73,7 @@ impl<E: JubjubEngineWithParams> Circuit<E> for RingVRF<E> {
         // that is guaranteed to be in the primeorder subgroup,
         // so no on-curve or subgroup checks are required //TODO: double-check
         // 750 constraints according to Zcash spec A.3.3.7
-        let pk = ecc::fixed_base_multiplication(
+        let pk = ecc::fixed_base_multiplication::<E, _>(
             cs.namespace(|| "PK = sk * G"),
             FixedGenerators::SpendingKeyGenerator, //TODO: any NUMS point of full order
             &sk_bits,
@@ -173,7 +173,7 @@ impl<E: JubjubEngineWithParams> Circuit<E> for RingVRF<E> {
             preimage.extend(xr.to_bits_le(cs.namespace(|| "xr into bits"))?);
 
             // Compute the new subtree value
-            cur = pedersen_hash::pedersen_hash(
+            cur = pedersen_hash::pedersen_hash::<E, _>(
                 cs.namespace(|| "computation of pedersen hash"),
                 pedersen_hash::Personalization::MerkleTree(i),
                 &preimage,
@@ -189,7 +189,7 @@ impl<E: JubjubEngineWithParams> Circuit<E> for RingVRF<E> {
 #[cfg(test)]
 mod tests {
     use bellman::gadgets::test::TestConstraintSystem;
-    use pairing::bls12_381::Bls12;
+    use pairing::bls12_381::{Bls12, Fr};
     // use zcash_primitives::jubjub::JubjubBls12;
 
     use rand_core::{RngCore}; // CryptoRng
@@ -224,7 +224,7 @@ mod tests {
             copath: Some(copath),
         };
 
-        let mut cs = TestConstraintSystem::<Bls12>::new();
+        let mut cs = TestConstraintSystem::<Fr>::new();
 
         instance.synthesize(&mut cs).unwrap();
         assert!(cs.is_satisfied());

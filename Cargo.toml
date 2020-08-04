@@ -8,6 +8,7 @@ license = "MIT"
 
 [dependencies]
 ff = { git = "https://github.com/zcash/librustzcash" }
+group = { git = "https://github.com/zcash/librustzcash" }
 pairing = { git = "https://github.com/zcash/librustzcash" }
 bellman = { git = "https://github.com/zcash/librustzcash" }
 zcash_primitives = { git = "https://github.com/zcash/librustzcash" }

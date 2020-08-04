@@ -13,9 +13,10 @@ use crate::{
     SynthesisResult, JubjubEngineWithParams, 
     SigningTranscript, RingRoot, VRFInOut
 };
+use pairing::MultiMillerLoop;
 
 
-impl<E: JubjubEngineWithParams> RingRoot<E> {
+impl<E: JubjubEngineWithParams + MultiMillerLoop> RingRoot<E> {
     /// Verify a proof using the given authentication root, VRF input and output,
     /// verifying key aka CRS, and paramaters.
     ///
