@@ -11,8 +11,7 @@
 
 use rand_core::{RngCore,CryptoRng};
 
-// use ff::{Field, ScalarEngine};
-use zcash_primitives::jubjub::{JubjubEngine};  // PrimeOrder, Unknown, edwards::Point
+use zcash_primitives::jubjub::JubjubEngine;
 
 #[macro_use]
 extern crate lazy_static;
@@ -38,16 +37,16 @@ pub mod bls12_381;
 
 
 use crate::misc::{
-    SignatureError,SignatureResult,signature_error,ReadWrite,
+    SignatureResult, signature_error, ReadWrite,
     Scalar, read_scalar, write_scalar,
-    scalar_times_generator,scalar_times_blinding_generator,
+    scalar_times_generator, scalar_times_blinding_generator
 };
 pub use crate::keys::{SecretKey, PublicKey, PublicKeyUnblinding};
-pub use crate::context::{signing_context, SigningTranscript}; // SigningTranscript
+pub use crate::context::{signing_context, SigningTranscript};
 
 pub use crate::merkle::{RingSecretCopath, RingRoot, auth_hash};
 pub use crate::generator::generate_crs;
-pub use vrf::{VRFInOut, VRFInput, VRFPreOut, vrfs_merge}; // no_extra, run_no_extra
+pub use vrf::{VRFInOut, VRFInput, VRFPreOut, vrfs_merge};
 
 
 /// Ugly hack until we can unify error handling
@@ -86,12 +85,10 @@ impl<SRS: Copy+Clone> Clone for RingSRS<SRS> {
 mod tests {
     use std::fs::File;
 
-    use rand_core::{RngCore}; // CryptoRng
+    use rand_core::RngCore;
 
     use bellman::groth16;
-    use zcash_primitives::jubjub::JubjubBls12;
     use pairing::bls12_381::Bls12;
-    // use rand_core::SeedableRng;
 
     use super::*;
 

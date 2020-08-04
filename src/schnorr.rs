@@ -32,22 +32,14 @@
 use std::io;
 use core::borrow::Borrow;
 
-// #[cfg(any(feature = "alloc", feature = "std"))]
-// use core::iter::once;
-
-// #[cfg(feature = "alloc")]
-// use alloc::{boxed::Box, vec::Vec};
-// #[cfg(feature = "std")]
-use std::{boxed::Box, vec::Vec};
-
 use std::ops::{SubAssign, MulAssign};
 
 use rand_core::{RngCore, CryptoRng};
 
 use merlin::Transcript;
 
-use ff::{Field}; // PrimeField, PrimeFieldRepr, ScalarEngine
-use zcash_primitives::jubjub::{JubjubEngine, Unknown, edwards::Point}; // PrimeOrder
+use ff::Field;
+use zcash_primitives::jubjub::{JubjubEngine, Unknown, edwards::Point};
 
 use crate::{
     rand_hack, JubjubEngineWithParams, ReadWrite, SignatureResult, signature_error,

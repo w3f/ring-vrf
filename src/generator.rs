@@ -9,7 +9,7 @@
 
 use bellman::groth16;
 
-use crate::{rand_hack, JubjubEngineWithParams, SynthesisResult, RingSRS};
+use crate::{rand_hack, JubjubEngineWithParams, SynthesisResult};
 use group::WnafGroup;
 
 

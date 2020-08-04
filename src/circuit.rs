@@ -190,12 +190,11 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
 mod tests {
     use bellman::gadgets::test::TestConstraintSystem;
     use pairing::bls12_381::{Bls12, Fr};
-    // use zcash_primitives::jubjub::JubjubBls12;
 
-    use rand_core::{RngCore}; // CryptoRng
+    use rand_core::{RngCore};
 
     use super::*;
-    use crate::{JubjubEngineWithParams, VRFInput, RingSecretCopath};
+    use crate::{VRFInput, RingSecretCopath};
 
     #[test]
     fn test_ring() {
