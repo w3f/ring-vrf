@@ -15,14 +15,14 @@ use core::ops::{Deref, DerefMut};
 use core::iter::IntoIterator;
 use core::borrow::Borrow;
 
-use ff::{PrimeField, PrimeFieldRepr, BitIterator, Field}; // ScalarEngine
+use ff::{PrimeField, BitIterator, Field};
 use pairing::bls12_381::Fr;
 use zcash_primitives::jubjub::JubjubEngine;
 use zcash_primitives::pedersen_hash;
 use crate::{JubjubEngineWithParams, PublicKey};
 
 
-/// Direction of the binary merkle path, either going left or right.
+/// Direction of the binary Merkle path, either going left or right.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub(crate) enum MerkleSelection {
     /// Move left to the sub-node.
@@ -53,38 +53,38 @@ pub(crate) struct CopathPoint<E: JubjubEngine> {
 }
 
 impl<E: JubjubEngine> CopathPoint<E> {
-    pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
+    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
         let mut repr = <E::Fr as PrimeField>::Repr::default();
-        repr.read_le(reader) ?;
+        reader.read_exact(repr.as_mut()) ?;
 
         use MerkleSelection::*;
-        let current_selection = if (repr.as_ref()[3] >> 63) == 1 { Left } else { Right };
-        repr.as_mut()[3] &= 0x7fffffffffffffff;
+        let current_selection = if (repr.as_ref()[31] >> 7) == 1 { Left } else { Right };
+        repr.as_mut()[31] &= 0x7f;
 
-        let err = |_| io::Error::new(io::ErrorKind::InvalidInput, "auth path point is not in field" );
+        let err = || io::Error::new(io::ErrorKind::InvalidInput, "auth path point is not in field" );
 
         // zcash_primitives::jubjub::fs::MODULUS_BITS = 252
-        let sibling = if (repr.as_ref()[3] >> 62) == 1 {
-            repr.as_mut()[3] &= 0x3fffffffffffffff;
-            Some(E::Fr::from_repr(repr).map_err(err) ?)
+        let sibling = if (repr.as_ref()[31] >> 6) != 1 {
+            repr.as_mut()[31] &= 0x3f;
+            Some(E::Fr::from_repr(repr).ok_or_else(err) ?)
         } else { None };
 
         Ok(CopathPoint { current_selection, sibling })
     }
 
-    pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
-        let mut repr = self.sibling.map( |x| x.into_repr() ).unwrap_or_default();
-        assert!((repr.as_mut()[3] & 0x7fffffffffffffff) == 0);
+    pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+        let mut repr = self.sibling.map( |x| x.to_repr() ).unwrap_or_default();
+        assert!((repr.as_mut()[31] & 0xf0) == 0); // repr takes 252 bits so the highest 4 should be unset
 
         if self.sibling.is_none() {
-            repr.as_mut()[3] |= 0x4000000000000000u64;
+            repr.as_mut()[31] |= 0x40;
         }
 
         if self.current_selection == MerkleSelection::Left {
-            repr.as_mut()[3] |= 0x8000000000000000u64;
+            repr.as_mut()[31] |= 0x80;
         }
 
-        repr.write_le(writer)
+        writer.write_all(repr.as_ref())
     }
 }
 
@@ -247,19 +247,19 @@ impl<E: JubjubEngineWithParams> RingRoot<E> {
         RingRoot(merkleize( depth, list.as_mut_slice(), 0 , |_: CopathPoint<E>| () ))
     }
 
-    pub fn read<R: io::Read>(reader: R) -> io::Result<Self> {
+    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
         let mut repr = <E::Fr as PrimeField>::Repr::default();
-        repr.read_le(reader) ?;
-        let err = |_| io::Error::new(io::ErrorKind::InvalidInput, "auth path point is not in field" );
-        Ok(RingRoot( E::Fr::from_repr(repr).map_err(err) ? ))
+        reader.read_exact(repr.as_mut()) ?;
+        let err = || io::Error::new(io::ErrorKind::InvalidInput, "auth path point is not in field" );
+        Ok(RingRoot( E::Fr::from_repr(repr).ok_or_else(err) ? ))
     }
 
-    pub fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
-        self.0.into_repr().write_le(writer)
+    pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+        writer.write_all(self.0.to_repr().as_ref())
     }
 }
 
-/// Hash function used to create the authentication merkle tree.
+/// Hash function used to create the authenticated Merkle tree.
 pub fn auth_hash<E: JubjubEngineWithParams>(
     left: Option<&E::Fr>,
     right: Option<&E::Fr>,
@@ -267,8 +267,8 @@ pub fn auth_hash<E: JubjubEngineWithParams>(
 ) -> E::Fr {
     let zero = <E::Fr>::zero();
 
-    let mut lhs = BitIterator::new(left.unwrap_or(&zero).into_repr()).collect::<Vec<bool>>();
-    let mut rhs = BitIterator::new(right.unwrap_or(&zero).into_repr()).collect::<Vec<bool>>();
+    let mut lhs = BitIterator::<u8, _>::new(left.unwrap_or(&zero).to_repr()).collect::<Vec<bool>>();
+    let mut rhs = BitIterator::<u8, _>::new(right.unwrap_or(&zero).to_repr()).collect::<Vec<bool>>();
 
     lhs.reverse();
     rhs.reverse();
@@ -282,3 +282,35 @@ pub fn auth_hash<E: JubjubEngineWithParams>(
     ).to_xy().0
 }
 
+
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+    use pairing::bls12_381::{Bls12, Fr};
+
+
+    impl PartialEq for CopathPoint<Bls12> {
+        fn eq(&self, other: &Self) -> bool {
+            self.current_selection == other.current_selection
+            && self.sibling == other.sibling
+        }
+    }
+
+    #[test]
+    fn test_serialization() {
+        let p = CopathPoint::<Bls12> {
+            current_selection: MerkleSelection::Left,
+            sibling: Some(Fr::from(123u64))
+        };
+
+        let mut v = vec![];
+        p.write(&mut v).unwrap();
+
+        assert_eq!(v.len(), 32);
+
+        let de_p: CopathPoint::<Bls12> = CopathPoint::read(&v[..]).unwrap();
+        assert_eq!(p, de_p);
+    }
+}

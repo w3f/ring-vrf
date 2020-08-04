@@ -19,7 +19,7 @@ use rand_core::{RngCore,CryptoRng,SeedableRng}; // OsRng
 
 use merlin::Transcript;
 
-use ff::{PrimeField, PrimeFieldRepr}; // Field, ScalarEngine
+use ff::PrimeField;
 use zcash_primitives::jubjub::{JubjubEngine, edwards::Point, PrimeOrder, Unknown};
 
 use crate::{JubjubEngineWithParams, ReadWrite, SigningTranscript, Scalar};  // use super::*;
@@ -71,11 +71,7 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
      -> VRFInput<E>
     where T: SigningTranscript
     {
-        let mut buf = [0u8; 32];
-        auth_root.0.into_repr()
-        .write_le(&mut buf[..])
-        .expect("Internal buffer write problem.  JubJub base field larger than 32 bytes?");
-        t.commit_bytes(b"vrf-nm-ar", &buf);
+        t.commit_bytes(b"vrf-nm-ar", auth_root.0.to_repr().as_ref());
         VRFInput::new_malleable(t)
     }
 

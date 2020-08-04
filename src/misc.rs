@@ -1,10 +1,10 @@
 
 use std::io;
 
-use ff::{PrimeField, PrimeFieldRepr}; // Field, ScalarEngine
+use ff::PrimeField;
 use zcash_primitives::jubjub::{
     JubjubEngine, FixedGenerators, JubjubParams,
-    PrimeOrder, edwards::Point, // Unknown, ToUniform,
+    PrimeOrder, edwards::Point
 };
 
 use crate::JubjubEngineWithParams;
@@ -20,9 +20,9 @@ pub fn signature_error(msg: &'static str) -> SignatureError {
 
 
 
-/// Serializtaion
+/// Serialization
 ///
-/// ZCash types require `std` for all (de)serializtaion, which sucks but hey.
+/// ZCash types require `std` for all (de)serialization, which sucks but hey.
 pub trait ReadWrite : Sized {
     fn read<R: io::Read>(reader: R) -> io::Result<Self>;
     fn write<W: io::Write>(&self, writer: W) -> io::Result<()>;
@@ -36,32 +36,26 @@ impl ReadWrite for () {
 
 pub(crate) type Scalar<E> = <E as JubjubEngine>::Fs;
 
-pub fn read_scalar<E: JubjubEngine, R: io::Read>(reader: R) -> io::Result<E::Fs> {
+pub fn read_scalar<E: JubjubEngine, R: io::Read>(mut reader: R) -> io::Result<E::Fs> {
     let mut s_repr = <E::Fs as PrimeField>::Repr::default();
-    s_repr.read_le(reader) ?;
+    reader.read_exact(s_repr.as_mut()) ?;
 
     E::Fs::from_repr(s_repr)
-        .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "scalar is not in field"))
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "scalar is not in field"))
 }
 
-pub fn write_scalar<E: JubjubEngine, W: io::Write>(s: &E::Fs, writer: W) -> io::Result<()> {
-    s.into_repr().write_le(writer)
+pub fn write_scalar<E: JubjubEngine, W: io::Write>(s: &E::Fs, mut writer: W) -> io::Result<()> {
+    writer.write_all(s.to_repr().as_ref())
 }
 
 
 /// Create a 128 bit `Scalar` for delinearization
-///
-/// TODO: Improve this
 pub(crate) fn scalar_from_u128<E>(s: [u8; 16]) -> Scalar<E> 
 where E: JubjubEngine
 {
-    let (x,y) = array_refs!(&s,8,8);
-    let mut x: <E::Fs as PrimeField>::Repr = u64::from_le_bytes(*x).into();
-    let y: <E::Fs as PrimeField>::Repr = u64::from_le_bytes(*y).into();
-    x.shl(64);
-    x.add_nocarry(&y);
-    <E::Fs as PrimeField>::from_repr(x).unwrap()
-    // Scalar::from(u128::from_le_bytes(s))  ?dalek?
+    let mut repr = <Scalar<E> as PrimeField>::Repr::default();
+    repr.as_mut().copy_from_slice(&s);
+    Scalar::<E>::from_repr(repr).unwrap()
 }
 
 
