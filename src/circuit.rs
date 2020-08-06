@@ -9,11 +9,12 @@
 
 use ff::Field;
 use zcash_primitives::jubjub::{FixedGenerators, JubjubEngine, PrimeOrder, edwards::Point}; // Unknown
-use zcash_proofs::circuit::{ecc, pedersen_hash};
+use zcash_proofs::circuit::ecc;
 use bellman::{Circuit, ConstraintSystem, SynthesisError};
 use bellman::gadgets::{boolean, num, Assignment};
 
 use crate::{JubjubEngineWithParams, merkle::MerkleSelection, RingSecretCopath, SecretKey};
+use neptune::circuit::poseidon_hash;
 
 
 /// A circuit for proving that the given vrf_preout is valid for the given vrf_input under
@@ -168,17 +169,8 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
             // collision-resistant. If the prover witnesses a congruency,
             // they will be unable to find an authentication path in the
             // tree with high probability.
-            let mut preimage = vec![];
-            preimage.extend(xl.to_bits_le(cs.namespace(|| "xl into bits"))?);
-            preimage.extend(xr.to_bits_le(cs.namespace(|| "xr into bits"))?);
-
-            // Compute the new subtree value
-            cur = pedersen_hash::pedersen_hash::<E, _>(
-                cs.namespace(|| "computation of pedersen hash"),
-                pedersen_hash::Personalization::MerkleTree(i),
-                &preimage,
-                engine_params,
-            )?.get_x().clone(); // Injective encoding
+            let preimage = vec![xl, xr];
+            cur = poseidon_hash(cs, preimage, E::poseidon_params()).expect("poseidon hashing failed");
         }
         cur.inputize(cs.namespace(|| "anchor"))?;
 

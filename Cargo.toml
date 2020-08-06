@@ -15,6 +15,7 @@ zcash_primitives = { git = "https://github.com/w3f/librustzcash", branch = "nept
 zcash_proofs = { git = "https://github.com/w3f/librustzcash", branch = "neptune-bis" }
 
 neptune = { git = "https://github.com/w3f/neptune", branch = "librustzcash-bis" }
+typenum = "1.11.2"
 
 bench-utils = { git = "https://github.com/scipr-lab/zexe", features = ["print-trace"]}
 

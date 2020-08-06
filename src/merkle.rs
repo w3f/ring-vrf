@@ -15,11 +15,10 @@ use core::ops::{Deref, DerefMut};
 use core::iter::IntoIterator;
 use core::borrow::Borrow;
 
-use ff::{PrimeField, BitIterator, Field};
-use pairing::bls12_381::Fr;
+use ff::{PrimeField, Field};
 use zcash_primitives::jubjub::JubjubEngine;
-use zcash_primitives::pedersen_hash;
 use crate::{JubjubEngineWithParams, PublicKey};
+use neptune::Poseidon;
 
 
 /// Direction of the binary Merkle path, either going left or right.
@@ -265,21 +264,12 @@ pub fn auth_hash<E: JubjubEngineWithParams>(
     right: Option<&E::Fr>,
     depth_to_bottom: usize,
 ) -> E::Fr {
+    let mut p = Poseidon::new(E::poseidon_params());
+
     let zero = <E::Fr>::zero();
-
-    let mut lhs = BitIterator::<u8, _>::new(left.unwrap_or(&zero).to_repr()).collect::<Vec<bool>>();
-    let mut rhs = BitIterator::<u8, _>::new(right.unwrap_or(&zero).to_repr()).collect::<Vec<bool>>();
-
-    lhs.reverse();
-    rhs.reverse();
-
-    pedersen_hash::pedersen_hash::<E, _>(
-        pedersen_hash::Personalization::MerkleTree(depth_to_bottom),
-        lhs.into_iter()
-            .take(Fr::NUM_BITS as usize)
-            .chain(rhs.into_iter().take(Fr::NUM_BITS as usize)),
-        E::params(),
-    ).to_xy().0
+    p.input(*left.unwrap_or(&zero)).unwrap();
+    p.input(*right.unwrap_or(&zero)).unwrap();
+    p.hash()
 }
 
 

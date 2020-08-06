@@ -47,6 +47,8 @@ pub use crate::context::{signing_context, SigningTranscript};
 pub use crate::merkle::{RingSecretCopath, RingRoot, auth_hash};
 pub use crate::generator::generate_crs;
 pub use vrf::{VRFInOut, VRFInput, VRFPreOut, vrfs_merge};
+use neptune::poseidon::PoseidonConstants;
+use typenum::U2;
 
 
 /// Ugly hack until we can unify error handling
@@ -59,6 +61,8 @@ fn rand_hack() -> impl RngCore+CryptoRng {
 /// Fix ZCash's curve paramater handling
 pub trait JubjubEngineWithParams : JubjubEngine {
     fn params() -> &'static <Self as JubjubEngine>::Params;
+
+    fn poseidon_params() -> &'static PoseidonConstants<Self::Fr, U2>;
 }
 
 /// RingVRF SRS consisting of the Merkle tree depth, our only runtime 
