@@ -5,16 +5,15 @@
 //! Insert an `AllocatedNum` into a sequence of `AllocatedNums` at an arbitrary position.
 //! This can be thought of as a generalization of `AllocatedNum::conditionally_reverse` and reduces to it in the binary case.
 
-use bellperson::gadgets::boolean::{AllocatedBit, Boolean};
-use bellperson::gadgets::num::AllocatedNum;
-use bellperson::{ConstraintSystem, SynthesisError};
-use ff::Field;
-use paired::Engine;
+use bellman::gadgets::boolean::{AllocatedBit, Boolean};
+use bellman::gadgets::num::AllocatedNum;
+use bellman::{ConstraintSystem, SynthesisError};
+use ff::PrimeField;
 
 /// Insert `element` after the nth 1-indexed element of `elements`, where `path_bits` represents n, least-significant bit first.
 /// The returned result contains a new vector of `AllocatedNum`s with `element` inserted, and constraints are enforced.
 /// `elements.len() + 1` must be a power of two.
-pub fn insert<E: Engine, CS: ConstraintSystem<E>>(
+pub fn insert<E: PrimeField, CS: ConstraintSystem<E>>(
     cs: &mut CS,
     element: &AllocatedNum<E>,
     bits: &[Boolean],
@@ -89,7 +88,7 @@ pub fn insert<E: Engine, CS: ConstraintSystem<E>>(
     Ok(result)
 }
 
-pub fn insert_2<E: Engine, CS: ConstraintSystem<E>>(
+pub fn insert_2<E: PrimeField, CS: ConstraintSystem<E>>(
     cs: &mut CS,
     element: &AllocatedNum<E>,
     bits: &[Boolean],
@@ -114,7 +113,7 @@ pub fn insert_2<E: Engine, CS: ConstraintSystem<E>>(
     ])
 }
 
-pub fn insert_4<E: Engine, CS: ConstraintSystem<E>>(
+pub fn insert_4<E: PrimeField, CS: ConstraintSystem<E>>(
     cs: &mut CS,
     element: &AllocatedNum<E>,
     bits: &[Boolean],
@@ -169,7 +168,7 @@ pub fn insert_4<E: Engine, CS: ConstraintSystem<E>>(
     Ok(vec![p0, p1, p2, p3])
 }
 
-pub fn insert_8<E: Engine, CS: ConstraintSystem<E>>(
+pub fn insert_8<E: PrimeField, CS: ConstraintSystem<E>>(
     cs: &mut CS,
     element: &AllocatedNum<E>,
     bits: &[Boolean],
@@ -281,7 +280,7 @@ pub fn insert_8<E: Engine, CS: ConstraintSystem<E>>(
 /// Select the nth element of `from`, where `path_bits` represents n, least-significant bit first.
 /// The returned result contains the selected element, and constraints are enforced.
 /// `from.len()` must be a power of two.
-pub fn select<E: Engine, CS: ConstraintSystem<E>>(
+pub fn select<E: PrimeField, CS: ConstraintSystem<E>>(
     mut cs: CS,
     from: &[AllocatedNum<E>],
     path_bits: &[Boolean],
@@ -314,7 +313,7 @@ pub fn select<E: Engine, CS: ConstraintSystem<E>>(
 }
 
 /// Takes two allocated numbers (`a`, `b`) and returns `a` if the condition is true, and `b` otherwise.
-pub fn pick<E: Engine, CS: ConstraintSystem<E>>(
+pub fn pick<E: PrimeField, CS: ConstraintSystem<E>>(
     mut cs: CS,
     condition: &Boolean,
     a: &AllocatedNum<E>,
@@ -339,7 +338,7 @@ pub fn pick<E: Engine, CS: ConstraintSystem<E>>(
     cs.enforce(
         || "pick",
         |lc| lc + b.get_variable() - a.get_variable(),
-        |_| condition.lc(CS::one(), E::Fr::one()),
+        |_| condition.lc(CS::one(), E::one()),
         |lc| lc + b.get_variable() - c.get_variable(),
     );
 
@@ -350,12 +349,16 @@ pub fn pick<E: Engine, CS: ConstraintSystem<E>>(
 mod tests {
     use super::*;
 
-    use bellperson::gadgets::boolean::AllocatedBit;
-    use bellperson::util_cs::test_cs::TestConstraintSystem;
+    use bellman::gadgets::boolean::AllocatedBit;
+    use bellman::gadgets::test::TestConstraintSystem;
     use ff::Field;
-    use paired::bls12_381::{Bls12, Fr};
-    use rand::SeedableRng;
+    use pairing::bls12_381::Fr;
+    use rand_core::SeedableRng;
     use rand_xorshift::XorShiftRng;
+
+    const TEST_SEED: [u8; 16] = [
+        0x59, 0x62, 0xbe, 0x5d, 0x76, 0x3d, 0x31, 0x8d, 0x17, 0xdb, 0x37, 0x32, 0x54, 0x06, 0xbc, 0xe5,
+    ];
 
     #[test]
     fn test_select() {
@@ -363,12 +366,12 @@ mod tests {
             let size = 1 << log_size;
             for index in 0..size {
                 // Initialize rng in loop to simplify debugging with consistent elements.
-                let rng = &mut XorShiftRng::from_seed(crate::TEST_SEED);
+                let rng = &mut XorShiftRng::from_seed(TEST_SEED);
                 let mut cs = TestConstraintSystem::new();
 
                 let elements: Vec<_> = (0..size)
                     .map(|i| {
-                        AllocatedNum::<Bls12>::alloc(
+                        AllocatedNum::<Fr>::alloc(
                             &mut cs.namespace(|| format!("element {}", i)),
                             || {
                                 let elt = <Fr as Field>::random(rng);
@@ -414,12 +417,12 @@ mod tests {
             let size = 1 << log_size;
             for index in 0..size {
                 // Initialize rng in loop to simplify debugging with consistent elements.
-                let rng = &mut XorShiftRng::from_seed(crate::TEST_SEED);
+                let rng = &mut XorShiftRng::from_seed(TEST_SEED);
                 let mut cs = TestConstraintSystem::new();
 
                 let elements: Vec<_> = (0..size - 1)
                     .map(|i| {
-                        AllocatedNum::<Bls12>::alloc(
+                        AllocatedNum::<Fr>::alloc(
                             &mut cs.namespace(|| format!("element {}", i)),
                             || {
                                 let elt = <Fr as Field>::random(rng);
@@ -431,7 +434,7 @@ mod tests {
                     .collect();
 
                 let to_insert =
-                    AllocatedNum::<Bls12>::alloc(&mut cs.namespace(|| "insert"), || {
+                    AllocatedNum::<Fr>::alloc(&mut cs.namespace(|| "insert"), || {
                         let elt_to_insert = <Fr as Field>::random(rng);
                         Ok(elt_to_insert)
                     })

@@ -34,7 +34,7 @@ mod verifier;
 pub mod vrf;
 pub mod schnorr;
 pub mod bls12_381;
-
+mod insertion;
 
 use crate::misc::{
     SignatureResult, signature_error, ReadWrite,
