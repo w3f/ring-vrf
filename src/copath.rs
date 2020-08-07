@@ -1,25 +1,35 @@
 // https://github.com/filecoin-project/rust-fil-proofs/blob/8e7c5a04c9b3e94a07809736cda3bdf618ac6921/storage-proofs/core/src/gadgets/por.rs#L5
 
+use ff::PrimeField;
+use neptune::Arity;
+use std::marker::PhantomData;
+use bellman::{ConstraintSystem, SynthesisError};
+use bellman::gadgets::num;
+use bellman::gadgets::boolean::{Boolean, AllocatedBit};
+use crate::insertion::insert;
+use crate::JubjubEngineWithParams;
+use neptune::circuit::poseidon_hash;
+
 #[derive(Debug, Clone)]
-struct SubPath<H: Hasher, Arity: 'static + PoseidonArity> {
-    path: Vec<PathElement<H, Arity>>,
+struct SubPath<E: PrimeField, A: Arity<E>> {
+    path: Vec<PathElement<E, A>>,
 }
 
 #[derive(Debug, Clone)]
-struct PathElement<H: Hasher, Arity: 'static + PoseidonArity> {
-    hashes: Vec<Option<Fr>>,
+struct PathElement<E: PrimeField, A: Arity<E>> {
+    hashes: Vec<Option<E>>,
     index: Option<usize>,
-    _a: PhantomData<Arity>,
-    _h: PhantomData<H>,
+    _a: PhantomData<A>,
 }
 
-impl<H: Hasher, Arity: 'static + PoseidonArity> SubPath<H, Arity> {
-    fn synthesize<CS: ConstraintSystem<Bls12>>(
+
+impl<E: JubjubEngineWithParams, A: Arity<E::Fr>> SubPath<E::Fr, A> {
+    fn synthesize<CS: ConstraintSystem<E::Fr>>(
         self,
         mut cs: CS,
-        mut cur: num::AllocatedNum<Bls12>,
-    ) -> Result<(num::AllocatedNum<Bls12>, Vec<Boolean>), SynthesisError> {
-        let arity = Arity::to_usize();
+        mut cur: num::AllocatedNum<E::Fr>,
+    ) -> Result<(num::AllocatedNum<E::Fr>, Vec<Boolean>), SynthesisError> {
+        let arity = A::to_usize();
 
         if arity == 0 {
             // Nothing to do here.
@@ -64,11 +74,7 @@ impl<H: Hasher, Arity: 'static + PoseidonArity> SubPath<H, Arity> {
             let inserted = insert(cs, &cur, &index_bits, &path_hash_nums)?;
 
             // Compute the new subtree value
-            cur = H::Function::hash_multi_leaf_circuit::<Arity, _>(
-                cs.namespace(|| "computation of commitment hash"),
-                &inserted,
-                i,
-            )?;
+            cur = poseidon_hash(cs, inserted, E::poseidon_params()) ?;
         }
 
         Ok((cur, auth_path_bits))
