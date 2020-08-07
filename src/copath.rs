@@ -11,8 +11,8 @@ use crate::JubjubEngineWithParams;
 use neptune::circuit::poseidon_hash;
 
 #[derive(Debug, Clone)]
-struct SubPath<E: PrimeField, A: Arity<E>> {
-    path: Vec<PathElement<E, A>>,
+struct SubPath<E: JubjubEngineWithParams, A: Arity<E::Fr>> {
+    path: Vec<PathElement<E::Fr, A>>,
 }
 
 #[derive(Debug, Clone)]
@@ -23,7 +23,7 @@ struct PathElement<E: PrimeField, A: Arity<E>> {
 }
 
 
-impl<E: JubjubEngineWithParams, A: Arity<E::Fr>> SubPath<E::Fr, A> {
+impl<E: JubjubEngineWithParams, A: Arity<E::Fr>> SubPath<E, A> {
     fn synthesize<CS: ConstraintSystem<E::Fr>>(
         self,
         mut cs: CS,
@@ -74,7 +74,7 @@ impl<E: JubjubEngineWithParams, A: Arity<E::Fr>> SubPath<E::Fr, A> {
             let inserted = insert(cs, &cur, &index_bits, &path_hash_nums)?;
 
             // Compute the new subtree value
-            cur = poseidon_hash(cs, inserted, E::poseidon_params()) ?;
+            cur = poseidon_hash(cs, inserted, E::poseidon_params())?;
         }
 
         Ok((cur, auth_path_bits))
