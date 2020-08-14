@@ -50,6 +50,7 @@ pub use crate::generator::generate_crs;
 pub use vrf::{VRFInOut, VRFInput, VRFPreOut, vrfs_merge};
 use neptune::poseidon::PoseidonConstants;
 use typenum::U2;
+use neptune::Arity;
 
 
 /// Ugly hack until we can unify error handling
@@ -61,9 +62,11 @@ fn rand_hack() -> impl RngCore+CryptoRng {
 
 /// Fix ZCash's curve paramater handling
 pub trait JubjubEngineWithParams : JubjubEngine {
+    type Arity: Arity<Self::Fr>;
+
     fn params() -> &'static <Self as JubjubEngine>::Params;
 
-    fn poseidon_params() -> &'static PoseidonConstants<Self::Fr, U2>;
+    fn poseidon_params() -> &'static PoseidonConstants<Self::Fr, Self::Arity>;
 }
 
 /// RingVRF SRS consisting of the Merkle tree depth, our only runtime 

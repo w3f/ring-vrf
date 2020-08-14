@@ -23,11 +23,11 @@ lazy_static! {
 }
 
 impl JubjubEngineWithParams for Bls12 {
+    type Arity = U2;
+
     fn params() -> &'static JubjubBls12 {
         &JUBJUB_BLS12_381
     }
 
-    fn poseidon_params() -> &'static PoseidonConstants<Self::Fr, U2> {
-        &POSEIDON_CONSTANTS_2
-    }
+    fn poseidon_params() -> &'static PoseidonConstants<Self::Fr, Self::Arity> { &POSEIDON_CONSTANTS_2 }
 }
