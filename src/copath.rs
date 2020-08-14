@@ -9,9 +9,10 @@ use bellman::gadgets::boolean::{Boolean, AllocatedBit};
 use crate::insertion::insert;
 use crate::JubjubEngineWithParams;
 use neptune::circuit::poseidon_hash;
+use zcash_primitives::jubjub::JubjubEngine;
 
 #[derive(Debug, Clone)]
-struct SubPath<E: JubjubEngineWithParams, A: Arity<E::Fr>> {
+struct SubPath<E: JubjubEngine, A: Arity<E::Fr>> {
     path: Vec<PathElement<E::Fr, A>>,
 }
 
