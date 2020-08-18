@@ -22,7 +22,7 @@ where
     E::G1: WnafGroup,
     E::G2: WnafGroup,
 {
-    let circuit = crate::circuit::RingVRF::<E> {
+    let circuit = crate::circuit::RingVRF::<E, E::Arity> {
         depth,
         sk: None,
         vrf_input: None,

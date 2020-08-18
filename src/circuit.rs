@@ -15,6 +15,7 @@ use bellman::gadgets::{boolean, num, Assignment};
 
 use crate::{JubjubEngineWithParams, merkle::MerkleSelection, RingSecretCopath, SecretKey};
 use neptune::circuit::poseidon_hash;
+use neptune::Arity;
 
 
 /// A circuit for proving that the given vrf_preout is valid for the given vrf_input under
@@ -28,7 +29,7 @@ use neptune::circuit::poseidon_hash;
 /// These are the values that are required to construct the circuit and populate all the wires.
 /// They are defined as Options as for CRS generation only circuit structure is relevant,
 /// not the wires' assignments, so knowing the types is enough.
-pub struct RingVRF<E: JubjubEngine> { // TODO: name
+pub struct RingVRF<E: JubjubEngine, A: Arity<E::Fr>> { // TODO: name
     /// Merkle tree depth
     pub depth: u32,
 
@@ -45,10 +46,10 @@ pub struct RingVRF<E: JubjubEngine> { // TODO: name
     /// the element of Jubjub base field.
     /// This is enough to build the root as the base point is hardcoded in the circuit in the lookup tables,
     /// so we can restore the public key from the secret key.
-    pub copath: Option<RingSecretCopath<E>>,
+    pub copath: Option<RingSecretCopath<E, A>>,
 }
 
-impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
+impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E, E::Arity> {
     fn synthesize<CS: ConstraintSystem<E::Fr>>(self, cs: &mut CS) -> Result<(), SynthesisError> {
         if let Some(copath) = self.copath.as_ref() {
             if copath.depth() != self.depth {

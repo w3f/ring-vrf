@@ -23,11 +23,11 @@ use crate::{
 
 impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// Create ring VRF signature using specified randomness source.
-    pub fn ring_vrf_prove<T,R,P>(
+    pub fn ring_vrf_prove<T, R, P>(
         &self,
         vrf_input: VRFInput<E>,
         mut extra: T,
-        copath: RingSecretCopath<E>,
+        copath: RingSecretCopath<E, E::Arity>,
         proving_key: RingSRS<P>,
         rng: &mut R,
     ) -> SynthesisResult<RingVRFProof<E>> 
@@ -54,10 +54,10 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     pub fn ring_vrf_sign_simple<P>(
         &self, 
         input: VRFInput<E>,
-        copath: RingSecretCopath<E>,
+        copath: RingSecretCopath<E, E::Arity>,
         proving_key: RingSRS<P>,
     ) -> SynthesisResult<(VRFInOut<E>, RingVRFProof<E>)>
-    where P: groth16::ParameterSource<E>, 
+    where P: groth16::ParameterSource<E>,
     {
         self.ring_vrf_sign_first(input, no_extra(), copath, proving_key)
     }
@@ -71,15 +71,16 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// you should probably use `vrf_sign_after_check` to gain access to
     /// the `VRFInOut` from `vrf_create_hash` first, and then avoid
     /// computing the proof whenever you do not win. 
-    pub fn ring_vrf_sign_first<T,P>(
+    pub fn ring_vrf_sign_first<T, P>(
         &self,
         input: VRFInput<E>,
         extra: T,
-        copath: RingSecretCopath<E>,
+        copath: RingSecretCopath<E, E::Arity>,
         proving_key: RingSRS<P>,
     ) -> SynthesisResult<(VRFInOut<E>, RingVRFProof<E>)>
-    where T: SigningTranscript,
-          P: groth16::ParameterSource<E>, 
+    where
+        T: SigningTranscript,
+        P: groth16::ParameterSource<E>,
     {
         let inout = input.to_inout(self);
         let proof = self.ring_vrf_prove(input, extra, copath, proving_key, &mut rand_hack()) ?;
@@ -90,16 +91,17 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// and correspodning Schnorr proof, but only if the result first
     /// passes some check, which itself returns either a `bool` or else
     /// an `Option` of an extra message transcript.
-    pub fn ring_vrf_sign_after_check<F,O,P>(
+    pub fn ring_vrf_sign_after_check<F, O, P>(
         &self, 
         input: VRFInput<E>,
         check: F,
-        copath: RingSecretCopath<E>,
+        copath: RingSecretCopath<E, E::Arity>,
         proving_key: RingSRS<P>,
     ) -> SynthesisResult<Option<(VRFPreOut<E>, RingVRFProof<E>)>>
-    where F: FnOnce(&VRFInOut<E>) -> O,
-          O: VRFExtraMessage,
-          P: groth16::ParameterSource<E>, 
+    where
+        F: FnOnce(&VRFInOut<E>) -> O,
+        O: VRFExtraMessage,
+        P: groth16::ParameterSource<E>,
     {
         let inout = input.to_inout(self);
         let extra = if let Some(e) = check(&inout).extra() { e } else { return Ok(None) };
@@ -109,15 +111,16 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// Run our Schnorr VRF on the `VRFInOut` input-output pair,
     /// producing its output component and and correspodning Schnorr
     /// proof.
-    pub fn ring_vrf_sign_checked<T,P>(
+    pub fn ring_vrf_sign_checked<T, P>(
         &self, 
         inout: VRFInOut<E>, 
         extra: T,
-        copath: RingSecretCopath<E>,
+        copath: RingSecretCopath<E, E::Arity>,
         proving_key: RingSRS<P>,
     ) -> SynthesisResult<(VRFPreOut<E>, RingVRFProof<E>)>
-    where T: SigningTranscript,
-          P: groth16::ParameterSource<E>, 
+    where
+        T: SigningTranscript,
+        P: groth16::ParameterSource<E>,
     {
         let VRFInOut { input, output } = inout;
         let proof = self.ring_vrf_prove(input, extra, copath, proving_key, &mut rand_hack()) ?;
