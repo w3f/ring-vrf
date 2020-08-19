@@ -141,7 +141,7 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E, E::Arity> {
         // Ascend the merkle tree authentication path
         for i in 0..(self.depth as usize) {
             let e: Option<(_,_)> = self.copath.as_ref().map(
-                |v| ( v.0[i].current_selection, v.0[i].sibling.unwrap_or(<E::Fr>::zero()) )
+                |v| ( v.0[i].current_selection, v.0[i].siblings[0].unwrap_or(<E::Fr>::zero()) )
             );
 
             let cs = &mut cs.namespace(|| format!("merkle tree hash {}", i));

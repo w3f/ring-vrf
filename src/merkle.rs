@@ -49,7 +49,7 @@ pub(crate) struct CopathPoint<E: JubjubEngine, A: Arity<E::Fr>> { // TODO: Prime
     /// The current selection. That is, the opposite of sibling.
     pub current_selection: MerkleSelection,
     /// Sibling value, if it exists.
-    pub sibling: Option<E::Fr>,
+    pub siblings: Vec<Option<E::Fr>>,
     _a: PhantomData<A>,
 }
 
@@ -70,14 +70,14 @@ impl<E: JubjubEngine, A: Arity<E::Fr>> CopathPoint<E, A> {
             Some(E::Fr::from_repr(repr).ok_or_else(err) ?)
         } else { None };
 
-        Ok(CopathPoint { current_selection, sibling, _a: Default::default() })
+        Ok(CopathPoint { current_selection, siblings: vec![sibling], _a: Default::default() })
     }
 
     pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
-        let mut repr = self.sibling.map( |x| x.to_repr() ).unwrap_or_default();
+        let mut repr = self.siblings[0].map( |x| x.to_repr() ).unwrap_or_default();
         assert!((repr.as_mut()[31] & 0xf0) == 0); // repr takes 252 bits so the highest 4 should be unset
 
-        if self.sibling.is_none() {
+        if self.siblings[0].is_none() {
             repr.as_mut()[31] |= 0x40;
         }
 
@@ -114,7 +114,7 @@ where E: JubjubEngineWithParams,
         } else {
             (MerkleSelection::Right, list.get(index).cloned())
         };
-        f(CopathPoint { current_selection, sibling, _a: Default::default() });
+        f(CopathPoint { current_selection, siblings: vec![sibling], _a: Default::default() });
 
         for i in (0..list.len()).filter(|x| x % 2 == 0) { 
             let left = list.get(i);
@@ -143,7 +143,7 @@ impl<E: JubjubEngineWithParams> RingSecretCopath<E, E::Arity> {
         let mut path = vec![];
         path.resize_with(depth.try_into().unwrap(), || CopathPoint {
             current_selection: MerkleSelection::random(rng),
-            sibling: Some(<E::Fr>::random(rng)),
+            siblings: vec![Some(<E::Fr>::random(rng))],
             _a: Default::default()
         });
         RingSecretCopath(path)
@@ -195,8 +195,8 @@ impl<E: JubjubEngineWithParams> RingSecretCopath<E, E::Arity> {
 
         for (depth_to_bottom, point) in self.0.iter().enumerate() {
             let (left, right) = match point.current_selection {
-                MerkleSelection::Right => (point.sibling.as_ref(), Some(&cur)),
-                MerkleSelection::Left => (Some(&cur), point.sibling.as_ref()),
+                MerkleSelection::Right => (point.siblings[0].as_ref(), Some(&cur)),
+                MerkleSelection::Left => (Some(&cur), point.siblings[0].as_ref()),
             };
 
             cur = auth_hash::<E>(left, right, depth_to_bottom);
