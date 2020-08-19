@@ -40,6 +40,13 @@ impl MerkleSelection {
             MerkleSelection::Right
         }
     }
+
+    pub fn index(&self) ->  Option<usize> {
+        match *self {
+            MerkleSelection::Left => Some(0),
+            MerkleSelection::Right => Some(1),
+        }
+    }
 }
 
 

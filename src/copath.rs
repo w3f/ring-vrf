@@ -7,24 +7,11 @@ use bellman::{ConstraintSystem, SynthesisError};
 use bellman::gadgets::num;
 use bellman::gadgets::boolean::{Boolean, AllocatedBit};
 use crate::insertion::insert;
-use crate::JubjubEngineWithParams;
+use crate::{JubjubEngineWithParams, RingSecretCopath};
 use neptune::circuit::poseidon_hash;
 use zcash_primitives::jubjub::JubjubEngine;
 
-#[derive(Debug, Clone)]
-struct SubPath<E: JubjubEngine, A: Arity<E::Fr>> {
-    path: Vec<PathElement<E::Fr, A>>,
-}
-
-#[derive(Debug, Clone)]
-struct PathElement<E: PrimeField, A: Arity<E>> {
-    hashes: Vec<Option<E>>,
-    index: Option<usize>,
-    _a: PhantomData<A>,
-}
-
-
-impl<E: JubjubEngineWithParams, A: Arity<E::Fr>> SubPath<E, A> {
+impl<E: JubjubEngineWithParams, A: Arity<E::Fr>> RingSecretCopath<E, A> {
     fn synthesize<CS: ConstraintSystem<E::Fr>>(
         self,
         mut cs: CS,
@@ -34,18 +21,18 @@ impl<E: JubjubEngineWithParams, A: Arity<E::Fr>> SubPath<E, A> {
 
         if arity == 0 {
             // Nothing to do here.
-            assert!(self.path.is_empty());
+            assert!(self.0.is_empty());
             return Ok((cur, vec![]));
         }
 
         assert_eq!(1, arity.count_ones(), "arity must be a power of two");
         let index_bit_count = arity.trailing_zeros() as usize;
 
-        let mut auth_path_bits = Vec::with_capacity(self.path.len());
+        let mut auth_path_bits = Vec::with_capacity(self.0.len());
 
-        for (i, path_element) in self.path.into_iter().enumerate() {
-            let path_hashes = path_element.hashes;
-            let optional_index = path_element.index; // Optional because of Bellman blank-circuit construction mechanics.
+        for (i, path_element) in self.0.into_iter().enumerate() {
+            let path_hashes = path_element.siblings;
+            let optional_index = path_element.current_selection.index(); // Optional because of Bellman blank-circuit construction mechanics.
 
             let cs = &mut cs.namespace(|| format!("merkle tree hash {}", i));
 
