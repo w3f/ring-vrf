@@ -72,7 +72,7 @@ impl<E: JubjubEngineWithParams + MultiMillerLoop> RingRoot<E> {
         let extra = extra.challenge_scalar(b"extra-msg");
         let public_input: [E::Fr; 6] = [ x1, y1, x2, y2, extra, self.0.clone() ];
         // Verify the proof
-        groth16::verify_proof(verifying_key, &zkproof, &public_input[..])
+        Ok(groth16::verify_proof(verifying_key, &zkproof, &public_input[..]).is_ok())
     }
 }
 
