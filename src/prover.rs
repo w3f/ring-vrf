@@ -41,7 +41,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
             sk: Some(self.clone()),
             vrf_input: Some(vrf_input.as_point().clone()),
             extra: Some(extra.challenge_scalar(b"extra-msg")),
-            copath: Some(copath),
+            copath: copath,
         };
         groth16::create_random_proof(instance, proving_key.srs, rng)
     } 

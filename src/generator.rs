@@ -9,7 +9,7 @@
 
 use bellman::groth16;
 
-use crate::{rand_hack, JubjubEngineWithParams, SynthesisResult};
+use crate::{rand_hack, JubjubEngineWithParams, SynthesisResult, RingSecretCopath};
 use group::WnafGroup;
 
 
@@ -27,7 +27,7 @@ where
         sk: None,
         vrf_input: None,
         extra: None,
-        copath: None,
+        copath: RingSecretCopath::random(depth, &mut rand_hack()), // TODO: blank?
     };
     groth16::generate_random_parameters(circuit, &mut rand_hack())
 }

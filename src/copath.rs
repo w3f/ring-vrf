@@ -12,7 +12,7 @@ use neptune::circuit::poseidon_hash;
 use zcash_primitives::jubjub::JubjubEngine;
 
 impl<E: JubjubEngineWithParams, A: Arity<E::Fr>> RingSecretCopath<E, A> {
-    fn synthesize<CS: ConstraintSystem<E::Fr>>(
+    pub fn synthesize<CS: ConstraintSystem<E::Fr>>(
         self,
         mut cs: CS,
         mut cur: num::AllocatedNum<E::Fr>,

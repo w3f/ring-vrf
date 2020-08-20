@@ -211,7 +211,7 @@ impl<E: JubjubEngineWithParams> RingSecretCopath<E, E::Arity> {
 
         RingRoot(cur)
     }
-   
+
 }
 
 /*

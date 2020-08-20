@@ -46,15 +46,13 @@ pub struct RingVRF<E: JubjubEngine, A: Arity<E::Fr>> { // TODO: name
     /// the element of Jubjub base field.
     /// This is enough to build the root as the base point is hardcoded in the circuit in the lookup tables,
     /// so we can restore the public key from the secret key.
-    pub copath: Option<RingSecretCopath<E, A>>,
+    pub copath: RingSecretCopath<E, A>,
 }
 
 impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E, E::Arity> {
     fn synthesize<CS: ConstraintSystem<E::Fr>>(self, cs: &mut CS) -> Result<(), SynthesisError> {
-        if let Some(copath) = self.copath.as_ref() {
-            if copath.depth() != self.depth {
-                return Err(SynthesisError::Unsatisfiable)
-            }
+        if copath.depth() != self.depth {
+            return Err(SynthesisError::Unsatisfiable)
         }
 
         let engine_params = E::params();
@@ -138,41 +136,7 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E, E::Arity> {
         // point in the prime order subgroup.
         let mut cur = pk.get_x().clone();
 
-        // Ascend the merkle tree authentication path
-        for i in 0..(self.depth as usize) {
-            let e: Option<(_,_)> = self.copath.as_ref().map(
-                |v| ( v.0[i].current_selection, v.0[i].siblings[0].unwrap_or(<E::Fr>::zero()) )
-            );
-
-            let cs = &mut cs.namespace(|| format!("merkle tree hash {}", i));
-
-            // Determines if the current subtree is the "right" leaf at this
-            // depth of the tree.
-            let cur_is_right = boolean::Boolean::from(boolean::AllocatedBit::alloc(
-                cs.namespace(|| "position bit"),
-                e.map(|e| e.0 == MerkleSelection::Right),
-            ) ?);
-
-            // Witness the authentication path element adjacent
-            // at this depth.
-            let path_element =
-                num::AllocatedNum::alloc(cs.namespace(|| "path element"), || Ok(e.get()?.1)) ?;
-
-            // Swap the two if the current subtree is on the right
-            let (xl, xr) = num::AllocatedNum::conditionally_reverse(
-                cs.namespace(|| "conditional reversal of preimage"),
-                &cur,
-                &path_element,
-                &cur_is_right,
-            ) ?;
-
-            // We don't need to be strict, because the function is
-            // collision-resistant. If the prover witnesses a congruency,
-            // they will be unable to find an authentication path in the
-            // tree with high probability.
-            let preimage = vec![xl, xr];
-            cur = poseidon_hash(cs, preimage, E::poseidon_params()).expect("poseidon hashing failed");
-        }
+        let (cur, _) = self.copath.synthesize(cs.namespace(|| "Merkle tree"), cur)?;
         cur.inputize(cs.namespace(|| "anchor"))?;
 
         Ok(())
@@ -213,7 +177,7 @@ mod tests {
             sk: Some(sk.clone()),
             vrf_input: Some(vrf_input.as_point().clone()),
             extra: Some(extra),
-            copath: Some(copath),
+            copath: copath,
         };
 
         let mut cs = TestConstraintSystem::<Fr>::new();
