@@ -10,7 +10,7 @@ use zcash_primitives::jubjub::{JubjubBls12};
 
 use crate::{JubjubEngineWithParams};
 use neptune::poseidon::PoseidonConstants;
-use typenum::U2;
+use typenum::U4;
 
 
 lazy_static! {
@@ -19,11 +19,11 @@ lazy_static! {
     };
 
     // TODO: is there any difference?
-    static ref POSEIDON_CONSTANTS_2: PoseidonConstants::<<Bls12 as Engine>::Fr, U2> = PoseidonConstants::new();
+    static ref POSEIDON_CONSTANTS_2: PoseidonConstants::<<Bls12 as Engine>::Fr, U4> = PoseidonConstants::new();
 }
 
 impl JubjubEngineWithParams for Bls12 {
-    type Arity = U2;
+    type Arity = U4;
 
     fn params() -> &'static JubjubBls12 {
         &JUBJUB_BLS12_381
