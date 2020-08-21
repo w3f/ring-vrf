@@ -22,77 +22,60 @@ use neptune::{Poseidon, Arity};
 use std::marker::PhantomData;
 
 
-/// Direction of the binary Merkle path, either going left or right.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub(crate) enum MerkleSelection {
-    /// Move left to the sub-node.
-    Left,
-    /// Move right to the sub-node.
-    Right,
-}
-
-impl MerkleSelection {
-    /// Create a random path direction from a random source.
-    pub fn random<R: rand_core::RngCore>(rng: &mut R) -> Self {
-        if rng.next_u32() % 2 == 0 {
-            MerkleSelection::Left
-        } else {
-            MerkleSelection::Right
-        }
-    }
-
-    pub fn index(&self) ->  Option<usize> {
-        match *self {
-            MerkleSelection::Left => Some(0),
-            MerkleSelection::Right => Some(1),
-        }
-    }
-}
-
-
 /// A point in the authentication path.
 #[derive(Clone, Debug)]
 pub(crate) struct CopathPoint<E: JubjubEngine, A: Arity<E::Fr>> { // TODO: PrimeField?
     /// The current selection. That is, the opposite of sibling.
-    pub current_selection: MerkleSelection,
+    pub current_selection: Option<usize>,
     /// Sibling value, if it exists.
     pub siblings: Vec<Option<E::Fr>>,
     _a: PhantomData<A>,
 }
 
 impl<E: JubjubEngine, A: Arity<E::Fr>> CopathPoint<E, A> {
-    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
-        let mut repr = <E::Fr as PrimeField>::Repr::default();
-        reader.read_exact(repr.as_mut()) ?;
+//    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
+//        let mut repr = <E::Fr as PrimeField>::Repr::default();
+//        reader.read_exact(repr.as_mut()) ?;
+//
+//        use MerkleSelection::*;
+//        let current_selection = if (repr.as_ref()[31] >> 7) == 1 { Left } else { Right };
+//        repr.as_mut()[31] &= 0x7f;
+//
+//        let err = || io::Error::new(io::ErrorKind::InvalidInput, "auth path point is not in field" );
+//
+//        // zcash_primitives::jubjub::fs::MODULUS_BITS = 252
+//        let sibling = if (repr.as_ref()[31] >> 6) != 1 {
+//            repr.as_mut()[31] &= 0x3f;
+//            Some(E::Fr::from_repr(repr).ok_or_else(err) ?)
+//        } else { None };
+//
+//        Ok(CopathPoint { current_selection, siblings: vec![sibling], _a: Default::default() })
+//    }
+//
+//    pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+//        let mut repr = self.siblings[0].map( |x| x.to_repr() ).unwrap_or_default();
+//        assert!((repr.as_mut()[31] & 0xf0) == 0); // repr takes 252 bits so the highest 4 should be unset
+//
+//        if self.siblings[0].is_none() {
+//            repr.as_mut()[31] |= 0x40;
+//        }
+//
+//        if self.current_selection == MerkleSelection::Left {
+//            repr.as_mut()[31] |= 0x80;
+//        }
+//
+//        writer.write_all(repr.as_ref())
+//    }
 
-        use MerkleSelection::*;
-        let current_selection = if (repr.as_ref()[31] >> 7) == 1 { Left } else { Right };
-        repr.as_mut()[31] &= 0x7f;
-
-        let err = || io::Error::new(io::ErrorKind::InvalidInput, "auth path point is not in field" );
-
-        // zcash_primitives::jubjub::fs::MODULUS_BITS = 252
-        let sibling = if (repr.as_ref()[31] >> 6) != 1 {
-            repr.as_mut()[31] &= 0x3f;
-            Some(E::Fr::from_repr(repr).ok_or_else(err) ?)
-        } else { None };
-
-        Ok(CopathPoint { current_selection, siblings: vec![sibling], _a: Default::default() })
-    }
-
-    pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
-        let mut repr = self.siblings[0].map( |x| x.to_repr() ).unwrap_or_default();
-        assert!((repr.as_mut()[31] & 0xf0) == 0); // repr takes 252 bits so the highest 4 should be unset
-
-        if self.siblings[0].is_none() {
-            repr.as_mut()[31] |= 0x40;
+    pub fn random<R: rand_core::RngCore>(rng: &mut R) -> Self {
+        let current_selection = Some((rng.next_u32() % A::to_u32()) as usize);
+        let mut siblings = vec![];
+        siblings.resize_with(A::to_usize() - 1, || Some(<E::Fr>::random(rng)));
+        Self {
+            current_selection,
+            siblings,
+            _a: Default::default()
         }
-
-        if self.current_selection == MerkleSelection::Left {
-            repr.as_mut()[31] |= 0x80;
-        }
-
-        writer.write_all(repr.as_ref())
     }
 }
 
@@ -136,7 +119,7 @@ where E: JubjubEngineWithParams,
         assert!(siblings.len() == arity - 1); // element at index is excluded
 
         f(CopathPoint {
-            current_selection: if index_within_chunk % 2 == 0 {MerkleSelection::Left} else {MerkleSelection::Right}, // index_within_siblings,
+            current_selection: Some(index_within_chunk),
             siblings,
             _a: Default::default()
         });
@@ -164,13 +147,8 @@ impl<E: JubjubEngineWithParams> RingSecretCopath<E, E::Arity> {
     /// Create a random path.
     pub fn random<R: rand_core::RngCore>(depth: u32, rng: &mut R) -> Self {
         use std::convert::TryInto;
-
         let mut path = vec![];
-        path.resize_with(depth.try_into().unwrap(), || CopathPoint {
-            current_selection: MerkleSelection::random(rng),
-            siblings: vec![Some(<E::Fr>::random(rng))],
-            _a: Default::default()
-        });
+        path.resize_with(depth.try_into().unwrap(), || CopathPoint::random(rng));
         RingSecretCopath(path)
     }
 
@@ -194,25 +172,25 @@ impl<E: JubjubEngineWithParams> RingSecretCopath<E, E::Arity> {
         (RingSecretCopath(copath), RingRoot(root))
     }
 
-    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
-        let mut len = [0u8; 4];
-        reader.read_exact(&mut len) ?;
-        let len = u32::from_le_bytes(len) as usize;
-        let mut copath = Vec::with_capacity(len);
-        for _ in 0..len {
-            copath.push( CopathPoint::read(&mut reader) ? );
-        }
-        Ok(RingSecretCopath(copath))
-    }
-
-    pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
-        let len: u32 = self.depth();
-        writer.write_all(& len.to_le_bytes()) ?;
-        for app in self.0.iter() {
-            app.write(&mut writer) ?;
-        }
-        Ok(())
-    }
+//    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
+//        let mut len = [0u8; 4];
+//        reader.read_exact(&mut len) ?;
+//        let len = u32::from_le_bytes(len) as usize;
+//        let mut copath = Vec::with_capacity(len);
+//        for _ in 0..len {
+//            copath.push( CopathPoint::read(&mut reader) ? );
+//        }
+//        Ok(RingSecretCopath(copath))
+//    }
+//
+//    pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+//        let len: u32 = self.depth();
+//        writer.write_all(& len.to_le_bytes()) ?;
+//        for app in self.0.iter() {
+//            app.write(&mut writer) ?;
+//        }
+//        Ok(())
+//    }
 
     /// Get the merkle root from proof.
     pub fn to_root(&self, leaf: &PublicKey<E>) -> RingRoot<E> {
@@ -220,7 +198,7 @@ impl<E: JubjubEngineWithParams> RingSecretCopath<E, E::Arity> {
 
         for (depth_to_bottom, point) in self.0.iter().enumerate() {
             let mut chunk = point.siblings.clone();
-            chunk.insert(point.current_selection.index().expect("element index in copath not specified"), Some(cur));
+            chunk.insert(point.current_selection.expect("element index in copath not specified"), Some(cur));
             cur = auth_hash::<E>(&chunk);
         }
 

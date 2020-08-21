@@ -13,7 +13,7 @@ use zcash_proofs::circuit::ecc;
 use bellman::{Circuit, ConstraintSystem, SynthesisError};
 use bellman::gadgets::{boolean, num, Assignment};
 
-use crate::{JubjubEngineWithParams, merkle::MerkleSelection, RingSecretCopath, SecretKey};
+use crate::{JubjubEngineWithParams, RingSecretCopath, SecretKey};
 use neptune::circuit::poseidon_hash;
 use neptune::Arity;
 
@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn test_ring() {
-        let depth = 10;
+        let depth = 9;
 
         // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
         let mut rng = ::rand_core::OsRng;

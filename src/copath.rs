@@ -32,7 +32,7 @@ impl<E: JubjubEngineWithParams, A: Arity<E::Fr>> RingSecretCopath<E, A> {
 
         for (i, path_element) in self.0.into_iter().enumerate() {
             let path_hashes = path_element.siblings;
-            let optional_index = path_element.current_selection.index(); // Optional because of Bellman blank-circuit construction mechanics.
+            let optional_index = path_element.current_selection; // Optional because of Bellman blank-circuit construction mechanics.
 
             let cs = &mut cs.namespace(|| format!("merkle tree hash {}", i));
 
