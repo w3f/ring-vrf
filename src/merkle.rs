@@ -114,25 +114,43 @@ where E: JubjubEngineWithParams,
     //    let s = 0usize.leadng_zeros() - list.len().leading_zeros() - 1;
     //     tail = (1usize << s) - list.len();
     // }
+    use typenum::marker_traits::Unsigned;
+    let arity = E::Arity::to_usize();
 
     for depth_to_bottom in 0..depth {
-        let (current_selection, sibling) = if index % 2 == 0 {
-            (MerkleSelection::Left, list.get(index).cloned())
-        } else {
-            (MerkleSelection::Right, list.get(index).cloned())
-        };
-        f(CopathPoint { current_selection, siblings: vec![sibling], _a: Default::default() });
+        let chunk_index = index / arity;
+        let index_within_chunk = index % arity;
+        let chunk = list
+            .chunks(arity)
+            .nth(chunk_index)
+            .expect("leaf index out of range");
+        assert!(index_within_chunk < chunk.len()); // last chunk may not be exact
+        let remainder_len = arity - chunk.len();
+        let siblings: Vec<_> = chunk
+            .into_iter()
+            .enumerate()
+            .filter(|(i, _)| *i != index_within_chunk)
+            .map(|(_, x)| Some(x.clone()))
+            .chain(std::iter::repeat(None).take(remainder_len)) // last chunk may not be exact
+            .collect();
+        assert!(siblings.len() == arity - 1); // element at index is excluded
 
-        for i in (0..list.len()).filter(|x| x % 2 == 0) { 
-            let left = list.get(i);
-            let right = list.get(i+1);
-            list[i/2] = auth_hash::<E>(left, right, depth_to_bottom);
-        }
+        f(CopathPoint {
+            current_selection: if index_within_chunk % 2 == 0 {MerkleSelection::Left} else {MerkleSelection::Right}, // index_within_siblings,
+            siblings,
+            _a: Default::default()
+        });
 
-        index /= 2;
+        let list =  &mut list.chunks(arity).map(|chunk| {
+            let remainder_len = arity - chunk.len();
+            let chunk: Vec<_> = chunk.iter()
+                .map(|x| Some(x.clone()))
+                .chain(std::iter::repeat(None).take(remainder_len)) // last chunk may not be exact
+                .collect();
+            auth_hash::<E>(&chunk)
+        }).collect::<Vec<_>>();
 
-        let len = list.len() + (list.len() % 2);
-        list = &mut list[0..len/2]
+        index /= arity;
     }
 
     list[0].clone()
@@ -201,12 +219,9 @@ impl<E: JubjubEngineWithParams> RingSecretCopath<E, E::Arity> {
         let mut cur = leaf.0.to_xy().0;
 
         for (depth_to_bottom, point) in self.0.iter().enumerate() {
-            let (left, right) = match point.current_selection {
-                MerkleSelection::Right => (point.siblings[0].as_ref(), Some(&cur)),
-                MerkleSelection::Left => (Some(&cur), point.siblings[0].as_ref()),
-            };
-
-            cur = auth_hash::<E>(left, right, depth_to_bottom);
+            let mut chunk = point.siblings.clone();
+            chunk.insert(point.current_selection.index().expect("element index in copath not specified"), Some(cur));
+            cur = auth_hash::<E>(&chunk);
         }
 
         RingRoot(cur)
@@ -275,16 +290,10 @@ impl<E: JubjubEngineWithParams> RingRoot<E> {
 }
 
 /// Hash function used to create the authenticated Merkle tree.
-pub fn auth_hash<E: JubjubEngineWithParams>(
-    left: Option<&E::Fr>,
-    right: Option<&E::Fr>,
-    depth_to_bottom: usize,
-) -> E::Fr {
-    let mut p = Poseidon::new(E::poseidon_params());
-
+pub fn auth_hash<E: JubjubEngineWithParams>(chunk: &[Option<E::Fr>]) -> E::Fr {
     let zero = <E::Fr>::zero();
-    p.input(*left.unwrap_or(&zero)).unwrap();
-    p.input(*right.unwrap_or(&zero)).unwrap();
+    let chunk: Vec<_> = chunk.iter().map(|o| o.unwrap_or(zero)).collect();
+    let mut p = Poseidon::new_with_preimage(&chunk, E::poseidon_params());
     p.hash()
 }
 
