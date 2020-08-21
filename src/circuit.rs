@@ -51,7 +51,7 @@ pub struct RingVRF<E: JubjubEngine, A: Arity<E::Fr>> { // TODO: name
 
 impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E, E::Arity> {
     fn synthesize<CS: ConstraintSystem<E::Fr>>(self, cs: &mut CS) -> Result<(), SynthesisError> {
-        if copath.depth() != self.depth {
+        if self.copath.depth() != self.depth {
             return Err(SynthesisError::Unsatisfiable)
         }
 
