@@ -4,7 +4,7 @@
 // Authors:
 // - Jeffrey Burdges <jeff@web3.foundation>
 
-use pairing::bls12_381::Bls12;
+use bls12_381::Bls12;
 
 use crate::{JubjubEngineWithParams};
 

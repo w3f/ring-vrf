@@ -16,7 +16,7 @@ use core::iter::IntoIterator;
 use core::borrow::Borrow;
 
 use ff::{PrimeField, BitIterator, Field};
-use pairing::bls12_381::Fr;
+use bls12_381::Scalar as Fr;
 use zcash_primitives::pedersen_hash;
 use crate::{JubjubEngineWithParams, PublicKey};
 
