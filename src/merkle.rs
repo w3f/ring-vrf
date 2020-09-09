@@ -17,7 +17,6 @@ use core::borrow::Borrow;
 
 use ff::{PrimeField, BitIterator, Field};
 use pairing::bls12_381::Fr;
-use zcash_primitives::jubjub::JubjubEngine;
 use zcash_primitives::pedersen_hash;
 use crate::{JubjubEngineWithParams, PublicKey};
 

@@ -8,7 +8,6 @@
 //! ### Ring VRF zkSNARK circut
 
 use ff::Field;
-use zcash_primitives::jubjub::{FixedGenerators, JubjubEngine, PrimeOrder, edwards::Point}; // Unknown
 use zcash_proofs::circuit::{ecc, pedersen_hash};
 use bellman::{Circuit, ConstraintSystem, SynthesisError};
 use bellman::gadgets::{boolean, num, Assignment};

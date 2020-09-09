@@ -5,7 +5,6 @@
 // - Jeffrey Burdges <jeff@web3.foundation>
 
 use pairing::bls12_381::Bls12;
-use zcash_primitives::jubjub::{JubjubBls12};
 
 use crate::{JubjubEngineWithParams};
 

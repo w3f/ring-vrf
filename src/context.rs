@@ -11,8 +11,7 @@ use arrayvec::{Array,ArrayVec};
 
 use rand_core::{RngCore,CryptoRng};
 
-use ff::{Field}; // ScalarEngine, PrimeField, PrimeFieldRepr
-use zcash_primitives::jubjub::{JubjubEngine, edwards::Point};  // PrimeOrder, Unknown
+use ff::Field;
 
 use merlin::Transcript;
 

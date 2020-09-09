@@ -20,7 +20,6 @@ use rand_core::{RngCore,CryptoRng,SeedableRng}; // OsRng
 use merlin::Transcript;
 
 use ff::PrimeField;
-use zcash_primitives::jubjub::{JubjubEngine, edwards::Point, PrimeOrder, Unknown};
 
 use crate::{JubjubEngineWithParams, ReadWrite, SigningTranscript, Scalar};  // use super::*;
 

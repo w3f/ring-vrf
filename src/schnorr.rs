@@ -39,7 +39,6 @@ use rand_core::{RngCore, CryptoRng};
 use merlin::Transcript;
 
 use ff::Field;
-use zcash_primitives::jubjub::{JubjubEngine, Unknown, edwards::Point};
 
 use crate::{
     rand_hack, JubjubEngineWithParams, ReadWrite, SignatureResult, signature_error,

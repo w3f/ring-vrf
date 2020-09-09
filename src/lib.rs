@@ -11,8 +11,6 @@
 
 use rand_core::{RngCore,CryptoRng};
 
-use zcash_primitives::jubjub::JubjubEngine;
-
 #[macro_use]
 extern crate lazy_static;
 

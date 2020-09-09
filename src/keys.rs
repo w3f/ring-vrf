@@ -8,11 +8,6 @@ use std::io;
 // use subtle::{Choice,ConstantTimeEq};
 use rand_core::{RngCore,CryptoRng};
 
-use zcash_primitives::jubjub::{
-    JubjubEngine, // FixedGenerators, JubjubParams,
-    edwards::Point, Unknown, // PrimeOrder
-};
-
 use zeroize::Zeroize;
 
 use crate::{JubjubEngineWithParams, ReadWrite, Scalar};

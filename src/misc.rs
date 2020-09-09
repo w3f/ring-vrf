@@ -2,10 +2,6 @@
 use std::io;
 
 use ff::PrimeField;
-use zcash_primitives::jubjub::{
-    JubjubEngine, FixedGenerators, JubjubParams,
-    PrimeOrder, edwards::Point
-};
 
 use crate::JubjubEngineWithParams;
 
