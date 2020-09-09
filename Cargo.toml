@@ -9,6 +9,7 @@ license = "MIT"
 [dependencies]
 ff = "0.7"
 group = "0.7"
+pairing = "0.17"
 jubjub = "0.4"
 bls12_381 = "0.2"
 bellman = { version = "0.7", default-features = false, features = ["groth16"] }
