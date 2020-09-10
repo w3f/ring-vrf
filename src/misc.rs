@@ -30,7 +30,7 @@ impl ReadWrite for () {
 }
 
 
-pub(crate) type Scalar<E> = <E as JubjubEngine>::Fs;
+pub(crate) type Scalar = jubjub::Fr;
 
 pub fn read_scalar<E: JubjubEngine, R: io::Read>(mut reader: R) -> io::Result<E::Fs> {
     let mut s_repr = <E::Fs as PrimeField>::Repr::default();
@@ -46,16 +46,16 @@ pub fn write_scalar<E: JubjubEngine, W: io::Write>(s: &E::Fs, mut writer: W) -> 
 
 
 /// Create a 128 bit `Scalar` for delinearization
-pub(crate) fn scalar_from_u128<E>(s: [u8; 16]) -> Scalar<E> 
+pub(crate) fn scalar_from_u128<E>(s: [u8; 16]) -> Scalar
 where E: JubjubEngine
 {
-    let mut repr = <Scalar<E> as PrimeField>::Repr::default();
+    let mut repr = <Scalar as PrimeField>::Repr::default();
     repr.as_mut().copy_from_slice(&s);
-    Scalar::<E>::from_repr(repr).unwrap()
+    Scalar::from_repr(repr).unwrap()
 }
 
 
-pub(crate) fn scalar_times_generator<E>(scalar: &Scalar<E>)
+pub(crate) fn scalar_times_generator<E>(scalar: &Scalar)
  -> Point<E,PrimeOrder> 
 where E: JubjubEngineWithParams,
 {
@@ -64,7 +64,7 @@ where E: JubjubEngineWithParams,
     base_point.mul(scalar.clone(), params)
 }
 
-pub(crate) fn scalar_times_blinding_generator<E>(scalar: &Scalar<E>)
+pub(crate) fn scalar_times_blinding_generator<E>(scalar: &Scalar)
  -> Point<E,PrimeOrder> 
 where E: JubjubEngineWithParams,
 {

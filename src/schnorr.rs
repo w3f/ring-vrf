@@ -52,7 +52,7 @@ use crate::{
 /// Delta of Pederson commitments
 #[derive(Debug, Clone)]
 pub struct PedersenDelta<E: JubjubEngineWithParams> {
-    delta: Scalar<E>,
+    delta: Scalar,
     publickey: PublicKey<E>,
 }
 
@@ -73,7 +73,7 @@ impl<E: JubjubEngineWithParams> ReadWrite for PedersenDelta<E> {
 /// Rough public key for verifier
 /// TODO: make sealed trait
 pub trait PedersenDeltaOrPublicKey<E: JubjubEngineWithParams> {
-    fn delta(&self) -> Scalar<E> { Scalar::<E>::zero() }
+    fn delta(&self) -> Scalar { Scalar::zero() }
     fn publickey(&self) -> &PublicKey<E>;
 }
 impl<E,PD> PedersenDeltaOrPublicKey<E> for PD 
@@ -82,7 +82,7 @@ where E: JubjubEngineWithParams, PD: Borrow<PublicKey<E>>
     fn publickey(&self) -> &PublicKey<E> { self.borrow() }
 }
 impl<E: JubjubEngineWithParams> PedersenDeltaOrPublicKey<E> for PedersenDelta<E> {
-    fn delta(&self) -> Scalar<E> { self.delta.clone() }
+    fn delta(&self) -> Scalar { self.delta.clone() }
     fn publickey(&self) -> &PublicKey<E> { &self.publickey }
 }
 
@@ -116,18 +116,18 @@ impl<E: JubjubEngineWithParams> NewPedersenDeltaOrPublicKey<E> for PedersenDelta
 /// for smaller or batchble signatures respectively.
 pub trait NewChallengeOrWitness<E: JubjubEngine> : Sized+Clone {
     #[allow(non_snake_case)]
-    fn new(c: Scalar<E>, R: Point<E,Unknown>, Hr: Point<E,Unknown>) -> Self;
+    fn new(c: Scalar, R: Point<E,Unknown>, Hr: Point<E,Unknown>) -> Self;
 }
 
 /// Challenge for smaller non-batchable VRF signatures
 #[derive(Debug, Clone)] // PartialEq, Eq // PartialOrd, Ord, Hash
 pub struct Individual<E: JubjubEngine> {
     /// Challenge
-    c: Scalar<E>,
+    c: Scalar,
 }
 impl<E: JubjubEngine> NewChallengeOrWitness<E> for Individual<E> {
     #[allow(non_snake_case)]
-    fn new(c: Scalar<E>, _R: Point<E,Unknown>, _Hr: Point<E,Unknown>) -> Self { Individual { c } }
+    fn new(c: Scalar, _R: Point<E,Unknown>, _Hr: Point<E,Unknown>) -> Self { Individual { c } }
 }
 impl<E: JubjubEngineWithParams> ReadWrite for Individual<E>  {
     fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
@@ -150,7 +150,7 @@ pub struct Batchable<E: JubjubEngine> {
 }
 impl<E: JubjubEngine> NewChallengeOrWitness<E> for Batchable<E> {
     #[allow(non_snake_case)]
-    fn new(_c: Scalar<E>, R: Point<E,Unknown>, Hr: Point<E,Unknown>) -> Self { Batchable { R, Hr } }
+    fn new(_c: Scalar, R: Point<E,Unknown>, Hr: Point<E,Unknown>) -> Self { Batchable { R, Hr } }
 }
 impl<E: JubjubEngineWithParams> ReadWrite for Batchable<E>  {
     #[allow(non_snake_case)]
@@ -170,7 +170,7 @@ impl<E: JubjubEngineWithParams> ReadWrite for Batchable<E>  {
 
 impl<E: JubjubEngine> NewChallengeOrWitness<E> for (Individual<E>, Batchable<E>) {
     #[allow(non_snake_case)]
-    fn new(c: Scalar<E>, R: Point<E,Unknown>, Hr: Point<E,Unknown>) -> Self {
+    fn new(c: Scalar, R: Point<E,Unknown>, Hr: Point<E,Unknown>) -> Self {
         (Individual { c }, Batchable { R, Hr })
     }
 }
@@ -193,7 +193,7 @@ pub struct VRFProof<E: JubjubEngine, P, CW, PD> {
     /// Challenge
     cw: CW,
     /// Schnorr proof
-    s: Scalar<E>,
+    s: Scalar,
     /// Either public key or else delta of Pederson commitments
     pd: PD,
 }
@@ -356,11 +356,11 @@ impl<E: JubjubEngineWithParams> SecretKey<E>  {
         t.commit_point(b"vrf:h", p.input.as_point());
 
         let mut publickey = self.to_public();
-        let mut delta = Scalar::<E>::zero();
-        let mut unblinding : PublicKeyUnblinding<E> = PublicKeyUnblinding(Scalar::<E>::zero());
+        let mut delta = Scalar::zero();
+        let mut unblinding : PublicKeyUnblinding<E> = PublicKeyUnblinding(Scalar::zero());
         if PD::BLINDED {
             // let R = crate::scalar_times_blinding_generator(&r).into();
-            let [b_pk,b_R] : [Scalar<E>;2]
+            let [b_pk,b_R] : [Scalar;2]
               = t.witness_scalars(b"blinding\00",&[&self.nonce_seed], &mut rng);
             publickey.0 = publickey.0.add(& crate::scalar_times_blinding_generator(&b_pk).into(), params);
             unblinding.0 = b_pk;
@@ -370,7 +370,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E>  {
 
         // let R = (&r * &constants::RISTRETTO_BASEPOINT_TABLE).compress();
         // Compute R after adding publickey and all h.
-        let [r] : [Scalar<E>;1] = t.witness_scalars(b"proving\00",&[&self.nonce_seed], rng);
+        let [r] : [Scalar;1] = t.witness_scalars(b"proving\00",&[&self.nonce_seed], rng);
         let mut R: Point<E,Unknown> = crate::scalar_times_generator(&r).into();
         if PD::BLINDED {
             // We abuse delta's mutability here
@@ -604,7 +604,7 @@ where E: JubjubEngineWithParams, PD: PedersenDeltaOrPublicKey<E>+Clone,
         // let R = ( (&proof.c * &pk.0) + (&proof.s * &constants::RISTRETTO_BASEPOINT_TABLE) ).compress();
         let R: Point<E,Unknown> = pd.publickey().0.mul(c,params)
             .add(& crate::scalar_times_generator(&s).into(), params);
-        let R: Point<E,Unknown> = if pd.delta() == Scalar::<E>::zero() { R } else {
+        let R: Point<E,Unknown> = if pd.delta() == Scalar::zero() { R } else {
             R.add(& crate::scalar_times_blinding_generator(&pd.delta()).into(), params)
         };
         t.commit_point(b"vrf:R=g^r", &R);
@@ -728,7 +728,7 @@ pub fn vrf_verify_batch(
     let rnd_128bit_scalar = |_| {
         let mut r = [0u8; 16];
         csprng.fill_bytes(&mut r);
-        let z: Scalar<E> = crate::scalar::scalar_from_u128::<E>(r);
+        let z: Scalar = crate::scalar::scalar_from_u128::<E>(r);
     };
     let zz: Vec<Scalar> = proofs.iter().map(rnd_128bit_scalar).collect();
 

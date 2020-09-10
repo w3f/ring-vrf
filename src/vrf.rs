@@ -306,7 +306,7 @@ where
         // Sample a 128bit scalar
         let mut s = [0u8; 16];
         t0.challenge_bytes(b"", &mut s);
-        let z: Scalar<E> = crate::misc::scalar_from_u128::<E>(s);
+        let z: Scalar = crate::misc::scalar_from_u128::<E>(s);
         (p,z)
     } );
 

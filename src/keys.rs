@@ -28,7 +28,7 @@ impl<E: JubjubEngineWithParams> PartialEq for PublicKey<E> {
 impl<E: JubjubEngineWithParams> Eq for PublicKey<E> { }
 
 impl<E: JubjubEngineWithParams> PublicKey<E> {
-    fn from_secret_scalar(secret: &Scalar<E>) -> PublicKey<E> {
+    fn from_secret_scalar(secret: &Scalar) -> PublicKey<E> {
         PublicKey( crate::scalar_times_generator(secret).into() )
     }
 }
@@ -47,12 +47,12 @@ impl<E: JubjubEngineWithParams> ReadWrite for PublicKey<E>  {
 /// Pederson commitment openning for a public key, consisting of a scalar
 /// that reveals the difference ebtween two public keys.
 #[derive(Clone)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct PublicKeyUnblinding<E: JubjubEngine>(pub(crate) Scalar<E>);
+pub struct PublicKeyUnblinding<E: JubjubEngine>(pub(crate) Scalar);
 
 impl<E: JubjubEngineWithParams> PublicKeyUnblinding<E> {
     pub fn is_blinded(&self) -> bool {
         use ff::Field;
-        self.0 != Scalar::<E>::zero()
+        self.0 != Scalar::zero()
     }
 
     pub fn verify(&self, blinded: PublicKey<E>, unblinded: PublicKey<E>) -> bool {
@@ -77,7 +77,7 @@ impl<E: JubjubEngine> ReadWrite for PublicKeyUnblinding<E>  {
 #[derive(Clone)] // Debug
 pub struct SecretKey<E: JubjubEngine> {
     /// Secret key represented as a scalar.
-    pub(crate) key: Scalar<E>,
+    pub(crate) key: Scalar,
 
     /// Seed for deriving the nonces used in Schnorr proofs.
     ///
