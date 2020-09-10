@@ -74,7 +74,7 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
         // 750 constraints according to Zcash spec A.3.3.7
         let pk = ecc::fixed_base_multiplication::<E, _>(
             cs.namespace(|| "PK = sk * G"),
-            FixedGenerators::SpendingKeyGenerator, //TODO: any NUMS point of full order
+            zcash_primitives::constants::SPENDING_KEY_GENERATOR, //TODO: any NUMS point of full order
             &sk_bits,
             engine_params,
         ) ?;

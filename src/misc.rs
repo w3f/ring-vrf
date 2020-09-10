@@ -60,7 +60,7 @@ pub(crate) fn scalar_times_generator<E>(scalar: &Scalar<E>)
 where E: JubjubEngineWithParams,
 {
     let params = E::params();
-    let base_point = params.generator(FixedGenerators::SpendingKeyGenerator);
+    let base_point = zcash_primitives::constants::SPENDING_KEY_GENERATOR;
     base_point.mul(scalar.clone(), params)
 }
 
@@ -69,7 +69,7 @@ pub(crate) fn scalar_times_blinding_generator<E>(scalar: &Scalar<E>)
 where E: JubjubEngineWithParams,
 {
     let params = E::params();
-    let base_point = params.generator(FixedGenerators::NullifierPosition);
+    let base_point = params.generator(zcash_primitives::constants::NULLIFIER_POSITION_GENERATOR);
     base_point.mul(scalar.clone(), params)
 }
 
