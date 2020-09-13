@@ -56,7 +56,7 @@ where E: JubjubEngine
 
 
 pub(crate) fn scalar_times_generator<E>(scalar: &Scalar)
- -> Point<E,PrimeOrder> 
+ -> jubjub::SubgroupPoint
 where E: JubjubEngineWithParams,
 {
     let params = E::params();
@@ -65,7 +65,7 @@ where E: JubjubEngineWithParams,
 }
 
 pub(crate) fn scalar_times_blinding_generator<E>(scalar: &Scalar)
- -> Point<E,PrimeOrder> 
+ -> jubjub::SubgroupPoint
 where E: JubjubEngineWithParams,
 {
     let params = E::params();

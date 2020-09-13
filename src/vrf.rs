@@ -28,10 +28,10 @@ use crate::{JubjubEngineWithParams, ReadWrite, SigningTranscript, Scalar};  // u
 ///
 /// All creation methods require the developer acknoledge their VRF output malleability.
 #[derive(Debug, Clone)] // PartialEq, Eq
-pub struct VRFInput<E: JubjubEngine>(Point<E, PrimeOrder>);
+pub struct VRFInput<E: JubjubEngine>(jubjub::SubgroupPoint);
 
 impl<E: JubjubEngineWithParams> VRFInput<E> {
-    pub(crate) fn as_point(&self) -> &Point<E, PrimeOrder> { &self.0 }
+    pub(crate) fn as_point(&self) -> &jubjub::SubgroupPoint { &self.0 }
 
     /// Create a new VRF input from an `RngCore`.
     #[inline(always)]
@@ -76,7 +76,7 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
 
     /// Into VRF output.
     pub fn to_preout(&self, sk: &crate::SecretKey<E>) -> VRFPreOut<E> {
-        let p: Point<E, Unknown> = self.0.clone().into();
+        let p: jubjub::ExtendedPoint = self.0.clone().into();
         VRFPreOut( p.mul(sk.key.clone(), E::params()) )
     }
 
@@ -90,10 +90,10 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
 
 /// VRF output, possibly unverified.
 #[derive(Debug, Clone)] // Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct VRFPreOut<E: JubjubEngine>(Point<E, Unknown>);
+pub struct VRFPreOut<E: JubjubEngine>(jubjub::ExtendedPoint);
 
 impl<E: JubjubEngineWithParams> VRFPreOut<E> {
-    pub(crate) fn as_point(&self) -> &Point<E, Unknown> { &self.0 }
+    pub(crate) fn as_point(&self) -> &jubjub::ExtendedPoint { &self.0 }
 
     /// Acknoledge VRF transcript malleablity
     ///
@@ -310,10 +310,10 @@ where
         (p,z)
     } );
 
-    let input = VRFInput( psz().fold(Point::zero(), |acc,(p,z)| { 
+    let input = VRFInput( psz().fold(jubjub::SubgroupPoint::identity(), |acc,(p,z)| {
         acc.add(&p.input.as_point().mul(z, engine_params), engine_params)
     } ) );
-    let output = VRFPreOut( psz().fold(Point::zero(), |acc,(p,z)| { 
+    let output = VRFPreOut( psz().fold(jubjub::ExtendedPoint::identity(), |acc,(p,z)| {
         acc.add(&p.output.as_point().mul(z, engine_params), engine_params)
     } ) );
     VRFInOut { input, output }

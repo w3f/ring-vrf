@@ -46,7 +46,7 @@ pub trait SigningTranscript {
     }
 
     /// Extend the transcript with a compressed Ristretto point
-    fn commit_point<E: JubjubEngine,Subgroup>(&mut self, label: &'static [u8], point: &Point<E,Subgroup>) 
+    fn commit_point<E: JubjubEngine>(&mut self, label: &'static [u8], point: &jubjub::ExtendedPoint)
     {
         // ZCash Foundation way: https://github.com/zkcrypto/jubjub/blob/master/src/lib.rs#L397
         // ..
@@ -122,7 +122,7 @@ where T: SigningTranscript + ?Sized,
     fn proto_name(&mut self, label: &'static [u8])
         {  (**self).proto_name(label)  }
     #[inline(always)]
-    fn commit_point<E: JubjubEngine,Subgroup>(&mut self, label: &'static [u8], point: &Point<E,Subgroup>) 
+    fn commit_point<E: JubjubEngine>(&mut self, label: &'static [u8], point: &jubjub::ExtendedPoint)
         {  (**self).commit_point(label, point)  }
     #[inline(always)]
     fn challenge_bytes(&mut self, label: &'static [u8], dest: &mut [u8])

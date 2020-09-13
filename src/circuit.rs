@@ -34,7 +34,7 @@ pub struct RingVRF<E: JubjubEngine> { // TODO: name
     pub sk: Option<SecretKey<E>>,
 
     /// The VRF input, a point in Jubjub prime order subgroup.
-    pub vrf_input: Option<Point<E, PrimeOrder>>,
+    pub vrf_input: Option<jubjub::SubgroupPoint>,
 
     /// An extra message to sign along with the 
     pub extra: Option<E::Fr>,

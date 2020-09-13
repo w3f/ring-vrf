@@ -15,14 +15,14 @@ use crate::{JubjubEngineWithParams, ReadWrite, Scalar};
 
 /// Public key consisting of a JubJub point
 #[derive(Debug,Clone)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct PublicKey<E: JubjubEngine>(pub(crate) Point<E,Unknown>);
+pub struct PublicKey<E: JubjubEngine>(pub(crate) jubjub::ExtendedPoint);
 
 // serde_boilerplate!(PublicKey);
 
 impl<E: JubjubEngineWithParams> PartialEq for PublicKey<E> {
     fn eq(&self, other: &PublicKey<E>) -> bool {
         let params = E::params();
-        self.0.mul_by_cofactor(params) == other.0.mul_by_cofactor(params) 
+        self.0.mul_by_cofactor(params) == other.0.mul_by_cofactor(params)
     }
 }
 impl<E: JubjubEngineWithParams> Eq for PublicKey<E> { }

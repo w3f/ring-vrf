@@ -116,7 +116,7 @@ impl<E: JubjubEngineWithParams> NewPedersenDeltaOrPublicKey<E> for PedersenDelta
 /// for smaller or batchble signatures respectively.
 pub trait NewChallengeOrWitness<E: JubjubEngine> : Sized+Clone {
     #[allow(non_snake_case)]
-    fn new(c: Scalar, R: Point<E,Unknown>, Hr: Point<E,Unknown>) -> Self;
+    fn new(c: Scalar, R: jubjub::ExtendedPoint, Hr: jubjub::ExtendedPoint) -> Self;
 }
 
 /// Challenge for smaller non-batchable VRF signatures
@@ -127,7 +127,7 @@ pub struct Individual<E: JubjubEngine> {
 }
 impl<E: JubjubEngine> NewChallengeOrWitness<E> for Individual<E> {
     #[allow(non_snake_case)]
-    fn new(c: Scalar, _R: Point<E,Unknown>, _Hr: Point<E,Unknown>) -> Self { Individual { c } }
+    fn new(c: Scalar, _R: jubjub::ExtendedPoint, _Hr: jubjub::ExtendedPoint) -> Self { Individual { c } }
 }
 impl<E: JubjubEngineWithParams> ReadWrite for Individual<E>  {
     fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
@@ -144,13 +144,13 @@ impl<E: JubjubEngineWithParams> ReadWrite for Individual<E>  {
 #[allow(non_snake_case)]
 pub struct Batchable<E: JubjubEngine> {
     /// Our nonce R = r G to permit batching the first verification equation
-    R: Point<E,Unknown>,
+    R: jubjub::ExtendedPoint,
     /// Our input hashed and raised to r to permit batching the second verification equation
-    Hr: Point<E,Unknown>,
+    Hr: jubjub::ExtendedPoint,
 }
 impl<E: JubjubEngine> NewChallengeOrWitness<E> for Batchable<E> {
     #[allow(non_snake_case)]
-    fn new(_c: Scalar, R: Point<E,Unknown>, Hr: Point<E,Unknown>) -> Self { Batchable { R, Hr } }
+    fn new(_c: Scalar, R: jubjub::ExtendedPoint, Hr: jubjub::ExtendedPoint) -> Self { Batchable { R, Hr } }
 }
 impl<E: JubjubEngineWithParams> ReadWrite for Batchable<E>  {
     #[allow(non_snake_case)]
@@ -170,7 +170,7 @@ impl<E: JubjubEngineWithParams> ReadWrite for Batchable<E>  {
 
 impl<E: JubjubEngine> NewChallengeOrWitness<E> for (Individual<E>, Batchable<E>) {
     #[allow(non_snake_case)]
-    fn new(c: Scalar, R: Point<E,Unknown>, Hr: Point<E,Unknown>) -> Self {
+    fn new(c: Scalar, R: jubjub::ExtendedPoint, Hr: jubjub::ExtendedPoint) -> Self {
         (Individual { c }, Batchable { R, Hr })
     }
 }
@@ -371,7 +371,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E>  {
         // let R = (&r * &constants::RISTRETTO_BASEPOINT_TABLE).compress();
         // Compute R after adding publickey and all h.
         let [r] : [Scalar;1] = t.witness_scalars(b"proving\00",&[&self.nonce_seed], rng);
-        let mut R: Point<E,Unknown> = crate::scalar_times_generator(&r).into();
+        let mut R: jubjub::ExtendedPoint = crate::scalar_times_generator(&r).into();
         if PD::BLINDED {
             // We abuse delta's mutability here
             *&mut R = R.add(& crate::scalar_times_blinding_generator(&delta).into(), params);
@@ -602,9 +602,9 @@ where E: JubjubEngineWithParams, PD: PedersenDeltaOrPublicKey<E>+Clone,
 
         // We recompute R aka u from the proof
         // let R = ( (&proof.c * &pk.0) + (&proof.s * &constants::RISTRETTO_BASEPOINT_TABLE) ).compress();
-        let R: Point<E,Unknown> = pd.publickey().0.mul(c,params)
+        let R: jubjub::ExtendedPoint = pd.publickey().0.mul(c,params)
             .add(& crate::scalar_times_generator(&s).into(), params);
-        let R: Point<E,Unknown> = if pd.delta() == Scalar::zero() { R } else {
+        let R: jubjub::ExtendedPoint = if pd.delta() == Scalar::zero() { R } else {
             R.add(& crate::scalar_times_blinding_generator(&pd.delta()).into(), params)
         };
         t.commit_point(b"vrf:R=g^r", &R);
