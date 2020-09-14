@@ -36,8 +36,7 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
     /// Create a new VRF input from an `RngCore`.
     #[inline(always)]
     fn from_rng<R: RngCore+CryptoRng>(mut rng: R) -> Self {
-        let params = E::params();
-        VRFInput( Point::rand(&mut rng, params).mul_by_cofactor(params) )
+        VRFInput(jubjub::SubgroupPoint::random(rng))
     }
 
     /// Acknoledge VRF transcript malleablity
