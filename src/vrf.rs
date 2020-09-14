@@ -59,8 +59,7 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
      -> VRFInput<E>
     where T: SigningTranscript
     {
-        let params = E::params();
-        t.commit_point(b"vrf-nm-pk", &publickey.0.mul_by_cofactor(params));
+        t.commit_point(b"vrf-nm-pk", &publickey.0.mul_by_cofactor());
         VRFInput::new_malleable(t)
     }
 
@@ -76,7 +75,7 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
     /// Into VRF output.
     pub fn to_preout(&self, sk: &crate::SecretKey<E>) -> VRFPreOut<E> {
         let p: jubjub::ExtendedPoint = self.0.clone().into();
-        VRFPreOut( p.mul(sk.key.clone(), E::params()) )
+        VRFPreOut( p.mul(sk.key.clone()) )
     }
 
     /// Into VRF output.
@@ -158,9 +157,8 @@ impl<E: JubjubEngineWithParams> VRFInOut<E> {
     /// We use this construction both for the VRF usage methods
     /// `VRFInOut::make_*` as well as for signer side batching.
     pub fn commit<T: SigningTranscript>(&self, t: &mut T) {
-        let params = E::params();
         t.commit_point(b"vrf-in", &self.input.as_point()); // .mul_by_cofactor(&params);
-        t.commit_point(b"vrf-out", &self.output.as_point().mul_by_cofactor(&params));
+        t.commit_point(b"vrf-out", &self.output.as_point().mul_by_cofactor());
     }
 
     /// Raw bytes output from the VRF.
@@ -295,8 +293,6 @@ where
     E: JubjubEngineWithParams,
     B: ::core::borrow::Borrow<VRFInOut<E>>,
 {
-    let engine_params = E::params();
-
     assert!( ps.len() > 0);
     let mut t = ::merlin::Transcript::new(b"MergeVRFs");
     for p in ps {  p.borrow().commit(&mut t);  }
@@ -315,10 +311,10 @@ where
     } );
 
     let input = VRFInput( psz().fold(jubjub::SubgroupPoint::identity(), |acc,(p,z)| {
-        acc.add(&p.input.as_point().mul(z, engine_params), engine_params)
+        acc.add(&p.input.as_point().mul(z))
     } ) );
     let output = VRFPreOut( psz().fold(jubjub::ExtendedPoint::identity(), |acc,(p,z)| {
-        acc.add(&p.output.as_point().mul(z, engine_params), engine_params)
+        acc.add(&p.output.as_point().mul(z))
     } ) );
     VRFInOut { input, output }
 }

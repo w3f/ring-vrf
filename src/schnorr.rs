@@ -356,8 +356,6 @@ impl<E: JubjubEngineWithParams> SecretKey<E>  {
         T: SigningTranscript,
         RNG: RngCore+CryptoRng,
     {
-        let params = E::params();
-
         t.proto_name(b"DLEQProof");
         // t.commit_point(b"vrf:g",constants::RISTRETTO_BASEPOINT_TABLE.basepoint().compress());
         t.commit_point(b"vrf:h", p.input.as_point());
@@ -369,7 +367,7 @@ impl<E: JubjubEngineWithParams> SecretKey<E>  {
             // let R = crate::scalar_times_blinding_generator(&r).into();
             let [b_pk,b_R] : [Scalar;2]
               = t.witness_scalars(b"blinding\00",&[&self.nonce_seed], &mut rng);
-            publickey.0 = publickey.0.add(& crate::scalar_times_blinding_generator(&b_pk).into(), params);
+            publickey.0 = publickey.0.add(& crate::scalar_times_blinding_generator(&b_pk).into());
             unblinding.0 = b_pk;
             delta = b_R;  // we subtract c * b_pk below
         }
@@ -381,12 +379,12 @@ impl<E: JubjubEngineWithParams> SecretKey<E>  {
         let mut R: jubjub::ExtendedPoint = crate::scalar_times_generator(&r).into();
         if PD::BLINDED {
             // We abuse delta's mutability here
-            *&mut R = R.add(& crate::scalar_times_blinding_generator(&delta).into(), params);
+            *&mut R = R.add(& crate::scalar_times_blinding_generator(&delta).into());
         }
         t.commit_point(b"vrf:R=g^r", &R);
 
         // let Hr = (&r * p.input.as_point()).compress();
-        let Hr = p.input.as_point().mul(r.clone(), params).into();
+        let Hr = p.input.as_point().mul(r.clone()).into();
         t.commit_point(b"vrf:h^r", &Hr);
 
         // We add h^sk last to save an allocation if we ever need to hash multiple h together.
@@ -599,7 +597,6 @@ where E: JubjubEngineWithParams, PD: PedersenDeltaOrPublicKey<E>+Clone,
     where
         T: SigningTranscript,
     {
-        let params = E::params();
         let VRFProof { io, cw: Individual { c }, s, pd } = self.clone();
 
         t.proto_name(b"DLEQProof");
@@ -609,18 +606,18 @@ where E: JubjubEngineWithParams, PD: PedersenDeltaOrPublicKey<E>+Clone,
 
         // We recompute R aka u from the proof
         // let R = ( (&proof.c * &pk.0) + (&proof.s * &constants::RISTRETTO_BASEPOINT_TABLE) ).compress();
-        let R: jubjub::ExtendedPoint = pd.publickey().0.mul(c,params)
-            .add(& crate::scalar_times_generator(&s).into(), params);
+        let R: jubjub::ExtendedPoint = pd.publickey().0.mul(c)
+            .add(& crate::scalar_times_generator(&s).into());
         let R: jubjub::ExtendedPoint = if pd.delta() == Scalar::zero() { R } else {
-            R.add(& crate::scalar_times_blinding_generator(&pd.delta()).into(), params)
+            R.add(& crate::scalar_times_blinding_generator(&pd.delta()).into())
         };
         t.commit_point(b"vrf:R=g^r", &R);
 
         // We also recompute h^r aka u using the proof
         // let Hr = (&proof.c * io.output.as_point()) + (&proof.s * io.input.as_point().into());
         // let Hr = Hr.compress();
-        let Hr = io.output.as_point().clone().mul(c,params)
-             .add(& io.input.as_point().clone().mul(s,params).into(), params);
+        let Hr = io.output.as_point().clone().mul(c)
+             .add(& io.input.as_point().clone().mul(s).into());
         t.commit_point(b"vrf:h^r", &Hr);
 
         // We add h^sk last to save an allocation if we ever need to hash multiple h together.

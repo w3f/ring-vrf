@@ -59,7 +59,7 @@ pub trait JubjubEngineWithParams : JubjubEngine {
     fn params() -> &'static <Self as JubjubEngine>::Params;
 }
 
-/// RingVRF SRS consisting of the Merkle tree depth, our only runtime 
+/// RingVRF SRS consisting of the Merkle tree depth, our only runtime
 /// configuration parameters for the system, attached to an appropirate
 /// `&'a Parameters<E>` or some other `P: groth16::ParameterSource<E>`.
 #[derive(Clone,Copy)]

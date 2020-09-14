@@ -21,8 +21,7 @@ pub struct PublicKey<E: JubjubEngine>(pub(crate) jubjub::ExtendedPoint);
 
 impl<E: JubjubEngineWithParams> PartialEq for PublicKey<E> {
     fn eq(&self, other: &PublicKey<E>) -> bool {
-        let params = E::params();
-        self.0.mul_by_cofactor(params) == other.0.mul_by_cofactor(params)
+        self.0.mul_by_cofactor() == other.0.mul_by_cofactor()
     }
 }
 impl<E: JubjubEngineWithParams> Eq for PublicKey<E> { }
@@ -62,9 +61,8 @@ impl<E: JubjubEngineWithParams> PublicKeyUnblinding<E> {
     }
 
     pub fn verify(&self, blinded: PublicKey<E>, unblinded: PublicKey<E>) -> bool {
-        let params = E::params();
-        unblinded.0.add(& crate::scalar_times_generator(&self.0).into(), params).mul_by_cofactor(params)
-        == blinded.0.mul_by_cofactor(params)
+        unblinded.0.add(& crate::scalar_times_generator(&self.0).into()).mul_by_cofactor()
+        == blinded.0.mul_by_cofactor()
     }
 }
 

@@ -54,8 +54,6 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
             }
         }
 
-        let engine_params = E::params();
-
         // Binary representation of the secret key, a prover's private input.
         // fs_bits wires and fs_bits booleanity constraints, where fs_bits = 252 is Jubjub scalar field size.
         // It isn't (range-)constrained to be an element of the field, so small values will have duplicate representations.
@@ -72,11 +70,10 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
         // that is guaranteed to be in the primeorder subgroup,
         // so no on-curve or subgroup checks are required //TODO: double-check
         // 750 constraints according to Zcash spec A.3.3.7
-        let pk = ecc::fixed_base_multiplication::<E, _>(
+        let pk = ecc::fixed_base_multiplication(
             cs.namespace(|| "PK = sk * G"),
             zcash_primitives::constants::SPENDING_KEY_GENERATOR, //TODO: any NUMS point of full order
-            &sk_bits,
-            engine_params,
+            &sk_bits
         ) ?;
 
         // Defines first 2 public input wires for the coordinates of the public key in Jubjub base field (~ BLS scalar field)
@@ -89,8 +86,7 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
         // adds 4 constraints (A.3.3.1) to check that it is indeed a point on Jubjub
         let vrf_input = ecc::EdwardsPoint::witness(
             cs.namespace(|| "VRF_INPUT"),
-            self.vrf_input,
-            engine_params,
+            self.vrf_input
         ) ?;
 
         // Checks that VRF_BASE lies in a proper subgroup of Jubjub. Not strictly required as it is the point provided
@@ -98,8 +94,7 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
         // But why not double-check it in 16 = 3 * 5 (ec doubling) + 1 (!=0) constraints
         // Moreover //TODO
         vrf_input.assert_not_small_order(
-            cs.namespace(|| "VRF_BASE not small order"),
-            engine_params,
+            cs.namespace(|| "VRF_BASE not small order")
         ) ?;
 
         // Defines the 3rd and the 4th input wires to be equal VRF_BASE coordinates,
@@ -111,8 +106,7 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
         // TODO: actually it is 13 more as it is full-length (252 bits) multiplication below
         let vrf = vrf_input.mul(
             cs.namespace(|| "vrf = sk * VRF_BASE"),
-            &sk_bits,
-            engine_params
+            &sk_bits
         ) ?;
 
         // And 2 more constraints to verify the output
@@ -172,11 +166,10 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
             preimage.extend(xr.to_bits_le(cs.namespace(|| "xr into bits"))?);
 
             // Compute the new subtree value
-            cur = pedersen_hash::pedersen_hash::<E, _>(
+            cur = pedersen_hash::pedersen_hash(
                 cs.namespace(|| "computation of pedersen hash"),
                 pedersen_hash::Personalization::MerkleTree(i),
-                &preimage,
-                engine_params,
+                &preimage
             )?.get_x().clone(); // Injective encoding
         }
         cur.inputize(cs.namespace(|| "anchor"))?;

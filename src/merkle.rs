@@ -272,12 +272,11 @@ pub fn auth_hash<E: JubjubEngineWithParams>(
     lhs.reverse();
     rhs.reverse();
 
-    pedersen_hash::pedersen_hash::<E, _>(
+    pedersen_hash::pedersen_hash(
         pedersen_hash::Personalization::MerkleTree(depth_to_bottom),
         lhs.into_iter()
             .take(Fr::NUM_BITS as usize)
-            .chain(rhs.into_iter().take(Fr::NUM_BITS as usize)),
-        E::params(),
+            .chain(rhs.into_iter().take(Fr::NUM_BITS as usize))
     ).to_xy().0
 }
 
