@@ -241,19 +241,24 @@ impl<E: JubjubEngineWithParams> VRFInOut<E> {
 }
 
 impl<E: JubjubEngineWithParams> ReadWrite for VRFPreOut<E>  {
-    fn read<R: io::Read>(reader: R) -> io::Result<Self> {
-        let p = Point::read(reader,E::params()) ?;
+    fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
+        let mut bytes = [0u8; 32];
+        reader.read_exact(&mut bytes)?;
+        let p = jubjub::ExtendedPoint::from_bytes(&bytes);
+        if p.is_none().into() {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid VRF pre-output encoding"));
+        }
         // ZCash has not method to check for a JubJub point being the identity,
         // but so long as the VRFInput can only be created by hashing, then this
         // sounds okay.
         // if p.is_identity() {
         //     return Err( io::Error::new(io::ErrorKind::InvalidInput, "Identity point provided as VRF output" ) );
         // }
-        Ok(VRFPreOut(p))
+        Ok(VRFPreOut(p.unwrap()))
     }
 
-    fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
-        self.0.write(writer)
+    fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+        writer.write_all(&self.0.to_bytes())
     }
 }
 

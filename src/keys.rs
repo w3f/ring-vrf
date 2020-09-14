@@ -34,12 +34,18 @@ impl<E: JubjubEngineWithParams> PublicKey<E> {
 }
 
 impl<E: JubjubEngineWithParams> ReadWrite for PublicKey<E>  {
-    fn read<R: io::Read>(reader: R) -> io::Result<Self> {
-        Ok(PublicKey( Point::read(reader,E::params()) ? ))
+    fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
+        let mut bytes = [0u8; 32];
+        reader.read_exact(&mut bytes)?;
+        let p = jubjub::ExtendedPoint::from_bytes(&bytes);
+        if p.is_none().into() {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid public key encoding"));
+        }
+        Ok(PublicKey(p.unwrap()))
     }
 
-    fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
-        self.0.write(writer)
+    fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+        writer.write_all(&self.0.to_bytes())
     }
 }
 

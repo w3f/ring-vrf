@@ -155,16 +155,23 @@ impl<E: JubjubEngine> NewChallengeOrWitness<E> for Batchable<E> {
 impl<E: JubjubEngineWithParams> ReadWrite for Batchable<E>  {
     #[allow(non_snake_case)]
     fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
-        let params = E::params();
-        let R = Point::read(&mut reader,params) ?;
-        let Hr = Point::read(&mut reader,params) ?;
-        Ok(Batchable { R, Hr, })
+        let mut bytes = [0u8; 32];
+        reader.read_exact(&mut bytes)?;
+        let R = jubjub::ExtendedPoint::from_bytes(&bytes);
+        if R.is_none().into() {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid 'R' encoding"));
+        }
+        reader.read_exact(&mut bytes)?;
+        let Hr = jubjub::ExtendedPoint::from_bytes(&bytes);
+        if Hr.is_none().into() {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid 'Hr' encoding"));
+        }
+        Ok(Batchable {R: R.unwrap(), Hr: Hr.unwrap()})
     }
     // #[allow(non_snake_case)]
     fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
-        self.R.write(&mut writer) ?;
-        self.Hr.write(&mut writer) ?;
-        Ok(())
+        writer.write_all(&self.R.to_bytes())?;
+        writer.write_all(&self.Hr.to_bytes())
     }
 }
 
