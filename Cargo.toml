@@ -7,16 +7,19 @@ edition = "2018"
 license = "MIT"
 
 [dependencies]
-ff = "0.7"
-group = "0.7"
-pairing = "0.17"
-jubjub = "0.4"
-bls12_381 = "0.2"
-bellman = { version = "0.7", default-features = false, features = ["groth16"] }
-zcash_primitives = { git = "https://github.com/zcash/librustzcash", version = "0.3"}
-zcash_proofs = { git = "https://github.com/zcash/librustzcash", version = "0.3" }
+ff = "0.8"
+group = "0.8"
+pairing = "0.18"
+jubjub = "0.5"
+bls12_381 = "0.3"
+bellman = { git = "https://github.com/w3f/bellman.git", branch="pub-multiexp", version = "0.8", default-features = false, features = ["groth16"] }
+zcash_primitives = { git = "https://github.com/zcash/librustzcash", version = "0.4"}
+zcash_proofs = { git = "https://github.com/zcash/librustzcash", version = "0.4" }
 
 bench-utils = { git = "https://github.com/scipr-lab/zexe", features = ["print-trace"]}
+
+[patch.crates-io]
+bellman = { git = "https://github.com/w3f/bellman.git", branch="pub-multiexp" }
 
 [dependencies.arrayref]
 version = "0.3.5"

@@ -14,35 +14,37 @@
 //! certificates instead of HDKD when using VRFs.
 
 use std::io;
+use std::ops::{Add, Mul};
 
 use rand_core::{RngCore,CryptoRng,SeedableRng}; // OsRng
 
 use merlin::Transcript;
 
 use ff::PrimeField;
+use group::{Group, GroupEncoding};
 
-use crate::{JubjubEngineWithParams, ReadWrite, SigningTranscript, Scalar};  // use super::*;
+use crate::{ReadWrite, SigningTranscript, Scalar};  // use super::*;
 
 
 /// VRF input, always created locally from a `SigningTranscript`.
 ///
 /// All creation methods require the developer acknoledge their VRF output malleability.
 #[derive(Debug, Clone)] // PartialEq, Eq
-pub struct VRFInput<E: JubjubEngine>(jubjub::SubgroupPoint);
+pub struct VRFInput(jubjub::SubgroupPoint);
 
-impl<E: JubjubEngineWithParams> VRFInput<E> {
+impl VRFInput {
     pub(crate) fn as_point(&self) -> &jubjub::SubgroupPoint { &self.0 }
 
     /// Create a new VRF input from an `RngCore`.
     #[inline(always)]
-    fn from_rng<R: RngCore+CryptoRng>(mut rng: R) -> Self {
+    fn from_rng<R: RngCore+CryptoRng>(rng: R) -> Self {
         VRFInput(jubjub::SubgroupPoint::random(rng))
     }
 
     /// Acknoledge VRF transcript malleablity
     ///
     /// TODO: Verify that Point::rand is stable or find a stable alternative.
-    pub fn new_malleable<T>(mut t: T) -> VRFInput<E> 
+    pub fn new_malleable<T>(mut t: T) -> Self
     where T: SigningTranscript
     {
         let mut seed = [0u8; 32]; // <ChaChaRng as rand_core::SeedableRng>::Seed::default();
@@ -55,8 +57,7 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
     ///
     /// Incompatable with ring VRF however.  We avoid malleability within the
     /// small order subgroup here by multiplying by the cofactor.
-    pub fn new_nonmalleable<T>(mut t: T, publickey: &crate::PublicKey<E>)
-     -> VRFInput<E>
+    pub fn new_nonmalleable<T>(mut t: T, publickey: &crate::PublicKey) -> Self
     where T: SigningTranscript
     {
         t.commit_point(b"vrf-nm-pk", &publickey.0.mul_by_cofactor());
@@ -64,8 +65,7 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
     }
 
     /// Semi-malleable VRF transcript
-    pub fn new_ring_malleable<T>(mut t: T, auth_root: &crate::merkle::RingRoot<E>)
-     -> VRFInput<E>
+    pub fn new_ring_malleable<T>(mut t: T, auth_root: &crate::merkle::RingRoot) -> Self
     where T: SigningTranscript
     {
         t.commit_bytes(b"vrf-nm-ar", auth_root.0.to_repr().as_ref());
@@ -73,13 +73,13 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
     }
 
     /// Into VRF output.
-    pub fn to_preout(&self, sk: &crate::SecretKey<E>) -> VRFPreOut<E> {
+    pub fn to_preout(&self, sk: &crate::SecretKey) -> VRFPreOut {
         let p: jubjub::ExtendedPoint = self.0.clone().into();
         VRFPreOut( p.mul(sk.key.clone()) )
     }
 
     /// Into VRF output.
-    pub fn to_inout(&self, sk: &crate::SecretKey<E>) -> VRFInOut<E> {
+    pub fn to_inout(&self, sk: &crate::SecretKey) -> VRFInOut {
         let output = self.to_preout(sk);
         VRFInOut { input: self.clone(), output }
     }
@@ -88,15 +88,15 @@ impl<E: JubjubEngineWithParams> VRFInput<E> {
 
 /// VRF output, possibly unverified.
 #[derive(Debug, Clone)] // Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct VRFPreOut<E: JubjubEngine>(jubjub::ExtendedPoint);
+pub struct VRFPreOut(jubjub::ExtendedPoint);
 
-impl<E: JubjubEngineWithParams> VRFPreOut<E> {
+impl VRFPreOut {
     pub(crate) fn as_point(&self) -> &jubjub::ExtendedPoint { &self.0 }
 
     /// Acknoledge VRF transcript malleablity
     ///
     /// TODO: Verify that Point::rand is stable or find a stable alternative.
-    pub fn attach_input_malleable<T>(&self, t: T) -> VRFInOut<E>
+    pub fn attach_input_malleable<T>(&self, t: T) -> VRFInOut
     where T: SigningTranscript
     {
         let input = VRFInput::new_malleable(t);
@@ -106,8 +106,7 @@ impl<E: JubjubEngineWithParams> VRFPreOut<E> {
     /// Non-malleable VRF transcript.
     ///
     /// Incompatable with ring VRF however.
-    pub fn attach_input_nonmalleable<T>(&self, t: T, publickey: &crate::PublicKey<E>)
-     -> VRFInOut<E>
+    pub fn attach_input_nonmalleable<T>(&self, t: T, publickey: &crate::PublicKey) -> VRFInOut
     where T: SigningTranscript
     {
         let input = VRFInput::new_nonmalleable(t,publickey);
@@ -115,8 +114,7 @@ impl<E: JubjubEngineWithParams> VRFPreOut<E> {
     }
 
     /// Semi-malleable VRF transcript
-    pub fn attach_input_ring_malleable<T>(&self, t: T, auth_root: &crate::merkle::RingRoot<E>)
-     -> VRFInOut<E>
+    pub fn attach_input_ring_malleable<T>(&self, t: T, auth_root: &crate::merkle::RingRoot) -> VRFInOut
     where T: SigningTranscript
     {
         let input = VRFInput::new_ring_malleable(t,auth_root);
@@ -130,18 +128,18 @@ impl<E: JubjubEngineWithParams> VRFPreOut<E> {
 /// Internally, we keep both `RistrettoPoint` and `CompressedRistretto`
 /// forms using `RistrettoBoth`.
 #[derive(Debug, Clone)] // PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct VRFInOut<E: JubjubEngine> {
+pub struct VRFInOut {
     /// VRF input point
-    pub input: VRFInput<E>,
+    pub input: VRFInput,
     /// VRF output point
-    pub output: VRFPreOut<E>,
+    pub output: VRFPreOut,
 }
 
-impl<E: JubjubEngine> From<VRFInOut<E>> for VRFInput<E> {
-    fn from(x: VRFInOut<E>) -> VRFInput<E> { x.input }
+impl From<VRFInOut> for VRFInput {
+    fn from(x: VRFInOut) -> VRFInput { x.input }
 }
 
-impl<E: JubjubEngineWithParams> VRFInOut<E> {
+impl VRFInOut {
     /// Write VRF output
     pub fn write_output<W: io::Write>(&self, writer: W) -> io::Result<()> {
         self.output.write(writer)
@@ -157,7 +155,7 @@ impl<E: JubjubEngineWithParams> VRFInOut<E> {
     /// We use this construction both for the VRF usage methods
     /// `VRFInOut::make_*` as well as for signer side batching.
     pub fn commit<T: SigningTranscript>(&self, t: &mut T) {
-        t.commit_point(b"vrf-in", &self.input.as_point()); // .mul_by_cofactor(&params);
+        t.commit_point(b"vrf-in", self.input.as_point().into()); // .mul_by_cofactor(&params);
         t.commit_point(b"vrf-out", &self.output.as_point().mul_by_cofactor());
     }
 
@@ -237,7 +235,7 @@ impl<E: JubjubEngineWithParams> VRFInOut<E> {
     }
 }
 
-impl<E: JubjubEngineWithParams> ReadWrite for VRFPreOut<E>  {
+impl ReadWrite for VRFPreOut  {
     fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
         let mut bytes = [0u8; 32];
         reader.read_exact(&mut bytes)?;
@@ -288,10 +286,8 @@ impl<E: JubjubEngineWithParams> ReadWrite for VRFPreOut<E>  {
 /// hashed to the curve.  TODO: Cite Wagner.
 /// We also note no such requirement when the values being hashed are
 /// BLS public keys as in https://crypto.stanford.edu/~dabo/pubs/papers/BLSmultisig.html
-pub fn vrfs_merge<E,B>(ps: &[B]) -> VRFInOut<E>
-where
-    E: JubjubEngineWithParams,
-    B: ::core::borrow::Borrow<VRFInOut<E>>,
+pub fn vrfs_merge<E,B>(ps: &[B]) -> VRFInOut
+where B: ::core::borrow::Borrow<VRFInOut>
 {
     assert!( ps.len() > 0);
     let mut t = ::merlin::Transcript::new(b"MergeVRFs");
@@ -306,7 +302,7 @@ where
         // Sample a 128bit scalar
         let mut s = [0u8; 16];
         t0.challenge_bytes(b"", &mut s);
-        let z: Scalar = crate::misc::scalar_from_u128::<E>(s);
+        let z: Scalar = crate::misc::scalar_from_u128(s);
         (p,z)
     } );
 
@@ -349,7 +345,7 @@ impl VRFExtraMessage for Transcript {
     fn extra(self) -> Option<Transcript> { Some(self) }
 }
 
-pub fn no_check_no_extra<E: JubjubEngineWithParams>(_: &VRFInOut<E>) -> bool { true }
+pub fn no_check_no_extra(_: &VRFInOut) -> bool { true }
 
 
 

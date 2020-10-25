@@ -13,28 +13,33 @@ use rand_core::{RngCore,CryptoRng};
 
 
 use crate::{
-    SynthesisResult, rand_hack, JubjubEngineWithParams,
+    SynthesisResult, rand_hack,
     RingSRS, SigningTranscript, 
     SecretKey, RingSecretCopath, 
     VRFInput, VRFPreOut, VRFInOut,
     vrf::{no_extra, VRFExtraMessage},
 };
+use bls12_381::Bls12;
+use bellman::multiexp::SourceBuilder;
+use pairing::Engine;
 
 
-impl<E: JubjubEngineWithParams> SecretKey<E> {
+impl SecretKey {
     /// Create ring VRF signature using specified randomness source.
     pub fn ring_vrf_prove<T,R,P>(
         &self,
-        vrf_input: VRFInput<E>,
+        vrf_input: VRFInput,
         mut extra: T,
-        copath: RingSecretCopath<E>,
+        copath: RingSecretCopath,
         proving_key: RingSRS<P>,
         rng: &mut R,
-    ) -> SynthesisResult<RingVRFProof<E>> 
+    ) -> SynthesisResult<RingVRFProof<Bls12>>
     where
-        T: SigningTranscript, 
-        P: groth16::ParameterSource<E>, 
-        R: RngCore+CryptoRng,
+        T: SigningTranscript,
+        R: RngCore + CryptoRng,
+        P: groth16::ParameterSource<Bls12>,
+        P::G1Builder: SourceBuilder<<Bls12 as Engine>::G1Affine>,
+        P::G2Builder: SourceBuilder<<Bls12 as Engine>::G2Affine>,
     {
         let instance = crate::circuit::RingVRF {
             depth: proving_key.depth,
@@ -53,11 +58,14 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// You must extract the `VRFPreOut` from the `VRFInOut` returned.
     pub fn ring_vrf_sign_simple<P>(
         &self, 
-        input: VRFInput<E>,
-        copath: RingSecretCopath<E>,
+        input: VRFInput,
+        copath: RingSecretCopath,
         proving_key: RingSRS<P>,
-    ) -> SynthesisResult<(VRFInOut<E>, RingVRFProof<E>)>
-    where P: groth16::ParameterSource<E>, 
+    ) -> SynthesisResult<(VRFInOut, RingVRFProof<Bls12>)>
+    where
+        P: groth16::ParameterSource<Bls12>,
+        P::G1Builder: SourceBuilder<<Bls12 as Engine>::G1Affine>,
+        P::G2Builder: SourceBuilder<<Bls12 as Engine>::G2Affine>,
     {
         self.ring_vrf_sign_first(input, no_extra(), copath, proving_key)
     }
@@ -73,13 +81,16 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// computing the proof whenever you do not win. 
     pub fn ring_vrf_sign_first<T,P>(
         &self,
-        input: VRFInput<E>,
+        input: VRFInput,
         extra: T,
-        copath: RingSecretCopath<E>,
+        copath: RingSecretCopath,
         proving_key: RingSRS<P>,
-    ) -> SynthesisResult<(VRFInOut<E>, RingVRFProof<E>)>
-    where T: SigningTranscript,
-          P: groth16::ParameterSource<E>, 
+    ) -> SynthesisResult<(VRFInOut, RingVRFProof<Bls12>)>
+    where
+        T: SigningTranscript,
+        P: groth16::ParameterSource<Bls12>,
+        P::G1Builder: SourceBuilder<<Bls12 as Engine>::G1Affine>,
+        P::G2Builder: SourceBuilder<<Bls12 as Engine>::G2Affine>,
     {
         let inout = input.to_inout(self);
         let proof = self.ring_vrf_prove(input, extra, copath, proving_key, &mut rand_hack()) ?;
@@ -92,14 +103,17 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// an `Option` of an extra message transcript.
     pub fn ring_vrf_sign_after_check<F,O,P>(
         &self, 
-        input: VRFInput<E>,
+        input: VRFInput,
         check: F,
-        copath: RingSecretCopath<E>,
+        copath: RingSecretCopath,
         proving_key: RingSRS<P>,
-    ) -> SynthesisResult<Option<(VRFPreOut<E>, RingVRFProof<E>)>>
-    where F: FnOnce(&VRFInOut<E>) -> O,
-          O: VRFExtraMessage,
-          P: groth16::ParameterSource<E>, 
+    ) -> SynthesisResult<Option<(VRFPreOut, RingVRFProof<Bls12>)>>
+    where
+        F: FnOnce(&VRFInOut) -> O,
+        O: VRFExtraMessage,
+        P: groth16::ParameterSource<Bls12>,
+        P::G1Builder: SourceBuilder<<Bls12 as Engine>::G1Affine>,
+        P::G2Builder: SourceBuilder<<Bls12 as Engine>::G2Affine>,
     {
         let inout = input.to_inout(self);
         let extra = if let Some(e) = check(&inout).extra() { e } else { return Ok(None) };
@@ -111,13 +125,16 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
     /// proof.
     pub fn ring_vrf_sign_checked<T,P>(
         &self, 
-        inout: VRFInOut<E>, 
+        inout: VRFInOut,
         extra: T,
-        copath: RingSecretCopath<E>,
+        copath: RingSecretCopath,
         proving_key: RingSRS<P>,
-    ) -> SynthesisResult<(VRFPreOut<E>, RingVRFProof<E>)>
-    where T: SigningTranscript,
-          P: groth16::ParameterSource<E>, 
+    ) -> SynthesisResult<(VRFPreOut, RingVRFProof<Bls12>)>
+    where
+        T: SigningTranscript,
+        P: groth16::ParameterSource<Bls12>,
+        P::G1Builder: SourceBuilder<<Bls12 as Engine>::G1Affine>,
+        P::G2Builder: SourceBuilder<<Bls12 as Engine>::G2Affine>,
     {
         let VRFInOut { input, output } = inout;
         let proof = self.ring_vrf_prove(input, extra, copath, proving_key, &mut rand_hack()) ?;
