@@ -1,13 +1,8 @@
 
 use std::io;
+use std::ops::Mul;
 
 use ff::PrimeField;
-use zcash_primitives::jubjub::{
-    JubjubEngine, FixedGenerators, JubjubParams,
-    PrimeOrder, edwards::Point
-};
-
-use crate::JubjubEngineWithParams;
 
 
 // TODO: Avoid std::io entirely after switching to ZEXE
@@ -34,47 +29,40 @@ impl ReadWrite for () {
 }
 
 
-pub(crate) type Scalar<E> = <E as JubjubEngine>::Fs;
+pub(crate) type Scalar = jubjub::Fr;
 
-pub fn read_scalar<E: JubjubEngine, R: io::Read>(mut reader: R) -> io::Result<E::Fs> {
-    let mut s_repr = <E::Fs as PrimeField>::Repr::default();
+pub fn read_scalar<R: io::Read>(mut reader: R) -> io::Result<jubjub::Scalar> {
+    let mut s_repr = <jubjub::Scalar as PrimeField>::Repr::default();
     reader.read_exact(s_repr.as_mut()) ?;
 
-    E::Fs::from_repr(s_repr)
+    jubjub::Scalar::from_repr(s_repr)
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "scalar is not in field"))
 }
 
-pub fn write_scalar<E: JubjubEngine, W: io::Write>(s: &E::Fs, mut writer: W) -> io::Result<()> {
+pub fn write_scalar<W: io::Write>(s: &jubjub::Scalar, mut writer: W) -> io::Result<()> {
     writer.write_all(s.to_repr().as_ref())
 }
 
 
 /// Create a 128 bit `Scalar` for delinearization
-pub(crate) fn scalar_from_u128<E>(s: [u8; 16]) -> Scalar<E> 
-where E: JubjubEngine
+pub(crate) fn scalar_from_u128(s: [u8; 16]) -> jubjub::Scalar
 {
-    let mut repr = <Scalar<E> as PrimeField>::Repr::default();
+    let mut repr = <jubjub::Scalar as PrimeField>::Repr::default();
     repr.as_mut().copy_from_slice(&s);
-    Scalar::<E>::from_repr(repr).unwrap()
+    jubjub::Scalar::from_repr(repr).unwrap()
 }
 
 
-pub(crate) fn scalar_times_generator<E>(scalar: &Scalar<E>)
- -> Point<E,PrimeOrder> 
-where E: JubjubEngineWithParams,
+pub(crate) fn scalar_times_generator(scalar: &jubjub::Scalar) -> jubjub::SubgroupPoint
 {
-    let params = E::params();
-    let base_point = params.generator(FixedGenerators::SpendingKeyGenerator);
-    base_point.mul(scalar.clone(), params)
+    let base_point = zcash_primitives::constants::SPENDING_KEY_GENERATOR;
+    base_point.mul(scalar.clone())
 }
 
-pub(crate) fn scalar_times_blinding_generator<E>(scalar: &Scalar<E>)
- -> Point<E,PrimeOrder> 
-where E: JubjubEngineWithParams,
+pub(crate) fn scalar_times_blinding_generator(scalar: &jubjub::Scalar) -> jubjub::SubgroupPoint
 {
-    let params = E::params();
-    let base_point = params.generator(FixedGenerators::NullifierPosition);
-    base_point.mul(scalar.clone(), params)
+    let base_point = zcash_primitives::constants::NULLIFIER_POSITION_GENERATOR;
+    base_point.mul(scalar.clone())
 }
 
 

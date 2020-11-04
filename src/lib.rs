@@ -11,16 +11,11 @@
 
 use rand_core::{RngCore,CryptoRng};
 
-use zcash_primitives::jubjub::JubjubEngine;
-
-#[macro_use]
+// #[macro_use]
 extern crate lazy_static;
 
-#[macro_use]
+// #[macro_use]
 extern crate arrayref;
-
-#[macro_use]
-extern crate bench_utils;
 
 
 mod misc;
@@ -33,7 +28,6 @@ mod prover;
 mod verifier;
 pub mod vrf;
 pub mod schnorr;
-pub mod bls12_381;
 
 
 use crate::misc::{
@@ -56,12 +50,8 @@ fn rand_hack() -> impl RngCore+CryptoRng {
     ::rand_core::OsRng
 }
 
-/// Fix ZCash's curve paramater handling
-pub trait JubjubEngineWithParams : JubjubEngine {
-    fn params() -> &'static <Self as JubjubEngine>::Params;
-}
 
-/// RingVRF SRS consisting of the Merkle tree depth, our only runtime 
+/// RingVRF SRS consisting of the Merkle tree depth, our only runtime
 /// configuration parameters for the system, attached to an appropirate
 /// `&'a Parameters<E>` or some other `P: groth16::ParameterSource<E>`.
 #[derive(Clone,Copy)]
@@ -82,19 +72,23 @@ impl<SRS: Copy+Clone> Clone for RingSRS<SRS> {
 
 
 #[cfg(test)]
+
+#[macro_use]
+extern crate bench_utils;
+
 mod tests {
     use std::fs::File;
 
     use rand_core::RngCore;
 
     use bellman::groth16;
-    use pairing::bls12_381::Bls12;
 
     use super::*;
+    use bls12_381::Bls12;
 
     #[test]
     fn test_completeness() {
-        let depth = 10;
+        let depth = 2;
 
         // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
         let mut rng = ::rand_core::OsRng;
@@ -123,11 +117,11 @@ mod tests {
             },
         };
 
-        let sk = SecretKey::<Bls12>::from_rng(&mut rng);
+        let sk = SecretKey::from_rng(&mut rng);
         let pk = sk.to_public();
 
         let t = signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
-        let vrf_input = VRFInput::<Bls12>::new_malleable(t.clone());
+        let vrf_input = VRFInput::new_malleable(t.clone());
 
         let vrf_inout = vrf_input.to_inout(&sk);
 

@@ -10,13 +10,15 @@
 use bellman::groth16::{self, Proof}; // verify_proof, prepare_verifying_key, PreparedVerifyingKey, VerifyingKey
 
 use crate::{
-    SynthesisResult, JubjubEngineWithParams, 
+    SynthesisResult,
     SigningTranscript, RingRoot, VRFInOut
 };
-use pairing::MultiMillerLoop;
+use bls12_381::Bls12;
+use jubjub::ExtendedPoint;
+use group::Curve;
 
 
-impl<E: JubjubEngineWithParams + MultiMillerLoop> RingRoot<E> {
+impl RingRoot {
     /// Verify a proof using the given authentication root, VRF input and output,
     /// verifying key aka CRS, and paramaters.
     ///
@@ -25,14 +27,14 @@ impl<E: JubjubEngineWithParams + MultiMillerLoop> RingRoot<E> {
     /// https://docs.rs/bellman/0.6.0/bellman/groth16/struct.VerifyingKey.html
     pub fn ring_vrf_verify_unprepared<T>(
         &self, // auth_root
-        vrf_inout: VRFInOut<E>,
+        vrf_inout: VRFInOut,
         extra: T,
-        zkproof: Proof<E>,
-        verifying_key: &groth16::VerifyingKey<E>,
+        zkproof: Proof<Bls12>,
+        verifying_key: &groth16::VerifyingKey<Bls12>,
     ) -> SynthesisResult<bool> 
     where T: SigningTranscript, 
     {
-        let pvk = groth16::prepare_verifying_key::<E>(verifying_key);
+        let pvk = groth16::prepare_verifying_key::<Bls12>(verifying_key);
         self.ring_vrf_verify(vrf_inout, extra, zkproof, &pvk)
     }
 
@@ -49,14 +51,14 @@ impl<E: JubjubEngineWithParams + MultiMillerLoop> RingRoot<E> {
         // 1. Signer set specified by a Merkle root, given as x-coordinate rom a Pederson hash
         &self, // auth_root
         // 2. VRF input and output points on Jubjub prepared togther
-        vrf_inout: VRFInOut<E>,
+        vrf_inout: VRFInOut,
         // 3. extra message signed along with the VRF
         mut extra: T,
         // 
-        zkproof: Proof<E>,
+        zkproof: Proof<Bls12>,
         // Prepared means that 1 pairing e(alpha, beta) has been precomputed.
         // Makes sense, as we verify multiple proofs for the same circuit
-        verifying_key: &groth16::PreparedVerifyingKey<E>,
+        verifying_key: &groth16::PreparedVerifyingKey<Bls12>,
     ) -> SynthesisResult<bool> 
     where T: SigningTranscript, 
     {
@@ -64,13 +66,15 @@ impl<E: JubjubEngineWithParams + MultiMillerLoop> RingRoot<E> {
         // TODO: Check params.auth_depth perhaps?
         // TODO: subgroup checks
         // Public inputs are elements of the main curve (BLS12-381) scalar field (that matches Jubjub base field, that's the thing)
-        let (x1, y1) = vrf_inout.input.as_point().to_xy();
-        let (x2, y2) = vrf_inout.output.as_point().to_xy();
+        let input = ExtendedPoint::from(vrf_inout.input.as_point().clone()).to_affine();
+        let output = vrf_inout.output.as_point().to_affine();
+        let (x1, y1) = (input.get_u(), input.get_v());
+        let (x2, y2) = (output.get_u(), output.get_v());
         // We employ the challenge_scalar method since it hashes into a field,
         // but we're hashing into the jubjub base field not the scalar field
         // here, so maybe the method should be renamed.
         let extra = extra.challenge_scalar(b"extra-msg");
-        let public_input: [E::Fr; 6] = [ x1, y1, x2, y2, extra, self.0.clone() ];
+        let public_input: [bls12_381::Scalar; 6] = [ x1, y1, x2, y2, extra, self.0.clone() ];
         // Verify the proof
         Ok(groth16::verify_proof(verifying_key, &zkproof, &public_input[..]).is_ok())
     }

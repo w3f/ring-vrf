@@ -3,48 +3,51 @@
 //! ### Ring VRF keys
 
 use std::io;
+use std::ops::Add;
 // use core::fmt::{Debug};
 
 // use subtle::{Choice,ConstantTimeEq};
 use rand_core::{RngCore,CryptoRng};
 
-use zcash_primitives::jubjub::{
-    JubjubEngine, // FixedGenerators, JubjubParams,
-    edwards::Point, Unknown, // PrimeOrder
-};
-
 use zeroize::Zeroize;
 
-use crate::{JubjubEngineWithParams, ReadWrite, Scalar};
+use crate::{ReadWrite, Scalar};
+use group::GroupEncoding;
 
 
 /// Public key consisting of a JubJub point
 #[derive(Debug,Clone)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct PublicKey<E: JubjubEngine>(pub(crate) Point<E,Unknown>);
+pub struct PublicKey(pub(crate) jubjub::ExtendedPoint);
 
 // serde_boilerplate!(PublicKey);
 
-impl<E: JubjubEngineWithParams> PartialEq for PublicKey<E> {
-    fn eq(&self, other: &PublicKey<E>) -> bool {
-        let params = E::params();
-        self.0.mul_by_cofactor(params) == other.0.mul_by_cofactor(params) 
+impl PartialEq for PublicKey {
+    fn eq(&self, other: &PublicKey) -> bool {
+        self.0.mul_by_cofactor() == other.0.mul_by_cofactor()
     }
 }
-impl<E: JubjubEngineWithParams> Eq for PublicKey<E> { }
 
-impl<E: JubjubEngineWithParams> PublicKey<E> {
-    fn from_secret_scalar(secret: &Scalar<E>) -> PublicKey<E> {
+impl Eq for PublicKey {}
+
+impl PublicKey {
+    fn from_secret_scalar(secret: &Scalar) -> Self {
         PublicKey( crate::scalar_times_generator(secret).into() )
     }
 }
 
-impl<E: JubjubEngineWithParams> ReadWrite for PublicKey<E>  {
-    fn read<R: io::Read>(reader: R) -> io::Result<Self> {
-        Ok(PublicKey( Point::read(reader,E::params()) ? ))
+impl ReadWrite for PublicKey {
+    fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
+        let mut bytes = [0u8; 32];
+        reader.read_exact(&mut bytes)?;
+        let p = jubjub::ExtendedPoint::from_bytes(&bytes);
+        if p.is_none().into() {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid public key encoding"));
+        }
+        Ok(PublicKey(p.unwrap()))
     }
 
-    fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
-        self.0.write(writer)
+    fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+        writer.write_all(&self.0.to_bytes())
     }
 }
 
@@ -52,37 +55,35 @@ impl<E: JubjubEngineWithParams> ReadWrite for PublicKey<E>  {
 /// Pederson commitment openning for a public key, consisting of a scalar
 /// that reveals the difference ebtween two public keys.
 #[derive(Clone)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct PublicKeyUnblinding<E: JubjubEngine>(pub(crate) Scalar<E>);
+pub struct PublicKeyUnblinding(pub(crate) Scalar);
 
-impl<E: JubjubEngineWithParams> PublicKeyUnblinding<E> {
+impl PublicKeyUnblinding {
     pub fn is_blinded(&self) -> bool {
-        use ff::Field;
-        self.0 != Scalar::<E>::zero()
+        self.0 != Scalar::zero()
     }
 
-    pub fn verify(&self, blinded: PublicKey<E>, unblinded: PublicKey<E>) -> bool {
-        let params = E::params();
-        unblinded.0.add(& crate::scalar_times_generator(&self.0).into(), params).mul_by_cofactor(params)
-        == blinded.0.mul_by_cofactor(params)
+    pub fn verify(&self, blinded: PublicKey, unblinded: PublicKey) -> bool {
+        unblinded.0.add(& crate::scalar_times_generator(&self.0)).mul_by_cofactor()
+        == blinded.0.mul_by_cofactor()
     }
 }
 
-impl<E: JubjubEngine> ReadWrite for PublicKeyUnblinding<E>  {
+impl ReadWrite for PublicKeyUnblinding  {
     fn read<R: io::Read>(reader: R) -> io::Result<Self> {
-        Ok(PublicKeyUnblinding( crate::read_scalar::<E, R>(reader) ? ))
+        Ok(PublicKeyUnblinding( crate::read_scalar::<R>(reader) ? ))
     }
 
     fn write<W: io::Write>(&self, writer: W) -> io::Result<()> {
-        crate::write_scalar::<E, W>(&self.0, writer)
+        crate::write_scalar::<W>(&self.0, writer)
     }
 }
 
 
 /// Seceret key consisting of a JubJub scalar and a secret nonce seed.
 #[derive(Clone)] // Debug
-pub struct SecretKey<E: JubjubEngine> {
+pub struct SecretKey {
     /// Secret key represented as a scalar.
-    pub(crate) key: Scalar<E>,
+    pub(crate) key: Scalar,
 
     /// Seed for deriving the nonces used in Schnorr proofs.
     ///
@@ -97,19 +98,19 @@ pub struct SecretKey<E: JubjubEngine> {
     ///
     /// TODO: Replace this with serialized byte representation like [u8; 32]
     /// TODO: Compjute lazilty using usafe code and std::sync::Once
-    public: PublicKey<E>,
+    public: PublicKey,
 }
 
 // serde_boilerplate!(SecretKey);
 
-impl<E: JubjubEngine> Zeroize for SecretKey<E> {
+impl Zeroize for SecretKey {
     fn zeroize(&mut self) {
         self.nonce_seed.zeroize();
         // self.key.zeroize();
         // self.key = <E:Fs as PrimeField>::from_repr(<E:Fs as PrimeField>::Repr::default());
     }
 }
-impl<E: JubjubEngine> Drop for SecretKey<E> {
+impl Drop for SecretKey {
     fn drop(&mut self) { self.zeroize() }
 }
 
@@ -135,22 +136,22 @@ impl ConstantTimeEq for SecretKey {
 }
 */
 
-impl<E: JubjubEngineWithParams> SecretKey<E> {
+impl SecretKey {
     /// Generate an "unbiased" `SecretKey` directly from a user
     /// suplied `csprng` uniformly, bypassing the `MiniSecretKey`
     /// layer.
-    pub fn from_rng<R>(mut rng: R) -> SecretKey<E>
+    pub fn from_rng<R>(mut rng: R) -> Self
     where R: CryptoRng + RngCore,
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
         rng.fill_bytes(&mut nonce_seed);
-        let key = <E::Fs as ::ff::Field>::random(&mut rng);
+        let key = <jubjub::Scalar as ::ff::Field>::random(&mut rng);
         let public = PublicKey::from_secret_scalar(&key);
         SecretKey { key, nonce_seed, public, }
     }
 
     /// Generate a JubJub `SecretKey` from a 32 byte seed.
-    pub fn from_seed(seed: [u8; 32]) -> SecretKey<E> {
+    pub fn from_seed(seed: [u8; 32]) -> Self {
         use rand_core::SeedableRng;
         let rng = ::rand_chacha::ChaChaRng::from_seed(seed);
         SecretKey::from_rng(rng)
@@ -158,20 +159,20 @@ impl<E: JubjubEngineWithParams> SecretKey<E> {
 
     /// Generate a JubJub `SecretKey` with the default randomness source.
     #[cfg(feature = "std")]
-    pub fn new(params: &E::Params) -> SecretKey<E> {
-        SecretKey::from_rng(::rand::thread_rng(), params)
+    pub fn new() -> Self {
+        SecretKey::from_rng(::rand::thread_rng())
     }
 
     /// Derive the `PublicKey` corresponding to this `SecretKey`.
-    pub fn to_public(&self) -> PublicKey<E> {
+    pub fn to_public(&self) -> PublicKey {
         self.public.clone()
     }
 }
 // TODO:  Convert to/from zcash_primitives::redjubjub::PrivateKey
 
-impl<E: JubjubEngineWithParams> ReadWrite for SecretKey<E>  {
+impl ReadWrite for SecretKey  {
     fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
-        let key = crate::read_scalar::<E, &mut R>(&mut reader) ?;
+        let key = crate::read_scalar::<&mut R>(&mut reader) ?;
         let mut nonce_seed = [0u8; 32];
         reader.read_exact(&mut nonce_seed) ?;
         let public = PublicKey::from_secret_scalar(&key);
@@ -179,7 +180,7 @@ impl<E: JubjubEngineWithParams> ReadWrite for SecretKey<E>  {
     }
 
     fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
-        crate::write_scalar::<E, &mut W>(&self.key, &mut writer) ?;
+        crate::write_scalar::<&mut W>(&self.key, &mut writer) ?;
         writer.write_all(&self.nonce_seed) ?;
         Ok(())
     }

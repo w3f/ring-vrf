@@ -9,20 +9,16 @@
 
 use bellman::groth16;
 
-use crate::{rand_hack, JubjubEngineWithParams, SynthesisResult};
-use group::WnafGroup;
+use crate::{rand_hack, SynthesisResult};
+use bls12_381::Bls12;
 
 
 /// Generates structured (meaning circuit-depending) Groth16
 /// CRS (that comprises proving and verificaton keys) over BLS12-381
 /// for the circuit defined in circuit.rs using OS RNG.
-pub fn generate_crs<E: JubjubEngineWithParams>(depth: u32)
- -> SynthesisResult<groth16::Parameters<E>>
-where
-    E::G1: WnafGroup,
-    E::G2: WnafGroup,
+pub fn generate_crs(depth: u32) -> SynthesisResult<groth16::Parameters<Bls12>>
 {
-    let circuit = crate::circuit::RingVRF::<E> {
+    let circuit = crate::circuit::RingVRF {
         depth,
         sk: None,
         vrf_input: None,

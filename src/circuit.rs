@@ -7,13 +7,11 @@
 
 //! ### Ring VRF zkSNARK circut
 
-use ff::Field;
-use zcash_primitives::jubjub::{FixedGenerators, JubjubEngine, PrimeOrder, edwards::Point}; // Unknown
 use zcash_proofs::circuit::{ecc, pedersen_hash};
 use bellman::{Circuit, ConstraintSystem, SynthesisError};
 use bellman::gadgets::{boolean, num, Assignment};
 
-use crate::{JubjubEngineWithParams, merkle::MerkleSelection, RingSecretCopath, SecretKey};
+use crate::{merkle::MerkleSelection, RingSecretCopath, SecretKey};
 
 
 /// A circuit for proving that the given vrf_preout is valid for the given vrf_input under
@@ -27,35 +25,34 @@ use crate::{JubjubEngineWithParams, merkle::MerkleSelection, RingSecretCopath, S
 /// These are the values that are required to construct the circuit and populate all the wires.
 /// They are defined as Options as for CRS generation only circuit structure is relevant,
 /// not the wires' assignments, so knowing the types is enough.
-pub struct RingVRF<E: JubjubEngine> { // TODO: name
+pub struct RingVRF { // TODO: name
     /// Merkle tree depth
     pub depth: u32,
 
     /// The secret key, an element of Jubjub scalar field.
-    pub sk: Option<SecretKey<E>>,
+    pub sk: Option<SecretKey>,
 
     /// The VRF input, a point in Jubjub prime order subgroup.
-    pub vrf_input: Option<Point<E, PrimeOrder>>,
+    pub vrf_input: Option<jubjub::SubgroupPoint>,
 
     /// An extra message to sign along with the 
-    pub extra: Option<E::Fr>,
+    pub extra: Option<bls12_381::Scalar>,
 
     /// The authentication path of the public key x-coordinate in the Merkle tree,
     /// the element of Jubjub base field.
     /// This is enough to build the root as the base point is hardcoded in the circuit in the lookup tables,
     /// so we can restore the public key from the secret key.
-    pub copath: Option<RingSecretCopath<E>>,
+    pub copath: Option<RingSecretCopath>,
 }
 
-impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
-    fn synthesize<CS: ConstraintSystem<E::Fr>>(self, cs: &mut CS) -> Result<(), SynthesisError> {
+impl Circuit<bls12_381::Scalar> for RingVRF {
+
+    fn synthesize<CS: ConstraintSystem<bls12_381::Scalar>>(self, cs: &mut CS) -> Result<(), SynthesisError> {
         if let Some(copath) = self.copath.as_ref() {
             if copath.depth() != self.depth {
                 return Err(SynthesisError::Unsatisfiable)
             }
         }
-
-        let engine_params = E::params();
 
         // Binary representation of the secret key, a prover's private input.
         // fs_bits wires and fs_bits booleanity constraints, where fs_bits = 252 is Jubjub scalar field size.
@@ -73,11 +70,10 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
         // that is guaranteed to be in the primeorder subgroup,
         // so no on-curve or subgroup checks are required //TODO: double-check
         // 750 constraints according to Zcash spec A.3.3.7
-        let pk = ecc::fixed_base_multiplication::<E, _>(
+        let pk = ecc::fixed_base_multiplication(
             cs.namespace(|| "PK = sk * G"),
-            FixedGenerators::SpendingKeyGenerator, //TODO: any NUMS point of full order
-            &sk_bits,
-            engine_params,
+            &zcash_proofs::constants::SPENDING_KEY_GENERATOR, //TODO: any NUMS point of full order
+            &sk_bits
         ) ?;
 
         // Defines first 2 public input wires for the coordinates of the public key in Jubjub base field (~ BLS scalar field)
@@ -90,8 +86,7 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
         // adds 4 constraints (A.3.3.1) to check that it is indeed a point on Jubjub
         let vrf_input = ecc::EdwardsPoint::witness(
             cs.namespace(|| "VRF_INPUT"),
-            self.vrf_input,
-            engine_params,
+            self.vrf_input.map(|p| p.into())
         ) ?;
 
         // Checks that VRF_BASE lies in a proper subgroup of Jubjub. Not strictly required as it is the point provided
@@ -99,8 +94,7 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
         // But why not double-check it in 16 = 3 * 5 (ec doubling) + 1 (!=0) constraints
         // Moreover //TODO
         vrf_input.assert_not_small_order(
-            cs.namespace(|| "VRF_BASE not small order"),
-            engine_params,
+            cs.namespace(|| "VRF_BASE not small order")
         ) ?;
 
         // Defines the 3rd and the 4th input wires to be equal VRF_BASE coordinates,
@@ -112,8 +106,7 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
         // TODO: actually it is 13 more as it is full-length (252 bits) multiplication below
         let vrf = vrf_input.mul(
             cs.namespace(|| "vrf = sk * VRF_BASE"),
-            &sk_bits,
-            engine_params
+            &sk_bits
         ) ?;
 
         // And 2 more constraints to verify the output
@@ -134,12 +127,12 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
 
         // This is an injective encoding, as cur is a
         // point in the prime order subgroup.
-        let mut cur = pk.get_x().clone();
+        let mut cur = pk.get_u().clone();
 
         // Ascend the merkle tree authentication path
         for i in 0..(self.depth as usize) {
             let e: Option<(_,_)> = self.copath.as_ref().map(
-                |v| ( v.0[i].current_selection, v.0[i].sibling.unwrap_or(<E::Fr>::zero()) )
+                |v| ( v.0[i].current_selection, v.0[i].sibling.unwrap_or(bls12_381::Scalar::zero()) )
             );
 
             let cs = &mut cs.namespace(|| format!("merkle tree hash {}", i));
@@ -173,12 +166,11 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
             preimage.extend(xr.to_bits_le(cs.namespace(|| "xr into bits"))?);
 
             // Compute the new subtree value
-            cur = pedersen_hash::pedersen_hash::<E, _>(
+            cur = pedersen_hash::pedersen_hash(
                 cs.namespace(|| "computation of pedersen hash"),
                 pedersen_hash::Personalization::MerkleTree(i),
-                &preimage,
-                engine_params,
-            )?.get_x().clone(); // Injective encoding
+                &preimage
+            )?.get_u().clone(); // Injective encoding
         }
         cur.inputize(cs.namespace(|| "anchor"))?;
 
@@ -189,9 +181,9 @@ impl<E: JubjubEngineWithParams> Circuit<E::Fr> for RingVRF<E> {
 #[cfg(test)]
 mod tests {
     use bellman::gadgets::test::TestConstraintSystem;
-    use pairing::bls12_381::{Bls12, Fr};
 
     use rand_core::{RngCore};
+    use group::Curve;
 
     use super::*;
     use crate::{VRFInput, RingSecretCopath};
@@ -203,11 +195,11 @@ mod tests {
         // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
         let mut rng = ::rand_core::OsRng;
 
-        let sk = SecretKey::<Bls12>::from_rng(&mut rng);
+        let sk = SecretKey::from_rng(&mut rng);
         let pk = sk.to_public();
 
         let t = crate::signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
-        let vrf_input = VRFInput::<Bls12>::new_malleable(t);
+        let vrf_input = VRFInput::new_malleable(t);
 
         use crate::SigningTranscript;
         let extra = ::merlin::Transcript::new(b"whatever").challenge_scalar(b"");
@@ -223,7 +215,7 @@ mod tests {
             copath: Some(copath),
         };
 
-        let mut cs = TestConstraintSystem::<Fr>::new();
+        let mut cs = TestConstraintSystem::new();
 
         instance.synthesize(&mut cs).unwrap();
         assert!(cs.is_satisfied());
@@ -232,13 +224,14 @@ mod tests {
 
         println!("{}", cs.num_constraints() - 4293);
 
-        let vrf_preout = vrf_input.to_preout(&sk); 
+        let vrf_preout = vrf_input.to_preout(&sk);
 
-        assert_eq!(cs.get_input(1, "VRF_BASE input/x/input variable"), vrf_input.as_point().to_xy().0);
-        assert_eq!(cs.get_input(2, "VRF_BASE input/y/input variable"), vrf_input.as_point().to_xy().1);
-
-        assert_eq!(cs.get_input(3, "vrf/x/input variable"), vrf_preout.as_point().to_xy().0);
-        assert_eq!(cs.get_input(4, "vrf/y/input variable"), vrf_preout.as_point().to_xy().1);
+        let vrf_input = <&jubjub::ExtendedPoint>::from(vrf_input.as_point()).to_affine();
+        let vrf_preout = <&jubjub::ExtendedPoint>::from(vrf_preout.as_point()).to_affine();
+        assert_eq!(cs.get_input(1, "VRF_BASE input/u/input variable"), vrf_input.get_u());
+        assert_eq!(cs.get_input(2, "VRF_BASE input/v/input variable"), vrf_input.get_v());
+        assert_eq!(cs.get_input(3, "vrf/u/input variable"), vrf_preout.get_u());
+        assert_eq!(cs.get_input(4, "vrf/v/input variable"), vrf_preout.get_v());
         assert_eq!(cs.get_input(5, "extra/input variable"), extra );
         assert_eq!(cs.get_input(6, "anchor/input variable"), auth_root.0);
     }
