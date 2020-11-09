@@ -11,7 +11,7 @@
 
 use rand_core::{RngCore,CryptoRng};
 
-// #[macro_use]
+#[macro_use]
 extern crate lazy_static;
 
 // #[macro_use]
@@ -28,7 +28,8 @@ mod prover;
 mod verifier;
 pub mod vrf;
 pub mod schnorr;
-
+mod insertion;
+mod copath;
 
 use crate::misc::{
     SignatureResult, signature_error, ReadWrite,
@@ -41,6 +42,9 @@ pub use crate::context::{signing_context, SigningTranscript};
 pub use crate::merkle::{RingSecretCopath, RingRoot, auth_hash};
 pub use crate::generator::generate_crs;
 pub use vrf::{VRFInOut, VRFInput, VRFPreOut, vrfs_merge};
+use neptune::poseidon::PoseidonConstants;
+use typenum::{U2, U4};
+
 
 
 /// Ugly hack until we can unify error handling
@@ -49,6 +53,28 @@ pub type SynthesisResult<T> = Result<T, ::bellman::SynthesisError>;
 fn rand_hack() -> impl RngCore+CryptoRng {
     ::rand_core::OsRng
 }
+
+pub trait PoseidonArity: neptune::Arity<bls12_381::Scalar> + Send + Sync + Clone + std::fmt::Debug {
+    fn params() -> &'static PoseidonConstants<bls12_381::Scalar, Self>;
+}
+
+lazy_static! {
+    static ref POSEIDON_CONSTANTS_2: PoseidonConstants::<bls12_381::Scalar, U2> = PoseidonConstants::new();
+    static ref POSEIDON_CONSTANTS_4: PoseidonConstants::<bls12_381::Scalar, U4> = PoseidonConstants::new();
+}
+
+impl PoseidonArity for U2 {
+    fn params() -> &'static PoseidonConstants<bls12_381::Scalar, Self> {
+        &POSEIDON_CONSTANTS_2
+    }
+}
+
+impl PoseidonArity for U4 {
+    fn params() -> &'static PoseidonConstants<bls12_381::Scalar, Self> {
+        &POSEIDON_CONSTANTS_4
+    }
+}
+
 
 
 /// RingVRF SRS consisting of the Merkle tree depth, our only runtime
@@ -84,7 +110,7 @@ mod tests {
     use bellman::groth16;
 
     use super::*;
-    use bls12_381::Bls12;
+    use ::bls12_381::Bls12;
 
     #[test]
     fn test_completeness() {
@@ -99,7 +125,7 @@ mod tests {
             Err(_) => {
                 let f = File::create(filename).unwrap();
                 let generation = start_timer!(|| "generation");
-                let c = generator::generate_crs(depth).expect("can't generate SRS");
+                let c = generator::generate_crs::<U4>(depth).expect("can't generate SRS");
                 end_timer!(generation);
                 c.write(&f).unwrap();
                 c
@@ -125,7 +151,7 @@ mod tests {
 
         let vrf_inout = vrf_input.to_inout(&sk);
 
-        let copath = RingSecretCopath::random(depth, &mut rng);
+        let copath = RingSecretCopath::<U4>::random(depth, &mut rng);
         let auth_root = copath.to_root(&pk);
 
         let proving = start_timer!(|| "proving");

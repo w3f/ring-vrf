@@ -7,11 +7,12 @@
 
 //! ### Ring VRF zkSNARK circut
 
-use zcash_proofs::circuit::{ecc, pedersen_hash};
+use zcash_proofs::circuit::ecc;
 use bellman::{Circuit, ConstraintSystem, SynthesisError};
 use bellman::gadgets::{boolean, num, Assignment};
 
-use crate::{merkle::MerkleSelection, RingSecretCopath, SecretKey};
+use crate::{RingSecretCopath, SecretKey, PoseidonArity};
+use neptune::Arity;
 
 
 /// A circuit for proving that the given vrf_preout is valid for the given vrf_input under
@@ -25,7 +26,7 @@ use crate::{merkle::MerkleSelection, RingSecretCopath, SecretKey};
 /// These are the values that are required to construct the circuit and populate all the wires.
 /// They are defined as Options as for CRS generation only circuit structure is relevant,
 /// not the wires' assignments, so knowing the types is enough.
-pub struct RingVRF { // TODO: name
+pub struct RingVRF<A: PoseidonArity> { // TODO: name
     /// Merkle tree depth
     pub depth: u32,
 
@@ -42,16 +43,14 @@ pub struct RingVRF { // TODO: name
     /// the element of Jubjub base field.
     /// This is enough to build the root as the base point is hardcoded in the circuit in the lookup tables,
     /// so we can restore the public key from the secret key.
-    pub copath: Option<RingSecretCopath>,
+    pub copath: RingSecretCopath<A>,
 }
 
-impl Circuit<bls12_381::Scalar> for RingVRF {
+impl<A: 'static + PoseidonArity> Circuit<bls12_381::Scalar> for RingVRF<A> {
 
     fn synthesize<CS: ConstraintSystem<bls12_381::Scalar>>(self, cs: &mut CS) -> Result<(), SynthesisError> {
-        if let Some(copath) = self.copath.as_ref() {
-            if copath.depth() != self.depth {
-                return Err(SynthesisError::Unsatisfiable)
-            }
+        if self.copath.depth() != self.depth {
+            return Err(SynthesisError::Unsatisfiable)
         }
 
         // Binary representation of the secret key, a prover's private input.
@@ -129,49 +128,7 @@ impl Circuit<bls12_381::Scalar> for RingVRF {
         // point in the prime order subgroup.
         let mut cur = pk.get_u().clone();
 
-        // Ascend the merkle tree authentication path
-        for i in 0..(self.depth as usize) {
-            let e: Option<(_,_)> = self.copath.as_ref().map(
-                |v| ( v.0[i].current_selection, v.0[i].sibling.unwrap_or(bls12_381::Scalar::zero()) )
-            );
-
-            let cs = &mut cs.namespace(|| format!("merkle tree hash {}", i));
-
-            // Determines if the current subtree is the "right" leaf at this
-            // depth of the tree.
-            let cur_is_right = boolean::Boolean::from(boolean::AllocatedBit::alloc(
-                cs.namespace(|| "position bit"),
-                e.map(|e| e.0 == MerkleSelection::Right),
-            ) ?);
-
-            // Witness the authentication path element adjacent
-            // at this depth.
-            let path_element =
-                num::AllocatedNum::alloc(cs.namespace(|| "path element"), || Ok(e.get()?.1)) ?;
-
-            // Swap the two if the current subtree is on the right
-            let (xl, xr) = num::AllocatedNum::conditionally_reverse(
-                cs.namespace(|| "conditional reversal of preimage"),
-                &cur,
-                &path_element,
-                &cur_is_right,
-            ) ?;
-
-            // We don't need to be strict, because the function is
-            // collision-resistant. If the prover witnesses a congruency,
-            // they will be unable to find an authentication path in the
-            // tree with high probability.
-            let mut preimage = vec![];
-            preimage.extend(xl.to_bits_le(cs.namespace(|| "xl into bits"))?);
-            preimage.extend(xr.to_bits_le(cs.namespace(|| "xr into bits"))?);
-
-            // Compute the new subtree value
-            cur = pedersen_hash::pedersen_hash(
-                cs.namespace(|| "computation of pedersen hash"),
-                pedersen_hash::Personalization::MerkleTree(i),
-                &preimage
-            )?.get_u().clone(); // Injective encoding
-        }
+        let (cur, _) = self.copath.synthesize(cs.namespace(|| "Merkle tree"), cur)?;
         cur.inputize(cs.namespace(|| "anchor"))?;
 
         Ok(())
@@ -187,10 +144,11 @@ mod tests {
 
     use super::*;
     use crate::{VRFInput, RingSecretCopath};
+    use typenum::U4;
 
     #[test]
     fn test_ring() {
-        let depth = 10;
+        let depth = 9;
 
         // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
         let mut rng = ::rand_core::OsRng;
@@ -204,7 +162,7 @@ mod tests {
         use crate::SigningTranscript;
         let extra = ::merlin::Transcript::new(b"whatever").challenge_scalar(b"");
 
-        let copath = RingSecretCopath::random(depth, &mut rng);
+        let copath = RingSecretCopath::<U4>::random(depth, &mut rng);
         let auth_root = copath.to_root(&pk);
 
         let instance = RingVRF {
@@ -212,7 +170,7 @@ mod tests {
             sk: Some(sk.clone()),
             vrf_input: Some(vrf_input.as_point().clone()),
             extra: Some(extra),
-            copath: Some(copath),
+            copath: copath,
         };
 
         let mut cs = TestConstraintSystem::new();

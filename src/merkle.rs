@@ -16,76 +16,67 @@ use core::iter::IntoIterator;
 use core::borrow::Borrow;
 
 use ff::{PrimeField, Field};
+use crate::{PublicKey, PoseidonArity};
+use neptune::{Poseidon, Arity};
+use std::marker::PhantomData;
+use typenum::Unsigned;
 use group::Curve;
-use jubjub::ExtendedPoint;
-use bls12_381::Scalar as Fr;
-use zcash_primitives::pedersen_hash;
-use crate::PublicKey;
-
-
-/// Direction of the binary Merkle path, either going left or right.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub(crate) enum MerkleSelection {
-    /// Move left to the sub-node.
-    Left,
-    /// Move right to the sub-node.
-    Right,
-}
-
-impl MerkleSelection {
-    /// Create a random path direction from a random source.
-    pub fn random<R: rand_core::RngCore>(rng: &mut R) -> Self {
-        if rng.next_u32() % 2 == 0 {
-            MerkleSelection::Left
-        } else {
-            MerkleSelection::Right
-        }
-    }
-}
 
 
 /// A point in the authentication path.
 #[derive(Clone, Debug)]
-pub(crate) struct CopathPoint {
+pub(crate) struct CopathPoint<A> { // TODO: PrimeField?
     /// The current selection. That is, the opposite of sibling.
-    pub current_selection: MerkleSelection,
+    pub current_selection: Option<usize>,
     /// Sibling value, if it exists.
-    pub sibling: Option<jubjub::Fq>,
+    pub siblings: Vec<Option<bls12_381::Scalar>>,
+    _a: PhantomData<A>,
 }
 
-impl CopathPoint {
-    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
-        let mut repr = <bls12_381::Scalar as PrimeField>::Repr::default();
-        reader.read_exact(repr.as_mut()) ?;
+impl<A: PoseidonArity> CopathPoint<A> {
+//    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
+//        let mut repr = <E::Fr as PrimeField>::Repr::default();
+//        reader.read_exact(repr.as_mut()) ?;
+//
+//        use MerkleSelection::*;
+//        let current_selection = if (repr.as_ref()[31] >> 7) == 1 { Left } else { Right };
+//        repr.as_mut()[31] &= 0x7f;
+//
+//        let err = || io::Error::new(io::ErrorKind::InvalidInput, "auth path point is not in field" );
+//
+//        // zcash_primitives::jubjub::fs::MODULUS_BITS = 252
+//        let sibling = if (repr.as_ref()[31] >> 6) != 1 {
+//            repr.as_mut()[31] &= 0x3f;
+//            Some(E::Fr::from_repr(repr).ok_or_else(err) ?)
+//        } else { None };
+//
+//        Ok(CopathPoint { current_selection, siblings: vec![sibling], _a: Default::default() })
+//    }
+//
+//    pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+//        let mut repr = self.siblings[0].map( |x| x.to_repr() ).unwrap_or_default();
+//        assert!((repr.as_mut()[31] & 0xf0) == 0); // repr takes 252 bits so the highest 4 should be unset
+//
+//        if self.siblings[0].is_none() {
+//            repr.as_mut()[31] |= 0x40;
+//        }
+//
+//        if self.current_selection == MerkleSelection::Left {
+//            repr.as_mut()[31] |= 0x80;
+//        }
+//
+//        writer.write_all(repr.as_ref())
+//    }
 
-        use MerkleSelection::*;
-        let current_selection = if (repr.as_ref()[31] >> 7) == 1 { Left } else { Right };
-        repr.as_mut()[31] &= 0x7f;
-
-        let err = || io::Error::new(io::ErrorKind::InvalidInput, "auth path point is not in field" );
-
-        // zcash_primitives::jubjub::fs::MODULUS_BITS = 252
-        let sibling = if (repr.as_ref()[31] >> 6) != 1 {
-            repr.as_mut()[31] &= 0x3f;
-            Some(bls12_381::Scalar::from_repr(repr).ok_or_else(err) ?)
-        } else { None };
-
-        Ok(CopathPoint { current_selection, sibling })
-    }
-
-    pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
-        let mut repr = self.sibling.map( |x| x.to_repr() ).unwrap_or_default();
-        assert!((repr.as_mut()[31] & 0xf0) == 0); // repr takes 252 bits so the highest 4 should be unset
-
-        if self.sibling.is_none() {
-            repr.as_mut()[31] |= 0x40;
+    pub fn random<R: rand_core::RngCore>(rng: &mut R) -> Self {
+        let current_selection = Some((rng.next_u32() % A::to_u32()) as usize);
+        let mut siblings = vec![Some(bls12_381::Scalar::random(rng)); A::to_usize() - 1];
+        // siblings.resize_with(A::to_usize() - 1, || Some(bls12_381::Scalar::random(rng))); TODO:
+        Self {
+            current_selection,
+            siblings,
+            _a: Default::default()
         }
-
-        if self.current_selection == MerkleSelection::Left {
-            repr.as_mut()[31] |= 0x80;
-        }
-
-        writer.write_all(repr.as_ref())
     }
 }
 
@@ -93,38 +84,55 @@ impl CopathPoint {
 /// Compute Merkle root and path
 ///
 /// Leaves list argument unusable
-fn merkleize(
+fn merkleize<A: 'static + PoseidonArity>(
     depth: usize,
-    mut list: &mut [jubjub::Fq],
+    mut list: &mut [bls12_381::Scalar],
     mut index: usize,
-    mut f: impl FnMut(CopathPoint) -> (),
-) -> jubjub::Fq
-{
+    mut f: impl FnMut(CopathPoint<A>) -> (),
+) -> bls12_381::Scalar {
     assert!( list.len() > 0 );
     // let mut tail = 0usize;
     // if list.len().count_ones() != 1 {
     //    let s = 0usize.leadng_zeros() - list.len().leading_zeros() - 1;
     //     tail = (1usize << s) - list.len();
     // }
+    use typenum::marker_traits::Unsigned;
+    let arity = A::to_usize();
 
     for depth_to_bottom in 0..depth {
-        let (current_selection, sibling) = if index % 2 == 0 {
-            (MerkleSelection::Left, list.get(index).cloned())
-        } else {
-            (MerkleSelection::Right, list.get(index).cloned())
-        };
-        f(CopathPoint { current_selection, sibling, });
+        let chunk_index = index / arity;
+        let index_within_chunk = index % arity;
+        let chunk = list
+            .chunks(arity)
+            .nth(chunk_index)
+            .expect("leaf index out of range");
+        assert!(index_within_chunk < chunk.len()); // last chunk may not be exact
+        let remainder_len = arity - chunk.len();
+        let siblings: Vec<_> = chunk
+            .into_iter()
+            .enumerate()
+            .filter(|(i, _)| *i != index_within_chunk)
+            .map(|(_, x)| Some(x.clone()))
+            .chain(std::iter::repeat(None).take(remainder_len)) // last chunk may not be exact
+            .collect();
+        assert!(siblings.len() == arity - 1); // element at index is excluded
 
-        for i in (0..list.len()).filter(|x| x % 2 == 0) { 
-            let left = list.get(i);
-            let right = list.get(i+1);
-            list[i/2] = auth_hash(left, right, depth_to_bottom);
-        }
+        f(CopathPoint {
+            current_selection: Some(index_within_chunk),
+            siblings,
+            _a: Default::default()
+        });
 
-        index /= 2;
+        let list =  &mut list.chunks(arity).map(|chunk| {
+            let remainder_len = arity - chunk.len();
+            let chunk: Vec<_> = chunk.iter()
+                .map(|x| Some(x.clone()))
+                .chain(std::iter::repeat(None).take(remainder_len)) // last chunk may not be exact
+                .collect();
+            auth_hash::<A>(&chunk)
+        }).collect::<Vec<_>>();
 
-        let len = list.len() + (list.len() % 2);
-        list = &mut list[0..len/2]
+        index /= arity;
     }
 
     list[0].clone()
@@ -132,15 +140,15 @@ fn merkleize(
 
 /// The authentication path of the merkle tree.
 #[derive(Clone, Debug)]
-pub struct RingSecretCopath(pub(crate) Vec<CopathPoint>);
+pub struct RingSecretCopath<A: PoseidonArity>(pub(crate) Vec<CopathPoint<A>>);
 
-impl RingSecretCopath {
+impl<A: 'static + PoseidonArity> RingSecretCopath<A> {
     /// Create a random path.
     pub fn random<R: rand_core::RngCore>(depth: u32, rng: &mut R) -> Self {
-        RingSecretCopath(vec![CopathPoint {
-            current_selection: MerkleSelection::random(rng),
-            sibling: Some(bls12_381::Scalar::random(rng))
-        }; depth as usize])
+        use std::convert::TryInto;
+        let mut path = vec![];
+        path.resize_with(depth.try_into().unwrap(), || CopathPoint::random(rng));
+        RingSecretCopath(path)
     }
 
     pub fn depth(&self) -> u32 {
@@ -150,8 +158,10 @@ impl RingSecretCopath {
 
     /// Create a path from a given plain list, of target specified as `list_index`.
     /// Panic if `list_index` is out of bound.
-    pub fn from_publickeys<B,I>(iter: I, index: usize, depth: usize) -> (Self, RingRoot)
-    where B: Borrow<PublicKey>, I: IntoIterator<Item=B>
+    pub fn from_publickeys<B, I>(iter: I, index: usize, depth: usize) -> (Self, RingRoot)
+    where
+        B: Borrow<PublicKey>,
+        I: IntoIterator<Item=B>
     {
         let mut list = iter.into_iter().map( |pk| pk.borrow().0.to_affine().get_u() ).collect::<Vec<_>>();
         let path_len = 0usize.leading_zeros() - depth.leading_zeros();
@@ -161,42 +171,39 @@ impl RingSecretCopath {
         (RingSecretCopath(copath), RingRoot(root))
     }
 
-    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
-        let mut len = [0u8; 4];
-        reader.read_exact(&mut len) ?;
-        let len = u32::from_le_bytes(len) as usize;
-        let mut copath = Vec::with_capacity(len);
-        for _ in 0..len {
-            copath.push( CopathPoint::read(&mut reader) ? );
-        }
-        Ok(RingSecretCopath(copath))
-    }
-
-    pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
-        let len: u32 = self.depth();
-        writer.write_all(& len.to_le_bytes()) ?;
-        for app in self.0.iter() {
-            app.write(&mut writer) ?;
-        }
-        Ok(())
-    }
+//    pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
+//        let mut len = [0u8; 4];
+//        reader.read_exact(&mut len) ?;
+//        let len = u32::from_le_bytes(len) as usize;
+//        let mut copath = Vec::with_capacity(len);
+//        for _ in 0..len {
+//            copath.push( CopathPoint::read(&mut reader) ? );
+//        }
+//        Ok(RingSecretCopath(copath))
+//    }
+//
+//    pub fn write<W: io::Write>(&self, mut writer: W) -> io::Result<()> {
+//        let len: u32 = self.depth();
+//        writer.write_all(& len.to_le_bytes()) ?;
+//        for app in self.0.iter() {
+//            app.write(&mut writer) ?;
+//        }
+//        Ok(())
+//    }
 
     /// Get the merkle root from proof.
     pub fn to_root(&self, leaf: &PublicKey) -> RingRoot {
         let mut cur = leaf.0.to_affine().get_u();
 
         for (depth_to_bottom, point) in self.0.iter().enumerate() {
-            let (left, right) = match point.current_selection {
-                MerkleSelection::Right => (point.sibling.as_ref(), Some(&cur)),
-                MerkleSelection::Left => (Some(&cur), point.sibling.as_ref()),
-            };
-
-            cur = auth_hash(left, right, depth_to_bottom);
+            let mut chunk = point.siblings.clone();
+            chunk.insert(point.current_selection.expect("element index in copath not specified"), Some(cur));
+            cur = auth_hash::<A>(&chunk);
         }
 
         RingRoot(cur)
     }
-   
+
 }
 
 /*
@@ -224,27 +231,30 @@ impl<E: JubjubEngine> DerefMut for RingSecretCopath<E> {
 */
 
 /// The authentication root / merkle root of a given tree.
-pub struct RingRoot(pub jubjub::Fq);
+pub struct RingRoot(pub bls12_381::Scalar);
 
 impl Deref for RingRoot {
-    type Target = jubjub::Fq;
-    fn deref(&self) -> &jubjub::Fq { &self.0 }
+    type Target = bls12_381::Scalar;
+    fn deref(&self) -> &bls12_381::Scalar { &self.0 }
 }
 
 impl DerefMut for RingRoot {
-    fn deref_mut(&mut self) -> &mut jubjub::Fq { &mut self.0 }
+    fn deref_mut(&mut self) -> &mut bls12_381::Scalar { &mut self.0 }
 }
 
 impl RingRoot {
     /// Get the merkle root from a list of public keys. Panic if length of the list is zero.
     ///
     /// TODO: We do no initial hashing here for the leaves, but maybe that's fine.
-    pub fn from_publickeys<B,I>(iter: I, depth: usize) -> Self
-    where B: Borrow<PublicKey>, I: IntoIterator<Item=B>
+    pub fn from_publickeys<B, I, A>(iter: I, depth: usize) -> Self
+    where
+        B: Borrow<PublicKey>,
+        I: IntoIterator<Item=B>,
+        A: 'static + PoseidonArity,
     {
         let mut list = iter.into_iter().map( |pk| pk.borrow().0.to_affine().get_u() ).collect::<Vec<_>>();
         assert!(list.len() > 1);
-        RingRoot(merkleize( depth, list.as_mut_slice(), 0 , |_: CopathPoint| () ))
+        RingRoot(merkleize( depth, list.as_mut_slice(), 0 , |_: CopathPoint<A>| () ))
     }
 
     pub fn read<R: io::Read>(mut reader: R) -> io::Result<Self> {
@@ -260,52 +270,42 @@ impl RingRoot {
 }
 
 /// Hash function used to create the authenticated Merkle tree.
-pub fn auth_hash(
-    left: Option<&jubjub::Fq>,
-    right: Option<&jubjub::Fq>,
-    depth_to_bottom: usize,
-) -> jubjub::Fq {
-    let zero = jubjub::Fq::zero();
-
-    let lhs = left.unwrap_or(&zero).to_le_bits();
-    let rhs = right.unwrap_or(&zero).to_le_bits();
-
-    ExtendedPoint::from(pedersen_hash::pedersen_hash(
-        pedersen_hash::Personalization::MerkleTree(depth_to_bottom),
-        lhs.into_iter()
-            .take(Fr::NUM_BITS as usize)
-            .chain(rhs.into_iter().take(Fr::NUM_BITS as usize))
-            .cloned()
-    )).to_affine().get_u()
+pub fn auth_hash<A: 'static + PoseidonArity>(chunk: &[Option<bls12_381::Scalar>]) -> bls12_381::Scalar {
+    let zero = bls12_381::Scalar::zero();
+    let chunk: Vec<_> = chunk.iter().map(|o| o.unwrap_or(zero)).collect();
+    let mut p = Poseidon::new_with_preimage(&chunk, A::params());
+    p.hash()
 }
 
 
 
-#[cfg(test)]
-mod tests {
-
-    use super::*;
-
-    impl PartialEq for CopathPoint {
-        fn eq(&self, other: &Self) -> bool {
-            self.current_selection == other.current_selection
-            && self.sibling == other.sibling
-        }
-    }
-
-    #[test]
-    fn test_serialization() {
-        let p = CopathPoint {
-            current_selection: MerkleSelection::Left,
-            sibling: Some(Fr::from(123u64))
-        };
-
-        let mut v = vec![];
-        p.write(&mut v).unwrap();
-
-        assert_eq!(v.len(), 32);
-
-        let de_p: CopathPoint = CopathPoint::read(&v[..]).unwrap();
-        assert_eq!(p, de_p);
-    }
-}
+//#[cfg(test)]
+//mod tests {
+//
+//    use super::*;
+//    use pairing::bls12_381::{Bls12, Fr};
+//
+//
+//    impl PartialEq for CopathPoint<Bls12> {
+//        fn eq(&self, other: &Self) -> bool {
+//            self.current_selection == other.current_selection
+//            && self.sibling == other.sibling
+//        }
+//    }
+//
+//    #[test]
+//    fn test_serialization() {
+//        let p = CopathPoint::<Bls12> {
+//            current_selection: MerkleSelection::Left,
+//            sibling: Some(Fr::from(123u64))
+//        };
+//
+//        let mut v = vec![];
+//        p.write(&mut v).unwrap();
+//
+//        assert_eq!(v.len(), 32);
+//
+//        let de_p: CopathPoint::<Bls12> = CopathPoint::read(&v[..]).unwrap();
+//        assert_eq!(p, de_p);
+//    }
+//}
