@@ -360,130 +360,130 @@ mod tests {
         0x59, 0x62, 0xbe, 0x5d, 0x76, 0x3d, 0x31, 0x8d, 0x17, 0xdb, 0x37, 0x32, 0x54, 0x06, 0xbc, 0xe5,
     ];
 
-    // #[test]
-    // fn test_select() {
-    //     for log_size in 1..5 {
-    //         let size = 1 << log_size;
-    //         for index in 0..size {
-    //             // Initialize rng in loop to simplify debugging with consistent elements.
-    //             let rng = &mut XorShiftRng::from_seed(TEST_SEED);
-    //             let mut cs = TestConstraintSystem::new();
-    //
-    //             let elements: Vec<_> = (0..size)
-    //                 .map(|i| {
-    //                     AllocatedNum::<Fr>::alloc(
-    //                         &mut cs.namespace(|| format!("element {}", i)),
-    //                         || {
-    //                             let elt = <Fr as Field>::random(rng);
-    //                             Ok(elt)
-    //                         },
-    //                     )
-    //                         .unwrap()
-    //                 })
-    //                 .collect();
-    //
-    //             let path_bits = (0..log_size)
-    //                 .map(|i| {
-    //                     <Boolean as std::convert::From<AllocatedBit>>::from(
-    //                         AllocatedBit::alloc(cs.namespace(|| format!("index bit {}", i)), {
-    //                             let bit = ((index >> i) & 1) == 1;
-    //                             Some(bit)
-    //                         })
-    //                             .unwrap(),
-    //                     )
-    //                 })
-    //                 .collect::<Vec<_>>();
-    //
-    //             let test_constraints = cs.num_constraints();
-    //             assert_eq!(log_size, test_constraints);
-    //
-    //             let selected = select(cs.namespace(|| "select"), &elements, &path_bits).unwrap();
-    //
-    //             assert!(cs.is_satisfied());
-    //             assert_eq!(elements[index].get_value(), selected.get_value());
-    //
-    //             // One constraint per non-leaf node of a binary tree with `size` leaves.
-    //             let expected_constraints = size - 1;
-    //
-    //             let actual_constraints = cs.num_constraints() - test_constraints;
-    //             assert_eq!(expected_constraints, actual_constraints);
-    //         }
-    //     }
-    // }
+    #[test]
+    fn test_select() {
+        for log_size in 1..5 {
+            let size = 1 << log_size;
+            for index in 0..size {
+                // Initialize rng in loop to simplify debugging with consistent elements.
+                let rng = &mut XorShiftRng::from_seed(TEST_SEED);
+                let mut cs = TestConstraintSystem::new();
 
-    // #[test]
-    // fn test_insert() {
-    //     for log_size in 1..=4 {
-    //         let size = 1 << log_size;
-    //         for index in 0..size {
-    //             // Initialize rng in loop to simplify debugging with consistent elements.
-    //             let rng = &mut XorShiftRng::from_seed(TEST_SEED);
-    //             let mut cs = TestConstraintSystem::new();
-    //
-    //             let elements: Vec<_> = (0..size - 1)
-    //                 .map(|i| {
-    //                     AllocatedNum::<Fr>::alloc(
-    //                         &mut cs.namespace(|| format!("element {}", i)),
-    //                         || {
-    //                             let elt = <Fr as Field>::random(rng);
-    //                             Ok(elt)
-    //                         },
-    //                     )
-    //                         .unwrap()
-    //                 })
-    //                 .collect();
-    //
-    //             let to_insert =
-    //                 AllocatedNum::<Fr>::alloc(&mut cs.namespace(|| "insert"), || {
-    //                     let elt_to_insert = <Fr as Field>::random(rng);
-    //                     Ok(elt_to_insert)
-    //                 })
-    //                     .unwrap();
-    //
-    //             let index_bits = (0..log_size)
-    //                 .map(|i| {
-    //                     <Boolean as std::convert::From<AllocatedBit>>::from(
-    //                         AllocatedBit::alloc(cs.namespace(|| format!("index bit {}", i)), {
-    //                             let bit = ((index >> i) & 1) == 1;
-    //                             Some(bit)
-    //                         })
-    //                             .unwrap(),
-    //                     )
-    //                 })
-    //                 .collect::<Vec<_>>();
-    //
-    //             let test_constraints = cs.num_constraints();
-    //             assert_eq!(log_size, test_constraints);
-    //
-    //             let mut inserted = insert(
-    //                 &mut cs,
-    //                 &to_insert.clone(),
-    //                 index_bits.as_slice(),
-    //                 &elements.as_slice(),
-    //             )
-    //                 .unwrap();
-    //
-    //             assert!(cs.is_satisfied());
-    //
-    //             let extracted = inserted.remove(index);
-    //             assert_eq!(to_insert.get_value(), extracted.get_value(),);
-    //
-    //             for i in 0..size - 1 {
-    //                 let a = elements[i].get_value();
-    //                 let b = inserted[i].get_value();
-    //                 assert_eq!(a, b)
-    //             }
-    //
-    //             // One selection for each element of the result.
-    //             let expected_constraints = match size {
-    //                 8 => 22, // unoptimized, would be 56
-    //                 4 => 8,  // unoptimized, would be 12
-    //                 _ => size * (size - 1),
-    //             };
-    //
-    //             let actual_constraints = cs.num_constraints() - test_constraints;
-    //             assert_eq!(expected_constraints, actual_constraints);
-    //         }
-    //     }
-    // }
+                let elements: Vec<_> = (0..size)
+                    .map(|i| {
+                        AllocatedNum::<Fr>::alloc(
+                            &mut cs.namespace(|| format!("element {}", i)),
+                            || {
+                                let elt = <Fr as Field>::random(&mut *rng);
+                                Ok(elt)
+                            },
+                        )
+                            .unwrap()
+                    })
+                    .collect();
+
+                let path_bits = (0..log_size)
+                    .map(|i| {
+                        <Boolean as std::convert::From<AllocatedBit>>::from(
+                            AllocatedBit::alloc(cs.namespace(|| format!("index bit {}", i)), {
+                                let bit = ((index >> i) & 1) == 1;
+                                Some(bit)
+                            })
+                                .unwrap(),
+                        )
+                    })
+                    .collect::<Vec<_>>();
+
+                let test_constraints = cs.num_constraints();
+                assert_eq!(log_size, test_constraints);
+
+                let selected = select(cs.namespace(|| "select"), &elements, &path_bits).unwrap();
+
+                assert!(cs.is_satisfied());
+                assert_eq!(elements[index].get_value(), selected.get_value());
+
+                // One constraint per non-leaf node of a binary tree with `size` leaves.
+                let expected_constraints = size - 1;
+
+                let actual_constraints = cs.num_constraints() - test_constraints;
+                assert_eq!(expected_constraints, actual_constraints);
+            }
+        }
+    }
+
+    #[test]
+    fn test_insert() {
+        for log_size in 1..=4 {
+            let size = 1 << log_size;
+            for index in 0..size {
+                // Initialize rng in loop to simplify debugging with consistent elements.
+                let rng = &mut XorShiftRng::from_seed(TEST_SEED);
+                let mut cs = TestConstraintSystem::new();
+
+                let elements: Vec<_> = (0..size - 1)
+                    .map(|i| {
+                        AllocatedNum::<Fr>::alloc(
+                            &mut cs.namespace(|| format!("element {}", i)),
+                            || {
+                                let elt = <Fr as Field>::random(&mut *rng);
+                                Ok(elt)
+                            },
+                        )
+                            .unwrap()
+                    })
+                    .collect();
+
+                let to_insert =
+                    AllocatedNum::<Fr>::alloc(&mut cs.namespace(|| "insert"), || {
+                        let elt_to_insert = <Fr as Field>::random(&mut *rng);
+                        Ok(elt_to_insert)
+                    })
+                        .unwrap();
+
+                let index_bits = (0..log_size)
+                    .map(|i| {
+                        <Boolean as std::convert::From<AllocatedBit>>::from(
+                            AllocatedBit::alloc(cs.namespace(|| format!("index bit {}", i)), {
+                                let bit = ((index >> i) & 1) == 1;
+                                Some(bit)
+                            })
+                                .unwrap(),
+                        )
+                    })
+                    .collect::<Vec<_>>();
+
+                let test_constraints = cs.num_constraints();
+                assert_eq!(log_size, test_constraints);
+
+                let mut inserted = insert(
+                    &mut cs,
+                    &to_insert.clone(),
+                    index_bits.as_slice(),
+                    &elements.as_slice(),
+                )
+                    .unwrap();
+
+                assert!(cs.is_satisfied());
+
+                let extracted = inserted.remove(index);
+                assert_eq!(to_insert.get_value(), extracted.get_value(),);
+
+                for i in 0..size - 1 {
+                    let a = elements[i].get_value();
+                    let b = inserted[i].get_value();
+                    assert_eq!(a, b)
+                }
+
+                // One selection for each element of the result.
+                let expected_constraints = match size {
+                    8 => 22, // unoptimized, would be 56
+                    4 => 8,  // unoptimized, would be 12
+                    _ => size * (size - 1),
+                };
+
+                let actual_constraints = cs.num_constraints() - test_constraints;
+                assert_eq!(expected_constraints, actual_constraints);
+            }
+        }
+    }
 }

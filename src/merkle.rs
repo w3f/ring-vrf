@@ -70,8 +70,8 @@ impl<A: PoseidonArity> CopathPoint<A> {
 
     pub fn random<R: rand_core::RngCore>(rng: &mut R) -> Self {
         let current_selection = Some((rng.next_u32() % A::to_u32()) as usize);
-        let mut siblings = vec![Some(bls12_381::Scalar::random(rng)); A::to_usize() - 1];
-        // siblings.resize_with(A::to_usize() - 1, || Some(bls12_381::Scalar::random(rng))); TODO:
+        let mut siblings = vec![];
+        siblings.resize_with(A::to_usize() - 1, || Some(bls12_381::Scalar::random(&mut *rng)));
         Self {
             current_selection,
             siblings,
