@@ -19,8 +19,8 @@ pub fn generate_crs<A: 'static + PoseidonArity>(depth: u32) -> SynthesisResult<g
 {
     let circuit = crate::circuit::RingVRF::<A> {
         depth,
-        sk: None,
-        vrf_input: None,
+        unblinding: None,
+        pk_blinded: None,
         extra: None,
         copath: RingSecretCopath::random(depth, &mut rand_hack()), // TODO: blank?
     };
