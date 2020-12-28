@@ -11,7 +11,7 @@ use zcash_proofs::circuit::ecc;
 use bellman::{Circuit, ConstraintSystem, SynthesisError};
 use bellman::gadgets::{boolean, num, Assignment};
 
-use crate::{RingSecretCopath, SecretKey, PoseidonArity};
+use crate::{RingSecretCopath, SecretKey, PoseidonArity, PublicKeyUnblinding, PublicKey};
 use neptune::Arity;
 
 
@@ -31,10 +31,15 @@ pub struct RingVRF<A: PoseidonArity> { // TODO: name
     pub depth: u32,
 
     /// The secret key, an element of Jubjub scalar field.
-    pub sk: Option<SecretKey>,
+    // pub sk: Option<SecretKey>,
+
+    // `b_pk` where b_pk is a blinding used to deform the public key in APK = PK + b_pk B,
+    // where the 2nd generator B is chosen B = zcash_primitives::constants::NULLIFIER_POSITION_GENERATOR
+    // see `SecretKey::dleq_proove` in `schnorr` module
+    pub unblinding: Option<PublicKeyUnblinding>,
 
     /// The VRF input, a point in Jubjub prime order subgroup.
-    pub vrf_input: Option<jubjub::SubgroupPoint>,
+    pub pk_blinded: Option<PublicKey>,
 
     /// An extra message to sign along with the 
     pub extra: Option<bls12_381::Scalar>,
@@ -53,6 +58,7 @@ impl<A: 'static + PoseidonArity> Circuit<bls12_381::Scalar> for RingVRF<A> {
             return Err(SynthesisError::Unsatisfiable)
         }
 
+        // TODO: update comment
         // Binary representation of the secret key, a prover's private input.
         // fs_bits wires and fs_bits booleanity constraints, where fs_bits = 252 is Jubjub scalar field size.
         // It isn't (range-)constrained to be an element of the field, so small values will have duplicate representations.
@@ -61,20 +67,26 @@ impl<A: 'static + PoseidonArity> Circuit<bls12_381::Scalar> for RingVRF<A> {
         //    and the check sk * G = PK passes for a congruent (sk + n|fs|) * G = sk * G + n|fs| * G == PK + O
         // 2. Multiplication by a congruent secret key results in the same VRF output:
         //    (sk + n|fs|) * H == sk * H, if ord(H) == |fs|
-        let sk_bits = boolean::field_into_boolean_vec_le(
-            cs.namespace(|| "sk"), self.sk.map(|sk| sk.key)
+
+        // -b_pk
+        let bp_neg_bits = boolean::field_into_boolean_vec_le(
+            cs.namespace(|| "-b_pk"), self.unblinding.map(|x| -x.0)
         ) ?;
 
+        // TODO: update comment
         // Derives the public key from the secret key using the hardcoded generator,
         // that is guaranteed to be in the primeorder subgroup,
         // so no on-curve or subgroup checks are required //TODO: double-check
         // 750 constraints according to Zcash spec A.3.3.7
-        let pk = ecc::fixed_base_multiplication(
-            cs.namespace(|| "PK = sk * G"),
-            &zcash_proofs::constants::SPENDING_KEY_GENERATOR, //TODO: any NUMS point of full order
-            &sk_bits
+
+        // - b_pk B = PK - APK
+        let pk_delta = ecc::fixed_base_multiplication(
+            cs.namespace(|| "- b_pk B"),
+            &zcash_proofs::constants::NULLIFIER_POSITION_GENERATOR, //TODO: any NUMS point of full order
+            &bp_neg_bits
         ) ?;
 
+        // TODO: update comment
         // Defines first 2 public input wires for the coordinates of the public key in Jubjub base field (~ BLS scalar field)
         // and assures their assignment matches the values calculated in the previous step in 2 constraints.
         // These 2 constraints are not strictly required, just Bellman is implemented this way.
@@ -83,33 +95,38 @@ impl<A: 'static + PoseidonArity> Circuit<bls12_381::Scalar> for RingVRF<A> {
 
         // Allocates VRF_BASE on the circuit and checks that it is a point on the curve
         // adds 4 constraints (A.3.3.1) to check that it is indeed a point on Jubjub
-        let vrf_input = ecc::EdwardsPoint::witness(
+
+        // APK
+        let pk_blinded = ecc::EdwardsPoint::witness(
             cs.namespace(|| "VRF_INPUT"),
-            self.vrf_input.map(|p| p.into())
+            self.pk_blinded.map(|p| p.0)
         ) ?;
 
         // Checks that VRF_BASE lies in a proper subgroup of Jubjub. Not strictly required as it is the point provided
         // externally as a public input, so MUST be previously checked by the verifier off-circuit.
         // But why not double-check it in 16 = 3 * 5 (ec doubling) + 1 (!=0) constraints
         // Moreover //TODO
-        vrf_input.assert_not_small_order(
+        pk_blinded.assert_not_small_order(
             cs.namespace(|| "VRF_BASE not small order")
         ) ?;
 
         // Defines the 3rd and the 4th input wires to be equal VRF_BASE coordinates,
         // thus adding 2 more constraints
-        vrf_input.inputize(cs.namespace(|| "VRF_BASE input")) ?;
+        pk_blinded.inputize(cs.namespace(|| "APK")) ?;
 
         // Produces VRF output = sk * VRF_BASE, it is a variable base multiplication, thus
         // 3252 constraints (A.3.3.8)
         // TODO: actually it is 13 more as it is full-length (252 bits) multiplication below
-        let vrf = vrf_input.mul(
-            cs.namespace(|| "vrf = sk * VRF_BASE"),
-            &sk_bits
+
+
+        // APK + pk_delta = APK + (PK - APK) = PK
+        let pk = pk_blinded.add(
+            cs.namespace(|| "PK = APK + pk_delta"),
+            &pk_delta
         ) ?;
 
-        // And 2 more constraints to verify the output
-        vrf.inputize(cs.namespace(|| "vrf")) ?;
+        // // And 2 more constraints to verify the output
+        // pk.inputize(cs.namespace(|| "vrf")) ?;
 
         // Add the extra message wire, which consists of one E::Fr scalar.
         // see: https://docs.rs/zcash_proofs/0.2.0/src/zcash_proofs/circuit/ecc.rs.html#138-155
@@ -145,6 +162,7 @@ mod tests {
     use super::*;
     use crate::{VRFInput, RingSecretCopath};
     use typenum::U4;
+    use crate::schnorr::{PedersenDelta, Individual};
 
     #[test]
     fn test_ring() {
@@ -158,17 +176,19 @@ mod tests {
 
         let t = crate::signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
         let vrf_input = VRFInput::new_malleable(t);
-
-        use crate::SigningTranscript;
-        let extra = ::merlin::Transcript::new(b"whatever").challenge_scalar(b"");
+        let (in_out, proof, unblinding) = sk.vrf_sign_simple::<Individual, PedersenDelta>(vrf_input);
+        assert_eq!(pk.0, proof.publickey().0 - crate::scalar_times_blinding_generator(&unblinding.0));
 
         let copath = RingSecretCopath::<U4>::random(depth, &mut rng);
         let auth_root = copath.to_root(&pk);
 
+        use crate::SigningTranscript;
+        let extra = ::merlin::Transcript::new(b"whatever").challenge_scalar(b"");
+
         let instance = RingVRF {
             depth,
-            sk: Some(sk.clone()),
-            vrf_input: Some(vrf_input.as_point().clone()),
+            unblinding: Some(unblinding),
+            pk_blinded: Some(proof.publickey().clone()),
             extra: Some(extra),
             copath: copath,
         };
@@ -177,20 +197,14 @@ mod tests {
 
         instance.synthesize(&mut cs).unwrap();
         assert!(cs.is_satisfied());
-        assert_eq!(cs.num_inputs(), 6 + 1); // the 1st public input predefined to be = 1
+        assert_eq!(cs.num_inputs(), 4 + 1); // the 1st public input predefined to be = 1
         //    assert_eq!(cs.num_constraints(), 4280 + 13); //TODO: 13
 
-        println!("{}", cs.num_constraints() - 4293);
+        println!("{}", cs.num_constraints());
 
-        let vrf_preout = vrf_input.to_preout(&sk);
-
-        let vrf_input = <&jubjub::ExtendedPoint>::from(vrf_input.as_point()).to_affine();
-        let vrf_preout = <&jubjub::ExtendedPoint>::from(vrf_preout.as_point()).to_affine();
-        assert_eq!(cs.get_input(1, "VRF_BASE input/u/input variable"), vrf_input.get_u());
-        assert_eq!(cs.get_input(2, "VRF_BASE input/v/input variable"), vrf_input.get_v());
-        assert_eq!(cs.get_input(3, "vrf/u/input variable"), vrf_preout.get_u());
-        assert_eq!(cs.get_input(4, "vrf/v/input variable"), vrf_preout.get_v());
-        assert_eq!(cs.get_input(5, "extra/input variable"), extra );
-        assert_eq!(cs.get_input(6, "anchor/input variable"), auth_root.0);
+        assert_eq!(cs.get_input(1, "APK/u/input variable"), proof.publickey().0.to_affine().get_u());
+        assert_eq!(cs.get_input(2, "APK/v/input variable"), proof.publickey().0.to_affine().get_v());
+        assert_eq!(cs.get_input(3, "extra/input variable"), extra);
+        assert_eq!(cs.get_input(4, "anchor/input variable"), auth_root.0);
     }
 }

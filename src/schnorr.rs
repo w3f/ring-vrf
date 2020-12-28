@@ -227,8 +227,8 @@ pub struct VRFProof<P, CW, PD> {
     pd: PD,
 }
 
-impl<IO,CW,B> VRFProof<IO,CW,B>
-where B: Borrow<PublicKey> {
+impl<IO,CW,PD> VRFProof<IO,CW,PD>
+where PD: PedersenDeltaOrPublicKey {
     #[inline(always)]
     pub fn publickey(&self) -> &PublicKey { self.pd.publickey().borrow() }
 }

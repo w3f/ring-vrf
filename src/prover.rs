@@ -38,8 +38,8 @@ impl SecretKey {
     {
         let instance = crate::circuit::RingVRF {
             depth: proving_key.depth,
-            sk: Some(self.clone()),
-            vrf_input: Some(vrf_input.as_point().clone()),
+            unblinding: None, //Some(self.clone()),
+            pk_blinded: None, //Some(vrf_input.as_point().clone()),
             extra: Some(extra.challenge_scalar(b"extra-msg")),
             copath: copath,
         };
