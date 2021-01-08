@@ -22,6 +22,8 @@ typenum = "1.11.2"
 
 bench-utils = { git = "https://github.com/arkworks-rs/utils", features = ["print-trace"]}
 
+rand = { version = "0.7", default-features = false }
+
 [patch.crates-io]
 bellman = { git = "https://github.com/w3f/bellman.git", branch="neptune-bis" }
 
