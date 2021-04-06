@@ -138,6 +138,7 @@ impl SecretKey {
         P::G2Builder: SourceBuilder<<Bls12 as Engine>::G2Affine>,
         A: 'static + PoseidonArity,
     {
+        // TODO: preoutput?
         let inout = input.to_inout(self);
         let extra = if let Some(e) = check(&inout).extra() { e } else { return Ok(None) };
         Ok(Some(self.ring_vrf_sign_checked(inout, extra, copath, proving_key) ?))
@@ -160,9 +161,10 @@ impl SecretKey {
         P::G2Builder: SourceBuilder<<Bls12 as Engine>::G2Affine>,
         A: 'static + PoseidonArity,
     {
-        let VRFInOut { input, output } = inout;
+        let VRFInOut { input, preoutput } = inout;
+        // TODO: preoutput??
         let proof = self.ring_vrf_prove(input, extra, copath, proving_key, &mut rand_hack()) ?;
-        Ok((output, proof))
+        Ok((preoutput, proof))
     }
 
     // TODO: VRFs methods

@@ -11,9 +11,8 @@
 //! https://eprint.iacr.org/2017/099.pdf
 //! We note the V(X)EdDSA signature scheme by Trevor Perrin at
 //! https://www.signal.org/docs/specifications/xeddsa/#vxeddsa
-//! is almost identical to the NSEC5 construction, except that
-//! V(X)Ed25519 fails to be a VRF by giving signers multiple
-//! outputs per input.  There is another even later variant at
+//! is almost identical to the NSEC5 construction.  
+//! There is another even later variant at
 //! https://datatracker.ietf.org/doc/draft-irtf-cfrg-vrf/
 //!
 //! We also implement verifier side batching analogous to batched
@@ -341,7 +340,7 @@ where PD: PedersenDeltaOrPublicKey+Clone
         t.commit_point(b"vrf:R=g^r", &self.cw.R);
         t.commit_point(b"vrf:h^r", &self.cw.Hr);
 
-        t.commit_point(b"vrf:h^sk", self.io.output.as_point());
+        t.commit_point(b"vrf:h^sk", self.io.preoutput.as_point());
 
         let c = t.challenge_scalar(b"prove");  // context, message, A/public_key, R=rG
 
@@ -409,7 +408,7 @@ impl SecretKey {
         t.commit_point(b"vrf:h^r", &Hr);
 
         // We add h^sk last to save an allocation if we ever need to hash multiple h together.
-        t.commit_point(b"vrf:h^sk", p.output.as_point());
+        t.commit_point(b"vrf:h^sk", p.preoutput.as_point());
 
         let c = t.challenge_scalar(b"prove"); // context, message, A/public_key, R=rG
         // let s = &r - &(&c * &self.key);
@@ -428,7 +427,7 @@ impl SecretKey {
         // ::zeroize::Zeroize::zeroize(&mut r);
 
         let cw = CW::new(c,R,Hr);
-        let io = p.output.clone();
+        let io = p.preoutput.clone();
         let (pd,unblinding) = PD::new(PedersenDelta { delta, publickey, }, unblinding);
         (VRFProof { io, cw, s, pd, }, unblinding)
     }
@@ -494,7 +493,7 @@ impl SecretKey {
         PD: NewPedersenDeltaOrPublicKey,
     {
         let (proof, pd) = self.dleq_proove(extra, &inout, rand_hack());
-        (inout.output, proof, pd)
+        (inout.preoutput, proof, pd)
     }
 
     /*
@@ -602,7 +601,7 @@ impl SecretKey {
 impl<PD> VRFProof<VRFInOut,Individual,PD>
 where PD: PedersenDeltaOrPublicKey+Clone,
 {
-    /// Verify DLEQ proof that `p.output = s * p.input` where `self`
+    /// Verify DLEQ proof that `p.preoutput = s * p.input` where `self`
     /// `s` times the basepoint.
     ///
     /// We return an enlarged `VRFProofBatchable` instead of just true,
@@ -635,19 +634,19 @@ where PD: PedersenDeltaOrPublicKey+Clone,
         t.commit_point(b"vrf:R=g^r", &R);
 
         // We also recompute h^r aka u using the proof
-        // let Hr = (&proof.c * io.output.as_point()) + (&proof.s * io.input.as_point().into());
+        // let Hr = (&proof.c * io.preoutput.as_point()) + (&proof.s * io.input.as_point().into());
         // let Hr = Hr.compress();
-        let Hr = io.output.as_point().clone().mul(c)
+        let Hr = io.preoutput.as_point().clone().mul(c)
              .add(& io.input.as_point().clone().mul(s));
         t.commit_point(b"vrf:h^r", &Hr);
 
         // We add h^sk last to save an allocation if we ever need to hash multiple h together.
-        t.commit_point(b"vrf:h^sk", io.output.as_point());
+        t.commit_point(b"vrf:h^sk", io.preoutput.as_point());
 
         let cw = Batchable { R, Hr };
         // We need not check that h^pk lies on the curve
         if c == t.challenge_scalar(b"prove") {
-            Ok(VRFProof { io: io.output.clone(), cw, s, pd }) // Scalar: Copy ?!?
+            Ok(VRFProof { io: io.preoutput.clone(), cw, s, pd }) // Scalar: Copy ?!?
         } else {
             // Err(SignatureError::EquationFalse)
             Err( signature_error("VRF signature validation failed") )
@@ -786,7 +785,7 @@ pub fn vrf_verify_batch(
             .chain(z_c)
             .chain(z_s),
         proofs.iter().map(|proof| proof.Hr.decompress())
-            .chain(inouts.iter().map(|p| Some(*p.output.as_point())))
+            .chain(inouts.iter().map(|p| Some(*p.preoutput.as_point())))
             .chain(inouts.iter().map(|p| Some(*p.input.as_point()))),
     ).map(|id| id.is_identity()).unwrap_or(false);
 
@@ -814,10 +813,10 @@ pub fn vrf_verify_batch(
         .zip(outs)
         .map(|((t, pk), out)| out.attach_input_hash(pk,t))
         .collect::<SignatureResult<Vec<VRFInOut<E>>>>() ?;
-    assert!(ts.next().is_none(), "Too few VRF outputs for VRF inputs.");
+    assert!(ts.next().is_none(), "Too few VRF pre-outputs for VRF inputs.");
     assert!(
         ps.len() == outs.len(),
-        "Too few VRF inputs for VRF outputs."
+        "Too few VRF inputs for VRF pre-outputs."
     );
     if dleq_verify_batch(&ps[..], proofs, publickeys).is_ok() {
         Ok(ps.into_boxed_slice())
@@ -865,7 +864,7 @@ mod tests {
         */
         let proof1too = proof1.clone().attach_input_nonmalleable(ctx.bytes(b"meow")).vrf_verify_simple()
             .expect("Correct VRF verification failed!");
-        let io1v = io1.output.attach_input_nonmalleable(ctx.bytes(b"meow"),&sk1.to_public());
+        let io1v = io1.preoutput.attach_input_nonmalleable(ctx.bytes(b"meow"),&sk1.to_public());
         let proof1 = proof1.remove_inout().attach_inout(io1v.clone());
         let proof1tooo = proof1.vrf_verify_simple()
             .expect("Correct VRF verification failed!");
@@ -879,10 +878,10 @@ mod tests {
         assert_eq!(
             sk1.vrf_sign_simple::<super::Individual,()>(input1).0.make_bytes::<[u8;16]>(b""),
             io1.make_bytes::<[u8;16]>(b""),
-            "Rerunning VRF gave different output"
+            "Rerunning VRF gave different pre-output"
         );
 
-        let io2v = io1.output.attach_input_nonmalleable(ctx.bytes(b"woof"),&sk1.to_public());
+        let io2v = io1.preoutput.attach_input_nonmalleable(ctx.bytes(b"woof"),&sk1.to_public());
         let proof1 = proof1.remove_inout().attach_inout(io2v);
         assert!(
             proof1.vrf_verify_simple().is_err(),
@@ -949,7 +948,7 @@ mod tests {
         let proofs21 = sk2.dleq_proove(t0.clone(), &io21);
         let io12 = sk1.secret.vrf_create_from_compressed_point(out2).unwrap();
         let proofs12 = sk1.dleq_proove(t0.clone(), &io12);
-        assert_eq!(io12.output, io21.output, "Sequential two-party VRF failed");
+        assert_eq!(io12.preoutput, io21.preoutput, "Sequential two-party VRF failed");
         assert_eq!(
             proofs21.0,
             proofs21.1.shorten_dleq(t0.clone(), &sk2.public, &io21),

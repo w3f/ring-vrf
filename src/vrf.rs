@@ -5,7 +5,7 @@
 
 //! ### VRF Output routines
 //!
-//! *Warning*  We warn that our ring VRF construction need malleable
+//! *Warning*  We warn that our ring VRF construction needs malleable
 //! outputs via the `*malleable*` methods.  These are insecure when
 //! used in  conjunction with our HDKD provided in dervie.rs.
 //! Attackers could translate malleable VRF outputs from one soft subkey 
@@ -43,6 +43,8 @@ impl VRFInput {
 
     /// Acknoledge VRF transcript malleablity
     ///
+    /// Avoid use with related keys, aka HDKD.
+    ///
     /// TODO: Verify that Point::rand is stable or find a stable alternative.
     pub fn new_malleable<T>(mut t: T) -> Self
     where T: SigningTranscript
@@ -55,8 +57,9 @@ impl VRFInput {
 
     /// Non-malleable VRF transcript.
     ///
-    /// Incompatable with ring VRF however.  We avoid malleability within the
-    /// small order subgroup here by multiplying by the cofactor.
+    /// Actually safe with related keys, aka HDKD, but incompatable with
+    /// our ring VRF of course.  Avoids malleability within the small order
+    /// subgroup here by multiplying by the cofactor.
     pub fn new_nonmalleable<T>(mut t: T, publickey: &crate::PublicKey) -> Self
     where T: SigningTranscript
     {
@@ -65,6 +68,8 @@ impl VRFInput {
     }
 
     /// Semi-malleable VRF transcript
+    ///
+    /// Avoid use when related keys lie inside the same ring.
     pub fn new_ring_malleable<T>(mut t: T, auth_root: &crate::merkle::RingRoot) -> Self
     where T: SigningTranscript
     {
@@ -72,21 +77,21 @@ impl VRFInput {
         VRFInput::new_malleable(t)
     }
 
-    /// Into VRF output.
+    /// Into VRF pre-output.
     pub fn to_preout(&self, sk: &crate::SecretKey) -> VRFPreOut {
         let p: jubjub::ExtendedPoint = self.0.clone().into();
         VRFPreOut( p.mul(sk.key.clone()) )
     }
 
-    /// Into VRF output.
+    /// Into VRF pre-output paired with input.
     pub fn to_inout(&self, sk: &crate::SecretKey) -> VRFInOut {
-        let output = self.to_preout(sk);
-        VRFInOut { input: self.clone(), output }
+        let preoutput = self.to_preout(sk);
+        VRFInOut { input: self.clone(), preoutput }
     }
 }
 
 
-/// VRF output, possibly unverified.
+/// VRF pre-output, possibly unverified.
 #[derive(Debug, Clone)] // Default, PartialEq, Eq, PartialOrd, Ord, Hash
 pub struct VRFPreOut(jubjub::ExtendedPoint);
 
@@ -95,35 +100,41 @@ impl VRFPreOut {
 
     /// Acknoledge VRF transcript malleablity
     ///
+    /// Avoid use with related keys, aka HDKD.
+    ///
     /// TODO: Verify that Point::rand is stable or find a stable alternative.
     pub fn attach_input_malleable<T>(&self, t: T) -> VRFInOut
     where T: SigningTranscript
     {
         let input = VRFInput::new_malleable(t);
-        VRFInOut { input, output: self.clone() }
+        VRFInOut { input, preoutput: self.clone() }
     }
 
     /// Non-malleable VRF transcript.
     ///
-    /// Incompatable with ring VRF however.
+    /// Actually safe with related keys, aka HDKD, but incompatable with
+    /// our ring VRF of course.  Avoids malleability within the small order
+    /// subgroup here by multiplying by the cofactor.
     pub fn attach_input_nonmalleable<T>(&self, t: T, publickey: &crate::PublicKey) -> VRFInOut
     where T: SigningTranscript
     {
         let input = VRFInput::new_nonmalleable(t,publickey);
-        VRFInOut { input, output: self.clone() }
+        VRFInOut { input, preoutput: self.clone() }
     }
 
     /// Semi-malleable VRF transcript
+    ///
+    /// Avoid use when related keys lie inside the same ring.
     pub fn attach_input_ring_malleable<T>(&self, t: T, auth_root: &crate::merkle::RingRoot) -> VRFInOut
     where T: SigningTranscript
     {
         let input = VRFInput::new_ring_malleable(t,auth_root);
-        VRFInOut { input, output: self.clone() }
+        VRFInOut { input, preoutput: self.clone() }
     }
 }
 
 
-/// VRF input and output paired together, possibly unverified.
+/// VRF input and pre-output paired together, possibly unverified.
 ///
 /// Internally, we keep both `RistrettoPoint` and `CompressedRistretto`
 /// forms using `RistrettoBoth`.
@@ -131,8 +142,8 @@ impl VRFPreOut {
 pub struct VRFInOut {
     /// VRF input point
     pub input: VRFInput,
-    /// VRF output point
-    pub output: VRFPreOut,
+    /// VRF pre-output point
+    pub preoutput: VRFPreOut,
 }
 
 impl From<VRFInOut> for VRFInput {
@@ -140,14 +151,14 @@ impl From<VRFInOut> for VRFInput {
 }
 
 impl VRFInOut {
-    /// Write VRF output
-    pub fn write_output<W: io::Write>(&self, writer: W) -> io::Result<()> {
-        self.output.write(writer)
+    /// Write VRF pre-output
+    pub fn write_preoutput<W: io::Write>(&self, writer: W) -> io::Result<()> {
+        self.preoutput.write(writer)
     }
 
-    /// Commit VRF input and output to a transcript.
+    /// Commit VRF input and pre-output to a transcript.
     ///
-    /// We commit both the input and output to provide the 2Hash-DH
+    /// We commit both the input and pre-output to provide the 2Hash-DH
     /// construction from Theorem 2 on page 32 in appendix C of
     /// ["Ouroboros Praos: An adaptively-secure, semi-synchronous proof-of-stake blockchain"](https://eprint.iacr.org/2017/573.pdf)
     /// by Bernardo David, Peter Gazi, Aggelos Kiayias, and Alexander Russell.
@@ -156,7 +167,7 @@ impl VRFInOut {
     /// `VRFInOut::make_*` as well as for signer side batching.
     pub fn commit<T: SigningTranscript>(&self, t: &mut T) {
         t.commit_point(b"vrf-in", self.input.as_point().into()); // .mul_by_cofactor(&params);
-        t.commit_point(b"vrf-out", &self.output.as_point().mul_by_cofactor());
+        t.commit_point(b"vrf-out", &self.preoutput.as_point().mul_by_cofactor());
     }
 
     /// Raw bytes output from the VRF.
@@ -247,7 +258,7 @@ impl ReadWrite for VRFPreOut  {
         // but so long as the VRFInput can only be created by hashing, then this
         // sounds okay.
         // if p.is_identity() {
-        //     return Err( io::Error::new(io::ErrorKind::InvalidInput, "Identity point provided as VRF output" ) );
+        //     return Err( io::Error::new(io::ErrorKind::InvalidInput, "Identity point provided as VRF pre-output" ) );
         // }
         Ok(VRFPreOut(p.unwrap()))
     }
@@ -258,12 +269,12 @@ impl ReadWrite for VRFPreOut  {
 }
 
 
-/// Merge VRF input and output pairs from the same signer,
+/// Merge VRF input and pre-output pairs from the same signer,
 /// probably using variable time arithmetic
 ///
-/// We merge VRF input-outputs pairs by a single signer using the same
-/// technique as the "DLEQ Proofs" and "Batching the Proofs" sections
-/// of "Privacy Pass - The Math" by Alex Davidson,
+/// We merge VRF input and pre-outputs pairs by a single signer using
+/// the same technique as the "DLEQ Proofs" and "Batching the Proofs"
+/// sections of "Privacy Pass - The Math" by Alex Davidson,
 /// https://new.blog.cloudflare.com/privacy-pass-the-math/#dleqproofs
 /// and "Privacy Pass: Bypassing Internet Challenges Anonymously"
 /// by Alex Davidson, Ian Goldberg, Nick Sullivan, George Tankersley,
@@ -309,10 +320,10 @@ where B: ::core::borrow::Borrow<VRFInOut>
     let input = VRFInput( psz().fold(jubjub::SubgroupPoint::identity(), |acc,(p,z)| {
         acc.add(&p.input.as_point().mul(z))
     } ) );
-    let output = VRFPreOut( psz().fold(jubjub::ExtendedPoint::identity(), |acc,(p,z)| {
-        acc.add(&p.output.as_point().mul(z))
+    let preoutput = VRFPreOut( psz().fold(jubjub::ExtendedPoint::identity(), |acc,(p,z)| {
+        acc.add(&p.preoutput.as_point().mul(z))
     } ) );
-    VRFInOut { input, output }
+    VRFInOut { input, preoutput }
 }
 
 

@@ -80,9 +80,9 @@ impl RingRoot {
         // TODO: subgroup checks
         // Public inputs are elements of the main curve (BLS12-381) scalar field (that matches Jubjub base field, that's the thing)
         let input = ExtendedPoint::from(vrf_inout.input.as_point().clone()).to_affine();
-        let output = vrf_inout.output.as_point().to_affine();
+        let preout = vrf_inout.preoutput.as_point().to_affine();
         let (x1, y1) = (input.get_u(), input.get_v());
-        let (x2, y2) = (output.get_u(), output.get_v());
+        let (x2, y2) = (preout.get_u(), preout.get_v());
         // We employ the challenge_scalar method since it hashes into a field,
         // but we're hashing into the jubjub base field not the scalar field
         // here, so maybe the method should be renamed.
