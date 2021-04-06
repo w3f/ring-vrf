@@ -140,12 +140,12 @@ impl SecretKey {
     /// Generate an "unbiased" `SecretKey` directly from a user
     /// suplied `csprng` uniformly, bypassing the `MiniSecretKey`
     /// layer.
-    pub fn from_rng<R>(mut rng: R) -> Self
+    pub fn from_rng<R>(rng: &mut R) -> Self
     where R: CryptoRng + RngCore,
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
         rng.fill_bytes(&mut nonce_seed);
-        let key = <jubjub::Scalar as ::ff::Field>::random(&mut rng);
+        let key = <jubjub::Scalar as ::ff::Field>::random(rng);
         let public = PublicKey::from_secret_scalar(&key);
         SecretKey { key, nonce_seed, public, }
     }
@@ -153,8 +153,8 @@ impl SecretKey {
     /// Generate a JubJub `SecretKey` from a 32 byte seed.
     pub fn from_seed(seed: [u8; 32]) -> Self {
         use rand_core::SeedableRng;
-        let rng = ::rand_chacha::ChaChaRng::from_seed(seed);
-        SecretKey::from_rng(rng)
+        let mut rng = ::rand_chacha::ChaChaRng::from_seed(seed);
+        SecretKey::from_rng(&mut rng)
     }
 
     /// Generate a JubJub `SecretKey` with the default randomness source.

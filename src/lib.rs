@@ -108,59 +108,49 @@ mod tests {
 
     use super::*;
     use ::bls12_381::Bls12;
+    use crate::schnorr::{Individual, PedersenDelta};
 
-    use ark_std::{end_timer, start_timer};
+    use ark_std::{end_timer, start_timer, test_rng};
 
     #[test]
     fn test_completeness() {
-        let depth = 2;
+        let rng = &mut test_rng();
 
-        // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
-        let mut rng = ::rand_core::OsRng;
+        let depth = 5;
 
-        let filename = format!("srs{}.pk", depth);
-        let srs = match File::open(&filename) {
-            Ok(f) => groth16::Parameters::<Bls12>::read(f, false).expect("can't read SRS prover key"),
-            Err(_) => {
-                let f = File::create(filename).unwrap();
-                let generation = start_timer!(|| "generation");
-                let c = generator::generate_crs::<U4>(depth).expect("can't generate SRS");
-                end_timer!(generation);
-                c.write(&f).unwrap();
-                c
-            },
-        };
+        let generation = start_timer!(|| "CRS generation");
+        let srs = generator::generate_crs::<U4>(depth).expect("can't generate SRS");
+        end_timer!(generation);
+
         let srs = RingSRS { srs: &srs, depth, };
+        let pvk = groth16::prepare_verifying_key::<Bls12>(&srs.srs.vk);
 
-        let filename = format!("srs{}.vk", depth);
-        let vk = match File::open(&filename) {
-            Ok(f) => groth16::VerifyingKey::<Bls12>::read(f).expect("can't read SRS verifier key"),
-            Err(_) => {
-                let f = File::create(filename).unwrap();
-                srs.srs.vk.write(&f).unwrap();
-                srs.srs.vk.clone()
-            },
-        };
-
-        let sk = SecretKey::from_rng(&mut rng);
+        let sk = SecretKey::from_rng(rng);
         let pk = sk.to_public();
+        let copath = RingSecretCopath::<U4>::random(depth, rng);
+        let auth_root = copath.to_root(&pk);
 
         let t = signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
         let vrf_input = VRFInput::new_malleable(t.clone());
 
-        let vrf_inout = vrf_input.to_inout(&sk);
+        let proving_schnorr = start_timer!(|| "proving Schnorr");
+        let (vrf_in_out, vrf_proof, unblinding) = sk.vrf_sign_simple::<Individual, PedersenDelta>(vrf_input);
+        end_timer!(proving_schnorr);
 
-        let copath = RingSecretCopath::<U4>::random(depth, &mut rng);
-        let auth_root = copath.to_root(&pk);
+        let proving_snark = start_timer!(|| "proving snark");
+        let ring_proof= prover::compute_ring_affinity_proof(unblinding, vrf_proof.publickey().clone(), vrf::no_extra(), copath.clone(), srs, rng).unwrap();
+        end_timer!(proving_snark);
 
-        let proving = start_timer!(|| "proving");
-        let (vrf_preout, proof) = sk.ring_vrf_sign_checked(vrf_inout, vrf::no_extra(), copath.clone(), srs).unwrap();
-        end_timer!(proving);
+        let WTF = vrf_proof.clone().remove_inout().attach_inout(vrf_in_out); //TODO: who does what
 
-        let vrf_inout = vrf_preout.attach_input_malleable(t);
-        let verification = start_timer!(|| "verification");
-        let valid = auth_root.ring_vrf_verify_unprepared(vrf_inout, vrf::no_extra(), proof, &vk);
-        end_timer!(verification);
-        assert_eq!(valid.unwrap(), true);
+        let verifying_schnorr = start_timer!(|| "verifying Schnorr");
+        assert!(WTF.vrf_verify_simple().is_ok());
+        end_timer!(verifying_schnorr);
+
+        let verifying_snark = start_timer!(|| "verifying snark");
+        let valid = auth_root.verify_ring_affinity_proof(vrf_proof.publickey().clone(), vrf::no_extra(), ring_proof, &pvk);
+        end_timer!(verifying_snark);
+
+        assert!(valid.unwrap());
     }
 }

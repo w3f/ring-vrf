@@ -12,11 +12,36 @@ pub use groth16::Proof as RingVRFProof;
 use rand_core::{RngCore,CryptoRng};
 
 
-use crate::{SynthesisResult, rand_hack, RingSRS, SigningTranscript, SecretKey, RingSecretCopath, VRFInput, VRFPreOut, VRFInOut, vrf::{no_extra, VRFExtraMessage}, PoseidonArity};
+use crate::{SynthesisResult, rand_hack, RingSRS, SigningTranscript, SecretKey, RingSecretCopath, VRFInput, VRFPreOut, VRFInOut, vrf::{no_extra, VRFExtraMessage}, PoseidonArity, PublicKeyUnblinding, PublicKey};
 use bls12_381::Bls12;
 use bellman::multiexp::SourceBuilder;
 use pairing::Engine;
 
+pub fn compute_ring_affinity_proof<T, R, P, A>(
+    unblinding: PublicKeyUnblinding,
+    pk_blinded: PublicKey,
+    mut extra: T,
+    copath: RingSecretCopath<A>,
+    proving_key: RingSRS<P>,
+    rng: &mut R,
+) -> SynthesisResult<RingVRFProof<Bls12>>
+    where
+        T: SigningTranscript,
+        R: RngCore + CryptoRng,
+        P: groth16::ParameterSource<Bls12>,
+        P::G1Builder: SourceBuilder<<Bls12 as Engine>::G1Affine>,
+        P::G2Builder: SourceBuilder<<Bls12 as Engine>::G2Affine>,
+        A: 'static + PoseidonArity,
+{
+    let instance = crate::circuit::RingVRF {
+        depth: proving_key.depth,
+        unblinding: Some(unblinding),
+        pk_blinded: Some(pk_blinded),
+        extra: Some(extra.challenge_scalar(b"extra-msg")),
+        copath: copath,
+    };
+    groth16::create_random_proof(instance, proving_key.srs, rng)
+}
 
 impl SecretKey {
     /// Create ring VRF signature using specified randomness source.

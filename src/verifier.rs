@@ -9,16 +9,29 @@
 
 use bellman::groth16::{self, Proof}; // verify_proof, prepare_verifying_key, PreparedVerifyingKey, VerifyingKey
 
-use crate::{
-    SynthesisResult,
-    SigningTranscript, RingRoot, VRFInOut
-};
+use crate::{SynthesisResult, SigningTranscript, RingRoot, VRFInOut, PublicKey};
 use bls12_381::Bls12;
 use jubjub::ExtendedPoint;
 use group::Curve;
 
 
 impl RingRoot {
+    pub fn verify_ring_affinity_proof<T>(
+        &self,
+        pk_blinded: PublicKey,
+        mut extra: T,
+        zkproof: Proof<Bls12>,
+        verifying_key: &groth16::PreparedVerifyingKey<Bls12>,
+    ) -> SynthesisResult<bool>
+        where T: SigningTranscript,
+    {
+        let pk_blinded = pk_blinded.0.to_affine();
+        let extra = extra.challenge_scalar(b"extra-msg");
+        let public_input: [bls12_381::Scalar; 4] = [ pk_blinded.get_u(), pk_blinded.get_v(), extra, self.0.clone() ];
+        Ok(groth16::verify_proof(verifying_key, &zkproof, &public_input[..]).is_ok())
+    }
+
+
     /// Verify a proof using the given authentication root, VRF input and output,
     /// verifying key aka CRS, and paramaters.
     ///
