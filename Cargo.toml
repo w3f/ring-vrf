@@ -10,19 +10,15 @@ license = "MIT"
 ff = "0.8"
 group = "0.8"
 pairing = "0.18"
-jubjub = "0.5"
-bls12_381 = "0.3"
+jubjub = "0.5.1"
+bls12_381 = "0.3.1"
 # bellman = { git = "https://github.com/w3f/bellman.git", branch="pub-multiexp", version = "0.8", default-features = false, features = ["groth16"] }
 bellman = { git = "https://github.com/w3f/bellman.git", branch = "neptune-bis", version = "0.8", default-features = false, features = ["groth16"] }
-zcash_primitives = { git = "https://github.com/zcash/librustzcash", version = "0.4"}
-zcash_proofs = { git = "https://github.com/zcash/librustzcash", version = "0.4" }
+zcash_primitives = "0.5"
+zcash_proofs = "0.5"
 
 neptune = { git = "https://github.com/w3f/neptune", branch = "librustzcash-bis" }
 typenum = "1.11.2"
-
-bench-utils = { git = "https://github.com/arkworks-rs/utils", features = ["print-trace"]}
-
-rand = { version = "0.7", default-features = false }
 
 [patch.crates-io]
 bellman = { git = "https://github.com/w3f/bellman.git", branch="neptune-bis" }
@@ -69,6 +65,7 @@ features = ["zeroize_derive"]
 [dev-dependencies]
 rand_xorshift = "0.2"
 rand_chacha = "0.2"
+ark-std = { git = "https://github.com/arkworks-rs/utils" }
 
 [features]
 default = ["rand_chacha"] # "std", 

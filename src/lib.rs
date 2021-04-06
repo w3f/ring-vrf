@@ -99,9 +99,6 @@ impl<SRS: Copy+Clone> Clone for RingSRS<SRS> {
 
 #[cfg(test)]
 
-#[macro_use]
-extern crate bench_utils;
-
 mod tests {
     use std::fs::File;
 
@@ -113,16 +110,7 @@ mod tests {
     use ::bls12_381::Bls12;
     use crate::schnorr::{Individual, PedersenDelta};
 
-    pub fn test_rng() -> rand::rngs::StdRng {
-        use rand::SeedableRng;
-
-        // arbitrary seed
-        let seed = [
-            1, 0, 0, 0, 23, 0, 0, 0, 200, 1, 0, 0, 210, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0,
-        ];
-        rand::rngs::StdRng::from_seed(seed)
-    }
+    use ark_std::{end_timer, start_timer, test_rng};
 
     #[test]
     fn test_completeness() {
