@@ -99,9 +99,6 @@ impl<SRS: Copy+Clone> Clone for RingSRS<SRS> {
 
 #[cfg(test)]
 
-#[macro_use]
-extern crate bench_utils;
-
 mod tests {
     use std::fs::File;
 
@@ -111,6 +108,8 @@ mod tests {
 
     use super::*;
     use ::bls12_381::Bls12;
+
+    use ark_std::{end_timer, start_timer};
 
     #[test]
     fn test_completeness() {

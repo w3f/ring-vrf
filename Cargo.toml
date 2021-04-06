@@ -20,8 +20,6 @@ zcash_proofs = { git = "https://github.com/zcash/librustzcash", version = "0.4" 
 neptune = { git = "https://github.com/w3f/neptune", branch = "librustzcash-bis" }
 typenum = "1.11.2"
 
-bench-utils = { git = "https://github.com/scipr-lab/zexe", features = ["print-trace"]}
-
 [patch.crates-io]
 bellman = { git = "https://github.com/w3f/bellman.git", branch="neptune-bis" }
 
@@ -67,6 +65,7 @@ features = ["zeroize_derive"]
 [dev-dependencies]
 rand_xorshift = "0.2"
 rand_chacha = "0.2"
+ark-std = { git = "https://github.com/arkworks-rs/utils" }
 
 [features]
 default = ["rand_chacha"] # "std", 
