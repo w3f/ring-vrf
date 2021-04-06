@@ -131,7 +131,7 @@ mod tests {
         let auth_root = copath.to_root(&pk);
 
         let t = signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
-        let vrf_input = VRFInput::new_malleable(t.clone());
+        let vrf_input = VRFInput::new_ring_malleable(t.clone(),&auth_root);
 
         let proving_schnorr = start_timer!(|| "proving Schnorr");
         let (vrf_in_out, vrf_proof, unblinding) = sk.vrf_sign_simple::<Individual, PedersenDelta>(vrf_input);
@@ -141,14 +141,14 @@ mod tests {
         let ring_proof= prover::compute_ring_affinity_proof(unblinding, vrf_proof.publickey().clone(), vrf::no_extra(), copath.clone(), srs, rng).unwrap();
         end_timer!(proving_snark);
 
-        let WTF = vrf_proof.clone().remove_inout().attach_inout(vrf_in_out); //TODO: who does what
+        let vrf_proof_decoded = vrf_proof.attach_input_ring_malleable(t.clone(),&auth_root);
 
         let verifying_schnorr = start_timer!(|| "verifying Schnorr");
-        assert!(WTF.vrf_verify_simple().is_ok());
+        assert!(vrf_proof_decoded.vrf_verify_simple().is_ok());
         end_timer!(verifying_schnorr);
 
         let verifying_snark = start_timer!(|| "verifying snark");
-        let valid = auth_root.verify_ring_affinity_proof(vrf_proof.publickey().clone(), vrf::no_extra(), ring_proof, &pvk);
+        let valid = auth_root.verify_ring_affinity_proof(vrf_proof_decoded.publickey().clone(), vrf::no_extra(), ring_proof, &pvk);
         end_timer!(verifying_snark);
 
         assert!(valid.unwrap());
