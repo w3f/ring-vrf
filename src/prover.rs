@@ -45,6 +45,8 @@ pub fn compute_ring_affinity_proof<T, R, P, A>(
 
 impl SecretKey {
     /// Create ring VRF signature using specified randomness source.
+    ///
+    /// TODO: BROKEN use compute_ring_affinity_proof
     pub fn ring_vrf_prove<T, R, P, A>(
         &self,
         vrf_input: VRFInput,
