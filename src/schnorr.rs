@@ -368,7 +368,7 @@ impl SecretKey {
     /// using one of the `vrf_create_*` methods on `SecretKey`.
     /// If so, we produce a proof that this multiplication was done correctly.
     #[allow(non_snake_case)]
-    pub fn dleq_proove<T,CW,PD,RNG>(&self, mut t: T, p: &VRFInOut, mut rng: RNG) // blinded: bool
+    pub fn dleq_proove<T,CW,PD,RNG>(&self, p: &VRFInOut, mut t: T, mut rng: RNG) // blinded: bool
      -> (VRFProof<VRFPreOut,CW,PD>, PD::Unblinding)
     where
         CW: NewChallengeOrWitness,
@@ -442,7 +442,7 @@ impl SecretKey {
         CW: NewChallengeOrWitness,
         PD: NewPedersenDeltaOrPublicKey,
     {
-        let (proof, pd) = self.dleq_proove(extra, &inout, rand_hack());
+        let (proof, pd) = self.dleq_proove(&inout, extra, rand_hack());
         (inout.preoutput, proof, pd)
     }
 
@@ -483,7 +483,7 @@ impl SecretKey {
             .map(|t| t.to_inout(self))
             .collect::<Vec<VRFInOut<E>>>();
         let p = vrfs_merge(&ps);
-        let (proof, unblinding) = self.dleq_proove(extra, &p, rand_hack());
+        let (proof, unblinding) = self.dleq_proove(&p, extra, rand_hack());
         (ps.into_boxed_slice(), proof.remove_io(), unblinding)
     }
 }
@@ -711,9 +711,9 @@ mod tests {
         // Verified key exchange, aka sequential two party VRF.
         let t0 = Transcript::new(b"VRF");
         let io21 = sk2.secret.vrf_create_from_compressed_point(out1).unwrap();
-        let proofs21 = sk2.dleq_proove(t0.clone(), &io21);
+        let proofs21 = sk2.dleq_proove(&io21, t0.clone());
         let io12 = sk1.secret.vrf_create_from_compressed_point(out2).unwrap();
-        let proofs12 = sk1.dleq_proove(t0.clone(), &io12);
+        let proofs12 = sk1.dleq_proove(&io12, t0.clone());
         assert_eq!(io12.preoutput, io21.preoutput, "Sequential two-party VRF failed");
         assert_eq!(
             proofs21.0,
