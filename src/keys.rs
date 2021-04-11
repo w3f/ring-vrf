@@ -163,10 +163,11 @@ impl SecretKey {
         SecretKey::from_rng(::rand::thread_rng())
     }
 
-    /// Derive the `PublicKey` corresponding to this `SecretKey`.
-    pub fn to_public(&self) -> PublicKey {
-        self.public.clone()
-    }
+    /// Reference the `PublicKey` corresponding to this `SecretKey`.
+    pub fn as_publickey(&self) -> &PublicKey { &self.public }
+
+    /// Clone the `PublicKey` corresponding to this `SecretKey`.
+    pub fn to_public(&self) -> PublicKey { self.public.clone() }
 }
 // TODO:  Convert to/from zcash_primitives::redjubjub::PrivateKey
 
