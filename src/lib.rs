@@ -137,10 +137,10 @@ mod tests {
         let input = signing_context(b"").bytes(&rng.next_u64().to_le_bytes()[..]);
 
         let (io,proof) = sk.ring_vrf_sign_unchecked(input.clone(), no_extra(), copath, srs).unwrap();
-        assert_eq!(
-            io.make_bytes::<[u8;16]>(b""),
-            sk.vrf_sign_unchecked(input.clone(), no_extra()).0.make_bytes::<[u8;16]>(b"")
-        );
+        // assert_eq!(
+        //    io.make_bytes::<[u8;16]>(b""),
+        //     sk.vrf_sign_unchecked(input.clone(), no_extra()).0.make_bytes::<[u8;16]>(b"")
+        // );
         assert_eq!(
             io.make_bytes::<[u8;16]>(b""),
             proof.ring_vrf_verify(input.clone(), no_extra(), &auth_root, &pvk).unwrap().make_bytes::<[u8;16]>(b"")

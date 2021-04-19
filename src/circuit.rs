@@ -208,6 +208,6 @@ mod tests {
         assert_eq!(cs.get_input(1, "APK/u/input variable"), proof.publickey().0.to_affine().get_u());
         assert_eq!(cs.get_input(2, "APK/v/input variable"), proof.publickey().0.to_affine().get_v());
         // assert_eq!(cs.get_input(3, "extra/input variable"), extra);
-        assert_eq!(cs.get_input(4, "anchor/input variable"), auth_root.0);
+        assert_eq!(cs.get_input(3, "anchor/input variable"), auth_root.0);
     }
 }
