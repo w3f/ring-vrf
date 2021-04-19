@@ -477,12 +477,12 @@ impl SecretKey {
     /// 
     /// Returns first the `VRFInOut` from which output can be extracted,
     /// and second the VRF signature.
-    pub fn vrf_sign_unchecked<TI,TE,CW>(&self, input: TI, extra: TE)
-     -> (VRFInOut, VRFProof<VRFPreOut,CW,PublicKey>)
+    pub fn vrf_sign_unchecked<TI,TE>(&self, input: TI, extra: TE)
+     -> (VRFInOut, VRFProof<VRFPreOut,Individual,PublicKey>)
     where
         TI: SigningTranscript,
         TE: SigningTranscript,
-        CW: NewChallengeOrWitness,
+        // CW: NewChallengeOrWitness,
     {
         use crate::vrf::VRFMalleability;
         let inout = self.as_publickey().vrf_input(input).to_inout(self);
@@ -498,11 +498,11 @@ impl SecretKey {
     /// We check whether an output warrants producing a proof using the
     /// closure provided, which itself returns either a `bool` or else
     /// an `Option` of an extra message transcript.
-    pub fn vrf_sign_after_check<T,CW,F,O>(&self, input: T, check: F)
-     -> Option<VRFProof<VRFPreOut,CW,PublicKey>>
+    pub fn vrf_sign_after_check<T,F,O>(&self, input: T, check: F)
+     -> Option<VRFProof<VRFPreOut,Individual,PublicKey>>
     where
         T: SigningTranscript,
-        CW: NewChallengeOrWitness,
+        // CW: NewChallengeOrWitness,
         F: FnOnce(&VRFInOut) -> O,
         O: VRFExtraMessage,
     {
