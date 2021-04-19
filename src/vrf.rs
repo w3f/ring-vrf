@@ -26,13 +26,76 @@ use group::{Group, GroupEncoding};
 use crate::{ReadWrite, SigningTranscript, Scalar};  // use super::*;
 
 
-/// VRF input, always created locally from a `SigningTranscript`.
+/// VRF Malleability Type
+pub trait VRFMalleability {
+    /// True if suitable for use with anonymized aka ring VRFs.
+    const ANONYMOUS : bool = true;
+
+    /// Build `VRFInput` from input transcript.
+    fn vrf_input<T>(&self, t: T) -> VRFInput
+    where T: SigningTranscript;
+}
+
+/// Malleable VRF input transcript.
 ///
-/// All creation methods require the developer acknoledge their VRF output malleability.
+/// Avoid use with related keys, aka HDKD.
+/// Acknoledge malleability by never making this default behavior.
+pub struct Malleable;
+impl VRFMalleability for Malleable {
+    /// Build malleable VRF input transcript.  
+    /// Insecure if used with related keys, aka HDKD.
+    ///
+    /// TODO: Verify that Point::rand is stable or find a stable alternative.
+    fn vrf_input<T>(&self, t: T) -> VRFInput
+    where T: SigningTranscript
+    {
+        VRFInput::from_transcript(t)
+    }
+}
+
+/// Non-malleable VRF transcript.  Unsuitable for ring VRFs.
+impl VRFMalleability for crate::PublicKey {
+    const ANONYMOUS : bool = false;
+
+    /// Build non-malleable VRF transcript.
+    ///
+    /// Actually safe with related keys, aka HDKD, but incompatable with
+    /// our ring VRF of course.  Avoids malleability within the small order
+    /// subgroup here by multiplying by the cofactor.
+    fn vrf_input<T>(&self, mut t: T) -> VRFInput
+    where T: SigningTranscript
+    {
+        t.commit_point(b"vrf-nm-pk", &self.0.mul_by_cofactor());
+        VRFInput::from_transcript(t)
+    }
+}
+
+/// Semi-malleable VRF transcript for usage with ring VRFs
+impl VRFMalleability for crate::merkle::RingRoot {
+    /// Semi-malleable VRF transcript
+    ///
+    /// Avoid use when related keys lie inside the same ring.
+    fn vrf_input<T>(&self, mut t: T) -> VRFInput
+    where T: SigningTranscript
+    {
+        t.commit_bytes(b"vrf-nm-ar", self.0.to_repr().as_ref());
+        VRFInput::from_transcript(t)
+    }
+}
+
+
+/// VRF input, consisting of an elliptic curve point.  
+///
+/// Always created locally from a `SigningTranscript` using the
+/// `VRFMalleability` trait, which makes developers acknoledge their
+/// malleability choice.
+///
+/// Not necessarily in the prime order subgroup.
 #[derive(Debug, Clone)] // PartialEq, Eq
 pub struct VRFInput(jubjub::SubgroupPoint);
 
 impl VRFInput {
+    /// TODO: Should we provide a convenience method that invokes `mul_by_cofactor()`?
     pub(crate) fn as_point(&self) -> &jubjub::SubgroupPoint { &self.0 }
 
     /// Create a new VRF input from an `RngCore`.
@@ -41,41 +104,20 @@ impl VRFInput {
         VRFInput(jubjub::SubgroupPoint::random(rng))
     }
 
-    /// Acknoledge VRF transcript malleablity
-    ///
-    /// Avoid use with related keys, aka HDKD.
-    ///
-    /// TODO: Verify that Point::rand is stable or find a stable alternative.
-    pub fn new_malleable<T>(mut t: T) -> Self
-    where T: SigningTranscript
-    {
+    /// Create a new VRF input from an `[u8; 32]`.
+    #[inline(always)]
+    fn from_seed(seed: [u8; 32]) -> Self {
+        VRFInput::from_rng(rand_chacha::ChaChaRng::from_seed(seed))
+    }
+
+    /// Create a new VRF input from an `[u8; 32]`.
+    #[inline(always)]
+    fn from_transcript<T: SigningTranscript>(mut t: T) -> Self {
         let mut seed = [0u8; 32]; // <ChaChaRng as rand_core::SeedableRng>::Seed::default();
         t.challenge_bytes(b"vrf-input", seed.as_mut());
-        let rng = ::rand_chacha::ChaChaRng::from_seed(seed);
-        VRFInput::from_rng(rng)
+        VRFInput::from_seed(seed)
     }
 
-    /// Non-malleable VRF transcript.
-    ///
-    /// Actually safe with related keys, aka HDKD, but incompatable with
-    /// our ring VRF of course.  Avoids malleability within the small order
-    /// subgroup here by multiplying by the cofactor.
-    pub fn new_nonmalleable<T>(mut t: T, publickey: &crate::PublicKey) -> Self
-    where T: SigningTranscript
-    {
-        t.commit_point(b"vrf-nm-pk", &publickey.0.mul_by_cofactor());
-        VRFInput::new_malleable(t)
-    }
-
-    /// Semi-malleable VRF transcript
-    ///
-    /// Avoid use when related keys lie inside the same ring.
-    pub fn new_ring_malleable<T>(mut t: T, auth_root: &crate::merkle::RingRoot) -> Self
-    where T: SigningTranscript
-    {
-        t.commit_bytes(b"vrf-nm-ar", auth_root.0.to_repr().as_ref());
-        VRFInput::new_malleable(t)
-    }
 
     /// Into VRF pre-output.
     pub fn to_preout(&self, sk: &crate::SecretKey) -> VRFPreOut {
@@ -96,39 +138,15 @@ impl VRFInput {
 pub struct VRFPreOut(jubjub::ExtendedPoint);
 
 impl VRFPreOut {
+    /// TODO: Should we provide a convenience method that invokes `mul_by_cofactor()`?
     pub(crate) fn as_point(&self) -> &jubjub::ExtendedPoint { &self.0 }
 
-    /// Acknoledge VRF transcript malleablity
-    ///
-    /// Avoid use with related keys, aka HDKD.
-    ///
-    /// TODO: Verify that Point::rand is stable or find a stable alternative.
-    pub fn attach_input_malleable<T>(&self, t: T) -> VRFInOut
-    where T: SigningTranscript
+    /// Create `VRFInOut` by attaching to our pre-output the VRF input
+    /// with given malleablity from the given transcript. 
+    pub fn attach_input<M,T>(&self, malleability: &M, t: T) -> VRFInOut
+    where M: VRFMalleability, T: SigningTranscript
     {
-        let input = VRFInput::new_malleable(t);
-        VRFInOut { input, preoutput: self.clone() }
-    }
-
-    /// Non-malleable VRF transcript.
-    ///
-    /// Actually safe with related keys, aka HDKD, but incompatable with
-    /// our ring VRF of course.  Avoids malleability within the small order
-    /// subgroup here by multiplying by the cofactor.
-    pub fn attach_input_nonmalleable<T>(&self, t: T, publickey: &crate::PublicKey) -> VRFInOut
-    where T: SigningTranscript
-    {
-        let input = VRFInput::new_nonmalleable(t,publickey);
-        VRFInOut { input, preoutput: self.clone() }
-    }
-
-    /// Semi-malleable VRF transcript
-    ///
-    /// Avoid use when related keys lie inside the same ring.
-    pub fn attach_input_ring_malleable<T>(&self, t: T, auth_root: &crate::merkle::RingRoot) -> VRFInOut
-    where T: SigningTranscript
-    {
-        let input = VRFInput::new_ring_malleable(t,auth_root);
+        let input = malleability.vrf_input(t);
         VRFInOut { input, preoutput: self.clone() }
     }
 }

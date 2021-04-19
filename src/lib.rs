@@ -31,24 +31,29 @@ pub mod schnorr;
 mod insertion;
 mod copath;
 
-use crate::misc::{
-    SignatureResult, signature_error, ReadWrite,
+use misc::{
+    SignatureResult, SignatureError, ReadWrite,
     Scalar, read_scalar, write_scalar,
     scalar_times_generator, scalar_times_blinding_generator
 };
-pub use crate::keys::{SecretKey, PublicKey, PublicKeyUnblinding};
-pub use crate::context::{signing_context, SigningTranscript};
+pub use keys::{SecretKey, PublicKey, PublicKeyUnblinding};
+pub use context::{signing_context, SigningTranscript};
 
-pub use crate::merkle::{RingSecretCopath, RingRoot, auth_hash};
-pub use crate::generator::generate_crs;
-pub use vrf::{VRFInOut, VRFInput, VRFPreOut, vrfs_merge};
+pub use merkle::{RingSecretCopath, RingRoot, auth_hash};
+pub use generator::generate_crs;
+pub use vrf::{VRFInOut, VRFInput, VRFPreOut, no_extra};
+pub use schnorr::{VRFSignature,VRFProof};
+
 use neptune::poseidon::PoseidonConstants;
 use typenum::{U2, U4};
 
 
+pub type RingProof = (schnorr::PedersenDelta,bellman::groth16::Proof<bls12_381::Bls12>);
+
 
 /// Ugly hack until we can unify error handling
 pub type SynthesisResult<T> = Result<T, ::bellman::SynthesisError>;
+
 
 fn rand_hack() -> impl RngCore+CryptoRng {
     ::rand_core::OsRng
@@ -98,7 +103,6 @@ impl<SRS: Copy+Clone> Clone for RingSRS<SRS> {
 
 
 #[cfg(test)]
-
 mod tests {
     use std::fs::File;
 
@@ -130,7 +134,19 @@ mod tests {
         let copath = RingSecretCopath::<U4>::random(depth, rng);
         let auth_root = copath.to_root(&pk);
 
-        let t = signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
+        let input = signing_context(b"").bytes(&rng.next_u64().to_le_bytes()[..]);
+
+        let (io,proof) = sk.ring_vrf_sign_unchecked(input.clone(), no_extra(), copath, srs).unwrap();
+        assert_eq!(
+            io.make_bytes::<[u8;16]>(b""),
+            sk.vrf_sign_unchecked(input.clone(), no_extra()).0.make_bytes::<[u8;16]>(b"")
+        );
+        assert_eq!(
+            io.make_bytes::<[u8;16]>(b""),
+            proof.ring_vrf_verify(input.clone(), no_extra(), &auth_root, &pvk).unwrap().make_bytes::<[u8;16]>(b"")
+        );
+
+        /*
         let vrf_input = VRFInput::new_ring_malleable(t.clone(),&auth_root);
 
         let proving_schnorr = start_timer!(|| "proving Schnorr");
@@ -152,5 +168,6 @@ mod tests {
         end_timer!(verifying_snark);
 
         assert!(valid.unwrap());
+        */
     }
 }
