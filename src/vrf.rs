@@ -43,7 +43,11 @@ pub trait VRFMalleability {
 pub struct Malleable;
 impl VRFMalleability for Malleable {
     /// Build malleable VRF input transcript.  
-    /// Insecure if used with related keys, aka HDKD.
+    ///
+    /// We caution that malleable VRF inputs often become insecure if used
+    /// with related keys, like blockchain wallets produce via "soft" HDKD.
+    /// Instead you want a session key layer in which machines create
+    /// unrelated VRF keys, and then users' account keys certify them.
     ///
     /// TODO: Verify that Point::rand is stable or find a stable alternative.
     fn vrf_input<T>(&self, t: T) -> VRFInput
@@ -59,9 +63,14 @@ impl VRFMalleability for crate::PublicKey {
 
     /// Build non-malleable VRF transcript.
     ///
-    /// Actually safe with related keys, aka HDKD, but incompatable with
-    /// our ring VRF of course.  Avoids malleability within the small order
-    /// subgroup here by multiplying by the cofactor.
+    /// Actually safe with user created related keys, aka HDKD, but
+    /// incompatable with our ring VRF.  Avoids malleability within
+    /// the small order subgroup here by multiplying by the cofactor.
+    ///
+    /// We expect full signer sets should be registered well in advance,
+    /// so our removing the malleability here never creates more valid
+    /// VRF outputs, but reconsider this if you've more dynamic key
+    /// registration process.
     fn vrf_input<T>(&self, mut t: T) -> VRFInput
     where T: SigningTranscript
     {
@@ -70,11 +79,21 @@ impl VRFMalleability for crate::PublicKey {
     }
 }
 
-/// Semi-malleable VRF transcript for usage with ring VRFs
+/// Ring-malleable VRF transcript for usage with ring VRFs
 impl VRFMalleability for crate::merkle::RingRoot {
-    /// Semi-malleable VRF transcript
+    /// Ring-malleable VRF transcript
     ///
-    /// Avoid use when related keys lie inside the same ring.
+    /// We caution that ring malleable VRF inputs could become insecure
+    /// when the same ring contains related keys, like blockchain wallets
+    /// produce via "soft" HDKD.  
+    /// We strongly suggest some session key abstraction in which servers
+    /// make unrelated VRF keys, which users' account keys then certify.
+    ///
+    /// In this, we need the ring to be fixed protocol wide in advance
+    /// because if users choose their ring then they enjoy potentially 
+    /// unlimited VRF output choices too.  If you do this then your VRF
+    /// reduces to proof-of-work, making it worthless.
+    /// Use `Malleable` instead if you must choice over the ring.  
     fn vrf_input<T>(&self, mut t: T) -> VRFInput
     where T: SigningTranscript
     {
