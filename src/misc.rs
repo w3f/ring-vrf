@@ -6,12 +6,41 @@ use ff::PrimeField;
 
 
 // TODO: Avoid std::io entirely after switching to ZEXE
-pub type SignatureError = io::Error;
-pub type SignatureResult<T> = io::Result<T>;
-
-pub fn signature_error(msg: &'static str) -> SignatureError {
-    io::Error::new(io::ErrorKind::InvalidInput, msg)
+#[derive(Debug)]
+pub enum SignatureError {
+    VRFProofInvalid,
+    IO(io::Error),
+    Synthesis(bellman::SynthesisError),
 }
+impl From<io::Error> for SignatureError {
+    fn from(err: io::Error) -> SignatureError {
+        SignatureError::IO(err)
+    }
+}
+impl From<bellman::SynthesisError> for SignatureError {
+    fn from(err: bellman::SynthesisError) -> SignatureError {
+        SignatureError::Synthesis(err)
+    }
+}
+impl SignatureError {
+    pub fn is_invalid_proof(&self) -> bool {
+        match self {
+            SignatureError::VRFProofInvalid => true,
+            _ => false,
+        }
+    }
+}
+
+pub type SignatureResult<T> = Result<T,SignatureError>;
+
+// impl<T> SignatureResult<T> {
+//     pub fn is_valid_signature(&self) -> bool { self.is_ok() }
+// }
+
+
+// pub fn signature_error(msg: &'static str) -> SignatureError {
+//     io::Error::new(io::ErrorKind::InvalidInput, msg)
+// }
 
 
 

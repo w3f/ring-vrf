@@ -7,162 +7,109 @@
 //! ### Ring VRF zk SNARK prover
 
 use bellman::groth16;
-pub use groth16::Proof as RingVRFProof;
+pub use groth16::Proof as Groth16Proof;
 
 use rand_core::{RngCore,CryptoRng};
 
 
-use crate::{SynthesisResult, rand_hack, RingSRS, SigningTranscript, SecretKey, RingSecretCopath, VRFInput, VRFPreOut, VRFInOut, vrf::{no_extra, VRFExtraMessage}, PoseidonArity, PublicKeyUnblinding, PublicKey};
+use crate::{SignatureResult, SynthesisResult, rand_hack, RingSRS, SigningTranscript, SecretKey, RingSecretCopath, VRFInput, VRFPreOut, VRFInOut, vrf::{no_extra, VRFExtraMessage}, dleq::{VRFProof, NewChallengeOrWitness, PedersenDeltaOrPublicKey, PedersenDelta, Individual}, PoseidonArity, PublicKeyUnblinding, PublicKey, RingProof};
 use bls12_381::Bls12;
 use bellman::multiexp::SourceBuilder;
 use pairing::Engine;
 
-pub fn compute_ring_affinity_proof<T, R, P, A>(
+pub fn compute_ring_affinity_proof<A,P,RNG>(
     unblinding: PublicKeyUnblinding,
     pk_blinded: PublicKey,
-    mut extra: T,
     copath: RingSecretCopath<A>,
     proving_key: RingSRS<P>,
-    rng: &mut R,
-) -> SynthesisResult<RingVRFProof<Bls12>>
+    rng: &mut RNG,
+) -> SynthesisResult<Groth16Proof<Bls12>>
     where
-        T: SigningTranscript,
-        R: RngCore + CryptoRng,
+        A: 'static + PoseidonArity,
         P: groth16::ParameterSource<Bls12>,
         P::G1Builder: SourceBuilder<<Bls12 as Engine>::G1Affine>,
         P::G2Builder: SourceBuilder<<Bls12 as Engine>::G2Affine>,
-        A: 'static + PoseidonArity,
+        RNG: RngCore + CryptoRng,
 {
     let instance = crate::circuit::RingVRF {
         depth: proving_key.depth,
         unblinding: Some(unblinding),
         pk_blinded: Some(pk_blinded),
-        extra: Some(extra.challenge_scalar(b"extra-msg")),
         copath: copath,
     };
     groth16::create_random_proof(instance, proving_key.srs, rng)
 }
 
 impl SecretKey {
-    /// Create ring VRF signature using specified randomness source.
-    pub fn ring_vrf_prove<T, R, P, A>(
+    /// Irrefutable non-anonyimized/non-ring Schnorr VRF signature.
+    /// 
+    /// Returns first the `VRFInOut` from which output can be extracted,
+    /// and second the ring VRF signature.
+    pub fn ring_vrf_sign_unchecked<TI,TE,A,P>(
         &self,
-        vrf_input: VRFInput,
-        mut extra: T,
+        input: TI,
+        extra: TE,
         copath: RingSecretCopath<A>,
         proving_key: RingSRS<P>,
-        rng: &mut R,
-    ) -> SynthesisResult<RingVRFProof<Bls12>>
+    ) -> SynthesisResult<(VRFInOut, VRFProof<VRFPreOut,Individual,RingProof>)>
     where
-        T: SigningTranscript,
-        R: RngCore + CryptoRng,
+        TI: SigningTranscript,
+        TE: SigningTranscript,
+        // CW: NewChallengeOrWitness,  
+        A: 'static + PoseidonArity,
         P: groth16::ParameterSource<Bls12>,
         P::G1Builder: SourceBuilder<<Bls12 as Engine>::G1Affine>,
         P::G2Builder: SourceBuilder<<Bls12 as Engine>::G2Affine>,
-        A: 'static + PoseidonArity,
     {
-        let instance = crate::circuit::RingVRF {
-            depth: proving_key.depth,
-            unblinding: None, //Some(self.clone()),
-            pk_blinded: None, //Some(vrf_input.as_point().clone()),
-            extra: Some(extra.challenge_scalar(b"extra-msg")),
-            copath: copath,
-        };
-        groth16::create_random_proof(instance, proving_key.srs, rng)
-    } 
-
-
-
-    /// Run our Schnorr VRF on one single input, producing the output
-    /// and correspodning Schnorr proof.
-    /// You must extract the `VRFPreOut` from the `VRFInOut` returned.
-    pub fn ring_vrf_sign_simple<P, A>(
-        &self, 
-        input: VRFInput,
-        copath: RingSecretCopath<A>,
-        proving_key: RingSRS<P>,
-    ) -> SynthesisResult<(VRFInOut, RingVRFProof<Bls12>)>
-    where
-        P: groth16::ParameterSource<Bls12>,
-        P::G1Builder: SourceBuilder<<Bls12 as Engine>::G1Affine>,
-        P::G2Builder: SourceBuilder<<Bls12 as Engine>::G2Affine>,
-        A: 'static + PoseidonArity,
-    {
-        self.ring_vrf_sign_first(input, no_extra(), copath, proving_key)
+        use crate::{vrf::VRFMalleability, dleq::PedersenDeltaOrPublicKey};
+        let inout = copath.to_root(self.as_publickey()).vrf_input(input).to_inout(self);
+        let (proof, unblinding): (VRFProof<VRFPreOut,Individual,PedersenDelta>, PublicKeyUnblinding)
+          = self.dleq_proove(&inout, extra, rand_hack());
+        let rap = compute_ring_affinity_proof(
+            unblinding,
+            proof.pd.publickey().clone(),
+            copath,
+            proving_key,
+            &mut rand_hack()
+        ) ?;
+        Ok(( inout, proof.alter_pd( |pd: PedersenDelta| (pd,rap) ) ))
     }
 
-    /// Run our Schnorr VRF on one single input and an extra message 
-    /// transcript, producing the output and correspodning Schnorr proof.
-    /// You must extract the `VRFPreOut` from the `VRFInOut` returned.
+    /// Refutable ring VRF signature.
     ///
-    /// There are schemes like Ouroboros Praos in which nodes evaluate
-    /// VRFs repeatedly until they win some contest.  In these case,
-    /// you should probably use `vrf_sign_after_check` to gain access to
-    /// the `VRFInOut` from `vrf_create_hash` first, and then avoid
-    /// computing the proof whenever you do not win. 
-    pub fn ring_vrf_sign_first<T, P, A>(
-        &self,
-        input: VRFInput,
-        extra: T,
-        copath: RingSecretCopath<A>,
-        proving_key: RingSRS<P>,
-    ) -> SynthesisResult<(VRFInOut, RingVRFProof<Bls12>)>
-    where
-        T: SigningTranscript,
-        P: groth16::ParameterSource<Bls12>,
-        P::G1Builder: SourceBuilder<<Bls12 as Engine>::G1Affine>,
-        P::G2Builder: SourceBuilder<<Bls12 as Engine>::G2Affine>,
-        A: 'static + PoseidonArity,
-    {
-        let inout = input.to_inout(self);
-        let proof = self.ring_vrf_prove(input, extra, copath, proving_key, &mut rand_hack()) ?;
-        Ok((inout, proof))
-    }
-
-    /// Run our Schnorr VRF on one single input, producing the output
-    /// and correspodning Schnorr proof, but only if the result first
-    /// passes some check, which itself returns either a `bool` or else
+    /// We check whether an output warrants producing a proof using the
+    /// closure provided, which itself returns either a `bool` or else
     /// an `Option` of an extra message transcript.
-    pub fn ring_vrf_sign_after_check<F, O, P, A>(
-        &self, 
-        input: VRFInput,
+    pub fn ring_vrf_sign_after_check<TI,F,O,A,P>(
+        &self,
+        input: TI,
         check: F,
         copath: RingSecretCopath<A>,
         proving_key: RingSRS<P>,
-    ) -> SynthesisResult<Option<(VRFPreOut, RingVRFProof<Bls12>)>>
+    ) -> SynthesisResult<Option<VRFProof<VRFPreOut,Individual,RingProof>>>
     where
+        TI: SigningTranscript,
+        // CW: NewChallengeOrWitness,
         F: FnOnce(&VRFInOut) -> O,
         O: VRFExtraMessage,
+        A: 'static + PoseidonArity,
         P: groth16::ParameterSource<Bls12>,
         P::G1Builder: SourceBuilder<<Bls12 as Engine>::G1Affine>,
         P::G2Builder: SourceBuilder<<Bls12 as Engine>::G2Affine>,
-        A: 'static + PoseidonArity,
     {
-        let inout = input.to_inout(self);
-        let extra = if let Some(e) = check(&inout).extra() { e } else { return Ok(None) };
-        Ok(Some(self.ring_vrf_sign_checked(inout, extra, copath, proving_key) ?))
-    }
-
-    /// Run our Schnorr VRF on the `VRFInOut` input-output pair,
-    /// producing its output component and and correspodning Schnorr
-    /// proof.
-    pub fn ring_vrf_sign_checked<T, P, A>(
-        &self, 
-        inout: VRFInOut,
-        extra: T,
-        copath: RingSecretCopath<A>,
-        proving_key: RingSRS<P>,
-    ) -> SynthesisResult<(VRFPreOut, RingVRFProof<Bls12>)>
-    where
-        T: SigningTranscript,
-        P: groth16::ParameterSource<Bls12>,
-        P::G1Builder: SourceBuilder<<Bls12 as Engine>::G1Affine>,
-        P::G2Builder: SourceBuilder<<Bls12 as Engine>::G2Affine>,
-        A: 'static + PoseidonArity,
-    {
-        let VRFInOut { input, output } = inout;
-        let proof = self.ring_vrf_prove(input, extra, copath, proving_key, &mut rand_hack()) ?;
-        Ok((output, proof))
+        use crate::{vrf::VRFMalleability, dleq::PedersenDeltaOrPublicKey};
+        let inout = copath.to_root(self.as_publickey()).vrf_input(input).to_inout(self);
+        let extra = if let Some(extra) = check(&inout).extra() { extra } else { return Ok(None) };
+        let (proof, unblinding): (VRFProof<VRFPreOut,Individual,PedersenDelta>, PublicKeyUnblinding)
+          = self.dleq_proove(&inout, extra, rand_hack());
+        let rap = compute_ring_affinity_proof(
+            unblinding,
+            proof.pd.publickey().clone(),
+            copath,
+            proving_key,
+            &mut rand_hack()
+        ) ?;
+        Ok(Some( proof.alter_pd( |pd: PedersenDelta| (pd,rap) ) ))
     }
 
     // TODO: VRFs methods
