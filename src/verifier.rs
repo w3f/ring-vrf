@@ -9,7 +9,7 @@
 
 use bellman::groth16; // Proof, verify_proof, prepare_verifying_key, PreparedVerifyingKey, VerifyingKey
 
-use crate::{SignatureResult, SynthesisResult, SigningTranscript, RingRoot, VRFInOut, VRFPreOut, PublicKey, schnorr::{VRFProof, PedersenDeltaOrPublicKey, PedersenDelta, Individual}, RingProof };
+use crate::{SignatureResult, SynthesisResult, SigningTranscript, RingRoot, VRFInOut, VRFPreOut, PublicKey, dleq::{VRFProof, PedersenDeltaOrPublicKey, PedersenDelta, Individual}, RingProof };
 use bls12_381::Bls12;
 use jubjub::ExtendedPoint;
 use group::Curve;

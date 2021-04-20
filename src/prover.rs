@@ -12,7 +12,7 @@ pub use groth16::Proof as Groth16Proof;
 use rand_core::{RngCore,CryptoRng};
 
 
-use crate::{SignatureResult, SynthesisResult, rand_hack, RingSRS, SigningTranscript, SecretKey, RingSecretCopath, VRFInput, VRFPreOut, VRFInOut, vrf::{no_extra, VRFExtraMessage}, schnorr::{VRFProof, NewChallengeOrWitness, PedersenDeltaOrPublicKey, PedersenDelta, Individual}, PoseidonArity, PublicKeyUnblinding, PublicKey, RingProof};
+use crate::{SignatureResult, SynthesisResult, rand_hack, RingSRS, SigningTranscript, SecretKey, RingSecretCopath, VRFInput, VRFPreOut, VRFInOut, vrf::{no_extra, VRFExtraMessage}, dleq::{VRFProof, NewChallengeOrWitness, PedersenDeltaOrPublicKey, PedersenDelta, Individual}, PoseidonArity, PublicKeyUnblinding, PublicKey, RingProof};
 use bls12_381::Bls12;
 use bellman::multiexp::SourceBuilder;
 use pairing::Engine;
@@ -61,7 +61,7 @@ impl SecretKey {
         P::G1Builder: SourceBuilder<<Bls12 as Engine>::G1Affine>,
         P::G2Builder: SourceBuilder<<Bls12 as Engine>::G2Affine>,
     {
-        use crate::{vrf::VRFMalleability, schnorr::PedersenDeltaOrPublicKey};
+        use crate::{vrf::VRFMalleability, dleq::PedersenDeltaOrPublicKey};
         let inout = copath.to_root(self.as_publickey()).vrf_input(input).to_inout(self);
         let (proof, unblinding): (VRFProof<VRFPreOut,Individual,PedersenDelta>, PublicKeyUnblinding)
           = self.dleq_proove(&inout, extra, rand_hack());
@@ -97,7 +97,7 @@ impl SecretKey {
         P::G1Builder: SourceBuilder<<Bls12 as Engine>::G1Affine>,
         P::G2Builder: SourceBuilder<<Bls12 as Engine>::G2Affine>,
     {
-        use crate::{vrf::VRFMalleability, schnorr::PedersenDeltaOrPublicKey};
+        use crate::{vrf::VRFMalleability, dleq::PedersenDeltaOrPublicKey};
         let inout = copath.to_root(self.as_publickey()).vrf_input(input).to_inout(self);
         let extra = if let Some(extra) = check(&inout).extra() { extra } else { return Ok(None) };
         let (proof, unblinding): (VRFProof<VRFPreOut,Individual,PedersenDelta>, PublicKeyUnblinding)

@@ -27,7 +27,7 @@ mod generator;
 mod prover;
 mod verifier;
 pub mod vrf;
-pub mod schnorr;
+pub mod dleq;
 mod insertion;
 mod copath;
 
@@ -42,13 +42,13 @@ pub use context::{signing_context, SigningTranscript};
 pub use merkle::{RingSecretCopath, RingRoot, auth_hash};
 pub use generator::generate_crs;
 pub use vrf::{VRFInOut, VRFInput, VRFPreOut, no_extra};
-pub use schnorr::{VRFSignature,VRFProof};
+pub use dleq::{VRFSignature,VRFProof};
 
 use neptune::poseidon::PoseidonConstants;
 use typenum::{U2, U4};
 
 
-pub type RingProof = (schnorr::PedersenDelta,bellman::groth16::Proof<bls12_381::Bls12>);
+pub type RingProof = (dleq::PedersenDelta,bellman::groth16::Proof<bls12_381::Bls12>);
 
 
 /// Ugly hack until we can unify error handling
@@ -112,7 +112,7 @@ mod tests {
 
     use super::*;
     use ::bls12_381::Bls12;
-    use crate::schnorr::{Individual, PedersenDelta};
+    use crate::dleq::{Individual, PedersenDelta};
 
     use ark_std::{end_timer, start_timer, test_rng};
 

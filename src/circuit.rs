@@ -35,7 +35,7 @@ pub struct RingVRF<A: PoseidonArity> { // TODO: name
 
     // `b_pk` where b_pk is a blinding used to deform the public key in APK = PK + b_pk B,
     // where the 2nd generator B is chosen B = zcash_primitives::constants::NULLIFIER_POSITION_GENERATOR
-    // see `SecretKey::dleq_proove` in `schnorr` module
+    // see `SecretKey::dleq_proove` in `dleq` module
     pub unblinding: Option<PublicKeyUnblinding>,
 
     /// The VRF input, a point in Jubjub prime order subgroup.
@@ -164,12 +164,11 @@ mod tests {
     use super::*;
     use crate::{VRFInput, RingSecretCopath};
     use typenum::U4;
-    use crate::schnorr::{PedersenDelta, Individual};
 
     #[test]
     fn test_ring() {
         use crate::vrf::{VRFMalleability}; // Malleable
-        use crate::schnorr::{VRFSignature, PedersenDelta};
+        use crate::dleq::{VRFSignature, PedersenDelta};
 
         let depth = 9;
 
