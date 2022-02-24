@@ -1,0 +1,72 @@
+\begin{thebibliography}{10}
+
+\bibitem{RandomizationGroth16}
+Karim Baghery, Markulf Kohlweiss, Janno Siim, and Mikhail Volkhov.
+\newblock Another look at extraction and randomization of groth's zk-snark.
+\newblock In Nikita Borisov and Claudia Diaz, editors, {\em Financial
+  Cryptography and Data Security}, pages 457--475, Berlin, Heidelberg, 2021.
+  Springer Berlin Heidelberg.
+
+\bibitem{cryptoeprint:2005:304}
+Adam Bender, Jonathan Katz, and Ruggero Morselli.
+\newblock Ring signatures: Stronger definitions, and constructions without
+  random oracles.
+\newblock In Shai Halevi and Tal Rabin, editors, {\em Theory of Cryptography},
+  pages 60--79, Berlin, Heidelberg, 2006. Springer Berlin Heidelberg.
+
+\bibitem{cryptoeprint:2020:823}
+Jacqueline Brendel, Cas Cremers, Dennis Jackson, and Mang Zhao.
+\newblock The provable security of ed25519: Theory and practice.
+\newblock Cryptology ePrint Archive, Report 2020/823, 2020.
+\newblock \url{https://eprint.iacr.org/2020/823}.
+
+\bibitem{cryptoeprint:2019:1185}
+David Butler, Andreas Lochbihler, David Aspinall, and Adri{\`a} Gasc{\'o}n.
+\newblock Formalising $\sigma$-protocols and commitment schemes using crypthol.
+\newblock Cryptology ePrint Archive, Report 2019/1185, 2019.
+\newblock \url{https://ia.cr/2019/1185}.
+
+\bibitem{praos}
+Bernardo David, Peter Ga{\v{z}}i, Aggelos Kiayias, and Alexander Russell.
+\newblock Ouroboros praos: An adaptively-secure, semi-synchronous
+  proof-of-stake blockchain.
+\newblock In {\em Annual International Conference on the Theory and
+  Applications of Cryptographic Techniques}, pages 66--98. Springer, 2018.
+
+\bibitem{cryptoeprint:2021:181}
+Jesus Diaz and Anja Lehmann.
+\newblock Group signatures with user-controlled and sequential linkability.
+\newblock Cryptology ePrint Archive, Report 2021/181, 2021.
+\newblock \url{https://eprint.iacr.org/2021/181}.
+
+\bibitem{groth16}
+Jens Groth.
+\newblock On the size of pairing-based non-interactive arguments.
+\newblock In Marc Fischlin and Jean-S{\'e}bastien Coron, editors, {\em Advances
+  in Cryptology -- EUROCRYPT 2016}, pages 305--326, Berlin, Heidelberg, 2016.
+  Springer Berlin Heidelberg.
+\newblock \url{https://ia.cr/2016/260}.
+
+\bibitem{agg_dkg}
+Kobi Gurkan, Philipp Jovanovic, Mary Maller, Sarah Meiklejohn, Gilad Stern, and
+  Alin Tomescu.
+\newblock Aggregatable distributed key generation.
+\newblock In Anne Canteaut and Fran{\c{c}}ois{-}Xavier Standaert, editors, {\em
+  {EUROCRYPT} 2021}, volume 12696 of {\em LNCS}, pages 147--176, 2021.
+\newblock \url{https://ia.cr/2021/005}.
+
+\bibitem{group_sig_survey}
+Mark Manulis, Nils Fleischhacker, Felix G\"unther, Franziskus Kiefer, and
+  Bertram Poettering.
+\newblock Group signatures: Authentication with privacy.
+\newblock BSI, 2011.
+\newblock \url{https://www.franziskuskiefer.de/paper/GruPA.pdf} and
+  \url{https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/Studies/GruPA/GruPA.pdf}.
+
+\bibitem{vrf_micali}
+Silvio Micali, Michael Rabin, and Salil Vadhan.
+\newblock Verifiable random functions.
+\newblock In {\em 40th annual symposium on foundations of computer science
+  (cat. No. 99CB37039)}, pages 120--130. IEEE, 1999.
+
+\end{thebibliography}

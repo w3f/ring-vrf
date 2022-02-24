@@ -1,0 +1,112 @@
+\documentclass[runningheads,evcountsame,a4paper,11pt,orivec]{llncs}
+\usepackage[margin=2.5cm,includefoot]{geometry}
+
+%=================Begin:Packages===================
+\usepackage{graphicx}
+\usepackage{bmpsize}
+\usepackage{algorithm}
+
+\usepackage[noend]{algpseudocode}
+% \usepackage{enumitem}
+\usepackage{url}
+%\usepackage{amsthm}
+
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{hyperref}
+% \usepackage[capitalize,nameinlink]{cleveref}
+% \usepackage{framed}
+% \usepackage{fancybox}
+\usepackage[utf8]{inputenc}
+\usepackage{mathtools}
+% \usepackage{tcolorbox}
+\usepackage{tikz}
+% \usepackage{todonotes}
+\usepackage{xspace}
+\usepackage{xcolor}
+\usepackage[advantage,
+adversary,
+asymptotics,
+complexity,
+ff,
+mm,
+operators,
+probability,
+]{cryptocode}
+\usepackage[linewidth=1pt]{mdframed}
+\usepackage{ulem}
+\usetikzlibrary{arrows,chains,matrix,positioning,scopes}
+
+% TODO: Clean up macros
+\input{macros/style.tex}
+\input{macros/primitives.tex}
+\input{macros/other.tex}
+
+
+\sloppy
+
+
+\title{Ethical identity, ring VRFs, and zero-knowledge continuations}
+
+\author{Jeffrey Burdges \and Handan Kilinc-Alper \and Alistair Stewart \and Sergey Vasilyev}
+\date{}
+\institute{Web 3.0 Foundation}
+
+
+\begin{document}
+	
+\maketitle
+
+\begin{abstract}
+Verifiable random functions (VRFs) weld a pseudorandom function (PRF) into a signature scheme, so that valid signatures prove correct PRF evaluation.  VRFs have diverse applications in consensus, protocols, randomness beacons, DNS via NSEC5, certificate transparency, and online games.
+
+Anonymized ring VRFs or group VRFs built from ring or group signatures prove correct evaluation of an authorized signer's PRF while hiding the signer's identity.
+As a natrual application, anonymized VRF outputs act like a unique pseudonym for its signer within whatever context the input determines, which then remains unlinkable vs other inputs.  These unlinkabile but unique pseudonyms provide an excellent balance between user privacy and service provider interests \cite{pop2008}.  Identity systems lacking this unlinkability property like OAuth wind up being unethical.
+% TODO: ``one person, one persona'' \cite{pop2008} https://bford.info/pub/net/sybil.pdf
+
+We discuss ring VRFs because they integrate with distributed systems more cleanly than threshold designs required by  group signatures and hence group VRFs.  As a rule, ring signatures require signer time logarithmic in the ring size, while group signatures take only constant signer time.  
+%
+We explore a continuation abstraction for composing rerandomizable zkSNARKs like \cite{groth16}, which dramatically improves {\it amortized} constraint count and hence prover time.  We implement a ring VRF with an amortized constraints count below 800 (TODO), which makes ring VRFs more competitive with group VRFs, and makes distributed identity systems less impractical.  
+\end{abstract}
+
+
+\input{intro}
+% \input{identity}
+\input{primitives}
+\input{vrf_def}
+\input{vrf_thin}
+\input{vrf_pedersen}
+\input{rvrf_def}
+\input{rvrf_inst}
+\input{app_id}
+
+
+
+
+\bibliographystyle{plain}
+\bibliography{refs_misc,refs_new,refs_sass}
+
+
+\end{document}
+
+
+
+
+
+\endinput
+
+
+
+
+\newpage
+MERGER IN PROGRESS
+\newpage
+
+
+\input{uc/model}
+\input{uc/rvrf}
+
+\input{uc/rvrf_se}	
+
+
+

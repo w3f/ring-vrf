@@ -1,0 +1,92 @@
+\section{Application: Identity}
+
+Anonymous VRFs yield anonymous identity systems:
+After a user and service establish a secure channel and
+the server authenticates itself with certificates, then
+the user authenticates themselves by providing an anonymous
+VRF signature with input \msg being the server's identity,
+thus creating an anonymous or pseudo-nonymous identified session.
+
+We expand this identified session workflow with an extra
+update operation suitable for our ring VRF's amortized prover.
+We discuss only \pifast here but adapting our techniques to \pisafe appears similar. 
+
+\begin{itemize}
+\item {\em Register} --
+ Adds users' public key commitments into some public ring \ctx,
+ after verifying the user does not currently exist in \ctx.
+\item {\em Update} --
+ User agents regenerate their stored SNARK \pifast everytime \ctx changes,
+ likely recieving \comring and \openring from some ring management service.
+\item {\em Identify} --
+ Our user agent first opens a standard TLS connection to a server \msg,
+ both checking the server's name is \msg, and checking certificate
+ transperency logs, and computes the shared session id \aux.
+ Our user agent computets the user's identity
+  $\mathtt{id} = \PedVRF.\Eval(\sk,\msg)$ on the server \msg.
+ Our user agent next rerandomizes \pifast, \compk, and \openpk, computes
+ $\sigma = \PedVRF.\Sign(\compk,\msg,\aux \doubleplus \compk \doubleplus \pifast,\sigma)$
+ and finally sends the server their ring VRF signature:
+ $\rVRF.\rSign(\sk,\openring,\msg,\aux) = (\compk,\pifast,\sigma)$.
+\item {\em Verify} -- 
+ After recieving $(\compk,\pifast,\sigma)$ in channel \aux,
+ the server named \msg checks \pifast on the input $\compk + \comring$,
+ checks the VRF signature
+ $\mathtt{id} = \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \pifast,\sigma)$,
+ and obtains the user's identity $\mathtt{id}$
+\end{itemize}
+
+We must not link users' identiteis at different sites, so user agents
+must disable all cross site resource loading, referer information, etc.
+User agents could still load purely static resources without metadata
+like cookies or referer information, especially purely content addressible
+resoruces.
+
+\subsection{Moderation}
+\label{subsec:moderation}
+
+All discussion or collaboration sites have behavioral guidlines and
+moderation rules that deeply impact their culture and collective values.
+
+Our ring VRFs enables a simple blacklisting operation:
+If a user missbehaves, then sites could blacklist or otherwise penalizes
+their site local identity $\mathtt{id}$.
+As $\mathtt{id}$ remains unlinked from other sites, we avoid thorny
+questions about how such pentalties impact the user elsewhere, and thus
+can assess and despence justice more precisely. 
+
+At the same time, there exist sites who must forget users' histories
+eventually, such as when users invoke GDPR compliance or to give children
+room to make social mistakes.  In these cases, we suggest injecting
+approximate date information into \msg along with the site name,
+so \msg becomes site name along with the current year plus month or week.
+In this way, users have only one stable $\mathtt{id}$ within the
+approximate date range, but they obtain fresh $\mathtt{id}$s merely
+by waiting until the next month or week.
+
+If desired, users still have the choice to prove multiple $(\msg,\mathtt{id})$
+pairs simultaniously in the same $\sigma$, which links these pairs
+together so sites could still give pseudo-nym stability.
+If a site thus links pseudo-nym creation date and current date, then
+users have multiple active pseudo-nyms, but only one active pseudo-nym
+per time period, which prevents spam.  If instead we link only adjuacent
+dates, then pseudo-nyms could be abandonded and repalced, but abandonded
+pseudo-nyms cannot then be reclaimed without linking to intervening dates.
+
+In these ways, sites encode into cryptography important aspects of
+their moderation rules.  We expect this makes sites' values and culture
+more uniform, predictable, and transperent.
+
+\subsection{AML/KYC}
+
+We shall not discuss AML/KYC in detail, because the entire field lacks
+clear goals, and thus winds up being ineffective \cite{???}.
+We do however observe that AML/KYC conflicts with security and privacy
+laws like GDPR typically require that one compliance party know users'
+identities, while another service party knows the users' activities.
+
+In principle, our compliance party could maintained the ring \ctx,
+which then gives users unique identities with service parties.
+If later required, users could prove their identities to investigators,
+or merely prove which services they use and do not use. 
+

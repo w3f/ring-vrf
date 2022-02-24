@@ -1,0 +1,31 @@
+
+We discuss the cryptographic underpinnings of identity system that prevent Sybil behavior and permit banning specific users in a specific context or domain, but ethically support general purpose usage in that they provide zero details about users and avoid linking users different activities across different contexts or domains.   
+
+We first learned of this underlying problem from Bryan Ford's work on proof-of-personhood parties \cite{pop2008,pop2017}.
+% https://bford.info/pub/dec/pop-abs/  https://bford.info/pub/net/sybil-abs/
+Yet here, we focus exclusively upon cryptographic security, flexibility, and performance, without exploring trust or certification problems like proof-of-personhood parties. 
+
+
+
+...
+
+
+
+
+We first in \S\ref{sec:rvrf_glue} unify a simple fast VRF signature given by a DLEQ proof together with a SNARK that proves ring membership by the public key, but here both must handle the public key as a Jubjub Pedersen commitment.  ZCash sapling uses a similar Schnorr signature scheme, without the Jubjub Pedersen commitment (TODO). 
+
+We next in \S\ref{sec:rvrf_cont} split this SNARK into a slower preliminary proof extracting the public key from the ring, and a continuations by a second faster SNARK that prepares the Jubjub Pedersen commitment.  We prefer this version whenever rings have low churn, but our first version has faster verifier time by one miller loop, making it preferable for very high churn rings.
+
+
+
+
+\endinput
+
+We first in \S\ref{sec:rvrf_dleq} unify a simple fast VRF signature given by a DLEQ proof together with a SNARK that proves ring membership by the public key, but here both must handle the public key as a Jubjub Pedersen commitment.  ZCash sapling uses a similar Schnorr signature scheme, without the Jubjub Pedersen commitment (TODO). 
+
+We next in \S\ref{sec:rvrf_two_snarks} split this SNARK into a slower preliminary proof extracting the public key from the ring, and a continuations by a second faster SNARK that prepares the Jubjub Pedersen commitment.  We prefer this version whenever rings have low churn, but our first version has faster verifier time by one miller loop, making it preferable for very high churn rings.
+
+
+
+
+Also, zero-knowlede continuations wind up so much faster than bruit force techniques like recursion. 

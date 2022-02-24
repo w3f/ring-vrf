@@ -1,0 +1,101 @@
+\subsection{Pederson keyed VRF-AD-KC}
+\label{sec:vrf_perderson}
+
+Anonymized VRF signatures could use Chaum-Pedersen DLEQ proofs that
+hide the true public key, which our key committing definition permits.
+Zero-knowledge continuations work by opening this key comittment
+ inside another zero-knowledge proof. % DUP
+
+We only describe the non-batchable variant analogous to
+ \cite{nsec5} and \cite{VXEd25519}.
+At least two easy batch verifiable flavors exist, but
+ they enlarge the VRF signature by 32 bytes.
+We need pairings to verify the SNARKs component of our ring VRF,
+which dwarfs the CPU savings from batch verification,
+so saving 32 bytes sounds more helpful.
+
+% TODO: Alternatives, like slow recursion.  Just Intro?
+
+\newcommand{\PedVRF}{\primalgo{PedVRF}} 
+
+We define \KeyGen like for \ThinVRF in \S\ref{sec:vrf_thin} but \Eval differs slightly:
+% by selecting a secret key \sk uniformly at random from $\F_p$ and
+% computing the public key $\pk = \sk \, \genG$.
+\begin{itemize}
+\item $\PedVRF.\KeyGen$ selects a secret key \sk uniformly at random from $\F_p$ and computes the public key $\pk = \sk \, \genG$. 
+\item $\PedVRF.\Eval(\sk,\msg)$ takes a secret key \sk and an input $\msg$, and
+ then returns a VRF output $H'(\msg,h \, \sk \, H_{\grE}(\msg))$.
+\end{itemize}
+We seleted here a base point $\genG$ for our public key
+ because this avoids some confusion later.
+
+We fix a second generator $\genB$ of $\grE$ independent from $\genG$, perhaps
+ created by applying $H_\grE$ to an input outside existing usages' domain. 
+We now form Pedersen-like commitments to this public key \pk as follows.
+\begin{itemize}
+\item $\PedVRF.\CommitKey$ selects a blinding factor $\openpk$ uniformly
+ at random from $\F_p$ and computes the commitment $\compk = \pk + \openpk \, \genB$.
+\item $\PedVRF.\OpenKey$ just returns $\pk = \compk - \openpk \, \genB$.
+\end{itemize}
+In fact, these are technically only Pedersen commitments to
+the secret key \sk, not to the public key \pk, because
+ \OpenKey does not enforce the structure of \pk.
+Instead, our \Verify proves correctness of \compk, as
+ required for our key binding condition, so
+zero-knowledge continuations then use \OpenKey with only minor caveots.
+% In particular, any VRF-AC-KC prevents adversaries from obtaining
+% extra valid outputs, but ring VRF protocols need a proof-of-knowledge
+% for the public key \pk if they demand that different \pk represent
+% different functions.
+
+\begin{itemize}
+\item $\PedVRF.\Sign(\sk,\openpk,\msg,\aux)$ takes a secret key \sk and blinding factor \openpk, an input $\msg$, and auxiliary data \aux, and then performs
+\begin{enumerate}
+    \item compute the VRF input point $\In := H_{\grE}(\msg)$ and pre-output $\Out_0 := \sk \, \In$,
+    \item Sample random $r_1,r_2 \leftarrow \F_p$ and compute $R = r_1 \genG + r_2 \genB$ and $R_\msg = r_1 \In$.
+    \item Compute the challenge $c = H_q(\aux,\msg,\compk,h \Out_0,R,R_m)$,
+     along with $s_1 = r_1 + c \sk$ and $s_2 = r_2 + c \, \openpk$.
+    \item Return the signature $(\Out_0,c,s_1,s_2)$.
+\end{enumerate}
+\item $\PedVRF.\Verify(\compk,\msg,\aux,\sigma)$, parses $\sigma = (\Out_0,c,s_1,s_2)$, and then 
+\begin{enumerate}
+    \item recompute the VRF input point $\In := H_{\grE}(\msg)$,
+    \item computes $R = s_1 \genG + s_2 \genB - c \compk$ and $R_m = s \In - c \Out_0$, and
+    \item returns $H'(\msg, h \Out_0)$ if $c = H_q(\aux,\msg,\compk,\Out_0,R,R_\msg)$.
+\end{enumerate}
+\end{itemize}
+
+We obtain roughly \cite{nsec5} or \cite{VXEd25519}
+if we choose $\openpk = 0 = r_2$ in \Sign.
+
+\begin{lemma}\label{prop:pedersen_vrf_hiding}
+$\PedVRF$ is a correct key commitment and (perfectly) key hiding.
+\end{lemma}
+
+
+\begin{proposition}\label{prop:pedersen_vrf}
+Assuming AGM in $\grE$, % $\ecE$ modulo $h$,
+our $\PedVRF$ satisfies VRF correctness, key binding, uniqueness,
+pseudorandomness, and unforgability. % (EUF-CMA-KC) on $(\msg,\aux)$.
+\end{proposition}
+
+
+
+\begin{proof}[Proof sketch]
+Correctness holds trivially.
+
+???
+\end{proof}
+
+
+
+
+
+
+\endinput
+
+
+
+
+
+

@@ -1,0 +1,34 @@
+
+% \newcommand\doubleplus{+\kern-1.3ex+\kern0.8ex}
+\newcommand\doubleplus{\ensuremath{\mathbin{+\mkern-10mu+}}}
+
+
+%% oracles
+\newcommand{\ora}[1]{\ensuremath{\mathcal{O}\mathsf{#1}}\xspace}
+%% algorithm
+\newcommand{\algo}[1]{{\textsc{#1}}}
+%%primitive algo
+\newcommand{\primalgo}[1]{{\ensuremath{\mathsf{#1}}}\xspace}
+%%primitive
+\newcommand{\prim}[1]{{\ensuremath{\mathsf{#1}}}\xspace}
+%%set
+\newcommand{\setsym}[1]{{\ensuremath{\mathcal{#1}}}}
+%%array
+\newcommand{\arraysym}[1]{{\ensuremath{\mathsf{#1}}}}
+
+\newcommand\N{\mathbb{N}}
+\newcommand\F{\mathbb{F}}
+% \newcommand\Gr{\mathbb{G}}
+
+
+\def\mathperiod{.}
+\def\mathcomma{.}
+
+
+
+\newcommand*\set[1]{\{ #1 \}} % in text, we don't want {} to grow
+\newcommand*\Set[1]{\left\{ #1 \right\}}
+\newcommand*\setst[2]{\{ #1 | #2 \}}
+\newcommand*\Setst[2]%
+        {\left\{\,#1\vphantom{#2} \;\right|\left. #2 \vphantom{#1}\,\right\}}
+% ``set such that''; puts in a vertical bar of the right height

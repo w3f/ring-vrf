@@ -1,0 +1,163 @@
+\section{Ring commitments}
+
+We now discuss strategies and tooling for the ring commitment scheme
+$\rVRF.\{ \CommitRing, \CommitKey, \OpenKey \}$.
+We mentioned public keys in $\grE$ being represetated in $\grJ$ already,
+but otherwise treated \pifast and \pisafe largely like a black box,
+instead focusing upon the implementation details of 
+ $\VRF.\{ \CommitKey, \OpenKey \}$.
+
+% \subsection{Ring updates}
+
+Although $\rVRF.\rSign$ runs fast, all users must update their stored
+SNARK \pifast every time the ring $\ctx$ changes.
+Almost any circuit works for \pifast though,
+ which permits diverse optimizations depending upon usecase.
+
+\subsection{Updates: Vector commitments}
+
+In either \pifast and \pisafe configurations, 
+our $\rVRF.\{ \CommitRing, \CommitKey, \OpenKey \}$ could implement a
+Merkle tree using SNARK friendly hash functions like Poseidon \cite{poseidon}.
+%
+All users need $O(\log |\ctx|)$ data with every update, which sounds
+reasonable but not free.  There is a fast moving literature on securing
+and optimizing SNARK friendly hash functions, with different techniques
+being better suited to different SNARKs or even curves.
+
+TODO: Arity 9 for 300 constraints?   % \cite{groth16} vs plookup \cite{plookup}.
+
+Instead of Merkle trees, our SNARk $\pi$ could use polynomial based
+vector commitments \cite{KZG} or so called ``Verkle trees'' \cite{??Verkle??} too.
+%
+Aggregatable subvector commitments \cite{aSVC} permit one server to
+compute a KZG commitment \comring together with every users' ring opening
+\openring,  and then send each user their \openring encrypted.
+Instead of Groth16 \cite{groth16}, our \pisafe then consists
+of blinding this KZG commitment and then open it in zero-knowledge.
+
+TODO: Explain zero-knowledge KZG opening positions?!?
+
+We cannot replace \pifast with a KZG commitment directly like this.
+We could however replace $\pisafe'$ with a zero-knowledge continuation
+that swaps the KZG blinding for the secret key blinding used by \pifast.
+
+$$ \pifast' = \rrSNARK \Setst{ \sk_0 + \sk_1 2^128, \pk }{ 
+ \exists b' \textrm{\ s.t.\ }
+ % 0 < \sk_0,\sk_1 < 2^128 \textrm{\ and\ } 
+ \pk = \sk_0 \genJ_0 + \sk_1 \genJ_1 + b' \genJ_2
+} $$ % \mathperiod 
+
+\subsection{Updates: Certificate}
+
+If an authority grants ring membership, then ring membership proofs
+could simply verify some certificate by the authority, likely using
+a signature on JubJub.
+
+In this, we prefer a SNARK friendly random oracle,
+because conventional random oracles cost like 30k constraints.
+We also need a variable base scalar multiplication, which costs like
+4k constraints, as well as a couple fixed base scalar multiplication.
+A priori, these fixed base scalar multiplications cost roughly 700
+constraints each, but ocasionally they cost only half this.   
+
+We conjecture one fixed based scalar multiplication could be replaced
+by adapting implicit certificate scheme technqiues,
+ instead of simply a signature on a user provided key.
+
+ \subsection{Updates: Revokation}
+
+We typically need expiration dates in certificates, likely demanding
+a range proof and demanding that \pifast be recomputed ocasionally. 
+
+A priori, we cannot revoke ring membership when using certificates,
+but revokation of ring membership winds up rare in practice, especially
+since ring membership cannot be traced to missbehavior at any particular site.
+
+We could therefore employ a seperate revokation list and inside \pifast
+do a non-membership proof like \cite{???}.
+In this way, we update \pifast only when the revokation list updates,
+far less often than the full ring \ctx itself updates, and likely
+corresponding with expiration checks.
+
+\subsection{Updates: Append only logs}
+
+If an append only log grants ring membership, then a recursive SNARK
+could validate ring membership with each recursive addition being
+relatively inexpensive.
+
+In this, we need a $\pifast_0$ similar to \pifast as well as a
+$\pifast_n$ that proves some $\comring_{n-1}$ to be the ancestor of
+its own $\comring_n$ and recursively proves some $\pifast_{n-1}$ with
+its own $\comring_{n-1}$ and the same $\sk$.
+We expect half pairing cycles fit this usage nicely, although they complicate provers.
+
+Append only logs wind up still being updates whenever \ctx updates
+however, so they benefit less than certificates from revokation lists.
+
+A priori, we expect prover complexity plus update fequency makes
+append only logs suboptimal, but
+ they remain an interesting corner of the design space.
+
+\subsection{Hiding rings} % ring membership circuits}
+\label{subsec:hiding_rings}
+
+At first, one imagines sites would accept few rings because each ring
+gives some users multiple ``Sybil'' identities within the site.
+In practice however, we think many sites benefit from accepting
+multiple overlapping rings for convenience, reach, etc. but then
+tollerating the resulting few ``Sybil'' users.
+
+As sites accept more rings, we increase risks that each user's ring
+\ctx reveals private user attributes, especially if
+ users join many rings, sites accept many rings, and
+ user agents manage the association poorly.
+As a solution, we suggest tweaking \pifast to prove the ring itself
+lies in some permitted set of rings, but hide the specific ring used.
+
+We could achieve this using recursion inside \pifast of course,
+but doing so lies out of scope.  We instead discuss using other
+zk continuation techniques or similar.
+
+As a first step, if all rings use the same circuit, then we hide the
+ring through openning a blinded polynomial commitment \cite{KZG}: 
+In \S\ref{subsec:rvrf_faster}, our \pifast takes public input
+ $X = \comring\, Y_0 + \compk$ where $\compk = \sk\, Y_1 + b \genB_\gamma$.
+Instead of revealing \comring, we prove correctness of \comring in
+ $X'' = \comring\, Y_0 + b'' \genB_\gamma$.
+We prove $X''$ has this structure by opening a polynomial commitment
+\cite{KZG}, but over a larger slower recursive elliptic curve
+ like BW6 \cite{BW6}.
+
+TODO: More details?
+
+Although $\gamma=1$ remains viable, all circuits wind up with
+unique $\delta$ and hence unique $\ecE_2$ SRS element $[\delta]_2$.
+We should again prove correctness of $[\delta]_2$ using a
+blinded polynomial commitment \cite{KZG} over BW6 \cite{BW6},
+except this time a multipicative blinding works better.
+
+TODO: More details?
+
+At this point, we have blinded and proven correct both the
+ring commitment \comring and the circuit commitment $[\gamma]_2$.
+A priori, \pifast chooses $\genG = Y_1$, which reveals the circuit too, like
+$$ Y_1 = [{1\over\gamma} (\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau))]_1 \mathperiod $$
+
+Instead, we propose $Y_{1,\gamma}$ be chosen independent before the circuit.
+We then merely add an SRS element $Y_{1,\delta}$, for usage in $C$, that binds
+ our independent $Y_{1,\gamma}$ to the desired definition, so
+$$ Y_{1,\delta} := [{1\over\delta} (\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) - \gamma Y_{1,\gamma})]_1 \mathperiod $$
+At this point, we replace $Y_1$ by $Y_{1,\gamma}$ everywhere and
+ include $\comring \, Y_{1,\delta}$ inside $C$.
+
+In this way, all ring membership circuits could share identical
+public input SRS points $Y_{1,\gamma}$, and similarly $Y_0$ if desired.
+
+% Interestingly the SRS ceremony could safely output points for both forms
+
+\subsection{SnarkPack}
+
+TODO: Handle $\pi$ hashes?
+
+

@@ -1,0 +1,112 @@
+
+\section{Primitives}
+\label{sec:lambda}
+
+\def\ecE{{\mathbb{E}}}
+\def\grE{{\mathbf{E}}}
+\def\genE{E}
+\def\genG{G}
+\def\genB{K} %{\genE_{\mathrm{bind}}}
+
+\def\ecJ{{\mathbb{J}}}
+\def\grJ{{\mathbf{J}}}
+\def\genJ{J}
+
+% As our ring VRF is built by composing them, 
+We briefly recall the primitives and security assumptions underlying both Chaum-Pederson proofs and pairing based zkSNARKs. 
+
+
+\subsection{Elliptic curves}
+
+We obey mathematical and cryptographic implementation convention by using additive notation for elliptic curve and multipicative notation for eliptic curve scalar multiplications. 
+
+We always implicitly have a paramater generation procedure $\mathtt{Params}$ that takes a security level $\lambda \in \N$ and returns elliptic curve paramaters including some prime numbers and efficient algorithms for computing elliptic curve operations.  As customary, we treat $\lambda$ and the output of $\mathtt{Params}$ as fixed paramaters, which makes sense because humans run $\mathtt{Params}$ manually in practice. 
+
+As implicit outputs of $\mathtt{Params}$, we work with an elliptic curve $\ecE[\F]$ over some base field $\F$ of (prime) characteristic $q_{\grE}$, along with a distinguished subgroup $\grE \le \ecE[\F]$ of prime order $p_{\grE} \approx 2^{2\lambda}$.  As $\grE$ distinguishes $\ecE[\F]$, we let $h_{\grE}$ denote the cofactor of $\grE$ in $\ecE[\F]$, meaning $\ecE[\F]$ has $h_{\grE} p_{\grE}$ points.
+% but abbreviate $h = h_{\grE}$, $p = p_{\grE}$, and $q = q_{\grE}$ when $\grE$ is clear from context.
+We write $\grE$ without subscript, and abbreviate $h = h_{\grE}$, $p = p_{\grE}$, and $q = q_{\grE}$, when $\ecE$ is either our uinque pairing friendly curve or else the only curve in view.
+
+We let $H_p : \{0,1\}^* \to \F_p$ or $H_q : \{0,1\}^* \to \F_q$ denote random oracles (RO) with a range $\F_p$ or $\F_q$.  We let $H_\ecE : \{0,1\}^* \to \ecE$ or $H_\grE : \{0,1\}^* \to \grE$ denote a hash-to-curve for $\ecE$ or hash-to-group for $\grE$, which we model as a random oracle too.  We note $H_\grE(x) = h H_\ecE(x)$ always works, although more efficent exist.
+
+\smallskip
+
+Almost all SNARKs like \cite{groth16} or \cite{plonk} work on a pairing friendly elliptic curve $\ecE$ over a field $\F_q$ of characteristic $q \approx 2^{2\lambda}$, which comes equipped with a type III pairing on subgroups of prime order $p \approx 2^{2\lambda}$:  We let $q_1,q_2,q_T$ denote small powers of $q$, and let $\grE_1 \le \ecE[\F_{q_1}]$ and $\grE_2 \le \ecE[\F_{q_2}]$ and $\grE_T \le \F_{q_T}^\times$ denote subgroups all of prime order $p$.  We also let $e : \ecE_1 \times \ecE_2 \to \ecE_T$ denote a type III pairing, meaning a computable bilinear map without known efficiently computable maps between $\ecE_1$ and $\ecE_2$.  Also $q_i = q_{\grE_i}$ for $i=1,2$ in our above notation.  
+
+Any pairing friendly elliptic curve $\ecE$ provides solutions to the decisional Diffie-Hellman problem (DDH).  We do however assume the computational Diffie-Hellman problem (CDH) remains hard in $\ecE$.  We remark that $H_\grE$ being a random oracle plus CDH hardness prevents computable relationships between $H_\grE$ outputs.
+
+% TODO: Pairing assumptions required by Groth16
+
+\smallskip
+
+% We shall require ZCash Sapling style ``Jubjub'' Edwards curves, whose base field characteristic divides of the order of a pairing friendly elliptic curve, thereby making Jubjub base field arithmetic SNARK friendly, and hence Jubjub elliptic curve operations as well \cite{}.
+
+We let $\ecJ$ denote a ZCash Sapling style ``JubJub'' Edwards curve associated to the pairing friendly elliptic curve $\ecE$, meaning $\ecJ$ has base field $\F_p$ whose characteristic $q_{\grJ} = p$ matches the group order $p$ of $\grE_1 \cong \grE_2 \cong \grE_T$.  As in ZCash Sapling, we now prove statements about elliptic curve operations inside $\ecJ$ by proving base field arithmetic in $\F_p$, which our $q_{\grJ} = p$ makes reltively inexpensive inside SNARKs on $\ecE$.
+
+As above, $\grJ \le \ecJ[\F_p]$ has large prime order $p_{\grJ}$ and a small cofactor $h_{\grJ}$.  We always support $4 p_{\grJ} < p$ because if $\ecJ$ is an Edwards curve then $h_{\grJ} \ge 4$ which imposes this by the Hasse bound.
+
+\smallskip
+
+We ask that deserialization prove that putative elements of $\grE$ lie in $\ecE[\F]$ by verifying curve equations, perhaps including twist checks.  We do sometimes require that deserialization checks membership in the prime order subgroup $\grE$ by checking $|\grE| X = 1$ or similar.  Yet, we also sometimes work in $\ecE[\F]$ directly when judicious multiplications by $h_{\grE}$ suffice.  
+
+Anytime $\ecE$ represents a pairing friendly curve then we do ask that deserialization prove elements of $\grE_1$, $\grE_2$, and $\grE_T$ lie inside the correct subgroup of order $p$.  As our SNARKs handle with points in $\ecJ$ directly, we prefer writing $\grJ$ equations in $\ecJ[\F_p]$ and explicitly describe where one clears the cofactor $h_{\grJ}$.  We handled $\grE$ with $\ecE$ not necessarily pairing friendly similarly to $\ecJ$.  We scrape by with only CDH hardness for $\grJ$ for convenience, although DDH winds up hard in $\grJ$.
+
+
+
+\subsection{zkSNARKs}
+
+We require details about Groth16 \cite{groth16} becuase our zero-knowledge continuations demand rerandomizing existing zkSNARKs. % which only Groth16 supports.
+
+We thus have an implicit setup procedure $\mathtt{Setup}$ that take our paramaters generated by $\mathtt{Params}$ and produces a structured reference string (SRS).  In practice, our SRS consists of points in $\ecE_1$ and $\ecE_2$ with specific relationships.  We suppress both $\mathtt{Setup}$ and $\mathtt{Params}$ whenever convenient, but $\mathtt{Setup}$ makes an appearance in \S\ref{sec:srs_second_stage}.
+
+TODO: AGM
+
+TODO: Describe Groth16 \cite{groth16} 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\endinput
+
+
+
+BROKEN BOLOW THIS
+
+
+
+
+We fix $J \in \ecJ$ as a generator for public keys.  Any $\KeyGen$ algorithm randomly samples a secret keys $\sk \in \F_q$ and then computes its associate public keys $\pk = \sk J$.  We shall not discuss infrastructure that authorizes public keys.  Yet although our results do not require proof-of-knowledge on $\pk$ per se, we still strongly recommend that back certifications accompany any certificates that authorize $\pk$.
+
+\smallskip
+
+
+
+
