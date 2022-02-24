@@ -5,7 +5,7 @@ $\rVRF.\{ \CommitRing, \CommitKey, \OpenKey \}$.
 We mentioned public keys in $\grE$ being represetated in $\grJ$ already,
 but otherwise treated \pifast and \pisafe largely like a black box,
 instead focusing upon the implementation details of 
- $\VRF.\{ \CommitKey, \OpenKey \}$.
+ $\PedVRF.\{ \CommitKey, \OpenKey \}$.
 
 % \subsection{Ring updates}
 
@@ -130,6 +130,11 @@ We prove $X''$ has this structure by opening a polynomial commitment
  like BW6 \cite{BW6}.
 
 TODO: More details?
+
+If using $\pisafe$ anyways then we could prove correctness for \comring
+using $\pisafe'$ too, which saves pairings over adding KZK.
+
+\smallskip
 
 Although $\gamma=1$ remains viable, all circuits wind up with
 unique $\delta$ and hence unique $\ecE_2$ SRS element $[\delta]_2$.
