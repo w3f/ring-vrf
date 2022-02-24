@@ -25,7 +25,7 @@ A {\em verifiable random function with auxiliary data and key commitments} (VRF-
 \begin{itemize}
 \item $\VRF.\KeyGen$ and returns a public key \pk and a secret key \sk, which one typically instantiates via come commitment scheme. 
 %
-\item $\VRF.\CommitKey : (\pk,\ctx) \mapsto (\compk,\openpk)$ takes a public key \pk and a context \ctx, and returns a public key commitment \compk to \sk and secret opening data \openpk.
+\item $\VRF.\CommitKey : (\pk,\ctx) \mapsto (\compk,\openpk)$ takes a public key \pk and a commitment context \ctx, and returns a public key commitment \compk to \sk and secret opening data \openpk.
 \item $\VRF.\OpenKey : (\compk,\openpk) \mapsto \pk$ opens a public key commitment \compk given the specified opening data \openpk.
 %
 \item $\VRF.\Eval : (\sk,\msg) \mapsto \Out$ takes a secret key \sk and an input $\msg$, and then returns a VRF output $\Out$.
