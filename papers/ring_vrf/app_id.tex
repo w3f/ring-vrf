@@ -1,4 +1,5 @@
 \section{Application: Identity}
+\label{sec:app_identity}
 
 Anonymous VRFs yield anonymous identity systems:
 After a user and service establish a secure channel and
@@ -55,6 +56,23 @@ In any case, we could always specify rules against cross site privacy invasions
 whenever writing ring VRF browser specifications.
 
 
+\subsection{AML/KYC}
+
+We shall not discuss AML/KYC in detail, because the entire field lacks
+clear goals, and thus winds up being ineffective
+ \cite{doi:10.1080/25741292.2020.1725366}.
+% https://www.tandfonline.com/doi/full/10.1080/25741292.2020.1725366
+% via https://twitter.com/ronaldpol/status/1491548352189587460
+We do however observe that AML/KYC conflicts with security and privacy
+laws like GDPR typically require that one compliance party know users'
+identities, while another service party knows the users' activities.
+
+In principle, our compliance party could maintained the ring \ctx,
+which then gives users unique identities with service parties.
+If later required, users could prove their identities to investigators,
+or merely prove which services they use and do not use. 
+
+
 \subsection{Moderation}
 \label{subsec:moderation}
 
@@ -86,22 +104,11 @@ per time period, which prevents spam.  If instead we link only adjuacent
 dates, then pseudo-nyms could be abandonded and repalced, but abandonded
 pseudo-nyms cannot then be reclaimed without linking to intervening dates.
 
-In these ways, sites encode into cryptography important aspects of
-their moderation rules.  We expect this makes sites' values and culture
-more uniform, predictable, and transperent.
+In these ways, sites encode important aspects of their moderation rules
+into the ring VRF inputs requested.  We expect this makes sites' values
+and culture more uniform, predictable, and transperent.
 
 
-\subsection{AML/KYC}
-
-We shall not discuss AML/KYC in detail, because the entire field lacks
-clear goals, and thus winds up being ineffective \cite{???}.
-We do however observe that AML/KYC conflicts with security and privacy
-laws like GDPR typically require that one compliance party know users'
-identities, while another service party knows the users' activities.
-
-In principle, our compliance party could maintained the ring \ctx,
-which then gives users unique identities with service parties.
-If later required, users could prove their identities to investigators,
-or merely prove which services they use and do not use. 
+% \subsection{Rate limits}
 
 
