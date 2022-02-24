@@ -36,11 +36,24 @@ We discuss only \pifast here but adapting our techniques to \pisafe appears simi
  and obtains the user's identity $\mathtt{id}$
 \end{itemize}
 
-We must not link users' identiteis at different sites, so user agents
+
+\subsection{Browsers}
+
+We must not link users' identiteis at different web sites, so user agents
 must disable all cross site resource loading, referer information, etc.
-User agents could still load purely static resources without metadata
+Yet, user agents could still load purely static resources, without metadata
 like cookies or referer information, especially purely content addressible
 resoruces.
+
+In other words, web browsers mostly fail these baseline privacy requirements.
+We expect Tor browser and Brave both behave correctly however.
+Apple's Safari trends towards preventing invasive cross site resoruces too.  
+There also do exist decentralized web aka web 3.0 projects whose stated aims
+include more privacy.
+
+In any case, we could always specify rules against cross site privacy invasions
+whenever writing ring VRF browser specifications.
+
 
 \subsection{Moderation}
 \label{subsec:moderation}
@@ -77,6 +90,7 @@ In these ways, sites encode into cryptography important aspects of
 their moderation rules.  We expect this makes sites' values and culture
 more uniform, predictable, and transperent.
 
+
 \subsection{AML/KYC}
 
 We shall not discuss AML/KYC in detail, because the entire field lacks
@@ -89,4 +103,5 @@ In principle, our compliance party could maintained the ring \ctx,
 which then gives users unique identities with service parties.
 If later required, users could prove their identities to investigators,
 or merely prove which services they use and do not use. 
+
 
