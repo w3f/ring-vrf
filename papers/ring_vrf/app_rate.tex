@@ -1,28 +1,144 @@
 \section{Application: Rate limiting}
+\label{sec:app_rate_limits}
 
-In \S\ref{subsec:moderation}, we described encoding moderation
-rules 
+We showed in \S\ref{sec:app_identity} how ring VRFs give users only
+one unique identity for each input \msg.  
+We explained in \S\ref{subsec:moderation} that choosing \msg to be
+the concatenation of a base domain and a date gives users a stream of changing identities.
 
-suggested that identity systems could encode 
-
-
-
-\subsection{Rationing}
-
-
-
-\endinput
+We next discuss giving users exactly $n > 1$ ring VRF outputs aka
+``identites'' per date, as opposed to the unique identity 
 
 
+% \subsection{Implementation}
+
+As a trivial implementation, we could include a counter $k = 1 \ldots n$
+in \msg, so $\msg = \mathtt{domain} \doubleplus \mathtt{date} \doubleplus k$.
 
 
-\subsection{}
+\subsection{Avoiding linkage}
+
+We actually leaks information about ring VRF outputs' ownership
+ in this trivial implementation, due to revealing $k$.
+%
+An adversary Eve observes two ring VRF signatures with different outputs
+$\Out_1$ and $\Out_2$, and the same data but with $k_1$ and $k_2$.
+If $k_1 \ne k_2$ then Eve learns nothing, but if $k_1 = k_2$ then
+ Eve learns that $sk_1 \ne \sk_2$, maybe representing different users. 
+
+We do not necessarily care if Eve learns this much information,
+but scenarions exist in which one cares.  We therefore briefly describe
+several easy solutions:
+
+If $n$ remains fixed forever, then we could simply let all users
+register $n$ ring VRF public keys in \ctx.
+If $n$ fluctuates with an upper bound $N$, then we could create $N$
+rings $\ctx_i$ for $i = 1 \ldots N$, and
+ then blid \comring in \pifast similarly to \S\ref{subsec:hiding_rings}.
+
+Although simple, these two approaches require users construct $N$
+different $\pifast$ proofs everytime the ring \ctx updates.
+We have additional options if using the \pisafe approach: 
+
+Instead of proving ring membership of one public key,
+$\pisafe$ could prove ring membership of a KZG commitment to $n$ keys.
+Our unamortized SNARK $\pisafe'$ could then open the specific key in
+zero-knowledge, which sounds acceptable once already working in the \pisafe case.
+
+We could compute the hash-to-curve $\In := H_{\grE}(\msg)$ inside the
+unamortized SNARK $\pisafe'$ and reveal only a Pedersen-like commitment
+to $\In + \openpk^{-1} \genB$.  We then adjust \PedVRF to yield
+a proof-of-knowledge of $\Out/\In$ subject to soundness of this
+$\pisafe'$.
+
+In all cases, we incur costs by hiding part of the input \msg, so
+deployment should seriously consider if leaking $k$ suffices.
+
+% TODO: Games part
+% Although our examples fit this poorly, we could choose $N$ large and
+% then reject many $\Ou$, so that statistically all users recieved the
+% desired number of accepted $\Ou$.
+% If so, we decrease the odds that $k_1 = k_2$ by
+%  increasing $N$ and decreasing odds of accepting some $\Out$.
+
+
+\subsection{Ration cards}
+
+As a species, we expect shortages of resources, energy, goods, water,
+and food beginning during the next several decades, due to climate change,
+ecosystem damage or collapse, and resource exaustion ala peak oil. 
+Invariably, we manage shortages through rationing, like during WWI,
+WWII, and the oil shocks.  
+
+Ring VRFs support anonymous rationing:
+Instead of treating ring VRF outpus like identitys, although
+this still holds somewhat.  We treat them like nullifiers which
+could each be spent exactly once.
+
+We fix a set $U$ of limited resources, and dynamically define
+an expiry date $\bar{d}_{u,d_0}$ an availability $n_{u,d_0}$, 
+both dependent upon the resource $u \in U$ and current date $d_0$.
+We typically want a randomness beacon $r_d$ too, which prevents
+anyone learning $r_d$ much before date $d$. 
+As ring VRF inputs, we choose
+ $\msg = u \doubleplus r_d \doubleplus d \doubleplus k$
+where $u \in U$ denotes a limited resoruce,
+ $d$ denotes an non-expired date meaning $\bar{d}_{u,d_0} < d \le d_0$,
+ and $1 \le k \le n_{u,d_0}$.
+In this way, our rationing system controls both daily consumption
+via $n_{u,d_0}$ and time shifted demand via expiry time $\bar{d}_{u,d_0}$.
+
+Importantly, our rationing system retains ring VRF outputs as nullifiers,
+filed under their associated date $d$ and resource $u$, so nullifiers
+expire once $d \le \bar{d}_{u,d_0}$ which permits perging old data rapidly.
+
+
+\subsection{Decommodification}
+
+There exist many reasons to decommodify important services,
+like energy, water, or internet, beyond real physical shortaged.
+Indeed real service providers typical prefer subscription models.
+Ring VRFs fit these cases using similar $\msg$ formulations.
+
+As an example, VPN providers or movie streaming services have some
+fixed capasity, and hopefully want to know nothing about their
+customers internet usage, so users purchase a ring membership, and
+then authenticate their bandwidth usages by providing ring VRF signatures.
+As above, our service must track nullifiers, but only until expirly.
+
+...
+
+
+\subsection{Anonymity }
 
 
 
-\subsection{}
+base context concatenated with both
+the date and a bounded counter $1..k$, so that users have exactly $k$
+identites on a given date.
 
 
+
+and especially 
+
+We described encoding site rules into 
+
+moderation rules
+into ring VRF usage by appending the year and week to the VRF input \msg.
+
+We need 
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Delegation}
 
 
 
