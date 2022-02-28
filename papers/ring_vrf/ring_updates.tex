@@ -44,7 +44,7 @@ of additively blinding this KZG commitment and then open it in zero-knowledge.
 TODO: Explain zero-knowledge KZG opening positions?!?
 
 We cannot replace \pifast with a KZG commitment directly like this,
-but could split \pifast into two parts similar to \pisafe and $\psisafe'$.
+but could split \pifast into two parts similar to \pisafe and $\pisafe'$.
 
 replace $\pisafe'$ with a zero-knowledge continuation
 that swaps the KZG blinding for the secret key blinding used by \pifast.
@@ -114,13 +114,13 @@ If an append only log grants ring membership, then a recursive SNARK
 could validate ring membership with each recursive addition being
 relatively inexpensive.
 
-In this, we need a $\pifast_0$ similar to \pifast as well as a
-$\pifast_n$ that proves some $\comring_{n-1}$ to be the ancestor of
-its own $\comring_n$ and recursively proves some $\pifast_{n-1}$ with
+In this, we need a $\pifast^0$ similar to \pifast as well as a
+$\pifast^n$ that proves some $\comring_{n-1}$ to be the ancestor of
+its own $\comring_n$ and recursively proves some $\pifast^{n-1}$ with
 its own $\comring_{n-1}$ and the same $\sk$.
 We expect half pairing cycles fit this usage nicely, although they complicate provers.
 
-Append only logs still depand \piast or \pisafe be reproven whenever
+Append only logs still depand \pifast or \pisafe be reproven whenever
 \ctx updates however, so they benefit less than certificates from revokation lists.
 
 A priori, we expect prover complexity plus update fequency makes
