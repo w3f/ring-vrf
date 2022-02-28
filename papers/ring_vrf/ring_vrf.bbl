@@ -6,6 +6,7 @@ Karim Baghery, Markulf Kohlweiss, Janno Siim, and Mikhail Volkhov.
 \newblock In Nikita Borisov and Claudia Diaz, editors, {\em Financial
   Cryptography and Data Security}, pages 457--475, Berlin, Heidelberg, 2021.
   Springer Berlin Heidelberg.
+\newblock \url{https://ia.cr/2020/811}.
 
 \bibitem{cryptoeprint:2005:304}
 Adam Bender, Jonathan Katz, and Ruggero Morselli.
@@ -28,7 +29,7 @@ David Butler, Andreas Lochbihler, David Aspinall, and Adri{\`a} Gasc{\'o}n.
 
 \bibitem{praos}
 Bernardo David, Peter Ga{\v{z}}i, Aggelos Kiayias, and Alexander Russell.
-\newblock Ouroboros praos: An adaptively-secure, semi-synchronous
+\newblock Ouroboros {P}raos: An adaptively-secure, semi-synchronous
   proof-of-stake blockchain.
 \newblock In {\em Annual International Conference on the Theory and
   Applications of Cryptographic Techniques}, pages 66--98. Springer, 2018.
@@ -74,5 +75,12 @@ Ronald~F. Pol.
 \newblock Anti-money laundering: The world's least effective policy experiment?
   together, we can fix it.
 \newblock {\em Policy Design and Practice}, 3(1):73--94, 2020.
+
+\bibitem{aSVC}
+Alin Tomescu, Ittai Abraham, Vitalik Buterin, Justin Drake, Dankrad Feist, and
+  Dmitry Khovratovich.
+\newblock Aggregatable subvector commitments for stateless cryptocurrencies.
+\newblock Cryptology ePrint Archive, Report 2020/527, 2020.
+\newblock \url{https://ia.cr/2020/527}.
 
 \end{thebibliography}
