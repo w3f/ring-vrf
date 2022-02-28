@@ -1,2 +1,71 @@
-\section{Ring hiding}
+\section{Ring hiding}% {Hiding rings} % ring membership circuits}
+\label{sec:ring_hiding}
+
+At first, one imagines sites would accept few rings because each ring
+gives some users multiple ``Sybil'' identities within the site.
+In practice however, we think many sites benefit from accepting
+multiple overlapping rings for convenience, reach, etc., but then
+tollerate the resulting few ``Sybil'' users.
+
+As sites accept more rings, we increase risks that each user's ring
+\ctx reveals private user attributes, especially if
+ users join many rings, sites accept many rings, and
+ user agents manage the association poorly.
+As a solution, we suggest tweaking \pifast to prove the ring itself
+lies in some permitted set of rings, but hide the specific ring used.
+
+We could achieve this using recursion inside \pifast of course,
+but doing so lies out of scope.  We instead discuss using other
+zk continuation techniques or similar.
+
+\subsection{Unique circuit}
+
+As a first step, if all rings use the same circuit, then we hide the
+ring through openning a blinded polynomial commitment \cite{KZG}: 
+In \S\ref{subsec:rvrf_faster}, our \pifast takes public input
+ $X = \comring\, Y_0 + \compk$ where $\compk = \sk\, Y_1 + b \genB_\gamma$.
+Instead of revealing \comring, we prove correctness of \comring in
+ $X'' = \comring\, Y_0 + b'' \genB_\gamma$.
+We prove $X''$ has this structure by opening a polynomial commitment
+\cite{KZG}, but over a larger slower recursive elliptic curve
+ like BW6 \cite{BW6}.
+
+TODO: More details?
+
+If using $\pisafe$ anyways then we could prove correctness for \comring
+using $\pisafe'$ too, which saves pairings over adding KZK.
+
+\subsection{Multi circuit}
+
+Although $\gamma=1$ remains viable, all circuits wind up with
+unique $\delta$ and hence unique $\ecE_2$ SRS element $[\delta]_2$.
+We hide $[\delta]_2$ so we suggest proving correctness of $[\delta]_2$
+using a blinded polynomial commitment \cite{KZG} over BW6 \cite{BW6},
+except this time a multipicative blinding works better.
+
+TODO: More details?
+
+At this point, we have blinded and proven correct both the
+ring commitment \comring and the circuit commitment $[\gamma]_2$.
+A priori, \pifast chooses $\genG = Y_1$, which reveals the circuit too, like
+$$ Y_1 = [{1\over\gamma} (\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau))]_1 \mathperiod $$
+
+Instead, we propose to stabalize the public input SRS elements:
+We choose $Y_{1,\gamma}$ independent before selecting the circuit
+ or running its trusted setup.
+We then merely add an SRS element $Y_{1,\delta}$, for usage in $C$, that binds
+ our independent $Y_{1,\gamma}$ to the desired definition, so
+$$ Y_{1,\delta} := [{1\over\delta} (\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) - \gamma Y_{1,\gamma})]_1 \mathperiod $$
+At this point, we replace $Y_1$ by $Y_{1,\gamma}$ everywhere and
+ include $\comring \, Y_{1,\delta}$ inside $C$.
+
+In this way, all ring membership circuits could share identical
+public input SRS points $Y_{1,\gamma}$, and similarly $Y_0$ if desired.
+
+% Interestingly the SRS ceremony could safely output points for both forms
+
+\subsection{SnarkPack}
+
+TODO: Handle $\pi$ hashes?
+
 

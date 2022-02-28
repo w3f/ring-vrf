@@ -148,7 +148,7 @@ $$ \pifast = \rrSNARK \Setst{ \sk_0 + \sk_1 2^128, \comring }{
  \genfrac{}{}{0pt}{}{\rVRF.\OpenKey(\comring,\openring)}{\,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + b' \genJ_2}
 } $$ % \mathperiod 
 
-We explain later in \S\ref{subsec:hiding_rings} how one could
+We explain later in \S\ref{sec:ring_hiding} how one could
 choose $Y_1$ independent before doing the trusted setup,
  and then wire $Y_1$ into $\pifast$ inside $C$.
 In ths case, we could prove $\pk = \sk\, Y_1$ inside $\pifast$, but then
@@ -210,7 +210,7 @@ Instead, we employ another Chaum-Pedersen DLEQ proof to wire
  the $X$ of $\pisafe$ to the $X'$ of $\pisafe'$,
  thus proving knowledge of both.
 We cannot avoid this proof-of-knowledge, but it becomes simpler if
-we choose $Y'_3 = Y_1$ and $Y'_4 = Y_2$ using the trick of \S\ref{subsec:hiding_rings}.
+we choose $Y'_3 = Y_1$ and $Y'_4 = Y_2$ using the trick of \S\ref{sec:ring_hiding}.
 
 We take $\aux \doubleplus \pisafe \doubleplus \pisafe'$
  to be the \aux of \PedVRF of course.
@@ -238,4 +238,5 @@ We conjecture $\gamma$ and $\delta$ could safely be shared between
 $\pisafe$ and $\pisafe'$, thereby requiring only four pairings,
 but caution this result appars non-trivial.
 
+% \smallskip
 
