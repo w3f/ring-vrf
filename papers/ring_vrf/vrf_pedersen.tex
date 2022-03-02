@@ -18,7 +18,8 @@ so saving 32 bytes sounds more helpful.
 
 \newcommand{\PedVRF}{\primalgo{PedVRF}} 
 
-We define \KeyGen like for \ThinVRF in \S\ref{sec:vrf_thin} but \Eval differs slightly:
+We define \KeyGen as in \ThinVRF in \S\ref{sec:vrf_thin} but \Eval differs
+slightly by not injecting \pk into \msg:
 % by selecting a secret key \sk uniformly at random from $\F_p$ and
 % computing the public key $\pk = \sk \, \genG$.
 \begin{itemize}
@@ -26,11 +27,12 @@ We define \KeyGen like for \ThinVRF in \S\ref{sec:vrf_thin} but \Eval differs sl
 \item $\PedVRF.\Eval(\sk,\msg)$ takes a secret key \sk and an input $\msg$, and
  then returns a VRF output $H'(\msg,h \, \sk \, H_{\grE}(\msg))$.
 \end{itemize}
-We seleted here a base point $\genG$ for our public key
+We select here an arbitrary base point $\genG$ for our public key
  because this avoids some confusion later.
 
-We fix a second generator $\genB$ of $\grE$ independent from $\genG$, perhaps
- created by applying $H_\grE$ to an input outside existing usages' domain. 
+We fix a second generator $\genB$ of $\grE$ independent from $\genG$,
+perhaps created by applying $H_\grE$ to an input outside existing usages'
+domain and also containing $\genG$. 
 We now form Pedersen-like commitments to this public key \pk as follows.
 \begin{itemize}
 \item $\PedVRF.\CommitKey$ selects a blinding factor $\openpk$ uniformly
@@ -61,7 +63,7 @@ zero-knowledge continuations then use \OpenKey with only minor caveots.
 \begin{enumerate}
     \item recompute the VRF input point $\In := H_{\grE}(\msg)$,
     \item computes $R = s_1 \genG + s_2 \genB - c \compk$ and $R_m = s \In - c \Out_0$, and
-    \item returns $H'(\msg, h \Out_0)$ if $c = H_q(\aux,\msg,\compk,\Out_0,R,R_\msg)$.
+    \item returns $H'(\msg, h \Out_0)$ if $c = H_q(\aux,\msg,\compk,\Out_0,R,R_\msg)$ or failure otherwise.
 \end{enumerate}
 \end{itemize}
 

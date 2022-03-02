@@ -1,4 +1,4 @@
-\subsection{Thin batchable 2C 1sMSM EC VRF-AD}
+\subsection{Thin batchable EC VRF-AD}
 \label{sec:vrf_thin}
 
 There are VRFs built upon Chaum-Pedersen DLEQ proofs in elliptic curves,
@@ -10,9 +10,9 @@ As a reslt, their naively batchable variant become ``fat'', requiring
 one scalar and two seperate nonces, which complicates batch verification.
 
 We propose a new ``thin'' batchable EC VRF that merges these two nonces,
-and requires only one elliptic curve multi-exponentiation (1sMSM), but
-internally computes an extra delinearization challenge (2C).
-As such, our thin batchable variant both runs faster and simplifies heafy usage,
+and requires only one elliptic curve multi-exponentiation, but
+internally computes an extra delinearization challenge.
+As such, our thin batchable variant both runs faster and simplifies heavy usage,
 and also provides a less annoying interface.
 
 Interestingly, our thin batchable EC VRF winds up litterally being
@@ -52,10 +52,10 @@ As in \S\ref{sec:lambda} and throughout,
 \item $\ThinVRF.\Verify$ takes $(\pk,\msg,\aux,\sigma)$, parses $\sigma = (\Out_0,R,s)$, and then 
 \begin{enumerate}
 %PoK:    \item abort unless either $\msg$ contains $\pk$ or else \pk has a valid the proof-of-knowledge,
-    \item recompute the VRF input point $\In := H_{\grE}(\msg,\pk)$,
-    \item recompute $c_1 = H_p(\aux,\msg,\pk,\Out_0)$ and $c = H_p(\aux,\msg,\pk,\Out_0,R)$, % the challenges
-    \item abort unless $s h (\genE + c_1 \In) = h R + c h (\pk + c_1 \Out_0)$ holds, and 
-    \item return $H'(\msg,\pk,h \Out_0)$ if nothing failed.
+    \item recomputes the VRF input point $\In := H_{\grE}(\msg,\pk)$,
+    \item recomputes $c_1 = H_p(\aux,\msg,\pk,\Out_0)$ and $c = H_p(\aux,\msg,\pk,\Out_0,R)$, % the challenges
+    \item aborts unless $s h (\genE + c_1 \In) = h R + c h (\pk + c_1 \Out_0)$ holds, and 
+    \item returns $H'(\msg,\pk,h \Out_0)$ if nothing failed.
 \end{enumerate}
 \end{itemize}
 As discussed above, if we omit this final hash $H'$ making
@@ -82,7 +82,7 @@ in $H_\grE$, aka injected \pk into \msg, to prevent
 related but different keys having algebraically related input points \In.
 We cannot employ this trick in key committing VRFs or ring VRFs however.
 Although $H'$ being a PRF mitigates problems, we still recommend caution 
-wehn combining identical inputs \msg with related secret keys,
+when combining identical inputs \msg with related secret keys,
  like ``blockchain'' users often produce with ``soft key derivation''.
 
 \begin{proposition}\label{prop:thin_vrf}
@@ -92,7 +92,9 @@ our $\ThinVRF$ satisfies
  and existential unforgability on $(\msg,\aux)$.
 \end{proposition}
 
-
+\begin{proof}[Proof sketch]
+TODO: ???
+\end{proof}
 
 
 \endinput

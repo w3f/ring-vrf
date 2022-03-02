@@ -2,7 +2,7 @@
 \section{Verifiable Random Functions}
 \label{sec:vrf}
 
-Intuitively, a verifiable random function welds a pseudorandom function into a signature scheme.
+Intuitively, a verifiable random function (VRF) welds a pseudorandom function into a signature scheme.
 % \cite{vrfmicali,vrflysyanskaya,vrfshort}
 % As in \cite[\S3.2 $\fvrf$]{praos}, we need a definition that both is simulation-based and provides pseudorandomness under malicious key generation.  In other words, we demand an unpredictability property reminiscent of a random oracle even against adversaries who generate their secret and pubic key pair themselves.
 
@@ -15,10 +15,10 @@ We follow \cite{agg_dkg} in making this explicit, while also
 \newcommand\CommitKey{\primalgo{CommitKey}}
 \newcommand\OpenKey{\primalgo{OpenKey}}
 
-Any signature scheme requires \KeyGen algorithm of course, but we also
+Any signature scheme requires a \KeyGen algorithm of course, but we also
 support hiding public keys inside a commitment scheme \CommitKey and \OpenKey.
-Zero-knowledge continuations shall work by running \OpenKey inside yet another
-zero-knowledge proof. 
+Zero-knowledge continuations then work by running \OpenKey inside yet
+another zero-knowledge proof. 
 
 \begin{definition}
 A {\em verifiable random function with auxiliary data and key commitments} (VRF-AD-KC) consists of several algorithms:
@@ -29,8 +29,8 @@ A {\em verifiable random function with auxiliary data and key commitments} (VRF-
 \item $\VRF.\OpenKey : (\compk,\openpk) \mapsto \pk$ opens a public key commitment \compk given the specified opening data \openpk.
 %
 \item $\VRF.\Eval : (\sk,\msg) \mapsto \Out$ takes a secret key \sk and an input $\msg$, and then returns a VRF output $\Out$.
-\item $\VRF.\Sign : (\sk,\openpk,\msg,\aux) \mapsto \sigma$ takes a secret key \sk, a public key opening \openpk, an input $\msg$, and auxiliary data \aux, and then returns a VRF signature $\sigma$.
-\item $\VRF.\Verify$ takes $(\compk,\msg,\aux,\sigma)$ for a public key commitment \compk, $\msg$ an input, and \aux auxiliary data, and then returns either an output $\Out$ or else failure $\perp$.
+\item $\VRF.\Sign : (\sk,\openpk,\msg,\aux) \mapsto \sigma$ takes a secret key \sk, a public key opening \openpk, an input \msg, and auxiliary data \aux, and then returns a VRF signature $\sigma$.
+\item $\VRF.\Verify$ takes $(\compk,\msg,\aux,\sigma)$ for a public key commitment \compk, an input \msg, and auxiliary data \aux, and then returns either an output $\Out$ or else failure $\perp$.
 \end{itemize}
 \end{definition}
 % PPA vs DPA ?
@@ -45,8 +45,8 @@ A {\em verifiable random function with auxiliary data and key commitments} (VRF-
 
 We say a VRF-AD-KC denoted \VRF is {\em secure} if it satisfies
  correctness, uniqueness, and pseudorandomness as defined below,
- as well as being unforgable as a signature on $(\msg,\aux)$ and
- being binding in one of the senses discussed blow
+ as well as being existentially unforgable as a signature on $(\msg,\aux)$
+ and being binding in one of the senses discussed blow.
 We caution that VRF security remains complex, in part due to
 signer and forger each being adversarial in some security properties,
 and that ring VRFs make this worse by verifiers being adversarial.
@@ -58,6 +58,10 @@ $\VRF.\Eval$ always has more optimized instantiations anyways.
 % We merge correctness of commitment and VRF here because
 % our VRF correctness invokes $\CommitKey$ by necessity.
 
+\subsection{Security}
+
+...
+
 \begin{definition}
 We say a VRF-AC-KC satisfies {\em commitment correctness} if
  $\OpenKey \circ \CommitKey$ returns the same public key \pk.
@@ -65,14 +69,15 @@ We say a VRF-AC-KC satisfies {\em commitment correctness} if
 
 \begin{definition}
 We say a VRF-AC-KC satisfies {\em VRF correctness} if
- $\Verify(\compk,\msg,\aux,\Sign(\sk,\openpk,\msg,\aux)) = \Eval(\sk,\msg)$ whenever
- $(\pk,\sk) \leftarrow \KeyGen$ and $(\compk,\openpk) \leftarrow \CommitKey(\pk,\ctx)$.
+$(\pk,\sk) \leftarrow \KeyGen$ and $(\compk,\openpk) \leftarrow \CommitKey(\pk,\ctx)$
+imply
+$\Verify(\compk,\msg,\aux,\Sign(\sk,\openpk,\msg,\aux)) = \Eval(\sk,\msg)$.
 % perhaps except with odds negligible in $\lambda$.
 \end{definition}
 
 We demand unforgability on $(\msg,\aux)$ because alone
  the usual VRF conditions only yield unforgability for \msg.
-Attackers do access \CommitKey in this EUF-CMA-KC game, so if desired
+Attackers access \CommitKey in this EUF-CMA-KC game, so if desired
  they could obtain multiple signatures under the same \compk.
 
 \begin{definition}
@@ -95,8 +100,8 @@ in the usual chosen-message game adapted to key commitments:
 
 We do not demand the commitment scheme $\CommitKey$ and $\OpenKey$
 be hiding in the definition of VRF-AD-KC security.
-Yet, we do internally employ the usual hiding definition for
- commitment schemes however, ala \cite[pp.8]{cryptoeprint:2019:1185}.
+Yet, we do internally employ the usual hiding definition from
+\cite[pp.8]{cryptoeprint:2019:1185} for commitment schemes however.
 % We could employ a weaker chosen-message-likehiding property, but
 % this full strenght versions suffices.
 
@@ -116,10 +121,10 @@ analogous to \cite[pp.9]{cryptoeprint:2019:1185}.
 \begin{definition}
 We say a VRF-AC-KC is {\em key binding} if any PPT adversary $\adv$
 cannot produce $\compk,\msg,\aux$ and $\sk_i,\openpk_i$ for $i=1,2$
-such that
+such that both
  $\OpenKey(\compk,\openpk_1) \ne \OpenKey(\compk,\openpk_2)$ and
  % $\CommitKey(\pk_1,\openpk_1) = \compk = \CommitKey(\pk_2,\openpk_2)$ and
- $\Verify(\compk,\msg,\aux,\Sign(\sk_i,\openpk_i,\msg,\aux)$ succeeds for $i=1,2$,
+ $\Verify(\compk,\msg,\aux,\Sign(\sk_i,\openpk_i,\msg,\aux))$ succeeds for $i=1,2$,
 except with odds negligible in $\lambda$.
 \end{definition}
 
@@ -146,8 +151,7 @@ except with odds negligible in $\lambda$.
 
 If desired, one easily simplifies VRF-AD-KC to a VRF-AD by
  taking $\compk = \pk$ and fixing $\openpk = \mathtt{""}$,
- which makes $\VRF.\CommitKey$ and $\VRF.\OpenKey$ trivial,
- and which avoids invoking the adversary's knowledge.
+ which makes $\VRF.\CommitKey$ and $\VRF.\OpenKey$ trivial.
 
 As in \cite{vrf_micali}, \cite{agg_dkg}, etc., VRF pseudorandomness
 resembles the definition of a pseudorandom function family, in that
@@ -224,7 +228,7 @@ formulation causes implementation and deployment mistakes:
 
 As a rule, VRF signatures have the form $\sigma = (\Out_0,\pi)$ in which
 some inner proof $\pi$ proves correctness of some ``pre-output'' $\Out_0$,
- often the associated ``pre-random'' VUF output.
+ often the associated ``pre-pseudo-random'' VUF output.
 As a rule, $\Out_0$ preserves algebraic relationships between secret keys,
  which breaks pseudorandomness and often permits related key attacks.
 It follows $\VRF.\Eval$ never corresponds to $\Out_0$, so actual code never
@@ -235,7 +239,7 @@ Indeed, \primalgo{EvalProve} encourages exposing the pre-output $\Out_0$,
 which developers then take as the output, violating pseudorandomness. 
 In practice, implementations then even wind up misshandling cofactors,
  or being increasingly subject to related key attacks.
-We've also avoided the VUF formalism taken by \cite{agg_dkg} because VUFs obfuscte this difficulty.
+We avoided the VUF formalism taken by \cite{agg_dkg} in part because VUFs obfuscte this difficulty.
 
 As a caveot, there exist UC formalisms that seemingly appear simpler
 with the \primalgo{EvalProve}, and \primalgo{VerifyProof} formulation,
@@ -249,18 +253,18 @@ We feel imposing this mental transaltion upon paper authors and reviewers
 
 \smallskip
 
-There exist VRFs based on RSA-FDH, Rabin-Williams variants, or BLS
-signatures for which the pre-output constitutes the entire signature,
-and thus lack auxiliary data. 
-There are even bespoke VRFs that relax correctness to some non-trivial relation
-on the space of secret keys and messages, including some Rabin-Williams variants. 
+There exist VRFs based on RSA-FDH or BLS signatures, for which the
+pre-output constitutes the entire signature, and thus lack auxiliary data. 
+There even exist bespoke VRFs that relax correctness to some non-trivial
+relation on the space of secret keys and messages,
+ seemingly including some Rabin variants. 
 Yet, these all suffer from either large signature sizes (RSA) or
  slow verification (BLS).
 
 As a rule, one prefers instantiating VRFs similarly to
  \cite{nsec5} or \cite{VXEd25519} using Chaum-Pedersen DLEQ proofs \cite{CP93}
  because they provide both small signatures and fast verification.
-In these, an extra auxiliary message $\aux$ can be verified for free,
+In these, our extra auxiliary message \aux can be verified for free,
 by binding the message into the challenge hash, like a Schnorr signature.
 VRF protocols could often reduce bandwidth and verifier time with
 this extra message, but some like Sassafras depend upon the extra message.
