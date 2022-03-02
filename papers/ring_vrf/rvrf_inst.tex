@@ -6,9 +6,10 @@
 \newcommand\pifast{\ensuremath{\pi_{\mathtt{fast}}}}
 \newcommand\pisafe{\ensuremath{\pi_{\mathtt{safe}}}}
 
-We now construct our ring VRF which achieves fast amortized prover time
-by using a zero-knowledge continuation for $\rVRF.\OpenKey$ and then
-only updating the $\PedVRF.\OpenKey$ component inside
+We now construct ring VRFs which achieves fast amortized prover time
+by using a heavy zero-knowledge continuation for $\rVRF.\OpenKey$ but
+which permits updating \openpk in the $\PedVRF.\OpenKey$ invokation
+without reproving $\pi$.
 $$ \pi = \NIZK \Setst{ \compk, \comring }{
  \exists \openpk,\openring \textrm{\ s.t.\ } 
  \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenKey(\comring,\openring)}
@@ -18,17 +19,17 @@ $$ \pi = \NIZK \Setst{ \compk, \comring }{
 \subsection{Rerandomization}
 % \label{sec:rvrf_groth16}
 
-zero-knowledge continuations depends upon rerandomizable zkSNARK
+Zero-knowledge continuations need rerandomizable zkSNARKs
 when being reused multiple times, meaning Groth16 \cite{groth16},
 but unlinkability requires more than merely rerandomization.
 
-In \cite{groth16}, we have an SRS $S$ consisting of curve points
- in $\grE_1$ and $\grE_2$ that encode the circuit being proven. 
+In Groth16 \cite{groth16}, we have an SRS $S$ consisting of curve
+points in $\grE_1$ and $\grE_2$ that encode the circuit being proven.
 We follow \cite{groth16} in discussing the SRS $S$ in terms of
 its ``toxic waste''
  $(\alpha,\beta,\delta,\gamma,\tau^1,\tau^2,\ldots) \in \F_q^*$.
 In other words, we could write say $[ f(\tau)/\delta ]_1$ or $[\cdots]_2$
-to denote an element of our SRS $S$ in $\grE_1$ or $\grE_2$ respective,
+to denote an element of our SRS $S$ in $\grE_1$ or $\grE_2$ respectively,
 computed by scalar multiplication from the toxic waste $\tau$ and $\delta$,
  but for which nobody knows the underlying $\tau$ or $\delta$ anymore.
 
@@ -36,7 +37,7 @@ In the SRS $S$, we distinguish the verifiers' string of elements
  $Y_1,\ldots,Y_k, [\alpha]_1 \in \grE_1$ and
  $[\beta]_2, [\gamma]_2, [\delta]_2 \in \grE_2$.
 % as seperate from the provers' much longer string of elements in $\grE_1$ and $\grE_2$.
-A \cite{groth16} proof then takes the form 
+A Groth16 \cite{groth16} proof then takes the form 
  $\pi = (A,B,C) \in \grE_1 \times \grE_2 \times \grE_1$.
 A verifier then produces a $X = \sum_i^k x_i Y_i \in \grE_1$ from
  the public inputs $x_i$ and then checks 

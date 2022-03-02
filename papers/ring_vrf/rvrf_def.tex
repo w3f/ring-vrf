@@ -20,19 +20,24 @@ We focus exclusively upon ring VRFs becuase otherwise anonymity and
 authorizations conditions come in too many flavours.
 In particular, there are group VRFs analogous to group signatures
  \cite{group_sig_survey}, some fairly efficient.
-We distrust group signatures thought because typically some group master
+%
+We distrust group signatures however because typically some group master
 has deanonymization capabilities, giving them only narrow real world uses,
 like mailbox spam defense in Pond \cite{pond}.
+%
+In this vein, attribute based credentials are frequently instantiated
+like group signatures, and thus similarly permit deanonymization by some
+group master, which makes them similarly unsuitabe for general purpose
+privacy.
+%
+There exist exceptions like credentials using Brands \cite{brands}, and
+group signatures with byzantine anonymity \cite{cryptoeprint:2021:181}.
 
-At first blush, attribute based credential schemes have typically
-similarly empowering some group master, which maked them unsuitabe for
-general purpose privacy.
-At least one related scheme \cite{cryptoeprint:2021:181} makes efforts
-towards giving users real control, albeit only in a byzantine threat model.
-
-Ring VRFs avoid deanonymization by a group master and impose a coherent
-structure upon the authorization conditions, with all signers' keys
+Ring VRFs avoid deanonymization by a group master, and impose coherent
+structure upon authorization conditions, with all signers' keys
 predating the authorization condition commitment \comring. 
+% TODO: Relax in \S\ref{subsec:..}
+%
 Ring VRF outputs clearly link any two ring VRF signatures with
 the same signer and input \msg, so in particular
  ring VRFs with a singleton input domain are linkable ring signatures.
@@ -62,8 +67,10 @@ $\rVRF.\KeyGen$ and $\rVRF.\Eval$ untouched, but
 \item $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto \Out \, \lor \perp$
 \end{itemize}
 
-\smallskip
-% \subsection{rVRF-AC security}
+...
+
+
+\subsection{rVRF-AC security}
 
 We extend the VRF-AC-KC commitment correctness condition for \CommitRing:
 
@@ -100,7 +107,7 @@ any PPT adversary $\adv$ has an advantage only
  indices $i_0,i_1 \le n$ such that $\pk_{i_0},\pk_{i_1} \in \ctx_0$ and 
  $\adv$ never invoked $\ora{Sign}$ on \msg and $i_j$ for $j=0,1$.
  Next the challenger fixes $j=0$ or $j=1$ and gives
-  $\adv$ a signature $\sigma = \Sign(\sk_{i_j},\openring,\msg,\aux)$.
+  $\adv$ a signature $\sigma = \rSign(\sk_{i_j},\openring,\msg,\aux)$.
  Finally $\adv$ wins by guessing $j$ correctly
 \end{itemize}
 \end{definition}
@@ -161,8 +168,7 @@ We reuse the VRF-AC-KC pseudorandomness definition for ring VRFs
 because pseudorandomness is strongest for singleton rings, i.e. $|\ctx| = 1$.
 
 
-\smallskip
-% \subsection{rVRF-AC instantiation}
+\subsection{rVRF-AC instantiation}
 
 We instantiate a rVRF-AD from a hiding VRF-AD-KC like \PedVRF plus
 a ring commitment scheme
@@ -170,27 +176,27 @@ a ring commitment scheme
 for which some zero-knowledge ring membership proof handles both
  $\PedVRF.\OpenKey$ and $\rVRF.\OpenKey$
 efficently.
-$$ \pi = \NIZK \Setst{ \compk, \comring }{
- \exists \openpk,\openring \textrm{\ s.t.\ } 
- \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenKey(\comring,\openring)}
-} $$
 
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$ takes
  a secret key \sk, a ring opening \openring, a message \msg, and auxiliary data \aux, and then \\
  \begin{enumerate}
  \item computes the ring membership proof $\pi$ and associated \openpk,
-  % $$ \pi = \NIZK.\Prove \Setst{ (\compk,\comring) }{ \OpenKey(\compk,\openpk) = \OpenRing(\comring,\opring) } \mathcomma $$
+  $$ \pi = \NIZK \Setst{ \compk, \comring }{
+  \exists \openpk,\openring \textrm{\ s.t.\ } 
+  \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenKey(\comring,\openring)}
+  } $$
  \item computes the VRF-AC-KC signature
   $\sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \pi)$, and finally
  \item returns the ring VRF signature $\rho = (\compk,\pi,\sigma)$.
  \end{enumerate}
 \item $\rVRF.\rVerify$ takes $(\comring,\msg,\aux,\rho)$,
-parses $\rho$ as $(\compk,\pi,\sigma,)$,  and then
-returns $\PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \pi,\sigma)$
+ parses $\rho$ as $(\compk,\pi,\sigma,)$,  and then returns
+ $$ \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \pi,\sigma) $$
  iff $\NIZK.\Verify(\pi,\compk,\comring)$ succeeds. 
 \end{itemize}
 
+% \noindent
 In this, we tie $\sigma$ to $\pi$ by expanding $\sigma$'s auxiliary data with $\pi$.
 
 \smallskip
@@ -236,7 +242,7 @@ TODO: Should we gives Handan's UC functionality or similar here?
  a PPT adversary $\adv$ cannot distinguish a random function from
   any evaluation map $F_{\sk_i} : \msg \mapsto \Eval(\sk,\msg)$,
  even given $\ctx_0 = \{ \pk_1,\ldots,\pk_i \}$ and
-  chosen-message queries to $\rVRF.\Sign(\sk_i,\openring)$,
+  chosen-message queries to $\rVRF.\rSign(\sk_i,\openring)$,
   except with odds negligible in $\lambda$.
 \end{itemize}
 
