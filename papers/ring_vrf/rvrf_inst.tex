@@ -94,9 +94,9 @@ We foresee some $x_i$ being transperent elements that determine the
 Merkle root of the ring $\ctx$, but any $x_i$ concerning the
  specific $\pk$ must be hidded by out blinding terms in $b$.
 
-All told, our rerandomization trick transforms some conventional
-Groth16 SNARK $\pi_{\mathtt{inner}}$ for $\rVRF.\OpenKey$
-into a SNARK $\pi$ with an opaque and unlinkable input $X$.
+All told, our opaque rerandomization trick transforms some conventional
+Groth16 zkSNARK $\pi_{\mathtt{inner}}$ for $\rVRF.\OpenKey$
+into a zkSNARK $\pi$ with an opaque and unlinkable input $X'$.
 We therefore explore two concrete $\pi_{\mathtt{inner}}$ proposals next.
 
 Importantly, rerandomization requires only
@@ -135,15 +135,15 @@ some Jubjub curve $\ecJ$.
 We know $\grJ$ typically has smaller order than $\grE$,
 due to $\ecJ$ being an Edwards curve, but 
 if $\sk = \sk_0 + \sk_1 \, 2^{128}$ then our public key commitments could
-take the form $\sk_0\, \genJ_0 + \sk_1\, \genJ_1 + b' \genJ_2$,
+take the form $\sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$,
 with independent $\genJ_0,\genJ_1,\genJ_2$.
 Interestingly, we avoid range proofs for $\sk_1$ and $\sk_2$
 by this independence. 
 
 $$ \pifast = \rrSNARK \Setst{ \sk_0 + \sk_1 2^128, \comring }{
- \exists b',\openring \textrm{\ s.t.\ }
+ \exists d,\openring \textrm{\ s.t.\ }
  % 0 < \sk_0,\sk_1 < 2^128 \textrm{\ and\ } 
- \genfrac{}{}{0pt}{}{\rVRF.\OpenKey(\comring,\openring)}{\,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + b' \genJ_2}
+ \genfrac{}{}{0pt}{}{\rVRF.\OpenKey(\comring,\openring)}{\,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2}
 } $$ % \mathperiod 
 
 We explain later in \S\ref{sec:ring_hiding} how one could

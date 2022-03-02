@@ -50,15 +50,15 @@ replace $\pisafe'$ with a zero-knowledge continuation
 that swaps the KZG blinding for the secret key blinding used by \pifast.
 
 We represent public keys in $\grE_1$ over $\ecJ$ like \pifast does,
-so $J = \sk_0\, \genJ_0 + \sk_1\, \genJ_1 + b' \genJ_2$.
+so $J = \sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$.
 After placing these into a KZG commitment over $\ecE$, a transperent
 openning yields $J.x Y_2 + J.y Y_3$, so our blinded opening could
 then yield $J.x Y_2 + J.y Y_3 + b \genB_\gamma$.
 At this point, we need a SNARK to translate $J$ into $\sk$, so
 $$ \pifast' = \rrSNARK \Setst{ \sk_0 + \sk_1 2^128, \pk }{ 
- \exists b' \textrm{\ s.t.\ }
+ \exists d \textrm{\ s.t.\ }
  % 0 < \sk_0,\sk_1 < 2^128 \textrm{\ and\ } 
- \pk = \sk_0 \genJ_0 + \sk_1 \genJ_1 + b' \genJ_2
+ \pk = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2
 } \mathperiod $$
 We compute $\pifast'$ only once ever, unlike $\pisafe'$.
 

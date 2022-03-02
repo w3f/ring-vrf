@@ -25,7 +25,7 @@ ring through openning a blinded polynomial commitment \cite{KZG}:
 In \S\ref{subsec:rvrf_faster}, our \pifast takes public input
  $X = \comring\, Y_0 + \compk$ where $\compk = \sk\, Y_1 + b \genB_\gamma$.
 Instead of revealing \comring, we prove correctness of \comring in
- $X'' = \comring\, Y_0 + b'' \genB_\gamma$.
+ $X'' = \comring\, Y_0 + d'' \genB_\gamma$.
 We prove $X''$ has this structure by opening a polynomial commitment
 \cite{KZG}, but over a larger slower recursive elliptic curve
  like BW6 \cite{BW6}.
