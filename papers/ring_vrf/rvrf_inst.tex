@@ -62,18 +62,15 @@ Alone rerandomization cannot alter public inputs $x_i$, so
 we instead need an opaque public input point $X$, which then becomes
 part of our proof and incurs its own seperate proof of correctness.
 
-We also need one fresh basepoint $\genB_0$ independent from all others,
+We also need one fresh basepoint $\genB_\gamma$ independent from all others,
 again perhaps created by applying $H_\grE$ to an input outside existing usages' domain.
-We now give provers the two additional SRS elements
-$$ \genB_\gamma := {1\over\gamma} \genB_0 \quad\textrm{and}\quad
-   \genB_\delta := {1\over\delta} \genB_0 $$
-Although $\genB_0$ is independent, 
-we create $\genB_\gamma$ and $\genB_\delta$ during the trusted setup,
+We now give provers the additional SRS elements
+$$ \genB_\delta := {\gamma\over\delta} \genB_\gamma $$
+Although $\genB_\gamma$ is independent, 
+we create $\genB_\delta$ during the trusted setup,
  so the toxic waste $\gamma$ and $\delta$ remain secret.
 After this, subversion resistance could be checked like 
-$$ e(\genB_\gamma, [\gamma]_2)
-   = e(\genB_0, \genE_2)
-   = e(\genB_\delta, [\delta]_2) \mathperiod $$
+$$ e(\genB_\gamma, [\gamma]_2) = e(\genB_\delta, [\delta]_2) \mathperiod $$
 
 We now have a zero-knowledge continuation $(X,A,B,C)$ from which
 we produce an unlinkable $(X',A',B',C')$ by
@@ -84,7 +81,7 @@ A' &= {1 \over r_1} A \\
 B' &= r_1 B + r_1 r_2 [\delta]_2 \\
 C' &= C + r_2 A + b \genB_\delta \mathperiod \\
 \end{aligned} $$
-As our two $b$ terms cancel in the pariings, we wind up with the standard Groth16
+As our two $b$ terms cancel in the pairings, we wind up with the standard Groth16
  rerandomization construction above, except with $X$ opaque.
 
 We still verify $(X',A',B',C')$ like 
