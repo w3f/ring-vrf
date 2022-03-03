@@ -44,14 +44,14 @@ We have nicer options if using the \pisafe approach:
 
 Instead of proving ring membership of one public key,
 $\pisafe$ could prove ring membership of a KZG commitment to $n$ keys.
-Our unamortized SNARK $\pisafe'$ could then open the specific key in
+Our unamortized SNARK $\pisafedot$ could then open the specific key in
 zero-knowledge, which sounds acceptable once already working in the \pisafe case.
 
 We could compute the hash-to-curve $\In := H_{\grE}(\msg)$ inside the
-unamortized SNARK $\pisafe'$ and reveal only a Pedersen-like commitment
+unamortized SNARK $\pisafedot$ and reveal only a Pedersen-like commitment
 to $\In + \openpk^{-1} \genB$.  We then adjust \PedVRF to yield
 a proof-of-knowledge of $\Out/\In$ subject to soundness of this
-$\pisafe'$.
+$\pisafedot$.
 
 In all cases, we incur costs by hiding part of the input \msg, so
 deployment should seriously consider if leaking $k$ suffices.
@@ -77,11 +77,12 @@ Instead of treating ring VRF outpus like identitys,
 we treat them like nullifiers which could each be spent exactly once.
 
 \def\expiry{e}
-We fix a set $U$ of limited resources, and dynamically define
+We fix a set $U$ of limited resource types, and dynamically define
 an expiry date $\expiry_{u,d_0}$ and an availability $n_{u,d_0}$, 
 both dependent upon the resource $u \in U$ and current date $d_0$.
 We typically want a randomness beacon $r_d$ too, which prevents
 anyone learning $r_d$ much before date $d$. 
+% Among other usages, this reduces damages from key compromises.
 As ring VRF inputs, we choose
  $\msg = u \doubleplus r_d \doubleplus d \doubleplus k$
 where $u \in U$ denotes a limited resoruce,
@@ -105,7 +106,7 @@ an explicit issuance stage, while ring VRFs self-issue.
 There exist many reasons to decommodify important services,
 like energy, water, or internet,
  beyond rationing real physical shortaged.
-Ring VRFs fit these cases using similar $\msg$ formulations,
+Ring VRFs fit these cases using similar $\msg$ formulations.
 
 As an example, a municipal ISP allocates some limited bandwidth capasity
 among all residents.  It allocates bandwidth fairly by verifying ring VRFs
@@ -115,15 +116,15 @@ Aside from essential government services, commercial service providers
 typically offers some free service tier, usually because doing so
 familiarizes users with their intimidating technical product.
 
-% As an example, a game company 
+% As an example, a company providing continuous integration testing services offers a free tier, but  
 
-All these rate limiting cases need unlinkability among individual
+A priori, rate limiting cases benefit from unlinkability among individual
 usages, not merely at some site boundary like moderation requires.
 We thus use each ring VRF output only once, which prevents our cashing
 trick of \S\ref{sec:reduced_pairings} from reducing verifier pairings.
 
-Although rationing sounds valuble enough nobody cares, we foresee
-services like ISP, VPNs, or mixnets having many low value transactions.
+Although rationing sounds valuble enough, we foresee services like ISP,
+VPNs, or mixnets having many low value transactions.
 In such cases, ring VRFs could authorize issuing a limited number of
 fast simple single-use blind issued credentials, like blind signatures
 ala GNU Taler \cite{taler} or PrivacyPass OPRF tokens \cite{PrivacyPass},
