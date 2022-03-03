@@ -7,7 +7,7 @@ We explained in \S\ref{subsec:moderation} that choosing \msg to be
 the concatenation of a base domain and a date gives users a stream of changing identities.
 
 We next discuss giving users exactly $n > 1$ ring VRF outputs aka
-``identites'' per date, as opposed to the unique identity 
+``identities'' per date, as opposed to the unique identity 
 
 
 % \subsection{Implementation}
@@ -29,7 +29,7 @@ If $k_1 \ne k_2$ then Eve learns nothing, but if $k_1 = k_2$ then
  Eve learns that $sk_1 \ne \sk_2$, maybe representing different users. 
 
 We do not necessarily always care if Eve learns this much information,
-but scenarions exist in which one cares.  We therefore briefly describe
+but scenarios exist in which one cares.  We therefore briefly describe
 several mitigations:
 
 If $n$ remains fixed forever, then we could simply let all users
@@ -39,7 +39,7 @@ rings $\ctx_i$ for $i = 1 \ldots N$, and
  then blind \comring in \pifast similarly to \S\ref{subsec:hiding_rings}.
 
 Although simple, these two approaches require users construct $n$ or $N$
-different $\pifast$ proofs everytime the ring \ctx updates.
+different $\pifast$ proofs every time the ring \ctx updates.
 We have nicer options if using the \pisafe approach: 
 
 Instead of proving ring membership of one public key,
@@ -61,12 +61,12 @@ deployment should seriously consider if leaking $k$ suffices.
 
 As a species, we expect shortages of resources, energy, goods, water,
 and food beginning during the next several decades, due to climate change,
-ecosystem damage or collapse, and resource exaustion ala peak oil. 
+ecosystem damage or collapse, and resource exhaustion ala peak oil. 
 Invariably, nations manage shortages through rationing, like during
 WWI, WWII, and the oil shocks.  
 
 Ring VRFs support anonymous rationing:
-Instead of treating ring VRF outpus like identitys,
+Instead of treating ring VRF outputs like identities,
 we treat them like nullifiers which could each be spent exactly once.
 
 \def\expiry{e}
@@ -78,7 +78,7 @@ anyone learning $r_d$ much before date $d$.
 % Among other usages, this reduces damages from key compromises.
 As ring VRF inputs, we choose
  $\msg = u \doubleplus r_d \doubleplus d \doubleplus k$
-where $u \in U$ denotes a limited resoruce,
+where $u \in U$ denotes a limited resource,
  $d$ denotes an non-expired date meaning $\expiry_{u,d_0} < d \le d_0$,
  and $1 \le k \le n_{u,d_0}$.
 In this way, our rationing system controls both daily consumption
@@ -86,11 +86,11 @@ via $n_{u,d_0}$ and time shifted demand via expiry time $\expiry_{u,d_0}$.
 
 Importantly, our rationing system retains ring VRF outputs as nullifiers,
 filed under their associated date $d$ and resource $u$, so nullifiers
-expire once $d \le \expiry_{u,d_0}$ which permits perging old data rapidly.
+expire once $d \le \expiry_{u,d_0}$ which permits purging old data rapidly.
 
-We remark that fully transferable assets could have constraned lifetimes
-too, which simiarly eases nullifier management when implements using
-blind signatures, zcash sappling, etc.  Yet, all these tokens require
+We remark that fully transferable assets could have constrained lifetimes
+too, which similarly eases nullifier management when implements using
+blind signatures, zcash sapling, etc.  Yet, all these tokens require
 an explicit issuance stage, while ring VRFs self-issue.
 
 
@@ -98,10 +98,10 @@ an explicit issuance stage, while ring VRFs self-issue.
 
 There exist many reasons to decommodify important services,
 like energy, water, or internet,
- beyond rationing real physical shortaged.
+ beyond rationing real physical shortage.
 Ring VRFs fit these cases using similar $\msg$ formulations.
 
-As an example, a municipal ISP allocates some limited bandwidth capasity
+As an example, a municipal ISP allocates some limited bandwidth capacity
 among all residents.  It allocates bandwidth fairly by verifying ring VRFs
 signatures on hourly \msg and then tracking nullifiers until expiry.
 
@@ -116,7 +116,7 @@ usages, not merely at some site boundary like moderation requires.
 We thus use each ring VRF output only once, which prevents our cashing
 trick of \S\ref{sec:reduced_pairings} from reducing verifier pairings.
 
-Although rationing sounds valuble enough, we foresee services like ISP,
+Although rationing sounds valuable enough, we foresee services like ISP,
 VPNs, or mixnets having many low value transactions.
 In such cases, ring VRFs could authorize issuing a limited number of
 fast simple single-use blind issued credentials, like blind signatures
@@ -137,7 +137,7 @@ but without making the token full transferable.
 Among blind issued credential many support this, both
 GNU Taler \cite{taler} and PrivacyPass \cite{PrivacyPass} could
 be redeemed by a delegatee family member who trusts the original
-delegator not to double spend, but transations with untrusted spenders
+delegator not to double spend, but transactions with untrusted spenders
 risks double spending.  
 
 Ring VRFs usage typically demands spender authenticate the specific
@@ -149,7 +149,7 @@ certificate that authenticates another public key held by the delegatee.
 GNU Taler achieves delegation and other features like this.
 
 We could similarly treat the ring VRF like an adaptor certificate aka
-implicit certificate.  In other wrods, the delegatee learns the full
+implicit certificate.  In other words, the delegatee learns the full
 ring VRF signatures, but then the delegatee hides $s_1$ from downstream
 recipients, and instead merely prove knowledge of $s_1$, usually via
 a key exchange or another Schnorr signature.

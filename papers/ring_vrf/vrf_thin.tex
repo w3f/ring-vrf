@@ -6,8 +6,8 @@ There are VRFs built upon Chaum-Pedersen DLEQ proofs in elliptic curves,
 Yet typically their proofs have one challenge scalar and one signature
 scalar, like a non-batchable Schnorr signature, while 
 their verification demands two elliptic curve multi-exponentiations.
-As a reslt, their naively batchable variant become ``fat'', requiring
-one scalar and two seperate nonces, which complicates batch verification.
+As a result, their naively batchable variant become ``fat'', requiring
+one scalar and two separate nonces, which complicates batch verification.
 
 We propose a new ``thin'' batchable EC VRF that merges these two nonces,
 and requires only one elliptic curve multi-exponentiation, but
@@ -15,10 +15,10 @@ internally computes an extra delinearization challenge.
 As such, our thin batchable variant both runs faster and simplifies heavy usage,
 and also provides a less annoying interface.
 
-Interestingly, our thin batchable EC VRF winds up litterally being
+Interestingly, our thin batchable EC VRF winds up literally being
 a tweaked Schnorr-like signature, which opens new proof strategies and
 use cases.  After this section, we abandon this thin batchable VRF
-because our ``fat Pederson'' variant introduced next in \S\ref{sec:vrf_pederson}
+because our ``fat Pedersen'' variant introduced next in \S\ref{sec:vrf_pederson}
 fits zero-knowledge continuations better.
 
 \smallskip
@@ -29,9 +29,9 @@ fits zero-knowledge continuations better.
 %PoK:  either separately or implicitly.
 
 We build only a VRF-AD here which lacks the key commitments of \S\ref{sec:vrf},
-meaing $\ThinVRF.\CommitKey$ and $\ThinVRF.\OpenKey$ are trivial, and $\openpk = \emptyset$.
+meaning $\ThinVRF.\CommitKey$ and $\ThinVRF.\OpenKey$ are trivial, and $\openpk = \emptyset$.
 
-We work solely in $\ecE$ here because we need only a basic Chaum-Pederson DLEQ proof.
+We work solely in $\ecE$ here because we need only a basic Chaum-Pedersen DLEQ proof.
 As in \S\ref{sec:lambda} and throughout,
  $\ecE$ has order $h p$ with $p \approx 2^{2\lambda}$ prime and $h$ a small cofactor.
 
@@ -75,7 +75,7 @@ If desired, one could easily generalize this VRF to $k$ messages by computing $k
 % $\primalgo{PreEval}(\sk,\msg) = h \sk H_{\grE}(\msg,\pk)$
 % \end{lemma}
 
-We discuss chosen message queries against only one key in pseudorandomness.  
+We discuss chosen message queries against only one key in pseudo-randomness.  
 % TODO: What?
 In \ThinVRF, we hash the public key \pk along with the message \msg
 in $H_\grE$, aka injected \pk into \msg, to prevent
@@ -88,8 +88,8 @@ when combining identical inputs \msg with related secret keys,
 \begin{proposition}\label{prop:thin_vrf}
 Assuming AGM in $\grE$, % $\ecE$ modulo $h$,
 our $\ThinVRF$ satisfies
- VRF correctness, uniqueness, pseudorandomness,
- and existential unforgability on $(\msg,\aux)$.
+ VRF correctness, uniqueness, pseudo-randomness,
+ and existential unforgeability on $(\msg,\aux)$.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
@@ -150,7 +150,7 @@ In AGM, $\adv$ must express its guess for $h \Out_0$
 As $H_\grE$ is a random oracle, we deduce that either
  $\adv$ solved the discrete logarithm problem, or else
  unpredictability holds for $\ThinVRF$.
-As $H'$ is a PRF, we now argue pseudorandomness for$\ThinVRF$ similarly
+As $H'$ is a PRF, we now argue pseudo-randomness for$\ThinVRF$ similarly
  to \cite[Proposition 1]{vrf_micali}.
 \end{proof}
 % An adversary cannot discover $\Out_0$ without querying $\msg$,

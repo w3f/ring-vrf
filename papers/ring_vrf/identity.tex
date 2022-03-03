@@ -42,7 +42,7 @@ As an only moderately harmful example, websites often prevent abuse by demanding
 
 As beneficial identity examples, financial institutions act as an identity provider for their own identity consumer logic by issuing login credentials, but then owe their customers some fiduciary duty and strongly discourage using the same login credentials elsewhere.  
 
-As a more nuanced example, an employer identifies employees to a personel management service by way of an external OAuth service, but the employer has some legal relationship with the personel management service, the OAuth service, and the employee, so any resulting harms rest upon the employer-employee relationship.  
+As a more nuanced example, an employer identifies employees to a personnel management service by way of an external OAuth service, but the employer has some legal relationship with the personnel management service, the OAuth service, and the employee, so any resulting harms rest upon the employer-employee relationship.  
 
 We think Google Single Sign-on or Facebook Connect cannot play the role of OAuth service even in this employer-employee example, and indeed cannot ever be used ethically, because they aggressively track the employee outside the employer-employee relationship.  At the same time, an employees' Github account might or might not serve this role depending upon the specific employee and how they use Github outside work.  
 
@@ -52,7 +52,7 @@ We think Google Single Sign-on or Facebook Connect cannot play the role of OAuth
 
 We now lay aside such identity systems that represent a distinguished purpose tied to onerous three-way legal relationships between the parties.  Instead we turn our attention towards the range of identity systems that avoid providing any user details.  
 
-At present, CAPTCHAs provide a popular defense against automated abuse.  There also exist cryptographic tools that amplify defenses against automated abuse, like blind signatures or verifiable oblivious pseudorandom functions (VOPRFs), as used in Privacy Pass \cite{privacypass}.  These dispence signle-use tokens within some limits imposed by other identity sources, rate limits, payments, or CAPTCHAs.  
+At present, CAPTCHAs provide a popular defense against automated abuse.  There also exist cryptographic tools that amplify defenses against automated abuse, like blind signatures or verifiable oblivious pseudo-random functions (VOPRFs), as used in Privacy Pass \cite{privacypass}.  These dispense single-use tokens within some limits imposed by other identity sources, rate limits, payments, or CAPTCHAs.  
 
 We think single-use tools like CAPTCHAs, blind signatures, and VOPRFs adequately deter abuse in most use cases.  Yet, there also exist situations where abusers cannot be dissuaded by solving another CAPTCHAs or spending another token, like when abuse takes a personal character, or due to a larger profit motive.  
 

@@ -1,9 +1,9 @@
-\subsection{Pederson keyed VRF-AD-KC}
+\subsection{Pedersen keyed VRF-AD-KC}
 \label{sec:vrf_perderson}
 
 Anonymized VRF signatures could use Chaum-Pedersen DLEQ proofs that
 hide the true public key, which our key committing definition permits.
-Zero-knowledge continuations work by opening this key comittment
+Zero-knowledge continuations work by opening this key commitment
  inside another zero-knowledge proof. % DUP
 
 We only describe the non-batchable variant analogous to
@@ -44,7 +44,7 @@ the secret key \sk, not to the public key \pk, because
  \OpenKey does not enforce the structure of \pk.
 Instead, our \Verify proves correctness of \compk, as
  required for our key binding condition, so
-zero-knowledge continuations then use \OpenKey with only minor caveots.
+zero-knowledge continuations then use \OpenKey with only minor caveats.
 % In particular, any VRF-AC-KC prevents adversaries from obtaining
 % extra valid outputs, but ring VRF protocols need a proof-of-knowledge
 % for the public key \pk if they demand that different \pk represent
@@ -78,7 +78,7 @@ $\PedVRF$ is a correct key commitment and (perfectly) key hiding.
 \begin{proposition}\label{prop:pedersen_vrf}
 Assuming AGM in $\grE$, % $\ecE$ modulo $h$,
 our $\PedVRF$ satisfies VRF correctness, key binding, uniqueness,
-pseudorandomness, and unforgability. % (EUF-CMA-KC) on $(\msg,\aux)$.
+pseudo-randomness, and unforgeability. % (EUF-CMA-KC) on $(\msg,\aux)$.
 \end{proposition}
 
 

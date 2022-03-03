@@ -10,7 +10,7 @@
 
 We now construct ring VRFs which achieves fast amortized prover time
 by using a heavy zero-knowledge continuation for $\rVRF.\OpenKey$ but
-which permits updating \openpk in the $\PedVRF.\OpenKey$ invokation
+which permits updating \openpk in the $\PedVRF.\OpenKey$ invocation
 without reproving $\piring$.
 $$ \piring = \NIZK \Setst{ \compk, \comring }{
  \exists \openpk,\openring \textrm{\ s.t.\ } 
@@ -23,7 +23,7 @@ $$ \piring = \NIZK \Setst{ \compk, \comring }{
 
 Zero-knowledge continuations need rerandomizable zkSNARKs
 when being reused multiple times, meaning Groth16 \cite{groth16},
-but unlinkability requires more than merely rerandomization.
+but unlinkability requires more than merely Rerandomization.
 
 In Groth16 \cite{groth16}, we have an SRS $S$ consisting of curve
 points in $\grE_1$ and $\grE_2$ that encode the circuit being proven.
@@ -38,7 +38,7 @@ computed by scalar multiplication from the toxic waste $\tau$ and $\delta$,
 In the SRS $S$, we distinguish the verifiers' string of elements
  $Y_1,\ldots,Y_k, [\alpha]_1 \in \grE_1$ and
  $[\beta]_2, [\gamma]_2, [\delta]_2 \in \grE_2$.
-% as seperate from the provers' much longer string of elements in $\grE_1$ and $\grE_2$.
+% as separate from the provers' much longer string of elements in $\grE_1$ and $\grE_2$.
 A Groth16 \cite{groth16} proof then takes the form 
  $\pi = (A,B,C) \in \grE_1 \times \grE_2 \times \grE_1$.
 A verifier then produces a $X = \sum_i^k x_i Y_i \in \grE_1$ from
@@ -47,7 +47,7 @@ $$ e(A,B) = e([\alpha]_1, [\beta]_2) \cdot
  e(X, [\gamma]_2) \cdot e(C, [\delta]_2) \mathperiod $$
 
 We need the rerandomization algorithm from \cite[Fig.~1]{RandomizationGroth16}:
-% to build a zero-knowlege continuation:
+% to build a zero-knowledge continuation:
 % https://eprint.iacr.org/2020/811
 % https://github.com/arkworks-rs/groth16/pull/16/files
 % \algo{rerandomize}
@@ -110,7 +110,7 @@ Importantly, rerandomization requires only
 which  BLS12 curves make roughly equivlent to
  eight scalar multplicaitons on $\ecE_1$.
 
-% Intutitively, an adversary cannot link $(X,A,B,C)$ with $(X',A',B',C')$ because 
+% Intuitively, an adversary cannot link $(X,A,B,C)$ with $(X',A',B',C')$ because 
 
 \begin{proposition}\label{prop:unlinkable}
 Let $\sigma'$ and $\sigma''$ denote Chaum-Pedersen proofs-of-knowledge

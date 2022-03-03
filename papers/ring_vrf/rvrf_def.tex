@@ -16,8 +16,8 @@ Among anonymized VRFs, ring VRFs are ring signatures broadly interpreted,
 meaning they prove an associated public key lies inside some signer set
 commitment \comring which anyone could construct from a set of public keys.
 
-We focus exclusively upon ring VRFs becuase otherwise anonymity and
-authorizations conditions come in too many flavours.
+We focus exclusively upon ring VRFs because otherwise anonymity and
+authorizations conditions come in too many flavors.
 In particular, there are group VRFs analogous to group signatures
  \cite{group_sig_survey}, some fairly efficient.
 %
@@ -27,11 +27,11 @@ like mailbox spam defense in Pond \cite{pond}.
 %
 In this vein, attribute based credentials are frequently instantiated
 like group signatures, and thus similarly permit deanonymization by some
-group master, which makes them similarly unsuitabe for general purpose
+group master, which makes them similarly unsuitable for general purpose
 privacy.
 %
 There exist exceptions like credentials using Brands \cite{brands}, and
-group signatures with byzantine anonymity \cite{cryptoeprint:2021:181}.
+group signatures with Byzantine anonymity \cite{cryptoeprint:2021:181}.
 
 Ring VRFs avoid deanonymization by a group master, and impose coherent
 structure upon authorization conditions, with all signers' keys
@@ -77,7 +77,7 @@ We extend the VRF-AC-KC commitment correctness condition for \CommitRing:
 \begin{definition}
 We say rVRF satisfies {\em ring commitment correctness} if
 commitment correctness holds, and also $\rVRF.\CommitRing$ is 
- compatable with $\rVRF.\CommitKey$ in that
+ compatible with $\rVRF.\CommitKey$ in that
   $\rVRF.\CommitRing(\ctx) = \rVRF.\CommitKey(\pk,\ctx).0$.
 \end{definition}
 
@@ -89,7 +89,7 @@ but instead demand a weaker anonymity condition similar to
 \begin{definition}
 We say \rVRF satisfies {\em ring anonymity} if
 any PPT adversary $\adv$ has an advantage only
- negligable in $\lambda$ to win the game:
+ negligible in $\lambda$ to win the game:
 \begin{itemize}
 \item[]
  Assume a set $\ctx_0 = \{ \pk_1,\ldots,\pk_n \}$ of public keys from
@@ -112,13 +112,13 @@ any PPT adversary $\adv$ has an advantage only
 \end{itemize}
 \end{definition}
 
-We similarly a ring unforgability resembling
+We similarly a ring unforgeability resembling
  \cite[pp. 7 Def. 7]{cryptoeprint:2005:304}:
 
 \begin{definition}
-We say \rVRF satisfies {\em ring unforgability} if
+We say \rVRF satisfies {\em ring unforgeability} if
 any PPT adversary $\adv$ has an advantage only
- negligable in $\lambda$ to win the game:
+ negligible in $\lambda$ to win the game:
 \begin{itemize}
 \item[]
  Assume a set $\ctx_0 = \{ \pk_1,\ldots,\pk_n \}$ of public keys from
@@ -131,26 +131,26 @@ any PPT adversary $\adv$ has an advantage only
   their choice of $\ctx',\msg',\aux'$ with $\pk_i \in \ctx'$.
  % as well as the various algorithms. 
  %
- Now $\adv$ wins by outputing a valid signature $\sigma$ for
+ Now $\adv$ wins by outputting a valid signature $\sigma$ for
  a ring $\ctx \subset \ctx_0$, a message \msg, and associated data \aux
  such that
  $\adv$ never invoked $\ora{Sign}$ on $\msg,\aux$ and $i$ with $\pk_i \in \ctx$.
 \end{itemize}
 \end{definition}
 
-We also need a uniqueness condition that limits even adersaries who know the secret key.
+We also need a uniqueness condition that limits even adversaries who know the secret key.
 
 % \begin{definition}
 % We say \rVRF satisfies {\em ring uniqueness} if
 % any PPT adversary $\adv$ has an advantage only
-%  negligable in $\lambda$ to 
+%  negligible in $\lambda$ to 
 % produces a ring $\ctx$, input $\msg$, 
 % and various $\aux_i,\sigma_i$ with more than $|\ctx|$
 % many verifying outputs $\Out_i = \Verify(\CommitRing(\ctx),\msg,\aux_i,\sigma_i)$.
 % \end{definition}
 
 \begin{definition}
-We say \rVRF satisfies {\em ring unforgability} if
+We say \rVRF satisfies {\em ring unforgeability} if
 any PPT adversary $\adv$ who produces
  a ring $\ctx$, input $\msg$,  and various $\aux_i,\sigma_i$
 cannot produce more than $|\ctx|$ many verifying outputs
@@ -164,8 +164,8 @@ In doing so this, ring uniqueness reduces to uniqueness for VRF-AC,
 meaning our uniqueness with only a trivial key commitment,
 but \ThinVRF is faster and simpler.
 
-We reuse the VRF-AC-KC pseudorandomness definition for ring VRFs
-because pseudorandomness is strongest for singleton rings, i.e. $|\ctx| = 1$.
+We reuse the VRF-AC-KC pseudo-randomness definition for ring VRFs
+because pseudo-randomness is strongest for singleton rings, i.e. $|\ctx| = 1$.
 
 
 \subsection{rVRF-AC instantiation}
@@ -175,7 +175,7 @@ a ring commitment scheme
  $\rVRF.\{ \CommitRing, \CommitKey, \OpenKey \}$
 for which some zero-knowledge ring membership proof handles both
  $\PedVRF.\OpenKey$ and $\rVRF.\OpenKey$
-efficently.
+efficiently.
 
 \newcommand\piring{\ensuremath{\pi_{\mathtt{ring}}}\xspace}
 
@@ -209,11 +209,11 @@ We now prove security of \rVRF using that
 \item our ring commitment scheme satisfies ring commitment correctness.
 \end{itemize}
 
-Pseudorandomness holds by pseudorandomness of \PedVRF from
+Pseudo-randomness holds by pseudo-randomness of \PedVRF from
  Proposition \ref{prop:pedersen_vrf}.
 
 \begin{proposition}\label{prop:pedersen_rvrf}
-$\rVRF$ satisfies ring uniqueness and ring unforgability.
+$\rVRF$ satisfies ring uniqueness and ring unforgeability.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
@@ -221,7 +221,7 @@ $\rVRF$ satisfies ring uniqueness and ring unforgability.
 \end{proof}
 
 
-TODO:  Should we give an abstract pure NIZK instaniation here?  I think later probably.
+TODO:  Should we give an abstract pure NIZK instantiation here?  I think later probably.
 
 
 \subsection{UC}
@@ -250,16 +250,16 @@ TODO: Should we gives Handan's UC functionality or similar here?
 
 
 \begin{definition}
-We say \rVRF satisfies {\em ring pseudorandomness} if 
-any PPT adversary $\adv$ has only a negigable advantage in $\lambda$
+We say \rVRF satisfies {\em ring pseudo-randomness} if 
+any PPT adversary $\adv$ has only a negligible advantage in $\lambda$
 in this chosen-message game:
 \begin{itemize}
- \item Frist, a challenger
+ \item First, a challenger
   generates keypairs $(\pk_1,\sk_1),\ldots,(\pk_1,\sk_1) \leftarrow \KeyGen$ and
   defines a signing oracles $\ora{Sign}_i$ given by
   $(\compk,\openpk,\msg,\aux) \mapsto \Sign(\sk_i,\openpk,\msg,\aux)$,
    except it logs $\msg$ and aborts if $\pk_i \ne \OpenKey(\compk,\openpk)$.
- \item Next $\adv$ recieves the $\pk_i$, repeatedly queries $\ora{Sign}_i $,
+ \item Next $\adv$ receives the $\pk_i$, repeatedly queries $\ora{Sign}_i $,
   and produces $\compk,\openpk,\msg,\aux$. 
  \item If $\adv$ never queried $\ora{Sign}(\cdot,\cdot,\msg,\cdot)$ then
   $\adv$ wins by distinguishing $\Eval(\sk,\msg)$ from random value.
