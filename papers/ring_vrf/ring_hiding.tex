@@ -16,19 +16,28 @@ lies in some permitted set of rings, but hide the specific ring used.
 
 We could achieve this using recursion inside \pifast of course,
 but doing so lies out of scope.  We instead discuss using other
-zk continuation techniques or similar.
+zero-knowledge continuation techniques or similar.
 
 \subsection{Unique circuit}
 
 As a first step, if all rings use the same circuit, then we hide the
-ring through openning a blinded polynomial commitment \cite{KZG}: 
+ring through openning a blinded polynomial commitment \cite{KZG} as follows. 
+
 In \S\ref{subsec:rvrf_faster}, our \pifast takes public input
  $X = \comring\, Y_0 + \compk$ where $\compk = \sk\, Y_1 + b \genB_\gamma$.
 Instead of revealing \comring, we prove correctness of \comring in
  $X'' = \comring\, Y_0 + d'' \genB_\gamma$.
-We prove $X''$ has this structure by opening a polynomial commitment
-\cite{KZG}, but over a larger slower recursive elliptic curve
- like BW6 \cite{BW6}.
+
+As an initial condition, we build two polynomial commitments \cite{KZG}
+on $\ecE$ with similarly indexed opennings:
+\begin{enumerate}
+\item to all our \comring choices over the basepoint $Y_0$, and
+\item to $1$ over the basepoint $\genB_\gamma$ at numerous points.
+\end{enumerate}
+We could construct or update the \comring commitment using \cite{aSVC} if desired.
+
+We now construct a commitment opening to $X''$ as desired, and
+open at a hidden index. ...
 
 TODO: More details?
 
@@ -37,25 +46,50 @@ using $\pisafedot$ too, which saves pairings over adding KZK.
 
 \subsection{Multi circuit}
 
-Although $\gamma=1$ remains viable, all circuits wind up with
-unique $\delta$ and hence unique $\ecE_2$ SRS element $[\delta]_2$.
-We hide $[\delta]_2$ so we suggest proving correctness of $[\delta]_2$
-using a blinded polynomial commitment \cite{KZG} over BW6 \cite{BW6},
-except this time a multipicative blinding works better.
+We handle \comring in the multi-circuit case almost like in the
+unique circuit case, except that circuit should enforce \comring
+suitability. 
 
-TODO: More details?
+All circuits wind up with unique $\alpha,\beta,\delta$ and
+hence unique SRS elements $[\alpha]_1 \in \ecE_1$ and
+ $[\beta]_2, [\delta]_2, [\gamma]_2 \in \grE_2$,
+and perhaps a unique $\grE_T$ element $e([\alpha]_1, [\beta]_2)$.
+We could fix $\gamma=1$ across circuits, but do not require this.
+
+We want polynomial commitment \cite{KZG} that prove correctness
+of these values, and which support appropriate blinding operations. 
+We prefer polynomial commitments in $\ecE$ because then
+we face a straightforward task of multipicatively blinding
+all terms identically using Chaum-Pedersen DLEQ proofs,
+and openning them all at identical hidden indices (TODO???).
+
+TODO: More details?  Actually sane?!?  $([\alpha]_1, [\beta]_2) \in grE_T$?!?  etc.
+
+Initially, we reserve space in the polynomial commitment for future
+circuits, by including commitments to the basepoint.
+As we later add circuits, we then using \cite{aSVC} construct opennings to
+$[\alpha]_1 \in \ecE_1$ and $[\beta]_2, [\delta]_2, [\gamma]_2 \in \grE_2$,
+ during each circuits' trusted setup.
+We now prove the multiplicative blindings correct using Chau-Pedersen
+DLEQ proofs, and then open all these blinded polynomial commitments
+to the desired points
+ ${t \over s} [\alpha]_1, t s [\beta]_2, t [\delta]_2, t [\gamma]_2$.
+
+% TODO:  Anything about using a blinded polynomial commitment \cite{KZG} over $\mathtt{BW6}$ \cite{BW6}, provided $\ecE = \mathtt{BLS12-377}$.
 
 At this point, we have blinded and proven correct both the
-ring commitment \comring and the circuit commitment $[\gamma]_2$.
-A priori, \pifast chooses $\genG = Y_1$, which reveals the circuit too, like
-$$ Y_1 = [{1\over\gamma} (\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau))]_1 \mathperiod $$
+ring commitment \comring and the circuit commitments $[\gamma]_2$,
+$[\delta]_2$, and $e([\alpha]_1, [\beta]_2)$.
+A priori, \pifast chooses $\genG = Y_1$, which reveals the circuit too,
+due to depending upon the SRS like
+$$ Y_1 = \left[ {\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) \over \gamma} \right]_1 \mathperiod $$
 
 Instead, we propose to stabalize the public input SRS elements:
 We choose $Y_{1,\gamma}$ independent before selecting the circuit
  or running its trusted setup.
 We then merely add an SRS element $Y_{1,\delta}$, for usage in $C$, that binds
  our independent $Y_{1,\gamma}$ to the desired definition, so
-$$ Y_{1,\delta} := [{1\over\delta} (\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) - \gamma Y_{1,\gamma})]_1 \mathperiod $$
+$$ Y_{1,\delta} := \left[ {\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) - \gamma Y_{1,\gamma} \over \delta} \right]_1 \mathperiod $$
 At this point, we replace $Y_1$ by $Y_{1,\gamma}$ everywhere and
  include $\comring \, Y_{1,\delta}$ inside $C$.
 
