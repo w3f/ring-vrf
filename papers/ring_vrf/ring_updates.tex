@@ -7,7 +7,7 @@ but otherwise mostly treated the ring commitment scheme
 $\rVRF.\{ \CommitRing, \CommitKey, \OpenKey \}$ like a black box.
 
 Although our $\rVRF.\rSign$ run fast, all users must update their
-stored SNARK \pifast every time the ring $\ctx$ changes.
+stored zkSNARK \pifast every time the ring $\ctx$ changes.
 Almost any circuit works for \pifast though,
  which permits diverse optimizations depending upon usecase.
 
@@ -16,37 +16,38 @@ Almost any circuit works for \pifast though,
 
 In either \pifast and \pisafe configurations, 
 our $\rVRF.\{ \CommitRing, \CommitKey, \OpenKey \}$ could implement a
-Merkle tree using SNARK friendly hash functions like Poseidon \cite{poseidon}.
+Merkle tree using zkSNARK friendly hash functions like Poseidon \cite{poseidon}.
 %
 All users need $O(\log |\ctx|)$ data with every update, which sounds
 reasonable but not free.  There is a fast moving literature on securing
-and optimizing SNARK friendly hash functions, with different techniques
-being better suited to different SNARKs or even curves.
+and optimizing zkSNARK friendly hash functions, with different techniques
+being better suited to different zkSNARKs or even curves.
 
 TODO: Arity 9 for 300 constraints?   % \cite{groth16} vs plookup \cite{plookup}.
 
-We leave deeper discussion of SNARK friendly Merkle to the literature.
+We leave deeper discussion of zkSNARK friendly Merkle to the literature.
 Instead we spend this section focusing upon the diversity of circuit
 designs that fit our \pifast and \pisafe framework.
 
 
 \subsection{Vector commitments}
 
-Instead of Merkle trees, our SNARk $\pi$ could use polynomial based
+Instead of Merkle trees, our zkSNARK $\pi$ could use polynomial based
 vector commitments \cite{KZG} or so called ``Verkle trees'' \cite{??Verkle??} too.
 %
-Aggregatable subvector commitments \cite{aSVC} permit one server to
-compute a KZG commitment \comring together with every users' ring opening
-\openring,  and then send each user their \openring encrypted.
+Among these, aggregatable subvector commitments \cite{aSVC} permit
+one server to compute a KZG commitment \comring together with all users'
+ring opening \openring,  and then send each user their \openring encrypted.
 Instead of Groth16 \cite{groth16}, our \pisafe then consists
 of additively blinding this KZG commitment and then open it in zero-knowledge.
 
 TODO: Explain zero-knowledge KZG opening positions?!?
 
-We cannot replace \pifast with a KZG commitment directly like this,
-but could split \pifast into two parts similar to \pisafe and $\pisafe'$.
+A priori, we cannot construct KZG commitments to secret keys,
+so \pifast cannot be replaced by a KZG commitment so simply.
+Yet, we could split \pifast into two parts similar to \pisafe and $\pisafedot$.
 
-replace $\pisafe'$ with a zero-knowledge continuation
+replace $\pisafedot$ with a zero-knowledge continuation
 that swaps the KZG blinding for the secret key blinding used by \pifast.
 
 We represent public keys in $\grE_1$ over $\ecJ$ like \pifast does,
@@ -54,17 +55,17 @@ so $J = \sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$.
 After placing these into a KZG commitment over $\ecE$, a transperent
 openning yields $J.x Y_2 + J.y Y_3$, so our blinded opening could
 then yield $J.x Y_2 + J.y Y_3 + b \genB_\gamma$.
-At this point, we need a SNARK to translate $J$ into $\sk$, so
-$$ \pifast' = \rrSNARK \Setst{ \sk_0 + \sk_1 2^128, \pk }{ 
+At this point, we need a zkSNARK \pifastdot to translate $J$ into $\sk$, so
+$$ \pifastdot = \rrSNARK \Setst{ \sk_0 + \sk_1 2^{128}, \pk }{ 
  \exists d \textrm{\ s.t.\ }
- % 0 < \sk_0,\sk_1 < 2^128 \textrm{\ and\ } 
+ % 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
  \pk = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2
 } \mathperiod $$
-We compute $\pifast'$ only once ever, unlike $\pisafe'$.
+We compute $\pifastdot$ only once ever, unlike $\pisafedot$.
 
 We must reblind the KZG commitment with each VRF signature, and
 tweak $\PedVRF$ to prove knowledge for $Y_2$ and $Y_3$, so 
-our marginal prover time remains higher than naieve \pifast here.
+our marginal prover time winds up higher than naieve \pifast here.
 We impose additional pairings upon verifiers too, likely suboptimal.
 
 
