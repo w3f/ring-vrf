@@ -177,27 +177,29 @@ for which some zero-knowledge ring membership proof handles both
  $\PedVRF.\OpenKey$ and $\rVRF.\OpenKey$
 efficently.
 
+\newcommand\piring{\ensuremath{\pi_{\mathtt{ring}}}\xspace}
+
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$ takes
  a secret key \sk, a ring opening \openring, a message \msg, and auxiliary data \aux, and then \\
  \begin{enumerate}
- \item computes the ring membership proof $\pi$ and associated \openpk,
-  $$ \pi = \NIZK \Setst{ \compk, \comring }{
+ \item computes the ring membership proof $\piring$ and associated \openpk,
+  $$ \piring = \NIZK \Setst{ \compk, \comring }{
   \exists \openpk,\openring \textrm{\ s.t.\ } 
   \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenKey(\comring,\openring)}
   } $$
  \item computes the VRF-AC-KC signature
-  $\sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \pi)$, and finally
- \item returns the ring VRF signature $\rho = (\compk,\pi,\sigma)$.
+  $\sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \piring)$, and finally
+ \item returns the ring VRF signature $\rho = (\compk,\piring,\sigma)$.
  \end{enumerate}
 \item $\rVRF.\rVerify$ takes $(\comring,\msg,\aux,\rho)$,
- parses $\rho$ as $(\compk,\pi,\sigma,)$,  and then returns
- $$ \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \pi,\sigma) $$
- iff $\NIZK.\Verify(\pi,\compk,\comring)$ succeeds. 
+ parses $\rho$ as $(\compk,\piring,\sigma,)$,  and then returns
+ $$ \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \piring,\sigma) $$
+ iff $\NIZK.\Verify(\piring,\compk,\comring)$ succeeds. 
 \end{itemize}
 
 % \noindent
-In this, we tie $\sigma$ to $\pi$ by expanding $\sigma$'s auxiliary data with $\pi$.
+In this, we tie $\sigma$ to $\piring$ by expanding $\sigma$'s auxiliary data with $\piring$.
 
 \smallskip
 
