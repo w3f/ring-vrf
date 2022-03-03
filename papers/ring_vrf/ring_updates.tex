@@ -91,22 +91,24 @@ a range proof and maybe requiring that \pifast be recomputed more often.
 
 % \subsection{Revokation}
 
-A priori, we cannot revoke ring membership when using certificates,
-but revokation of ring membership winds up rare in practice, especially
-since ring membership cannot be traced across site so easily.
+As a rule, one needs some revokation path for certificates,
+despite the underlying signature not being revokable. 
+%
+We suggest maitaining a seperate revokation list and then inside
+\pifast prove non-membership in the revokation list.
+% perhaps via \cite{???}.
+In this way, we update \pifast only when the revokation list updates.
+We expect this represents a significatn savings because the revokation
+list could update far less often than the full ring \ctx itself.
+% perhaps corresponding with expiration checks
+% especially since ring membership cannot be traced across site so easily.
 
-We could therefore employ a seperate revokation list and inside \pifast
-do a non-membership proof like \cite{???}.
-In this way, we update \pifast only when the revokation list updates,
-far less often than the full ring \ctx itself updates, and likely
-corresponding with expiration checks.
-
-We already trust an authority with issuing certificates here, so
-we shall trust them with managing therevokation list too.  As such,
-our revokation list non-membership proofs requires proving adjacency
-of the revoked public keys lexicographically before and after our own
-public key.  If the revokation list requires secrecy, then VRFs could
-hide its ordering, similarly to NSEC5 \cite{nsec5}.
+We already trust an authority with issuing certificates, so we trust
+them with managing therevokation list too.  As such, our revokation list
+non-membership proofs merely requires proving adjacency of the revoked
+public keys lexicographically before and after our own public key.
+If the revokation list requires secrecy, then VRFs could hide its ordering,
+similarly to NSEC5 \cite{nsec5}.
 
 
 \subsection{Append only logs}
@@ -122,9 +124,7 @@ its own $\comring_{n-1}$ and the same $\sk$.
 We expect half pairing cycles fit this usage nicely, although they complicate provers.
 
 Append only logs still depand \pifast or \pisafe be reproven whenever
-\ctx updates however, so they benefit less than certificates from revokation lists.
-
+\ctx updates however, so they only reduce bandwidth they not CPU usage.
 A priori, we expect prover complexity plus update fequency makes
 append only logs suboptimal, but
  they remain an interesting corner of the design space.
-
