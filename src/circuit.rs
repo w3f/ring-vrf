@@ -35,14 +35,14 @@ pub struct RingVRF<A: PoseidonArity> { // TODO: name
 
     // `b_pk` where b_pk is a blinding used to deform the public key in APK = PK + b_pk B,
     // where the 2nd generator B is chosen B = zcash_primitives::constants::NULLIFIER_POSITION_GENERATOR
-    // see `SecretKey::dleq_proove` in `schnorr` module
+    // see `SecretKey::dleq_proove` in `dleq` module
     pub unblinding: Option<PublicKeyUnblinding>,
 
     /// The VRF input, a point in Jubjub prime order subgroup.
     pub pk_blinded: Option<PublicKey>,
 
-    /// An extra message to sign along with the 
-    pub extra: Option<bls12_381::Scalar>,
+    // /// An extra message to sign along with the 
+    // pub extra: Option<bls12_381::Scalar>,
 
     /// The authentication path of the public key x-coordinate in the Merkle tree,
     /// the element of Jubjub base field.
@@ -128,6 +128,7 @@ impl<A: 'static + PoseidonArity> Circuit<bls12_381::Scalar> for RingVRF<A> {
         // // And 2 more constraints to verify the output
         // pk.inputize(cs.namespace(|| "vrf")) ?;
 
+        /*
         // Add the extra message wire, which consists of one E::Fr scalar.
         // see: https://docs.rs/zcash_proofs/0.2.0/src/zcash_proofs/circuit/ecc.rs.html#138-155
         let owned_extra = self.extra;
@@ -136,6 +137,7 @@ impl<A: 'static + PoseidonArity> Circuit<bls12_381::Scalar> for RingVRF<A> {
             || Ok(*owned_extra.get()?)
         ) ?;
         extra.inputize(cs.namespace(|| "extra"))?;
+        */
 
         // So the circuit is 6 (public inputs) + 252 (sk booleanity) + 750 (fixed-base mul)
         //                 + 20 (on-curve + subgroup check) + 3252 (var-base mul)
@@ -143,7 +145,7 @@ impl<A: 'static + PoseidonArity> Circuit<bls12_381::Scalar> for RingVRF<A> {
 
         // This is an injective encoding, as cur is a
         // point in the prime order subgroup.
-        let mut cur = pk.get_u().clone();
+        let cur = pk.get_u().clone();
 
         let (cur, _) = self.copath.synthesize(cs.namespace(|| "Merkle tree"), cur)?;
         cur.inputize(cs.namespace(|| "anchor"))?;
@@ -162,10 +164,12 @@ mod tests {
     use super::*;
     use crate::{VRFInput, RingSecretCopath};
     use typenum::U4;
-    use crate::schnorr::{PedersenDelta, Individual};
 
     #[test]
     fn test_ring() {
+        use crate::vrf::{VRFMalleability}; // Malleable
+        use crate::dleq::{VRFSignature, PedersenDelta};
+
         let depth = 9;
 
         // let mut rng = ::rand_chacha::ChaChaRng::from_seed([0u8; 32]);
@@ -174,22 +178,20 @@ mod tests {
         let sk = SecretKey::from_rng(&mut rng);
         let pk = sk.to_public();
 
-        let t = crate::signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
-        let vrf_input = VRFInput::new_malleable(t);
-        let (in_out, proof, unblinding) = sk.vrf_sign_simple::<Individual, PedersenDelta>(vrf_input);
-        assert_eq!(pk.0, proof.publickey().0 - crate::scalar_times_blinding_generator(&unblinding.0));
+        let input = crate::signing_context(b"Hello World!").bytes(&rng.next_u64().to_le_bytes()[..]);
+        // Malleable::vrf_input(input);
 
         let copath = RingSecretCopath::<U4>::random(depth, &mut rng);
         let auth_root = copath.to_root(&pk);
-
-        use crate::SigningTranscript;
-        let extra = ::merlin::Transcript::new(b"whatever").challenge_scalar(b"");
+        let inout = copath.to_root(&pk).vrf_input(input).to_inout(&sk);
+        let (proof, unblinding): (VRFSignature<PedersenDelta>, PublicKeyUnblinding)
+          = sk.dleq_proove(&inout, crate::no_extra(), &mut rng);
 
         let instance = RingVRF {
             depth,
             unblinding: Some(unblinding),
             pk_blinded: Some(proof.publickey().clone()),
-            extra: Some(extra),
+            // extra: Some(extra),
             copath: copath,
         };
 
@@ -197,14 +199,14 @@ mod tests {
 
         instance.synthesize(&mut cs).unwrap();
         assert!(cs.is_satisfied());
-        assert_eq!(cs.num_inputs(), 4 + 1); // the 1st public input predefined to be = 1
+        assert_eq!(cs.num_inputs(), 3 + 1); // the 1st public input predefined to be = 1
         //    assert_eq!(cs.num_constraints(), 4280 + 13); //TODO: 13
 
         println!("{}", cs.num_constraints());
 
         assert_eq!(cs.get_input(1, "APK/u/input variable"), proof.publickey().0.to_affine().get_u());
         assert_eq!(cs.get_input(2, "APK/v/input variable"), proof.publickey().0.to_affine().get_v());
-        assert_eq!(cs.get_input(3, "extra/input variable"), extra);
-        assert_eq!(cs.get_input(4, "anchor/input variable"), auth_root.0);
+        // assert_eq!(cs.get_input(3, "extra/input variable"), extra);
+        assert_eq!(cs.get_input(3, "anchor/input variable"), auth_root.0);
     }
 }

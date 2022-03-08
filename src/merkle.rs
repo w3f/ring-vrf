@@ -123,7 +123,7 @@ fn merkleize<A: 'static + PoseidonArity>(
             _a: Default::default()
         });
 
-        let list =  &mut list.chunks(arity).map(|chunk| {
+        let list = &mut list.chunks(arity).map(|chunk| {
             let remainder_len = arity - chunk.len();
             let chunk: Vec<_> = chunk.iter()
                 .map(|x| Some(x.clone()))

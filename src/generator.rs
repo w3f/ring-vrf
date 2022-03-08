@@ -21,7 +21,6 @@ pub fn generate_crs<A: 'static + PoseidonArity>(depth: u32) -> SynthesisResult<g
         depth,
         unblinding: None,
         pk_blinded: None,
-        extra: None,
         copath: RingSecretCopath::random(depth, &mut rand_hack()), // TODO: blank?
     };
     groth16::generate_random_parameters(circuit, &mut rand_hack())
