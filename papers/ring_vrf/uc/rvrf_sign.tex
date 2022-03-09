@@ -1,0 +1,13 @@
+\newcommand{\verifysign}{\ensuremath{\verify\mathsf{Signature}}}
+
+\paragraph{An Equivalent Protocol:} Now, we describe an equivalent protocol which is better for the implementation reasons. Remark that in our protocol, the rVRF evaluation value $ y $ is the output of a random oracle $ \hash $ with the input $ m, \pkring $ and the pre-output $ W =  x \hashG(m, \pkring)$. Anyone who has $ W $ can obtain the evaluation of an input $ m $ with the ring $ \pkring $.  Therefore, we define the equivalent protocol by removing the  $\rvrf.\prove $ algorithm and replacing it with $ \rvrf.\sign $ which outputs the same values that  $\rvrf.\prove $ outputs except $ y $. In more detail the equivalent protocol works as follows:
+
+\begin{itemize}
+       \item  $ \rvrf.\keygen(1^\kappa) $ and $ \rvrf.\eval(\skrvrf,\pkring,m) $ works the same.
+       \item $ \rvrf.\sign(\skrvrf, \pkring, m) $ computes $ W = xP $ where $ P  =  \hashG(m, \pkring)$.  Then, it generates the first and the second proof as in $ \rvrf.\prove $. In the end, it outputs $\sigma =  (\pi_1, \pi_2, C,W )$
+       \item $ \rvrf.\verifysign(\pkring, m, \sigma) $ verifies $ \pi_1, \pi_2 $ as in $ \rvrf.\verify $. If the  proofs are verified, it outputs $ y = \hash(m, \pkring,W) $. Otherwise, it outputs $ \perp $.
+       \item $ \rvrf.\link $ and $ \rvrf.\link\verify $ works the same.
+\end{itemize}
+
+When we talk about our ring VRF  protocol, we refer to the equivalent protocol in the rest of the paper.
+

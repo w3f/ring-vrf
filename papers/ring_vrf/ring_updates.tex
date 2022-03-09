@@ -1,0 +1,130 @@
+\section{Ring updates}
+\label{sec:ring_updates}
+
+We discuss \pifast representing public keys in $\grE$ in $\grJ$ already,
+% along with circuit implementation details of $\PedVRF.\{ \CommitKey, \OpenKey \}$,
+but otherwise mostly treated the ring commitment scheme
+$\rVRF.\{ \CommitRing, \CommitKey, \OpenKey \}$ like a black box.
+
+Although our $\rVRF.\rSign$ run fast, all users must update their
+stored zkSNARK \pifast every time the ring $\ctx$ changes.
+Almost any circuit works for \pifast though,
+ which permits diverse optimizations depending upon usecase.
+
+
+\subsection{Merkle trees} % {Poseidon}
+
+In either \pifast and \pisafe configurations, 
+our $\rVRF.\{ \CommitRing, \CommitKey, \OpenKey \}$ could implement a
+Merkle tree using zkSNARK friendly hash functions like Poseidon \cite{poseidon}.
+%
+All users need $O(\log |\ctx|)$ data with every update, which sounds
+reasonable but not free.  There is a fast moving literature on securing
+and optimizing zkSNARK friendly hash functions, with different techniques
+being better suited to different zkSNARKs or even curves.
+
+TODO: Arity 9 for 300 constraints?   % \cite{groth16} vs plookup \cite{plookup}.
+
+We leave deeper discussion of zkSNARK friendly Merkle to the literature.
+Instead we spend this section focusing upon the diversity of circuit
+designs that fit our \pifast and \pisafe framework.
+
+
+\subsection{Vector commitments}
+
+Instead of Merkle trees, our zkSNARK $\pi$ could use polynomial based
+vector commitments \cite{KZG} or so called ``Verkle trees'' \cite{??Verkle??} too.
+%
+Among these, aggregatable subvector commitments \cite{aSVC} permit
+one server to compute a KZG commitment \comring together with all users'
+ring opening \openring,  and then send each user their \openring encrypted.
+Instead of Groth16 \cite{groth16}, our \pisafe then consists
+of additively blinding this KZG commitment and then open it in zero-knowledge.
+
+TODO: Explain zero-knowledge KZG opening positions?!?
+
+A priori, we cannot construct KZG commitments to secret keys,
+so \pifast cannot be replaced by a KZG commitment so simply.
+Yet, we could split \pifast into two parts similar to \pisafe and $\pisafedot$.
+
+replace $\pisafedot$ with a zero-knowledge continuation
+that swaps the KZG blinding for the secret key blinding used by \pifast.
+
+We represent public keys in $\grE_1$ over $\ecJ$ like \pifast does,
+so $J = \sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$.
+After placing these into a KZG commitment over $\ecE$, a transperent
+openning yields $J.x Y_2 + J.y Y_3$, so our blinded opening could
+then yield $J.x Y_2 + J.y Y_3 + b \genB_\gamma$.
+At this point, we need a zkSNARK \pifastdot to translate $J$ into $\sk$, so
+$$ \pifastdot = \rrSNARK \Setst{ \sk_0 + \sk_1 2^{128}, \pk }{ 
+ \exists d \textrm{\ s.t.\ }
+ % 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
+ \pk = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2
+} \mathperiod $$
+We compute $\pifastdot$ only once ever, unlike $\pisafedot$.
+
+We must reblind the KZG commitment with each VRF signature, and
+tweak $\PedVRF$ to prove knowledge for $Y_2$ and $Y_3$, so 
+our marginal prover time winds up higher than naieve \pifast here.
+We impose additional pairings upon verifiers too, likely suboptimal.
+
+
+\subsection{Certificates} % \& revokation}
+
+If an authority grants ring membership, then ring membership proofs
+could simply verify some certificate by the authority, likely using
+a signature on JubJub.
+
+In this, we prefer a SNARK friendly random oracle,
+because conventional random oracles cost like 30k constraints.
+We also need a variable base scalar multiplication, which costs like
+4k constraints, as well as a couple fixed base scalar multiplication.
+A priori, these fixed base scalar multiplications cost roughly 700
+constraints each, but ocasionally they cost only half this.   
+
+We conjecture one fixed based scalar multiplication could be replaced
+by adapting implicit certificate scheme technqiues,
+ instead of simply a signature on a user provided key.
+
+We typically need expiration dates in certificates, likely demanding
+a range proof and maybe requiring that \pifast be recomputed more often.
+
+% \subsection{Revokation}
+
+As a rule, one needs some revokation path for certificates,
+despite the underlying signature not being revokable. 
+%
+We suggest maitaining a seperate revokation list and then inside
+\pifast prove non-membership in the revokation list.
+% perhaps via \cite{???}.
+In this way, we update \pifast only when the revokation list updates.
+We expect this represents a significatn savings because the revokation
+list could update far less often than the full ring \ctx itself.
+% perhaps corresponding with expiration checks
+% especially since ring membership cannot be traced across site so easily.
+
+We already trust an authority with issuing certificates, so we trust
+them with managing therevokation list too.  As such, our revokation list
+non-membership proofs merely requires proving adjacency of the revoked
+public keys lexicographically before and after our own public key.
+If the revokation list requires secrecy, then VRFs could hide its ordering,
+similarly to NSEC5 \cite{nsec5}.
+
+
+\subsection{Append only logs}
+
+If an append only log grants ring membership, then a recursive SNARK
+could validate ring membership with each recursive addition being
+relatively inexpensive.
+
+In this, we need a $\pifast^0$ similar to \pifast as well as a
+$\pifast^n$ that proves some $\comring_{n-1}$ to be the ancestor of
+its own $\comring_n$ and recursively proves some $\pifast^{n-1}$ with
+its own $\comring_{n-1}$ and the same $\sk$.
+We expect half pairing cycles fit this usage nicely, although they complicate provers.
+
+Append only logs still depand \pifast or \pisafe be reproven whenever
+\ctx updates however, so they only reduce bandwidth they not CPU usage.
+A priori, we expect prover complexity plus update fequency makes
+append only logs suboptimal, but
+ they remain an interesting corner of the design space.

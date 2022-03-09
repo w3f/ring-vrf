@@ -1,0 +1,20 @@
+\begin{figure}
+	\scriptsize
+	\begin{tcolorbox}
+	{
+			%\par\hrulefill\\
+			 $ \fgvrf^{zk} $ for a relation $ \mathcal{R} $ behaves exactly as $ \fgvrf $ and  it additionally does the following:
+			\begin{description}
+				\item[Secret Evaluation.] upon receiving a message $(\msg{secreteval}, \sid, \pkring,\pkvrf_i, m)$ from $\user_i$, verify that $\pkrvrf_i$ is in $ \pkring $ and that there exists a key $\user_i$ with an associated public key $\pkrvrf_i$ in $\vklist$. If that was not the case, just ignore the request.
+				If $\evaluationslist[\pkring, m][\pkrvrf_i]$ is empty, then sample a new $y \sample \bin^{\ell(\secpar)}$ and  store $\evaluationslist[\pkring, m][\pkrvrf_i] = y$. In any case, sample a random element $ \eta  \sample \bin^{\ell(\secpar)} $ and store $ \evaluationsecretlist[\pkring, m][\pkvrf_i] = \eta $. Create a set $ \proofzklist[\pkring,m][\pkvrf_i] = \emptylist $, if it does not exist. Return $(\msg{evaluated}, sid, y, \eta)$ to $ \user_i $.
+				
+				\item[Secret evaluation and proof.] upon receiving a message $(\msg{secretprove}, \sid, \pkring, \pkvrf_i, m)$ from $\user_i$, verify that $\pkrvrf_i \in \pkring $ and  that there exists a key $ \user_i $ with an associated public key $ \pkrvrf_i $ in $ \vklist $. (If that wasn't the case, just ignore the request.). Obtain $ (y, \eta) $ from $\evaluationslist[\pkring, m][\pkvrf_i]$ and $\evaluationsecretlist[\pkring, m][\pkvrf_i]$. If they are not defined execute the steps in VRF evaluation and secret evaluation.
+				If $ ((m, y, \pkring),(\eta,\pkvrf_i)) \notin \mathcal{R} $, ignore the request.  Otherwise, send $(\msg{zkprove}, \sid, \pkring, m, y)$ to $\simulator$. Upon receiving $(\msg{zkproof}, \sid, \pkring, m, y \pi^{zk})$ as a response from $\simulator$,  add $ \pi^{zk} $ to  the set $\proofzklist[\pkring, m][\pkvrf_i]$. Return $(\msg{zkproof}, \sid, y, \eta, \pi^{zk})$ to $\user_i$.
+				
+				
+				\item[Secret Verification.] upon receiving a message $(\msg{secretverify}, \sid, \pkring, m, \pi^{zk})$, from a party, check whether there exists  $ \pkvrf_i \in \vklist $ such that $ \proofzklist[\pkring,m][\pkvrf_i] = \pi^{zk} $, $ \evaluationslist[\pkring,m][\pkrvrf_i] = y $ and $ \evaluationsecretlist[\pkring,m][\pkrvrf_i] $. If there exists, set $b = 1$. Else, set $b =0$. Finally, output $(\msg{verification}, \sid, \pkring, m, \pi^{zk}, b)$.
+			\end{description}
+		}
+	\end{tcolorbox}
+	\caption{Functionality  $ \fgvrf^{zk} $.\label{f:gvrfzk}}
+\end{figure}

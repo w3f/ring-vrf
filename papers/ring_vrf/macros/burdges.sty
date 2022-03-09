@@ -1,0 +1,489 @@
+%% burdges.sty
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{burdges} % [2003/02/22 1.0 (MPL)]
+
+
+%%% Cute and Paste section %%%
+
+% \usepackage{xspace}   %% Example: \newcommand{\tex}{\TeX\xspace}
+% \usepackage{amsmath}  %% formatting macros
+% \usepackage{amssymb}  %%
+% \usepackage{amsfonts} %%
+% \usepackage{amsthm}   %%
+% \usepackage{burdges}  %%
+% \providecommand{\theoremstyle}[1]{} %% Greg does not have amsthm
+
+% %% This places internal reference names in the margin
+% \ifx\draft\undefined\relax\else
+% \usepackage[notcite]{showkeys}  % use notref or notcite limit behavior
+% \fi
+
+\RequirePackage{amsmath,amssymb}
+\RequirePackage{amsthm}
+% \DeclareOption{lemma}{}
+% \ExecuteOptions{lemma}
+\ProcessOptions
+
+
+\ifx\xspace\undefined
+  \PackageWarning{burdges}{You should be using the xspace package}
+\fi
+
+\def\ignore#1{}
+
+
+%%% Fast object definitions %%%
+
+% \mathrm, \mathsf, etc. do not put spacing, but \mayhop variants don't
+% make good exponents.
+\def\newmathbf#1{\expandafter\newcommand\csname #1\endcsname{\mathbf{#1}}}
+\def\newmathit#1{\expandafter\newcommand\csname #1\endcsname{\mathit{#1}}}
+\def\newmathrm#1{\expandafter\newcommand\csname #1\endcsname{\mathrm{#1}}}
+\def\newmathsf#1{\expandafter\newcommand\csname #1\endcsname{\mathsf{#1}}}
+\def\newmathtt#1{\expandafter\newcommand\csname #1\endcsname{\mathtt{#1}}}
+
+\def\newmathbb#1{\expandafter\newcommand\csname #1\endcsname{\mathbb{#1}}}
+\def\newmathcal#1{\expandafter\newcommand\csname #1\endcsname{\mathcal{#1}}}
+\def\newmathscr#1{\expandafter\newcommand\csname #1\endcsname{\mathscr{#1}}}
+\def\newmathfrak#1{\expandafter\newcommand\csname #1\endcsname{\mathfrak{#1}}}
+
+% \mathop{\mathrm{...}} and \operatorname* use limits
+\def\newmathop#1{\expandafter\newcommand\csname #1\endcsname{\operatorname{#1}}}
+\def\newmathoplim#1{\expandafter\newcommand\csname #1\endcsname{\operatorname*{#1}}}
+
+% I've never actually seen these two behave diffrently
+\def\newmathbin#1{\expandafter\newcommand\csname #1\endcsname{\mathbin{\mathrm{#1}}}}
+\def\newmathrel#1{\expandafter\newcommand\csname #1\endcsname{\mathrel{\mathrm{#1}}}}
+
+
+%%% Style by object type %%%
+
+\newcommand*\ideal[1]{\mathfrak{#1}}
+\newcommand*\CycGrp[1]{{\left<#1\right>}}
+\newcommand*\LieAlg[1]{\mathfrak{#1}}
+\newcommand*\field[1]{\mathbb{#1}} % propser uses \R
+\newcommand*\category[1]{\mathfrak{#1}}
+\newcommand*\sheaf[1]{\mathcal{#1}}
+\newcommand*\collection[1]{\mathcal{#1}}
+\newcommand*\conjclass[1]{{\mathcal{#1}}}
+
+
+%%% Symbol names %%%
+
+\newcommand*\half{\ensuremath{{1 \over 2}}}
+\newcommand*\third{\ensuremath{{1 \over 3}}}
+\newcommand*\fourth{\ensuremath{{1 \over 4}}}
+\newcommand*\iso{\cong}
+\newcommand*\ssim{\approx}
+\newcommand*\homotopic{\simeq}
+\newcommand*\tensor{\otimes}
+\newcommand*\twiddle{\sim}
+\newcommand*\defeq{\overset{\text{\rm def}}{=}}
+\newcommand*\normal{\lhd}
+\newcommand*\normaleq{\lhd}
+\newcommand{\vsim}{\mid\!\sim}
+\newcommand{\rcr}{\vsim}
+\newcommand{\notvsim}{\not\kern-0.07cm\mid\!\sim}
+\newcommand{\nrcr}{\nvsim}
+\newcommand*\says{\vDash}
+% \newcommand\implies{\Rightarrow} %% done by amsthm or amsmath
+\newcommand*\longto{\longrightarrow}
+\newcommand*\includedin{\subseteq}
+\newcommand*\union{\cup}
+\newcommand*\intersect{\cap}
+\newcommand*\intersection{\cap}
+\newcommand*\Union{\bigcup}
+\newcommand*\Intersect{\bigcap}
+\newcommand*\Intersection{\bigcap}
+
+\newcommand*\invlim{\varprojlim}
+\newcommand*\dirlim{\varinjlim}
+\newcommand*\sdprod{\rtimes}
+
+\def\con#1=#2(#3){#1\equiv#2\pmod{#3}}
+
+\let\slasho=\o % Warning: Greg might have \o mean ^\o
+\def\myo{\ifmmode\circ\else$^\circ$\xspace\fi}  \let\o=\myo
+\def\opri{\ifmmode^{\circ\prime}\else$^{\circ\prime}$\xspace\fi}
+
+\newcommand*\from{\colon}
+\newcommand*\dpart[2]{\frac{\partial #1}{\partial #2}}
+\newcommand*\ddpart[3]{\frac{\partial^2 #1}{\partial #2\,\partial #3}}
+\newcommand*\dbyd[2]{\frac{\partial #1}{\partial #2}}
+\newcommand*\dtot[2]{\frac{d #1}{d #2}}
+\newcommand*\dfunc[2]{\mathchoice{\frac{\delta#1}{\delta#2}}%
+{\frac{\delta#1}{\delta #2}}{\delta#1/\delta#2}{\delta#1/\delta#2}}
+\newcommand*\inv{^{-1}}
+\newcommand*\comp{\mathbin{\raise.29ex\hbox{$\scriptscriptstyle\circ$}}}
+\newcommand*\contr{\mathbin{\raise.29ex\hbox{$\lrcorner$}}}
+\newcommand*\bigdot{{\mathbin{\raise.29ex\hbox{$\scriptscriptstyle{\bullet}$}}}}\newcommand*\blank{\makebox[0.8em]{$\cdot$}}
+
+% \newcommand*\becircled{\mathaccent"7017 }
+                                                                                
+
+%%% Enclosed things %%%
+
+\newcommand*\ov[1]{\overline{#1}}
+
+\newcommand*\set[1]{\{ #1 \}} % in text, we don't want {} to grow
+\newcommand*\Set[1]{\left\{ #1 \right\}}
+\newcommand*\setst[2]{\{ #1 | #2 \}}
+\newcommand*\Setst[2]%
+        {\left\{\,#1\vphantom{#2} \;\right|\left. #2 \vphantom{#1}\,\right\}}
+% ``set such that''; puts in a vertical bar of the right height
+
+\newcommand*\gen[1]{\langle #1 \rangle}
+\newcommand*\Gen[1]{\left< #1 \right>}  % cute abbreviations
+\newcommand*\genst[2]{\langle #1 | #2 \rangle}
+\newcommand*\Genst[2]%
+        {\left<\,#1\vphantom{#2} \;\right|\left. #2 \vphantom{#1}\,\right>}
+
+\newcommand*\abs[1]{\left| #1 \right|} % \vert?
+\newcommand*\norm[1]{\left\| #1 \right\|} % \Vert?
+\newcommand*\paren[1]{\left( #1 \right)}
+\newcommand*\bracket[1]{\left[ #1 \right]}
+\newcommand*\dbrack[1]{\left[\!\left[#1\right]\!\right]}
+\newcommand*\pbrack[1]{\left\{ #1 \right\}}
+
+
+%%% Common objects %%%
+
+% These do not conflict with LaTeX primitives
+
+\newcommand*\N{{\field N}}
+\newcommand*\Z{{\field Z}}
+\newcommand*\Q{{\field Q}}
+\providecommand*\R{{\field R}}
+\newcommand*\C{{\field C}}
+\newcommand*\F{{\field F}}
+\newcommand*\bA{{\mathbb A}}
+\newcommand*\bP{{\mathbb P}}
+
+\newcommand*\MM{\mathcal{M}}
+\newcommand*\NN{\mathcal{N}}
+\newcommand*\DD{\mathcal{D}}
+
+\newmathop{Sym}
+\newmathop{Alt}
+\newcommand*\SymGrp{{\mathfrak S}}
+\newcommand*\AltGrp{{\mathfrak A}}
+
+% Should I really be using \operatorname for these?
+\newmathop{GL}
+\newmathop{SL}
+\newmathop{PSL}
+\newmathop{Sp}
+\newmathop{PSp}
+\newmathop{SO}
+\newmathop{PSO}
+\newmathop{G}
+\newmathop{E}
+% \newmathop{F}
+\newcommand\pPSL{\operatorname{(P)SL}}
+\newcommand\pPSp{\operatorname{(P)Sp}}
+\newcommand\pPSO{\operatorname{(P)SO}}
+
+
+%%% Operators %%%
+
+% I still need to work out which ones need \nolimits.
+
+\newmathop{id}
+\newmathop{Id}
+\newmathop{diag}
+\newmathop{sgn}
+\newmathop{lcm}
+% \newmathop{gcd}
+
+\newmathop{tr}
+\newmathop{Tr}
+\newmathop{rk}
+% \newmathop{deg}
+\newmathop{rank}
+\newmathop{mult}
+\newmathop{pr}
+\newmathop{n}
+\newmathop{m}
+
+\newcommand*\Char{\operatorname{char}}
+\newcommand*\nilrad{\operatorname{nil rad}}
+\newcommand*\trdeg{\operatorname{tr.\ deg}}
+
+\newmathop{ad}
+\newmathop{Ad}
+\newmathop{Der}
+\newmathop{Map}
+\newmathop{Hom}
+\newmathop{coker}
+
+\newmathop{Aut}
+\newmathop{Inn}
+\newmathop{Gal}
+\newmathop{Pic}
+\newmathop{Stab}
+\newmathop{Supp}
+
+\newmathop{Ann}
+\newmathop{Ass}
+\newmathop{End}
+\newmathop{Ext}
+\newmathop{Tor}
+\newmathop{Spec}
+\newmathop{Proj}
+
+\newmathop{Th}
+\newmathop{dcl}
+\newmathop{acl}
+\newmathop{ord}
+\newmathop{tp}
+\newmathop{stp}
+\newmathop{qftp}
+\newmathrm{eq} % used as an exponent
+
+
+%%% Custom Operators %%%
+
+\newcommand\rr{\bar{r}}
+\newcommand\Ftor{F_{\textrm{tor}}}
+\newcommand\Ealg{F_{\textrm{alg}}}
+
+
+%%% Textual %%%
+
+\newcommand\Altinel{Alt\i nel\xspace}
+\newcommand\Frecon{Fr\'econ\xspace}
+\newcommand\Ayse{Ay\c{s}e\xspace}
+\newcommand\Pinar{P\i nar\xspace}
+\newcommand\Ugurlu{U\"gurlu\xspace}
+\newcommand\Prufer{Pr\"ufer\xspace}
+
+% \newcommand{\eg}{e.g.}          % e.g.
+% \newcommand{\ie}{i.e.}          % i.e.
+% \newcommand{\etc}{etc.}         % etc.
+% \newcommand{\vs}{{\em vs.}}     % vs.
+
+
+%%% Journal %%%
+
+\newcommand\noteql[1]{not $#1$\xspace}
+
+\newcommand\mathperiod{.}
+\newcommand\mathcomma{,}
+
+\newcommand\qFact{Fact\ }
+\newcommand\qLemma{Lemma\ }%{Lemma\ }
+\newcommand\qCorollary{Cor.\ }%{Cor.\ }
+\newcommand\qTheorem{Thm.\ }%{Thm.\ }
+\newcommand\qProposition{Prop.\ }%{Prop.\ }
+
+
+
+%%% BibTeX %%%
+
+\providecommand\empty{}
+\newcommand\twophrases[3]{\def\tmparg{#3}\ifx\empty\tmparg{}#1\else{}#2#3\fi}
+
+\providecommand\Toappear[1][]{\twophrases{To appear}{To appear in }{#1}}
+\providecommand\Submitted[1][]{\twophrases{Submitted}{Submitted to }{#1}}
+\providecommand\Preprint[1][]{Preprint available}
+\providecommand\Modnet[1][]{\twophrases{Modnet preprint}{Modnet preprint \#}{#1}}
+\providecommand\Inpreparation[1][]{\twophrases{In preparation}{In preperation for }{#1}}
+
+% % French versions
+% \renewcommand{\Toappear}[1][]{\twophrases{Pour apparaître}{Pour apparaître \'a}{#1}}
+% \renewcommand{\Submitted}[1][]{\twophrases{Soumis pour publication}{Soumis pour publication \'a}{#1}}
+% \renewcommand\Inpreparation[1][]{\twophrases{En pr\'eparation}{En pr\'eparation pour}{#1}}
+
+\makeatletter
+\def\bibalias#1#2{}
+% \def\bibalias#1#2{\expandafter\xdef\csname b@#1\endcsname{\csname b@#2\endcsname}}
+\def\auxbibalias#1#2{\immediate\write\@auxout{\string\bibalias{#1}{#2}}}
+\makeatother
+
+
+
+%%% Intelegent use of chapter numbers %%%
+
+%\ifx\thechapter\undefined\relax\else
+%\def\thechapter{\Roman{chapter}}
+%\def\thesection{\string\ifchapteris{\arabic{chapter}}{\thechapter-}%
+%  \arabic{section}}
+%\fi
+%\def\ifchapteris%1%2{%2}
+
+
+%%% Intelegent link names for Hyperref %%%
+
+\def\chref#1{Chapter~\ref{#1}}
+\def\secref#1{\S\ref{#1}}
+\def\clref#1{Claim~\ref{#1}}
+\def\subclref#1{Subclaim~\ref{#1}}
+\def\caseref#1{Case~\ref{#1}}
+\def\subcaseref#1{Subcase~\ref{#1}}
+
+\def\namedref#1#2{\hyperlink{cite.#1}{#2} \pppageref{#1}}
+% Need to figure out the naming of hyperlinks
+% Also, need to give this a stared version to skip \pppageref command
+\def\pppageref#1{(p.~\pageref{#1})}
+% Need to make this only display page numbers every \pppagerefcount pages
+\def\pppagerefcount{3}
+
+% I might one day replace \clref and/or \secref to intelegently
+% use chapter/theorem numbers (and make Ashbacker style claims)
+% \eqref is handled by amsmath, not hyperref, so the links kinda sucks.
+
+\ifx\hyperbaseurl\undefined\relax\else
+  \hyperbaseurl{http://www.math.rutgers.edu/~burdges/}
+\fi
+
+\newcommand*{\hrefwww}[1]{\href{http://www.#1}{\nolinkurl{www.#1}}}
+
+% This makes hyerref's \autoref understand \newtheorem
+%\makeatletter
+%\let\realnewtheorem=\newtheorem
+%\def\newtheorem#1{\expandafter\def\csname \#1name\endcsname{#2}}
+%\makeattother
+
+
+%%% Theorem Enviroments %%%
+
+\theoremstyle{plain} %% requires amsthm
+
+\ifx\thesection\undefined
+  \newtheorem{lemma}{Lemma}
+\else
+  \ifx\thelemma\undefined
+    \newtheorem{lemma}{Lemma}[section]
+  \else
+%    \newtheorem{lemma}[lemma]{Lemma}
+  \fi
+\fi
+\newtheorem{theorem}[lemma]{Theorem}
+\newtheorem{corollary}[lemma]{Corollary}
+\newtheorem{proposition}[lemma]{Proposition}
+\newtheorem{fact}[lemma]{Fact}
+
+\newtheorem*{rawnamedtheorem}{\therawnamedtheorem}
+\newcommand{\therawnamedtheorem}{\error}
+\newenvironment{namedtheorem}[1]{\renewcommand{\therawnamedtheorem}{#1}
+   \begin{rawnamedtheorem}}
+  {\end{rawnamedtheorem}}
+% One day I will get this to work with hyperref
+
+
+%%% Claim Enviroments %%%
+
+%\makeatletter
+%\newtheoremstyle{claim}
+%  {\topsep}% Space above
+%  {\topsep}% Space below
+%  {}%         Body font
+%  {}%         Indent amount (empty = no indent, \parindent = para indent)
+%  {\itshape}% Thm head font
+%  {:}%        Punctuation after thm head
+%  {.5em}%     Space after thm head: " " = normal interword space;
+%        %       \newline = linebreak
+%  {}%         Thm head spec (can be left empty, meaning `normal')
+%% Its the head spec which really needs to get changed.
+%\makeatother
+%\theoremstyle{claim}
+
+\newtheorem{Claim}[lemma]{Claim}
+
+\newtheorem{claim}{Claim}[lemma]
+\renewcommand{\theclaim}{\arabic{claim}}
+\newtheorem{subclaim}{Subclaim}[claim]
+
+\newtheorem{case}{Case}[lemma]
+\renewcommand{\thecase}{\arabic{case}}
+\newtheorem{subcase}{Subcase}[case]
+
+
+%%% Definition Enviroments %%%
+
+\theoremstyle{definition} %% requires amsthm
+
+\newtheorem{definition}[lemma]{Definition}
+\newtheorem{hypothesis}[lemma]{Hypothesis}
+\newtheorem{notation}[lemma]{Notation}
+\newtheorem{axiom}{Axiom}
+
+\newtheorem*{rawnameddefinition}{\therawnameddefinition}
+\newcommand{\therawnameddefinition}{\error}
+\newenvironment{nameddefinition}[1]{\renewcommand{\therawnameddefinition}{#1}
+   \begin{rawnameddefinition}}
+  {\end{rawnameddefinition}}
+% One day I will get this to work with hyperref
+
+
+
+%%% Remark Enviroments %%%
+
+\theoremstyle{remark} %% requires amsthm
+
+\newtheorem{remark}[lemma]{Remark}
+\newtheorem{example}[lemma]{Example}
+\newtheorem{problem}{Problem}
+\newtheorem{question}[lemma]{Question}
+\newtheorem{conjecture}{Conjecture}%[section]
+
+
+
+%%% Proof Enviroments %%%
+
+\newenvironment{analysis}[1][Analysis]%
+   {\begin{proof}[#1]\renewcommand{\qedsymbol}{\innerqedsymbol}}{\end{proof}}
+\newenvironment{verification}[1][Verification]%
+   {\begin{proof}[#1]\renewcommand{\qedsymbol}{\innerqedsymbol}}{\end{proof}}
+\let\outerqedsymbol=\qedsymbol
+\newcommand\innerqedsymbol{$\Diamond$}%{$\lozenge$}
+\newcommand\bothqedmode{\renewcommand\qedsymbol{\innerqedsymbol\quad\outerqedsymbol}}
+\newcommand\noqedmode{\renewcommand\qedsymbol{}}
+
+% I do not know why this does not work.
+% \let\oldproof=\proof
+% \let\oldqed=\qed
+% \renewcommand{\proof}{\protect\begin{proof}}
+% \renewcommand{\qed}{\end{proof}}
+
+
+%%%  %%%
+
+
+\newcounter{hypothesis}
+\newenvironment{hypotheses}%
+   {\begin{list}{\alph{hypothesis}.}{\usecounter{hypothesis}}}{\end{list}}
+\newcounter{conclusion}
+\newenvironment{conclusions}%
+   {\begin{list}{\arabic{conclusion}.}{\usecounter{conclusion}}}{\end{list}}
+\newenvironment{TFAE}%
+   {\begin{conclusions}}{\end{conclusions}}
+% Need to make a version which handles spacing automagically
+
+\newenvironment{texteqn}[2][0.8\linewidth]
+   {\begin{equation} #2 \begin{minipage}{#1}}
+   {\end{minipage}\end{equation}}
+% \newenvironment{texteqn}%
+%    {\begin{equation} \begin{minipage}{0.9\linewidth}}
+%    {\end{minipage} \end{equation}}
+
+% need tagged texteqn?
+
+
+
+%%% Tools %%%
+
+\makeatother%
+\def\unexpandableprotect{\@unexpandable@protect}
+\makeatletter%
+
+\def\writeout#1#2{%
+\begingroup%
+\let\\=\relax%
+\let\protect=\unexpandableprotect%
+\immediate\write#1{#2}%
+\endgroup%
+}
+
+
