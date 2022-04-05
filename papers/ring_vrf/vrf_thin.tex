@@ -63,7 +63,16 @@ our output only $h \Out_0$, then we obtain only a VUF, not a VRF.
 We caution that $h \ne 1$ ensures SUF-CMA fails
  by \cite[\S4.1.2]{cryptoeprint:2020:823}.
 
-If desired, one could easily generalize this VRF to $k$ messages by computing $k$ distinct delinearization challenges $c_j = H_p(\aux,\msg_1,\ldots,\msg_k,\pk,\Out_{0,1},\ldots,\Out_{0,k},j)$ for $j=1,\ldots,k$.
+If desired, one could generalize \ThinVRF to $k$ messages by
+computing for $j=1,\ldots,k$ the $k$ distinct
+points $\In_j := H_{\grE}(\msg_j)$, pre-outputs $\Out_0 := \sk \, \In$,
+delinearization challenges
+ $c_j = H_p(\aux,\msg_1,\ldots,\msg_k,\pk,\Out_{0,1},\ldots,\Out_{0,k},j)$,
+and then running our Schnorr-like signature with
+ base point $\genE + \sum_j=1^k c_i \In_j$ and
+ public key $\genE + \sum_j=1^k c_i \Out_j$.
+
+% TODO: Proof correct?  Use same citations as schnorrkel.
 
 % We define $H_\grG(\msg) = h H_\grE(\msg)$ and observe 
 %

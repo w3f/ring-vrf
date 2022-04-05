@@ -67,10 +67,14 @@ We do however observe that AML/KYC conflicts with security and privacy
 laws like GDPR typically require that one compliance party know users'
 identities, while another service party knows the users' activities.
 
-In principle, our compliance party could maintained the ring \ctx,
-which then gives users unique identities with service parties.
-If later required, users could prove their identities to investigators,
-or merely prove which services they use and do not use. 
+In principle, our compliance party could maintained the ring \ctx, which
+then gives users unique identities with arbitrarily many service providers.
+If later asked or subpoenaed, users could prove their relevant identities
+to investigators, or maybe prove which services they use and do not use. 
+
+Interestingly, \PedVRF could be run ``backwards'' to prove a specific
+ring VRF output does not belong to the user, without revealing the users'
+identities to investigators. 
 
 
 \subsection{Moderation}
@@ -95,14 +99,15 @@ In this way, users have only one stable $\mathtt{id}$ within the
 approximate date range, but they obtain fresh $\mathtt{id}$s merely
 by waiting until the next month or week.
 
-If desired, users still have the choice to prove multiple $(\msg,\mathtt{id})$
-pairs simultaneously in the same $\sigma$, which links these pairs
-together so sites could still give pseudo-nym stability.
-If a site thus links pseudo-nym creation date and current date, then
-users have multiple active pseudo-nyms, but only one active pseudo-nym
-per time period, which prevents spam.  If instead we link only adjacent
-dates, then pseudo-nyms could be abandoned and replaced, but abandoned
-pseudo-nyms cannot then be reclaimed without linking to intervening dates.
+We discussed in \S\ref{sec:vrf_perderson} how one signle \PedVRF
+signature $\sigma$ could simultaneously prove multiple input-output
+pairs $(\msg_j,\mathtt{id}_j)$.  As doing so links these pairs
+together, sites could make users link pseudo-nym creation date and
+current date, so users could have multiple active pseudo-nyms,
+but only one active pseudo-nym per time period, which prevents spam.
+If instead we link only adjacent dates, then pseudo-nyms could
+be abandoned and replaced, but abandoned pseudo-nyms cannot then
+be reclaimed without linking to intervening dates.
 
 In these ways, sites encode important aspects of their moderation rules
 into the ring VRF inputs requested.  We expect this makes sites' values

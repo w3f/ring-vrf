@@ -94,12 +94,29 @@ blind signatures, zcash sapling, etc.  Yet, all these tokens require
 an explicit issuance stage, while ring VRFs self-issue.
 
 
+\subsection{Multi-constraint rationing}
+
+We could proving multiple \ThinVRF outputs with one signatures
+in \S\ref{sec:vrf_thin}.  We needed \PedVRF to isolate the blinding 
+factor when using a Pedersen commitment instead of a public key, but
+exactly the same technique works for proving multiple \PedVRF outputs
+in one ring VRF signature.
+
+We could therefore impose simultanious rationing constraints for multiple
+resources $u_1,\ldots,u_k$ by producing one ring VRF signature in which
+\PedVRF proves correctness of pre-ouptuts for multiple messages 
+ $\msg_j = u_j \doubleplus r_d \doubleplus d \doubleplus k$ for $j=1 \ldots k$.
+
+As an example, purchasing some product could require espending rations
+for multiple energy sources, like  
+
+
 \subsection{Decommodification}
 
 There exist many reasons to decommodify important services,
 like energy, water, or internet,
  beyond rationing real physical shortage.
-Ring VRFs fit these cases using similar $\msg$ formulations.
+Ring VRFs fit these cases using similar \msg formulations.
 
 As an example, a municipal ISP allocates some limited bandwidth capacity
 among all residents.  It allocates bandwidth fairly by verifying ring VRFs

@@ -70,6 +70,7 @@ zero-knowledge continuations then use \OpenKey with only minor caveats.
 We obtain roughly \cite{nsec5} or \cite{VXEd25519}
 if we choose $\openpk = 0 = r_2$ in \Sign.
 
+
 \begin{lemma}\label{prop:pedersen_vrf_hiding}
 $\PedVRF$ is a correct key commitment and (perfectly) key hiding.
 \end{lemma}
@@ -91,7 +92,20 @@ Correctness holds trivially.
 
 
 
+We need this second verification equation in \PedVRF, but not in \ThinVRF,
+because otherwise our $s_2 \genB$ term provides enough freedom to tamper
+with the pre-ouputs.  
 
+We could however generalize \PedVRF to $k$ messages $\msg_1,\ldots,\msg_k$
+similarly to \ThinVRF in \S\ref{sec:vrf_thin}:  We compute for
+$j=1,\ldots,k$ the $k$ distinct
+points $\In_j := H_{\grE}(\msg_j)$, pre-outputs $\Out_0 := \sk \, \In$,
+delinearization challenges
+ $c_j = H_p(\aux,\msg_1,\ldots,\msg_k,\compk,\Out_{0,1},\ldots,\Out_{0,k},j)$,
+and then use the \PedVRF proof for
+ $\In = \sum_j c_j \In_j$ and $\Out = \sum_j c_j \Out_j$.
+
+% TODO: Proof correct?  Use same citations as schnorrkel.
 
 
 \endinput
