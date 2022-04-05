@@ -22,12 +22,12 @@ $$ \piring = \NIZK \Setst{ \compk, \comring }{
 % \label{sec:rvrf_groth16}
 
 Zero-knowledge continuations need rerandomizable zkSNARKs
-when being reused multiple times, meaning Groth16 \cite{groth16},
+when being reused multiple times, meaning Groth16 \cite{Groth16},
 but unlinkability requires more than merely Rerandomization.
 
-In Groth16 \cite{groth16}, we have an SRS $S$ consisting of curve
+In Groth16 \cite{Groth16}, we have an SRS $S$ consisting of curve
 points in $\grE_1$ and $\grE_2$ that encode the circuit being proven.
-We follow \cite{groth16} in discussing the SRS $S$ in terms of
+We follow \cite{Groth16} in discussing the SRS $S$ in terms of
 its ``toxic waste''
  $(\alpha,\beta,\delta,\gamma,\tau^1,\tau^2,\ldots) \in \F_q^*$.
 In other words, we could write say $[ f(\tau)/\delta ]_1$ or $[\cdots]_2$
@@ -39,7 +39,7 @@ In the SRS $S$, we distinguish the verifiers' string of elements
  $Y_1,\ldots,Y_k, [\alpha]_1 \in \grE_1$ and
  $[\beta]_2, [\gamma]_2, [\delta]_2 \in \grE_2$.
 % as separate from the provers' much longer string of elements in $\grE_1$ and $\grE_2$.
-A Groth16 \cite{groth16} proof then takes the form 
+A Groth16 \cite{Groth16} proof then takes the form 
  $\pi = (A,B,C) \in \grE_1 \times \grE_2 \times \grE_1$.
 A verifier then produces a $X = \sum_i^k x_i Y_i \in \grE_1$ from
  the public inputs $x_i$ and then checks 
@@ -214,11 +214,11 @@ $$ \pisafedot = \rrSNARK \Setst{ \compk, \pk }{
 As $\pisafedot$ knows the $\openpk$ of \PedVRF,
 $\pisafedot$ cannot be another zero-knowledge continuation itself.
 As $\pisafedot$ does not require rerandomization, another SNARK besides
-Groth16 \cite{groth16} works here, perhaps like Plonk \cite{plonk} or
+Groth16 \cite{Groth16} works here, perhaps like Plonk \cite{plonk} or
 some inner product proof \cite{bootle,bulletproofs},
  assuming the opaque Pedersen input trick works.
 
-Assuming we use Groth16 \cite{groth16} for $\pisafedot$,
+Assuming we use Groth16 \cite{Groth16} for $\pisafedot$,
 our SRS needs a fresh $\dot{\delta}$ but one could take
 $\dot{\gamma} = \gamma$ if so desired \cite{???}, and anyways
 $\genB_{\dot{\gamma}} = \genB_{\gamma}$.

@@ -23,7 +23,7 @@ reasonable but not free.  There is a fast moving literature on securing
 and optimizing zkSNARK friendly hash functions, with different techniques
 being better suited to different zkSNARKs or even curves.
 
-TODO: Arity 9 for 300 constraints?   % \cite{groth16} vs plookup \cite{plookup}.
+TODO: Arity 9 for 300 constraints?   % \cite{Groth16} vs plookup \cite{plookup}.
 
 We leave deeper discussion of zkSNARK friendly Merkle to the literature.
 Instead we spend this section focusing upon the diversity of circuit
@@ -38,7 +38,7 @@ vector commitments \cite{KZG} or so called ``Verkle trees'' \cite{??Verkle??} to
 Among these, aggregatable subvector commitments \cite{aSVC} permit
 one server to compute a KZG commitment \comring together with all users'
 ring opening \openring,  and then send each user their \openring encrypted.
-Instead of Groth16 \cite{groth16}, our \pisafe then consists
+Instead of Groth16 \cite{Groth16}, our \pisafe then consists
 of additively blinding this KZG commitment and then open it in zero-knowledge.
 
 TODO: Explain zero-knowledge KZG opening positions?!?
