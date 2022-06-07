@@ -62,7 +62,7 @@ zero-knowledge continuations then use \OpenKey with only minor caveats.
 \item $\PedVRF.\Verify(\compk,\msg,\aux,\sigma)$, parses $\sigma = (\Out_0,c,s_1,s_2)$, and then 
 \begin{enumerate}
     \item recompute the VRF input point $\In := H_{\grE}(\msg)$,
-    \item computes $R = s_1 \genG + s_2 \genB - c \compk$ and $R_m = s \In - c \Out_0$, and
+    \item computes $R = s_1 \genG + s_2 \genB - c \, \compk$ and $R_m = s_1 \In - c \Out_0$, and
     \item returns $H'(\msg, h \Out_0)$ if $c = H_q(\aux,\msg,\compk,\Out_0,R,R_\msg)$ or failure otherwise.
 \end{enumerate}
 \end{itemize}
