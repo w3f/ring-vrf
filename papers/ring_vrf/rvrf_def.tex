@@ -70,9 +70,9 @@ $\rVRF.\KeyGen$ and $\rVRF.\Eval$ untouched, but
 ...
 
 
-\subsection{rVRF-AC security}
+\subsection{rVRF-AD security}
 
-We extend the VRF-AC-KC commitment correctness condition for \CommitRing:
+We extend the VRF-AD-KC commitment correctness condition for \CommitRing:
 
 \begin{definition}
 We say rVRF satisfies {\em ring commitment correctness} if
@@ -160,15 +160,15 @@ $\Out_i = \Verify(\CommitRing(\ctx),\msg,\aux_i,\sigma_i)$,
 
 Any ring VRF becomes a non-anonymized VRF whenever
  the ring becomes a singleton $\ctx = \{ \pk \}$ of course.
-In doing so this, ring uniqueness reduces to uniqueness for VRF-AC,
+In doing so this, ring uniqueness reduces to uniqueness for VRF-AD,
 meaning our uniqueness with only a trivial key commitment,
 but \ThinVRF is faster and simpler.
 
-We reuse the VRF-AC-KC pseudo-randomness definition for ring VRFs
+We reuse the VRF-AD-KC pseudo-randomness definition for ring VRFs
 because pseudo-randomness is strongest for singleton rings, i.e. $|\ctx| = 1$.
 
 
-\subsection{rVRF-AC instantiation}
+\subsection{rVRF-AD instantiation}
 
 We instantiate a rVRF-AD from a hiding VRF-AD-KC like \PedVRF plus
 a ring commitment scheme
@@ -188,7 +188,7 @@ efficiently.
   \exists \openpk,\openring \textrm{\ s.t.\ } 
   \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenKey(\comring,\openring)}
   } $$
- \item computes the VRF-AC-KC signature
+ \item computes the VRF-AD-KC signature
   $\sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \piring)$, and finally
  \item returns the ring VRF signature $\rho = (\compk,\piring,\sigma)$.
  \end{enumerate}
@@ -205,7 +205,7 @@ In this, we tie $\sigma$ to $\piring$ by expanding $\sigma$'s auxiliary data wit
 
 We now prove security of \rVRF using that
 \begin{itemize}
-\item \PedVRF is a secure hiding VRF-AC-KC, and that
+\item \PedVRF is a secure hiding VRF-AD-KC, and that
 \item our ring commitment scheme satisfies ring commitment correctness.
 \end{itemize}
 

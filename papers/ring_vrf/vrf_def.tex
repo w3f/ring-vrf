@@ -41,7 +41,7 @@ A {\em verifiable random function with auxiliary data and key commitments} (VRF-
 % We also define an equivalence relation upon secret keys with classes denoted $[\sk]$
 % because secret keys could contain a public key opening data with only limited impact upon the VRF output. 
 
-% \subsection{VRF-AC-KC security}
+% \subsection{VRF-AD-KC security}
 
 We say a VRF-AD-KC denoted \VRF is {\em secure} if it satisfies
  correctness, uniqueness, and pseudo-randomness as defined below,
@@ -64,12 +64,12 @@ $\VRF.\Eval$ always has more optimized instantiations anyways.
 ...
 
 \begin{definition}
-We say a VRF-AC-KC satisfies {\em commitment correctness} if
+We say a VRF-AD-KC satisfies {\em commitment correctness} if
  $\OpenKey \circ \CommitKey$ returns the same public key \pk.
 \end{definition}
 
 \begin{definition}
-We say a VRF-AC-KC satisfies {\em VRF correctness} if
+We say a VRF-AD-KC satisfies {\em VRF correctness} if
 $(\pk,\sk) \leftarrow \KeyGen$ and $(\compk,\openpk) \leftarrow \CommitKey(\pk,\ctx)$
 imply
 $\Verify(\compk,\msg,\aux,\Sign(\sk,\openpk,\msg,\aux)) = \Eval(\sk,\msg)$.
@@ -82,7 +82,7 @@ Attackers access \CommitKey in this EUF-CMA-KC game, so if desired
  they could obtain multiple signatures under the same \compk.
 
 \begin{definition}
-We say a VRF-AC-KC satisfies {\em existential unforgability (EUF-CMA-KC)} if
+We say a VRF-AD-KC satisfies {\em existential unforgability (EUF-CMA-KC)} if
 any PPT adversary $\adv$ has only a negligible advantage in $\lambda$
 in the usual chosen-message game adapted to key commitments:
 \begin{itemize}
@@ -107,7 +107,7 @@ Yet, we do internally employ the usual hiding definition from
 % this full strength versions suffices.
 
 \begin{definition}
-We say a VRF-AC-KC is {\em key hiding} if any PPT adversary $\adv$
+We say a VRF-AD-KC is {\em key hiding} if any PPT adversary $\adv$
 who creates a pair of public keys $\pk_1,\pk_2$
 has only negligible advantage for identifying which lies behind a commitment
  $\compk \leftarrow \CommitKey(\pk_i,\ctx)$.
@@ -120,7 +120,7 @@ analogous to \cite[pp.9]{cryptoeprint:2019:1185}.
 % except weakened to require the signature verify too.
 
 \begin{definition}
-We say a VRF-AC-KC is {\em key binding} if any PPT adversary $\adv$
+We say a VRF-AD-KC is {\em key binding} if any PPT adversary $\adv$
 cannot produce $\compk,\msg,\aux$ and $\sk_i,\openpk_i$ for $i=1,2$
 such that both
  $\OpenKey(\compk,\openpk_1) \ne \OpenKey(\compk,\openpk_2)$ and
@@ -139,7 +139,7 @@ condition, like in the subsequent two sections, but
 TOTO: Is binding redundant with uniqueness?
 
 \begin{definition}
-We say a VRF-AC-KC satisfies {\em uniqueness} if any PPT adversary $\adv$
+We say a VRF-AD-KC satisfies {\em uniqueness} if any PPT adversary $\adv$
 % produces $\msg$, $\pk$, and $\openpk_i,\aux_i,\sigma_i$ for $i=1,2$, then 
 % $\Verify(\CommitKey(\pk,\openpk_1),\msg,\aux_1,\sigma_1)
 %  = \Verify(\CommitKey(\pk,\openpk_i2,\msg,\aux_2,\sigma_2)$
@@ -161,7 +161,7 @@ map $F_\sk : \msg \mapsto \Eval(\sk,\msg)$,
 except now the adversary knows \pk and gets chosen-message queries to \Sign.
 
 \begin{definition}
-We say a VRF-AC-KC satisfies {\em pseudo-randomness} if 
+We say a VRF-AD-KC satisfies {\em pseudo-randomness} if 
 any PPT adversary $\adv$ has only a negligible advantage in $\lambda$
 in this chosen-message game:
 \begin{itemize}
@@ -192,7 +192,7 @@ As in \cite{agg_dkg}, a {\em verifiable unpredictable function} (VUF)
 means \adv cannot guess $F_\sk$ in the same game.
 
 \begin{definition}
-We say a VRF-AC-KC satisfies {\em unpredictability} if 
+We say a VRF-AD-KC satisfies {\em unpredictability} if 
 any PPT adversary $\adv$ has only a negligible advantage in $\lambda$
 in this chosen-message game:
 \begin{itemize}
@@ -272,7 +272,7 @@ this extra message, but some like Sassafras depend upon the extra message.
 
 
 
-\section{UC}
+\subsection{UC}
 
 TODO:  Should we give a relatively simple non-harmful UC functionality here?
 
