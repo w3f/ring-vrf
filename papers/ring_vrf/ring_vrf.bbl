@@ -14,6 +14,7 @@ Adam Bender, Jonathan Katz, and Ruggero Morselli.
   random oracles.
 \newblock In Shai Halevi and Tal Rabin, editors, {\em Theory of Cryptography},
   pages 60--79, Berlin, Heidelberg, 2006. Springer Berlin Heidelberg.
+\newblock \url{https://ia.cr/2005/304}.
 
 \bibitem{cryptoeprint:2020:823}
 Jacqueline Brendel, Cas Cremers, Dennis Jackson, and Mang Zhao.
