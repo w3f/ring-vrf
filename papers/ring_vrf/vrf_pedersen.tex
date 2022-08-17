@@ -1,5 +1,5 @@
 \subsection{Pedersen keyed VRF-AD-KC}
-\label{sec:vrf_perderson}
+\label{sec:vrf_pederson}
 
 Anonymized VRF signatures could use Chaum-Pedersen DLEQ proofs that
 hide the true public key, which our key committing definition permits.
@@ -55,7 +55,7 @@ zero-knowledge continuations then use \OpenKey with only minor caveats.
 \begin{enumerate}
     \item compute the VRF input point $\In := H_{\grE}(\msg)$ and pre-output $\Out_0 := \sk \, \In$,
     \item Sample random $r_1,r_2 \leftarrow \F_p$ and compute $R = r_1 \genG + r_2 \genB$ and $R_\msg = r_1 \In$.
-    \item Compute the challenge $c = H_q(\aux,\msg,\compk,h \Out_0,R,R_m)$,
+    \item Compute the challenge $c = H_q(\aux,\msg,\compk,\Out_0,R,R_m)$,
      along with $s_1 = r_1 + c \sk$ and $s_2 = r_2 + c \, \openpk$.
     \item Return the signature $(\Out_0,c,s_1,s_2)$.
 \end{enumerate}

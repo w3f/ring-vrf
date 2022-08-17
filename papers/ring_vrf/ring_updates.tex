@@ -51,21 +51,21 @@ replace $\pisafedot$ with a zero-knowledge continuation
 that swaps the KZG blinding for the secret key blinding used by \pifast.
 
 We represent public keys in $\grE_1$ over $\ecJ$ like \pifast does,
-so $J = \sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$.
+so $J_\pk = \sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$.
 After placing these into a KZG commitment over $\ecE$, a transperent
-openning yields $J.x Y_2 + J.y Y_3$, so our blinded opening could
-then yield $J.x Y_2 + J.y Y_3 + b \genB_\gamma$.
-At this point, we need a zkSNARK \pifastdot to translate $J$ into $\sk$, so
-$$ \pifastdot = \rrSNARK \Setst{ \sk_0 + \sk_1 2^{128}, \pk }{ 
+openning yields $J_\pk.x Y_2 + J_\pk.y Y_3$, so our blinded opening could
+then yield $J_\pk.x Y_2 + J_\pk.y Y_3 + b \genB_\gamma$.
+At this point, we need a zkSNARK \pifastdot to translate $J_\pk$ into $\sk$, so
+$$ \pifastdot = \rrSNARK \Setst{ \sk_0 + \sk_1 2^{128}, J_\pk }{ 
  \exists d \textrm{\ s.t.\ }
  % 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
- \pk = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2
+ J_\pk = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2
 } \mathperiod $$
 We compute $\pifastdot$ only once ever, unlike $\pisafedot$.
 
 We must reblind the KZG commitment with each VRF signature, and
 tweak $\PedVRF$ to prove knowledge for $Y_2$ and $Y_3$, so 
-our marginal prover time winds up higher than naieve \pifast here.
+our marginal prover time winds up higher than naive \pifast here.
 We impose additional pairings upon verifiers too, likely suboptimal.
 
 
@@ -125,6 +125,6 @@ We expect half pairing cycles fit this usage nicely, although they complicate pr
 
 Append only logs still depand \pifast or \pisafe be reproven whenever
 \ctx updates however, so they only reduce bandwidth they not CPU usage.
-A priori, we expect prover complexity plus update fequency makes
-append only logs suboptimal, but
+We shy away from such append only log optimizations, due to this
+prover complexity and our desire for revokation, but
  they remain an interesting corner of the design space.

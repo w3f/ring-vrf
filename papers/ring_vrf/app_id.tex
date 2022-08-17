@@ -21,14 +21,14 @@ We discuss only \pifast here but adapting our techniques to \pisafe appears simi
  likely receiving \comring and \openring from some ring management service.
 \item {\em Identify} --
  Our user agent first opens a standard TLS connection to a server \msg,
- both checking the server's name is \msg, and checking certificate
- transparency logs, and computes the shared session id \aux.
+ both checking the server's name is \msg and checking certificate
+ transparency logs, and then computes the shared session id \aux.
  Our user agent computes the user's identity
-  $\mathtt{id} = \PedVRF.\Eval(\sk,\msg)$ on the server \msg.
- Our user agent next rerandomizes \pifast, \compk, and \openpk, computes
- $\sigma = \PedVRF.\Sign(\compk,\msg,\aux \doubleplus \compk \doubleplus \pifast,\sigma)$
- and finally sends the server their ring VRF signature:
- $\rVRF.\rSign(\sk,\openring,\msg,\aux) = (\compk,\pifast,\sigma)$.
+  $\mathtt{id} = \PedVRF.\Eval(\sk,\msg)$ on the server \msg,
+ % Our user agent next rerandomizes \pifast, \compk, and \openpk, computes
+ %  $\sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \pifast)$
+ and finally sends the server their ring VRF signature
+ $\rVRF.\rSign(\sk,\openring,\msg,\aux)$ % $ = (\compk,\pifast,\sigma)$.
 \item {\em Verify} -- 
  After receiving $(\compk,\pifast,\sigma)$ in channel \aux,
  the server named \msg checks \pifast on the input $\compk + \comring$,
@@ -49,10 +49,9 @@ resources.
 In other words, web browsers mostly fail these baseline privacy requirements.
 We expect Tor browser and Brave both behave correctly however.
 Apple's Safari trends towards preventing invasive cross site resources too.  
-There also do exist decentralized web aka web 3.0 projects whose stated aims
-include more privacy.
-
-In any case, we could always specify rules against cross site privacy invasions
+% There also do exist decentralized web aka web 3.0 projects whose stated aims
+% include more privacy.
+In any case, one could always specify rules against cross site privacy invasions
 whenever writing ring VRF browser specifications.
 
 
@@ -64,11 +63,14 @@ clear goals, and thus winds up being ineffective
 % https://www.tandfonline.com/doi/full/10.1080/25741292.2020.1725366
 % via https://twitter.com/ronaldpol/status/1491548352189587460
 We do however observe that AML/KYC conflicts with security and privacy
-laws like GDPR typically require that one compliance party know users'
-identities, while another service party knows the users' activities.
+laws like GDPR.  As a compromise between these regulations,
+one needs a compliance party who know users' identities,
+ while another seperate service party knows the users' activities.
+We propose this more efficent solution:
 
-In principle, our compliance party could maintained the ring \ctx, which
-then gives users unique identities with arbitrarily many service providers.
+Instead our compliance party becomes an identity issuer who maintains
+a ring \ctx consisting of one unique public key for each user.
+Arbitrarily many service providers could ring VRF based identity proofs.
 If later asked or subpoenaed, users could prove their relevant identities
 to investigators, or maybe prove which services they use and do not use. 
 
@@ -99,7 +101,7 @@ In this way, users have only one stable $\mathtt{id}$ within the
 approximate date range, but they obtain fresh $\mathtt{id}$s merely
 by waiting until the next month or week.
 
-We discussed in \S\ref{sec:vrf_perderson} how one signle \PedVRF
+We discussed in \S\ref{sec:vrf_pederson} how one signle \PedVRF
 signature $\sigma$ could simultaneously prove multiple input-output
 pairs $(\msg_j,\mathtt{id}_j)$.  As doing so links these pairs
 together, sites could make users link pseudo-nym creation date and
@@ -110,8 +112,8 @@ be abandoned and replaced, but abandoned pseudo-nyms cannot then
 be reclaimed without linking to intervening dates.
 
 In these ways, sites encode important aspects of their moderation rules
-into the ring VRF inputs requested.  We expect this makes sites' values
-and culture more uniform, predictable, and transparent.
+into the ring VRF inputs requested.  
+% We expect this makes sites' values and culture more uniform, predictable, and transparent.
 
 
 \subsection{Reduced pairings}

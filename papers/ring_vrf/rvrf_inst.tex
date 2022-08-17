@@ -23,7 +23,7 @@ $$ \piring = \NIZK \Setst{ \compk, \comring }{
 
 Zero-knowledge continuations need rerandomizable zkSNARKs
 when being reused multiple times, meaning Groth16 \cite{Groth16},
-but unlinkability requires more than merely Rerandomization.
+but unlinkability requires more than merely rerandomization.
 
 In Groth16 \cite{Groth16}, we have an SRS $S$ consisting of curve
 points in $\grE_1$ and $\grE_2$ that encode the circuit being proven.
@@ -140,9 +140,9 @@ which prevents computing $\pk = \sk\, Y_1$ inside $\pifast$.
 Instead, we propose $\ctx$ contain commitments to $\sk$ over
 some Jubjub curve $\ecJ$.  
 
-We know $\grJ$ typically has smaller order than $\grE$,
-due to $\ecJ$ being an Edwards curve, but 
-if $\sk = \sk_0 + \sk_1 \, 2^{128}$ then our public key commitments could
+We know the large prime order group $\grJ$ of $\ecJ$ typically has
+smaller order than $\grE$, itself due to $\ecJ$ being an Edwards curve. 
+Yet, if $\sk = \sk_0 + \sk_1 \, 2^{128}$ then our public key commitments could
 take the form $\sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$,
 with independent $\genJ_0,\genJ_1,\genJ_2$.
 Interestingly, we avoid range proofs for $\sk_1$ and $\sk_2$

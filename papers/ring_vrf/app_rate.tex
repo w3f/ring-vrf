@@ -36,7 +36,7 @@ If $n$ remains fixed forever, then we could simply let all users
 register $n$ ring VRF public keys in \ctx.
 If $n$ fluctuates under an upper bound $N$, then we could create $N$
 rings $\ctx_i$ for $i = 1 \ldots N$, and
- then blind \comring in \pifast similarly to \S\ref{subsec:hiding_rings}.
+ then blind \comring in \pifast similarly to \S\ref{sec:ring_hiding}.
 
 Although simple, these two approaches require users construct $n$ or $N$
 different $\pifast$ proofs every time the ring \ctx updates.
@@ -52,6 +52,7 @@ unamortized SNARK $\pisafedot$ and reveal only a Pedersen-like commitment
 to $\In + \openpk^{-1} \genB$.  We then adjust \PedVRF to yield
 a proof-of-knowledge of $\Out/\In$ subject to soundness of this
 $\pisafedot$.
+TOTO: Explain better!!
 
 In all cases, we incur costs by hiding part of the input \msg, so
 deployment should seriously consider if leaking $k$ suffices.
@@ -107,8 +108,9 @@ resources $u_1,\ldots,u_k$ by producing one ring VRF signature in which
 \PedVRF proves correctness of pre-ouptuts for multiple messages 
  $\msg_j = u_j \doubleplus r_d \doubleplus d \doubleplus k$ for $j=1 \ldots k$.
 
-As an example, purchasing some product could require espending rations
-for multiple energy sources, like  
+As an example, purchasing some prepared food product could require espending
+rations for multiple base food sources, like making a cake from wheat, butter,
+eggs, and sugar.  
 
 
 \subsection{Decommodification}
@@ -126,7 +128,8 @@ Aside from essential government services, commercial service providers
 typically offers some free service tier, usually because doing so
 familiarizes users with their intimidating technical product.
 
-% As an example, a company providing continuous integration testing services offers a free tier, but  
+Some free and paid tier examples include DuoLingo's heats on mobile, 
+continuous integration testing services, and many dating sites.
 
 A priori, rate limiting cases benefit from unlinkability among individual
 usages, not merely at some site boundary like moderation requires.

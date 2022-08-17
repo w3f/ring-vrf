@@ -129,7 +129,7 @@ such that both
 except with odds negligible in $\lambda$.
 \end{definition}
 
-We weaken binding like this because, from \S\ref{sec:vrf_perderson}
+We weaken binding like this because, from \S\ref{sec:vrf_pederson}
 onwards, verification provides a proof-of-knowledge that turns
 Pedersen commitments to secret keys into commitments to public keys.
 We always take $\ctx = \emptyset$ when using this ``unique'' key binding
@@ -212,8 +212,9 @@ We focus upon VRFs because
 if $H(k,\cdot)$ is a PRF then computing $\Out = H'(\Out_0, \msg)$
 typically transforms a VUF output $\Out_0$, associated to an input $\msg$,
 into a VRF output $\Out$, like \cite[Proposition 1]{vrf_micali} does.
-As hashes are cheap, implementors should prefer VRFs over more subtle VUFs,
- but some caveats remain to be discussed in \S\ref{sec:IO}.
+As hashes are cheap, implementors should prefer VRFs over more subtle VUFs.
+% TODO:  What did I mean here?!?  -JEff
+% but some caveats remain to be discussed in \S\ref{sec:IO}.
 
 % \smallskip
 

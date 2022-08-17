@@ -113,10 +113,11 @@ any PPT adversary $\adv$ has an advantage only
 \end{definition}
 
 We similarly a ring unforgeability resembling
- \cite[pp. 7 Def. 7]{cryptoeprint:2005:304}:
+ \cite[pp. 7 Def. 7]{cryptoeprint:2005:304} % their definition appears broken
+while also capturing the uniqueness condition that limits even adversaries who know secret keys.
 
 \begin{definition}
-We say \rVRF satisfies {\em ring unforgeability} if
+We say \rVRF satisfies {\em ring unforgeability and uniqueness} if
 any PPT adversary $\adv$ has an advantage only
  negligible in $\lambda$ to win the game:
 \begin{itemize}
@@ -129,40 +130,23 @@ any PPT adversary $\adv$ has an advantage only
   \rSign(\sk_i,\CommitKey(\pk_i,\ctx').1,\msg',\aux')$
  for each secret key $\sk_i$ with $i=1,\ldots,n$, and
   their choice of $\ctx',\msg',\aux'$ with $\pk_i \in \ctx'$.
- % as well as the various algorithms. 
+ % as well as the various algorithms.
+ $\adv$ creates its own key freely as well.
  %
- Now $\adv$ wins by outputting a valid signature $\sigma$ for
- a ring $\ctx \subset \ctx_0$, a message \msg, and associated data \aux
- such that
- $\adv$ never invoked $\ora{Sign}$ on $\msg,\aux$ and $i$ with $\pk_i \in \ctx$.
+ Now $\adv$ wins by outputting a ring $\ctx$ as well as
+ $n$ valid ring VRF signature $\sigma$, each with distinct outputs,
+ for $\ctx$ on a message \msg and associated data \aux
+ provided that
+ $\adv$ invoked $\ora{Sign}$ on $\msg,\aux$ and $i$ with $\pk_i \in \ctx$
+  strictly fewer than $n - |\ctx \setminus \ctx_0|$ times.
 \end{itemize}
-\end{definition}
-
-We also need a uniqueness condition that limits even adversaries who know the secret key.
-
-% \begin{definition}
-% We say \rVRF satisfies {\em ring uniqueness} if
-% any PPT adversary $\adv$ has an advantage only
-%  negligible in $\lambda$ to 
-% produces a ring $\ctx$, input $\msg$, 
-% and various $\aux_i,\sigma_i$ with more than $|\ctx|$
-% many verifying outputs $\Out_i = \Verify(\CommitRing(\ctx),\msg,\aux_i,\sigma_i)$.
-% \end{definition}
-
-\begin{definition}
-We say \rVRF satisfies {\em ring unforgeability} if
-any PPT adversary $\adv$ who produces
- a ring $\ctx$, input $\msg$,  and various $\aux_i,\sigma_i$
-cannot produce more than $|\ctx|$ many verifying outputs
-$\Out_i = \Verify(\CommitRing(\ctx),\msg,\aux_i,\sigma_i)$,
- except with odds negligible in $\lambda$.
 \end{definition}
 
 Any ring VRF becomes a non-anonymized VRF whenever
  the ring becomes a singleton $\ctx = \{ \pk \}$ of course.
-In doing so this, ring uniqueness reduces to uniqueness for VRF-AD,
-meaning our uniqueness with only a trivial key commitment,
-but \ThinVRF is faster and simpler.
+In doing so this, our ring uniqueness reduces to uniqueness for VRF-AD,
+meaning our uniqueness with only a trivial key commitment.
+% but \ThinVRF is faster and simpler.
 
 We reuse the VRF-AD-KC pseudo-randomness definition for ring VRFs
 because pseudo-randomness is strongest for singleton rings, i.e. $|\ctx| = 1$.
@@ -232,6 +216,92 @@ TODO: Should we gives Handan's UC functionality or similar here?
 
 
 \endinput
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{definition}
+We say \rVRF satisfies {\em ring unforgeability} if
+any PPT adversary $\adv$ has an advantage only
+ negligible in $\lambda$ to win the game:
+\begin{itemize}
+\item[]
+ Assume a set $\ctx_0 = \{ \pk_1,\ldots,\pk_n \}$ of public keys from
+ distinct key pairs $(\pk_i,\sk_i) \leftarrow \KeyGen$ for $i=1,\ldots,n$ with $n \ge 2$.
+ %
+ $\adv$ has signing oracles
+ $\ora{Sign} : (i,\ctx',\msg',\aux') \mapsto
+  \rSign(\sk_i,\CommitKey(\pk_i,\ctx').1,\msg',\aux')$
+ for each secret key $\sk_i$ with $i=1,\ldots,n$, and
+  their choice of $\ctx',\msg',\aux'$ with $\pk_i \in \ctx'$.
+ % as well as the various algorithms. 
+ %
+ Now $\adv$ wins by outputting a valid signature $\sigma$ for
+ a ring $\ctx \subset \ctx_0$, a message \msg, and associated data \aux
+ such that
+ $\adv$ never invoked $\ora{Sign}$ on $\msg,\aux$ and $i$ with $\pk_i \in \ctx$.
+\end{itemize}
+\end{definition}
+
+We also need a uniqueness condition that limits even adversaries who know the secret key.
+
+% \begin{definition}
+% We say \rVRF satisfies {\em ring uniqueness} if
+% any PPT adversary $\adv$ has an advantage only
+%  negligible in $\lambda$ to 
+% produces a ring $\ctx$, input $\msg$, 
+% and various $\aux_i,\sigma_i$ with more than $|\ctx|$
+% many verifying outputs $\Out_i = \Verify(\CommitRing(\ctx),\msg,\aux_i,\sigma_i)$.
+% \end{definition}
+
+\begin{definition}
+We say \rVRF satisfies {\em ring uniqueness} if
+any PPT adversary $\adv$ who produces
+ a ring $\ctx$, input $\msg$,  and various $\aux_i,\sigma_i$
+cannot produce more than $|\ctx|$ many verifying outputs
+$\Out_i = \Verify(\CommitRing(\ctx),\msg,\aux_i,\sigma_i)$,
+ except with odds negligible in $\lambda$.
+\end{definition}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
