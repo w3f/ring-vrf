@@ -3,10 +3,12 @@
 \label{sec:rvrf_cont}
 
 \newcommand\rrSNARK{\primalgo{Groth16}\xspace}
+\newcommand\rrSNARKweak{\primalgo{Groth16/KZG}\xspace}
 \newcommand\pifast{\ensuremath{\pi_{\mathtt{fast}}}\xspace}
-\newcommand\pifastdot{\ensuremath{\dot{\pi}_{\mathtt{fast}}}\xspace}
-\newcommand\pisafe{\ensuremath{\pi_{\mathtt{safe}}}\xspace}
-\newcommand\pisafedot{\ensuremath{\dot{\pi}_{\mathtt{safe}}}\xspace}
+% \newcommand\pifastdot{\ensuremath{\dot{\pi}_{\mathtt{fast}}}\xspace}
+\newcommand\pisk{\ensuremath{\pi_{\mathtt{sk}}}\xspace}
+\newcommand\pipk{\ensuremath{\dot{\pi}_{\mathtt{pk}}}\xspace}
+
 
 We now construct ring VRFs which achieves fast amortized prover time
 by using a heavy zero-knowledge continuation for $\rVRF.\OpenKey$ but
@@ -122,10 +124,11 @@ Then $(X',A',B',C',\sigma)$ and $(X'',A'',B'',C'',\sigma')$ are unlinkable.
 ???
 \end{proof}
 
+
 \subsection{Faster}
 \label{subsec:rvrf_faster}
 
-We describe our preferred faster choice $\pifast$ for $\pi$
+We describe a much faster choice $\pifast$ for $\pi$
 that sets $x_1 := \sk$ and $x_0 = \comring = \CommitRing(\ctx)$ so that
 taking $\genG := Y_1$, $\genB := \genB_\gamma$, and $\openpk := b$ in \PedVRF
 yields and incredibly fast amortized ring VRF prover.
@@ -185,81 +188,43 @@ to deploy group signature like constructions where the deanonymization vectors m
 \end{proof}
 
 
-\subsection{Safer}
+\subsection{Side channel}
+\label{subsec:rvrf_side_channel}
 
-Although blindingly fast, we processed $\sk$ directly inside $\pifast$,
-which annoys those wanting lightweight HSM provers, and
-increases side channel attack risks.
+In this, we dislike exposing the secret key material inside
+ the Groth16 prover for \pifast.
+Adversaries could trigger \pifast recomputation only by updating the ring,
+but this still presents a side channel risk.
 
-We could easily build a safer circuit in which
-\PedVRF runs on, and $\pk$ lies in, the Jubjub curve $\ecJ$, like 
-$$ \pisafe = \rrSNARK \Setst{ \pk, \comring }{
+We address this via a second zk continuation that splits \pifast into two parts: % \pisk and \pipk.
+%
+$$ \pipk = \rrSNARKweak \Setst{ J_\pk, \comring }{
  \exists \openring \textrm{\ s.t.\ }
- \pk = \rVRF.\OpenKey(\comring,\openring)
-} \mathperiod $$
-In this, our $\genG$ and $\genB$ have no relation with $\ecE$
-or \pisafe, so now our $X'$ nolonger plays nicely with \PedVRF, 
-$$ X' = \comring\, Y_0 + \pk.x Y_1 + \pk.y Y_2 + b \genB_\gamma \mathperiod $$
-
-Instead we propose a small second SNARK $\pisafedot'$ working on $\ecE$
-with two tasks, strip the blinding $b \genB_\gamma \in \ecE$ needed
-by our zero-knowledge continuation, and then adding the Pedersen blinding
-in $\ecJ$ required by \PedVRF, ala
- $\compk = \PedVRF.\CommitKey(\compk,\openpk) = \pk + \openpk \genB \in \ecJ$.
-We create $\pisafedot'$ by again applying our opaque Pedersen input trick to
-$$ \pisafedot = \rrSNARK \Setst{ \compk, \pk }{
- \exists \openpk \textrm{\ s.t.\ } \compk = \pk + \openpk \genB
+  J_\pk = \rVRF.\OpenKey(\comring,\openring)
+} \mathcomma \quad\textrm{and} $$ 
+%
+$$ \pisk = \rrSNARK \Setst{ \sk_0 + \sk_1 2^{128}, J_\pk }{ 
+ \exists d \textrm{\ s.t.\ }
+ % 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
+ J_\pk = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2
 } \mathperiod $$
 
-As $\pisafedot$ knows the $\openpk$ of \PedVRF,
-$\pisafedot$ cannot be another zero-knowledge continuation itself.
-As $\pisafedot$ does not require rerandomization, another SNARK besides
-Groth16 \cite{Groth16} works here, perhaps like Plonk \cite{plonk} or
-some inner product proof \cite{bootle,bulletproofs},
- assuming the opaque Pedersen input trick works.
+We now prove \pisk only once {\it ever} during secret key generation,
+which largely eliminates any side channel risks.
+We do ask verifiers compute more pairings, but nobody cares when
+the VRF verifiers are few in number or institutional,
+ as in many applications.
+We also ask provers rerandomize both \pisk and \pipk, but this costs relatively little.
+Assuming \pipk is Groth16 then we need a proof-of-knowledge for the desired structure of $J_pk$ too.
+All totaled this almost doubles the size and complexity of our ring VRF signature.
 
-Assuming we use Groth16 \cite{Groth16} for $\pisafedot$,
-our SRS needs a fresh $\dot{\delta}$ but one could take
-$\dot{\gamma} = \gamma$ if so desired \cite{???}, and anyways
-$\genB_{\dot{\gamma}} = \genB_{\gamma}$.
-At this point our verifier supplies transperent public inputs
- $\compk.x \dot{Y}_1 + \compk.y \dot{Y}_2$ and uses opaque inputs
-$$ \dot{Y} = \dot{X}' - \compk.x \dot{Y}_1 + \compk.y \dot{Y}_2 =
-- \pk.x \dot{Y}_3 + \pk.y \dot{Y}_4 + b \genB_{\dot{\gamma}} \mathperiod $$
+There is no ``arrow of time'' among zk continuations per se, but
+as \pisk bridges between the \PedVRF and \pipk,
+one might consider this zk continuation to be time reversed.
 
-In this, we nolonger prove knowledge of $X$ in \PedVRF like $\pifast$ did.
-Instead, we employ another Chaum-Pedersen DLEQ proof $\dot{\sigma}$ to wire
- the $X'$ of $\pisafe$ to the $\dot{X}'$ of $\pisafedot$,
- thus proving knowledge of both.
-We cannot avoid this proof-of-knowledge, but it becomes simpler if
-we choose $Y'_3 = Y_1$ and $Y'_4 = Y_2$ using the trick of \S\ref{sec:ring_hiding}.
+Insterestingly, our \pipk has become simple enough that openning
+a KZG commitment \cite{KZG} at a secret point now suffices, ala Caulk \cite{Caulk}.
 
-We take $\aux \doubleplus \pisafe \doubleplus \pisafedot
- \doubleplus \dot{\sigma} \doubleplus \dot{Y}$
- to be the \aux of \PedVRF of course.
 
-\begin{proposition}\label{prop:pisafe_anonymity}
-\rVRF using \pisafe satisfies ring anonymity.
-\end{proposition}
-
-\begin{proof}[Proof stetch.]
-???
-\end{proof}
-
-% \smallskip
-
-As \openpk appears inside $\pisafedot$, we recompute $\pisafedot$ with
-every ring VRF signature, but the elliptic curve addition requires
-only 5ish constraints, and the elliptic curve scalar multiplication
-requires under 750 ??? constraints. 
-All told our amortized prover runs faster than a Groth16 prover
-with 800 constraints.
-
-A priori, our safer verifier requires five pairings, along with
-some additional $\ecE_1$ scalar multiplications.
-We conjecture $\gamma$ and $\delta$ could safely be shared between
-$\pisafe$ and $\pisafedot$, thereby requiring only four pairings,
-but caution this result appars non-trivial.
-
-% \smallskip
+\endinput
 

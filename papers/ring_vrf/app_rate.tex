@@ -39,19 +39,19 @@ rings $\ctx_i$ for $i = 1 \ldots N$, and
  then blind \comring in \pifast similarly to \S\ref{sec:ring_hiding}.
 
 Although simple, these two approaches require users construct $n$ or $N$
-different $\pifast$ proofs every time the ring \ctx updates.
-We have nicer options if using the \pisafe approach: 
+different $\pipk$ proofs every time the ring \ctx updates.
 
-Instead of proving ring membership of one public key,
-$\pisafe$ could prove ring membership of a KZG commitment to $n$ keys.
-Our unamortized SNARK $\pisafedot$ could then open the specific key in
-zero-knowledge, which sounds acceptable once already working in the \pisafe case.
+Instead of proving ring membership of one public key, $\pipk$ could
+prove ring membership of a Merkle commitment to multiple keys, so
+users have $\pisk^1,\ldots,\pisk^N$ for each of their multiple keys.
 
-We could compute the hash-to-curve $\In := H_{\grE}(\msg)$ inside the
-unamortized SNARK $\pisafedot$ and reveal only a Pedersen-like commitment
+As a more flexible approach,
+we could compute the hash-to-curve $\In := H_{\grE}(\msg)$ inside an
+unamortized SNARK $\pi_{\mathtt{in}}$ and reveal only a Pedersen-like commitment
 to $\In + \openpk^{-1} \genB$.  We then adjust \PedVRF to yield
 a proof-of-knowledge of $\Out/\In$ subject to soundness of this
-$\pisafedot$.
+SNARK $\pi_{\mathtt{in}}$.
+
 TOTO: Explain better!!
 
 In all cases, we incur costs by hiding part of the input \msg, so

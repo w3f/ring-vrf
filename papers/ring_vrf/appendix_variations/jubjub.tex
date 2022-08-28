@@ -1,0 +1,84 @@
+
+\subsection{Safer}
+
+\newcommand\pijub{\ensuremath{\pi_{\mathtt{jub}}}\xspace}
+\newcommand\pijubdot{\ensuremath{\dot{\pi}_{\mathtt{jub}}}\xspace}
+
+
+Although blindingly fast, we processed $\sk$ directly inside $\pifast$,
+which annoys those wanting lightweight HSM provers, and
+increases side channel attack risks.
+
+We could easily build a safer circuit in which
+\PedVRF runs on, and $\pk$ lies in, the Jubjub curve $\ecJ$, like 
+$$ \pisafe = \rrSNARK \Setst{ \pk, \comring }{
+ \exists \openring \textrm{\ s.t.\ }
+ \pk = \rVRF.\OpenKey(\comring,\openring)
+} \mathperiod $$
+In this, our $\genG$ and $\genB$ have no relation with $\ecE$
+or \pisafe, so now our $X'$ nolonger plays nicely with \PedVRF, 
+$$ X' = \comring\, Y_0 + \pk.x Y_1 + \pk.y Y_2 + b \genB_\gamma \mathperiod $$
+
+Instead we propose a small second SNARK $\pisafedot'$ working on $\ecE$
+with two tasks, strip the blinding $b \genB_\gamma \in \ecE$ needed
+by our zero-knowledge continuation, and then adding the Pedersen blinding
+in $\ecJ$ required by \PedVRF, ala
+ $\compk = \PedVRF.\CommitKey(\compk,\openpk) = \pk + \openpk \genB \in \ecJ$.
+We create $\pisafedot'$ by again applying our opaque Pedersen input trick to
+$$ \pisafedot = \rrSNARK \Setst{ \compk, \pk }{
+ \exists \openpk \textrm{\ s.t.\ } \compk = \pk + \openpk \genB
+} \mathperiod $$
+
+As $\pisafedot$ knows the $\openpk$ of \PedVRF,
+$\pisafedot$ cannot be another zero-knowledge continuation itself.
+As $\pisafedot$ does not require rerandomization, another SNARK besides
+Groth16 \cite{Groth16} works here, perhaps like Plonk \cite{plonk} or
+some inner product proof \cite{bootle,bulletproofs},
+ assuming the opaque Pedersen input trick works.
+
+Assuming we use Groth16 \cite{Groth16} for $\pisafedot$,
+our SRS needs a fresh $\dot{\delta}$ but one could take
+$\dot{\gamma} = \gamma$ if so desired \cite{???}, and anyways
+$\genB_{\dot{\gamma}} = \genB_{\gamma}$.
+At this point our verifier supplies transperent public inputs
+ $\compk.x \dot{Y}_1 + \compk.y \dot{Y}_2$ and uses opaque inputs
+$$ \dot{Y} = \dot{X}' - \compk.x \dot{Y}_1 + \compk.y \dot{Y}_2 =
+- \pk.x \dot{Y}_3 + \pk.y \dot{Y}_4 + b \genB_{\dot{\gamma}} \mathperiod $$
+
+In this, we nolonger prove knowledge of $X$ in \PedVRF like $\pifast$ did.
+Instead, we employ another Chaum-Pedersen DLEQ proof $\dot{\sigma}$ to wire
+ the $X'$ of $\pisafe$ to the $\dot{X}'$ of $\pisafedot$,
+ thus proving knowledge of both.
+We cannot avoid this proof-of-knowledge, but it becomes simpler if
+we choose $Y'_3 = Y_1$ and $Y'_4 = Y_2$ using the trick of \S\ref{sec:ring_hiding}.
+
+We take $\aux \doubleplus \pisafe \doubleplus \pisafedot
+ \doubleplus \dot{\sigma} \doubleplus \dot{Y}$
+ to be the \aux of \PedVRF of course.
+
+\begin{proposition}\label{prop:pisafe_anonymity}
+\rVRF using \pisafe satisfies ring anonymity.
+\end{proposition}
+
+\begin{proof}[Proof stetch.]
+???
+\end{proof}
+
+% \smallskip
+
+As \openpk appears inside $\pisafedot$, we recompute $\pisafedot$ with
+every ring VRF signature, but the elliptic curve addition requires
+only 5ish constraints, and the elliptic curve scalar multiplication
+requires under 750 ??? constraints. 
+All told our amortized prover runs faster than a Groth16 prover
+with 800 constraints.
+
+A priori, our safer verifier requires five pairings, along with
+some additional $\ecE_1$ scalar multiplications.
+We conjecture $\gamma$ and $\delta$ could safely be shared between
+$\pisafe$ and $\pisafedot$, thereby requiring only four pairings,
+but caution this result appars non-trivial.
+
+% \smallskip
+
+
