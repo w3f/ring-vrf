@@ -96,8 +96,8 @@ any PPT adversary $\adv$ has an advantage only
  distinct key pairs $(\pk_i,\sk_i) \leftarrow \KeyGen$ for $i=1,\ldots,n$ with $n \ge 2$.
  %
  $\adv$ has signing oracles
- $\ora{Sign} : (i,\ctx',\msg',\aux') \mapsto
-  \rSign(\sk_i,\CommitKey(\pk_i,\ctx').1,\msg',\aux')$
+ $$ \ora{Sign} : (i,\ctx',\msg',\aux') \mapsto
+  \rSign(\sk_i,\CommitKey(\pk_i,\ctx').1,\msg',\aux') $$
  for each secret key $\sk_i$ with $i=1,\ldots,n$, and
  their choice of $\ctx',\msg',\aux'$ with $\pk_i \in \ctx'$.
  % as well as the various algorithms. 
@@ -123,22 +123,22 @@ any PPT adversary $\adv$ has an advantage only
 \begin{itemize}
 \item[]
  Assume a set $\ctx_0 = \{ \pk_1,\ldots,\pk_n \}$ of public keys from
- distinct key pairs $(\pk_i,\sk_i) \leftarrow \KeyGen$ for $i=1,\ldots,n$ with $n \ge 2$.
+ distinct key pairs $(\pk_i,\sk_i) \leftarrow \KeyGen$ for $i=1,\ldots,n$.
  %
  $\adv$ has signing oracles
- $\ora{Sign} : (i,\ctx',\msg',\aux') \mapsto
-  \rSign(\sk_i,\CommitKey(\pk_i,\ctx').1,\msg',\aux')$
+ $$ \ora{Sign} : (i,\ctx',\msg',\aux') \mapsto
+  \rSign(\sk_i,\CommitKey(\pk_i,\ctx').1,\msg',\aux') $$
  for each secret key $\sk_i$ with $i=1,\ldots,n$, and
   their choice of $\ctx',\msg',\aux'$ with $\pk_i \in \ctx'$.
  % as well as the various algorithms.
  $\adv$ creates its own key freely as well.
  %
  Now $\adv$ wins by outputting a ring $\ctx$ as well as
- $n$ valid ring VRF signature $\sigma$, each with distinct outputs,
+ $k$ valid ring VRF signatures, each with distinct outputs,    % $\sigma_i$
  for $\ctx$ on a message \msg and associated data \aux
  provided that
- $\adv$ invoked $\ora{Sign}$ on $\msg,\aux$ and $i$ with $\pk_i \in \ctx$
-  strictly fewer than $n - |\ctx \setminus \ctx_0|$ times.
+ $\adv$ invoked $\ora{Sign}$ on $\msg,\aux$ and $i$ with $\pk_i \in \ctx_0$
+  strictly fewer than $k - |\ctx \setminus \ctx_0|$ times.
 \end{itemize}
 \end{definition}
 
@@ -152,7 +152,7 @@ We reuse the VRF-AD-KC pseudo-randomness definition for ring VRFs
 because pseudo-randomness is strongest for singleton rings, i.e. $|\ctx| = 1$.
 
 
-\subsection{rVRF-AD instantiation}
+\subsection{Generic rVRF-AD instantiation}
 
 We instantiate a rVRF-AD from a hiding VRF-AD-KC like \PedVRF plus
 a ring commitment scheme
@@ -173,7 +173,7 @@ efficiently.
   \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenKey(\comring,\openring)}
   } $$
  \item computes the VRF-AD-KC signature
-  $\sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \piring)$, and finally
+  $$ \sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \piring), \quad\textrm{and} $$ % finally
  \item returns the ring VRF signature $\rho = (\compk,\piring,\sigma)$.
  \end{enumerate}
 \item $\rVRF.\rVerify$ takes $(\comring,\msg,\aux,\rho)$,
