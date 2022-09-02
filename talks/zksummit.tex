@@ -28,11 +28,11 @@ Zero-knowledge continuations..
 	
 \bigskip
 
-Q: What is the fastest SNARK proof?
+Q: What are the fastest SNARK proofs?
 
 \bigskip
 
-A: One that does not need (re)proving
+A: Ones we reuse without reproving.
 
 \end{frame}
 
@@ -120,6 +120,22 @@ $$ \mathsf{Groth16} \Setst{ \sk_0 + \sk_1 2^{128}, J_\pk }{
 
 
 
+\begin{frame} % {Identity}
+	
+Q: How can identity be safe for online use?
+
+\bigskip
+
+A: By revealing nothing except users' uniqueness.
+
+\bigskip\bigskip
+
+No W3C attribute based bullshit!
+
+\end{frame}
+
+
+
 \begin{frame}{Identity}
 
 User agent: \\ \medskip
@@ -149,7 +165,10 @@ Anonymous rationing uses $\msg = \mathtt{``site.com``} \doubleplus \mathsf{week}
 
 \pause\bigskip\bigskip 
 
-Important: Ring membership can be transparent!  No fraudulent certificates!
+Q: How can rationing be trusted? \\ bigskip
+A: By asking users trust a list, not certificates.
+
+% Important: Ring membership can be transparent!  No fraudulent certificates!
 
 \end{frame}
 
@@ -165,21 +184,39 @@ Important: Ring membership can be transparent!  No fraudulent certificates!
 
 \begin{frame}
 
-SSLE = Secret single leader election
-
-\bigskip\bigskip
-
-Sassafras: Semi-anonymous sortition of staked assignees for fixed-time rhythmic assignment of slots
+Sassafras: Semi-anonymous sortition of staked assignees \\
+\hspace{5pt} for fixed-time rhythmic assignment of slots
 
 \pause\bigskip\bigskip
 
-It's basically block production by cards against humanity.
+It's secret single leader election (SSLE) by cards against humanity.
+
+\end{frame}
+
+
+
+\begin{frame}{Sassafras}
+
+Disadvantages: Network layer anonymity is weak, but we not care much..
+
+\bigskip\bigskip
+
+Advantages: \\ \smallskip
+- Praos quality randomness \\ \smallskip
+- Vastly more efficient than shuffle SSLEs \\ \smallskip
+- Block producers can prove their slot in advance \\ \smallskip
+- Tor-like {.onion} circuit to upcoming slots \\ \smallskip
+- Avoids need for memepools \\ \smallskip
+- Better MEV defenses \\ \smallskip
 
 \end{frame}
 
 
 
 \begin{frame}
+	
+...	
+	
 \end{frame}
 
 
