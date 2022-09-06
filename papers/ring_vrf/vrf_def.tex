@@ -264,7 +264,7 @@ Yet, these all suffer from either large signature sizes (RSA) or
  slow verification (BLS).
 
 As a rule, one prefers instantiating VRFs similarly to
- \cite{nsec5} or \cite{VXEd25519} using Chaum-Pedersen DLEQ proofs \cite{CP93}
+ \cite{nsec5} or \cite{VXEd25519} using Chaum-Pedersen DLEQ proofs \cite{CP92} % Or should it be CP93 ??
  because they provide both small signatures and fast verification.
 In these, our extra auxiliary message \aux can be verified for free,
 by binding the message into the challenge hash, like a Schnorr signature.
