@@ -1,5 +1,10 @@
 \begin{thebibliography}{10}
 
+\bibitem{w3c_vc_use_cases}
+Verifiable credentials use cases.
+\newblock W3C Working Group Note 24 September 2019.
+  \url{https://www.w3.org/TR/vc-use-cases/}.
+
 \bibitem{RandomizationGroth16}
 Karim Baghery, Markulf Kohlweiss, Janno Siim, and Mikhail Volkhov.
 \newblock Another look at extraction and randomization of groth's zk-snark.
@@ -27,14 +32,6 @@ David Butler, Andreas Lochbihler, David Aspinall, and Adri{\`a} Gasc{\'o}n.
 \newblock Formalising $\sigma$-protocols and commitment schemes using crypthol.
 \newblock Cryptology ePrint Archive, Report 2019/1185, 2019.
 \newblock \url{https://ia.cr/2019/1185}.
-
-\bibitem{bulletproofs}
-Benedikt Bünz, Jonathan Bootle, Dan Boneh, Andrew Poelstra, Pieter Wuille, and
-  Greg Maxwell.
-\newblock Bulletproofs: Short proofs for confidential transactions and more.
-\newblock In {\em 2018 IEEE Symposium on Security and Privacy (SP)}, pages
-  319--338, May 2018.
-\newblock IACR ePrint Archive 2017/1066.
 
 \bibitem{praos}
 Bernardo David, Peter Ga{\v{z}}i, Aggelos Kiayias, and Alexander Russell.
