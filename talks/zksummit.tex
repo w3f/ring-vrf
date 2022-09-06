@@ -22,6 +22,20 @@
 \maketitle
 
 
+
+\begin{frame}
+	
+	Ring signatures prove the actual signer exists in \\
+	\hspace{10pt} some publicly specified list, known as the ring. 
+	
+	\bigskip
+	
+	Examples:  Some deniable key exchanges, ZCash, Monero, etc.
+	
+\end{frame}
+
+
+
 \begin{frame}{EC VRF}
 
 A verifiable random function (VRF) proves evaluation of a pseudo-random function (PRF) determined by a signing key.
@@ -44,19 +58,6 @@ s \, G &= c \, \pk + R \\
 
 \begin{frame}
 
-Ring signatures prove the actual signer exists in \\
-\hspace{10pt} some publicly specified list, known as the ring. 
-
-\bigskip
-
-Examples:  Some deniable key exchanges, ZCash, Monero, etc.
-
-\end{frame}
-
-
-
-\begin{frame}
-
 Ring VRF is a ring signature that's also a VRF.
 
 \bigskip\bigskip 
@@ -69,6 +70,10 @@ A ring verifiable random function (ring VRF) is a ring signature that proves eva
 
 \begin{frame}{Pedersen VRF}
 
+We set $\compk := \sk \, G + b \, K$ to be a Pedersen commitment to $\sk$.
+
+\bigskip\bigskip
+
 $\mathsf{PedersenVRF}.\Verify(\msg,\aux,\compk,(\Out,R,R_\msg,s,t))$
 	
 $$ \begin{aligned}
@@ -78,10 +83,6 @@ s \, \In &= c \, \Out + R_\msg \\
 t \, K + s \, G &= c \, \compk + R \\
 & \mathtt{return} \, H(\Out,\msg) \\
 \end{aligned} $$
-
-\bigskip\bigskip
-
-We set $\compk := \sk \, G + b \, K$ to be a Pedersen commitment to $\sk$.
 	
 \end{frame}
 
@@ -105,15 +106,18 @@ A: Ones we reuse without reproving.
 
 \begin{frame}
 
-$X = \sk \, G + b \, K = \compk$
-
-\medskip
-
 $\mathsf{Groth16}.\Verify(X,(A,B,C))$
 
 $$ e(A,B) = e([\alpha]_1, [\beta]_2) \cdot e(X, [\gamma]_2) \cdot e(C, [\delta]_2) $$
 
 \pause\medskip
+
+$$ \begin{aligned}
+ X &= \sk \, G + b \, K + \cdots \\
+   &= \compk + \cdots \\
+\end{aligned} $$
+
+\pause\bigskip
 
 Add $K_\delta := {\gamma\over\delta} K$ to trusted setup
 
@@ -132,18 +136,29 @@ C' &:= C + r_2 A + b K_\delta \\
 
 $X = \sk \, G + b \, K + \comring \, L$
 
-\bigskip
+\medskip
 
 $$ \mathsf{Groth16} \Setst{ \sk_0 + \sk_1 2^{128}, \comring }{
     \exists d,o \textrm{\ s.t.\ }
 	\genfrac{}{}{0pt}{}{ \sk_0 J_0 + \sk_1 J_1 + d J_2 }{ \in_o \comring }
 } $$
 
-\hspace{5pt} Marginal cost: eight $\mathcal{G}_1$ mults plus two $\mathcal{G}_2$ mults
+\hspace{5pt} Marginal cost of eight $\mathcal{G}_1$ mults plus two $\mathcal{G}_2$ mults
 
-\pause\bigskip\bigskip 
+\end{frame}
+% \pause\bigskip\bigskip 
 
-% Avoid the Groth16 side channel..
+
+
+\begin{frame}
+	
+Avoid the Groth16 side channel..
+
+\bigskip
+
+$X = \sk \, G + b \, K + J_\pk.x \, L_x + J_\pk.y \, L_y$
+
+\medskip
 
 $$ \mathsf{Groth16} \Setst{ \sk_0 + \sk_1 2^{128}, J_\pk }{ 
 	\exists d \textrm{\ s.t.\ }
@@ -171,10 +186,12 @@ A: By revealing nothing except users' uniqueness.
 \end{frame}
 
 
-People are the ring !!!!!!!!!
-
 
 \begin{frame}{Identity}
+
+Ring consists of people, with one key per person.
+
+\bigskip\bigskip
 
 User agent: \\ \medskip
 
@@ -198,7 +215,7 @@ What happens if we use $\msg = \mathtt{``site.com``} \doubleplus \mathsf{month}$
 
 \pause\bigskip\bigskip 
 
-Anonymous rationing uses $\msg = \mathtt{``site.com``} \doubleplus \mathsf{week} \doubleplus \mathsf{counter}$ \\
+Anonymous rationing uses $\msg = \mathtt{``moutarde``} \doubleplus \mathsf{week} \doubleplus \mathsf{counter}$ \\
 \hspace{1pt} And treats outputs as short lived nullifiers.
 
 \end{frame}
@@ -215,7 +232,7 @@ Q: How can ration cards be trusted?
 
 \bigskip 
 
-A: By asking users trust a public list, not certificates.
+A: By asking users trust a public list of residents, not certificates.
 
 % Important: Ring membership can be transparent!  No fraudulent certificates!
 
