@@ -1,0 +1,9 @@
+# beamer files
+*.aux
+*.log
+*.nav
+*.out
+*.pdf
+*.snm
+*.toc
+
