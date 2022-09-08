@@ -10,11 +10,6 @@ VRFs have signature-like unforgeability properties, a fact which follows easily 
 We follow \cite{agg_dkg} in making this explicit, while also
  exposing the auxiliary data supported by our constructions. 
 
-\def\compk{\ensuremath{\mathsf{compk}}\xspace}
-\def\openpk{\ensuremath{\mathsf{oppk}}\xspace}
-\newcommand\CommitKey{\primalgo{CommitKey}}
-\newcommand\OpenKey{\primalgo{OpenKey}}
-
 Any signature scheme requires a \KeyGen algorithm of course, but we also
 support hiding public keys inside a commitment scheme \CommitKey and \OpenKey.
 Zero-knowledge continuations then work by running \OpenKey inside yet
