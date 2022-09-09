@@ -4,7 +4,7 @@
 At first, one imagines sites would accept few rings because each ring
 gives some users multiple ``Sybil'' identities within the site.
 In practice however, we think many sites benefit from accepting
-multiple overlapping rings for convenience, reach, etc., but then
+multiple overlapping rings for convenience and/or reach, but then
 tollerate the resulting few ``Sybil'' users.
 
 As sites accept more rings, we increase risks that each user's ring
@@ -18,15 +18,17 @@ We could achieve this using recursion inside \pifast of course,
 but doing so lies out of scope.  We instead discuss using other
 zero-knowledge continuation techniques or similar.
 
+
 \subsection{Unique circuit}
 
 As a first step, if all rings use the same circuit, then we hide the
 ring through openning a blinded polynomial commitment \cite{KZG} as follows. 
 
 In \S\ref{subsec:rvrf_faster}, our \pifast takes public input
- $X = \comring\, Y_0 + \compk$ where $\compk = \sk\, Y_1 + b \genB_\gamma$.
+$X = \comring\, Y_0 + \compk$ where $\compk = \sk\, Y_1 + b \genB_\gamma$.
 Instead of revealing \comring, we prove correctness of \comring in
  $X'' = \comring\, Y_0 + d'' \genB_\gamma$.
+Or similarly \pipk in \S\ref{subsec:rvrf_side_channel}.
 
 As an initial condition, we build two polynomial commitments \cite{KZG}
 on $\ecE$ with similarly indexed opennings:
@@ -39,10 +41,8 @@ We could construct or update the \comring commitment using \cite{aSVC} if desire
 We now construct a commitment opening to $X''$ as desired, and
 open at a hidden index. ...
 
-TODO: More details?
+TODO: Not good!  More details?
 
-If using $\pisafe$ anyways then we could prove correctness for \comring
-using $\pisafedot$ too, which saves pairings over adding KZK.
 
 \subsection{Multi circuit}
 
@@ -97,6 +97,7 @@ In this way, all ring membership circuits could share identical
 public input SRS points $Y_{1,\gamma}$, and similarly $Y_0$ if desired.
 
 % Interestingly the SRS ceremony could safely output points for both forms
+
 
 \subsection{SnarkPack}
 

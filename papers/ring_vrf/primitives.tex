@@ -14,7 +14,7 @@
 
 % As our ring VRF is built by composing them, 
 We briefly recall the primitives and security assumptions underlying
-both Chaum-Pederson DLEQ proofs and pairing based zkSNARKs. 
+both Chaum-Pedersen DLEQ proofs and pairing based zkSNARKs. 
 
 
 \subsection{Elliptic curves}
@@ -54,7 +54,7 @@ Anytime $\ecE$ represents a pairing friendly curve then we ask that
 deserialization prove elements of $\grE_1$, $\grE_2$, and $\grE_T$
 lie inside the correct subgroup of order $p$,
  which typically requires checking whether $|\grE| X = 1$ or similar.
-As our SNARKs handle with points in $\ecJ$ directly, we conversely
+As our SNARKs works with points in $\ecJ$ directly, we conversely
 prefer writing $\grJ$ equations in $\ecJ[\F_p]$ and explicitly describe
 where one clears the cofactor $h_{\grJ}$.  We handled $\grE$ withr
 $\ecE$ not necessarily pairing friendly similarly to $\ecJ$.

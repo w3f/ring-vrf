@@ -1,5 +1,5 @@
-\subsection{Pedersen keyed VRF-AD-KC}
-\label{sec:vrf_perderson}
+\section{Pedersen keyed VRF-AD-KC}
+\label{sec:vrf_pederson}
 
 Anonymized VRF signatures could use Chaum-Pedersen DLEQ proofs that
 hide the true public key, which our key committing definition permits.
@@ -45,7 +45,7 @@ the secret key \sk, not to the public key \pk, because
 Instead, our \Verify proves correctness of \compk, as
  required for our key binding condition, so
 zero-knowledge continuations then use \OpenKey with only minor caveats.
-% In particular, any VRF-AC-KC prevents adversaries from obtaining
+% In particular, any VRF-AD-KC prevents adversaries from obtaining
 % extra valid outputs, but ring VRF protocols need a proof-of-knowledge
 % for the public key \pk if they demand that different \pk represent
 % different functions.
@@ -55,14 +55,14 @@ zero-knowledge continuations then use \OpenKey with only minor caveats.
 \begin{enumerate}
     \item compute the VRF input point $\In := H_{\grE}(\msg)$ and pre-output $\Out_0 := \sk \, \In$,
     \item Sample random $r_1,r_2 \leftarrow \F_p$ and compute $R = r_1 \genG + r_2 \genB$ and $R_\msg = r_1 \In$.
-    \item Compute the challenge $c = H_q(\aux,\msg,\compk,h \Out_0,R,R_m)$,
+    \item Compute the challenge $c = H_q(\aux,\msg,\compk,\Out_0,R,R_m)$,
      along with $s_1 = r_1 + c \sk$ and $s_2 = r_2 + c \, \openpk$.
     \item Return the signature $(\Out_0,c,s_1,s_2)$.
 \end{enumerate}
 \item $\PedVRF.\Verify(\compk,\msg,\aux,\sigma)$, parses $\sigma = (\Out_0,c,s_1,s_2)$, and then 
 \begin{enumerate}
     \item recompute the VRF input point $\In := H_{\grE}(\msg)$,
-    \item computes $R = s_1 \genG + s_2 \genB - c \compk$ and $R_m = s \In - c \Out_0$, and
+    \item computes $R = s_1 \genG + s_2 \genB - c \, \compk$ and $R_m = s_1 \In - c \Out_0$, and
     \item returns $H'(\msg, h \Out_0)$ if $c = H_q(\aux,\msg,\compk,\Out_0,R,R_\msg)$ or failure otherwise.
 \end{enumerate}
 \end{itemize}
