@@ -129,18 +129,19 @@ any PPT adversary $\adv$ has an advantage only
  $\adv$ creates its own key freely as well.
  %
  Now $\adv$ wins by outputting a ring $\ctx$ as well as
- $k + |\ctx \setminus \ctx_0|$ valid ring VRF signatures, each with distinct outputs,    % $\sigma_i$
+ $k + |\ctx \setminus \ctx_0|$ valid ring VRF signatures,
+  each with distinct outputs,    % $\sigma_i$
  for $\ctx$ on a message \msg and associated data \aux, provided that
- $\adv$ invoked $\ora{Sign}$ on $\msg,\aux$ and $i$ with $\pk_i \in \ctx_0$
-  strictly fewer than $k$ times.
+ $\adv$ invoked $\ora{Sign}$ strictly fewer than $k$ times on $\msg$  % and some $\aux_i$,
+  and distinct $i$ with $\pk_i \in \ctx \cap \ctx_0$.
 \end{itemize}
 \end{definition}
 
 Any ring VRF becomes a non-anonymized VRF whenever
  the ring becomes a singleton $\ctx = \{ \pk \}$ of course.
-In doing so this, our ring uniqueness reduces to uniqueness for VRF-AD,
+In doing so this, our ring uniqueness reduces to
+ the seperate unforgeability and uniqueness games for VRF-AD,
 meaning our uniqueness with only a trivial key commitment.
-% but \ThinVRF is faster and simpler.
 
 We reuse the VRF-AD-KC pseudo-randomness definition for ring VRFs
 because pseudo-randomness is strongest for singleton rings, i.e. $|\ctx| = 1$.
