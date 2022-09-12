@@ -129,11 +129,10 @@ any PPT adversary $\adv$ has an advantage only
  $\adv$ creates its own key freely as well.
  %
  Now $\adv$ wins by outputting a ring $\ctx$ as well as
- $k$ valid ring VRF signatures, each with distinct outputs,    % $\sigma_i$
- for $\ctx$ on a message \msg and associated data \aux
- provided that
+ $k + |\ctx \setminus \ctx_0|$ valid ring VRF signatures, each with distinct outputs,    % $\sigma_i$
+ for $\ctx$ on a message \msg and associated data \aux, provided that
  $\adv$ invoked $\ora{Sign}$ on $\msg,\aux$ and $i$ with $\pk_i \in \ctx_0$
-  strictly fewer than $k - |\ctx \setminus \ctx_0|$ times.
+  strictly fewer than $k$ times.
 \end{itemize}
 \end{definition}
 
