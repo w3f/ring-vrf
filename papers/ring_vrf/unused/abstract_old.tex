@@ -1,0 +1,58 @@
+Verifiable random functions (VRFs) weld a pseudo-random function (PRF) into
+a signature scheme, so that valid signatures prove correct PRF evaluations.
+VRFs have diverse applications in consensus protocols, randomness
+beacons, DNS via NSEC5, certificate transparency, and online games.
+
+\smallskip
+
+Anonymized {\em ring VRFs} are then ring signatures that similarly prove
+correct evaluation of some authorized signer's PRF while hiding the
+specific signer's identity within some set of possible signers,
+ known as the ring.
+% Ring VRFs integrate with distributed systems better, and provide more robust
+% anonymity, than similar schemes like group VRFs or threshold protocols.
+
+% Above necessary in the abstract?
+
+\smallskip % 
+
+We propose ring VRFs as a natural fulcrum around which a diverse array of
+zkSNARK circuits turn, which thus makes ring VRFs an ideal target
+for optimization and eventually standards. 
+
+\smallskip
+
+Among their diverse uses, we discuss first identity-like cases in which
+ring VRF outputs act like pseudonyms provably unique within some domain or
+context, specified via the VRF input, but unlinkable between domains. 
+These unlinkable but unique pseudonyms provide an excellent balance between
+user privacy and service provider or social interests \cite{pop2008}.
+%
+In fact, identity systems without unlinkability like OAuth wind up being
+unethical when used outside specific narrow relationships.
+% TODO: ``one person, one persona'' \cite{pop2008} https://bford.info/pub/net/sybil.pdf
+
+\smallskip
+
+We similarly discuss how ring VRFs make anonymously rationing or
+rate limiting resource consumption to be vastly more efficent than
+purchases via monitary transactions.
+
+\smallskip %
+
+As our core optimization tool, we explore {\em zero-knowledge continuations}
+of rerandomizable zkSNARKs like \cite{Groth16} to amortize expensive
+ring membership proofs across many ring VRF outputs. 
+%
+We implement a broadly usable ring VRF that amortizes an arbitrary
+ring membership proofs, with a marginal prover cost
+ of eight $\mathbb{E}_1$ and two $\mathbb{E}_2$ scalar multiplications.
+
+\smallskip
+
+In other words, our ring VRF might be first ring signature with asymptotic
+performance competitive with group signatures.
+%
+We expect zero-knowledge continuations of rerandomizable zkSNARKs
+thoroughly trounce recursive zkSNARK techniques indefinitely.
+
