@@ -125,7 +125,7 @@ Then $(X',A',B',C',\sigma)$ and $(X'',A'',B'',C'',\sigma')$ are unlinkable.
 \end{proof}
 
 
-\subsection{Faster}
+\subsection{One single continuation}
 \label{subsec:rvrf_faster}
 
 We describe a much faster choice $\pifast$ for $\pi$
@@ -167,12 +167,14 @@ In ths case, we could prove $\pk = \sk\, Y_1$ inside $\pifast$, but then
 non-native arithmetic makes $\pifast$ far slower.
 
 At this point, \PedVRF requires four scalar multiplications on $\ecE_1$,
-so together with rerandomization our amortized prover time
- approaches 12 scalar multiplications on typical curves. 
-We expect the three pairings dominate verifier time.
+so together with rerandomization costing four scalar multiplications
+on $\ecE_1$ and two on $\ecE_2$, our amortized prover time
+ approaches 12 scalar multiplications on typical $\ecE_1$ curves. 
+We expect the three pairings dominate verifier time, but
+ verifiers also need five scalar multiplications on $\ecE_1$.
 
 As an aside, one could construct a second faster curve with the same
-group order as $\grE$, which speeds up one scalar multiplication
+group order as $\grE$, which speeds up two scalar multiplications
  in both the prover and verifier. 
 
 Importantly, our fast ring VRF' amortized prover time now rivals
@@ -196,7 +198,8 @@ In this, we dislike exposing the secret key material inside
 Adversaries could trigger \pifast recomputation only by updating the ring,
 but this still presents a side channel risk.
 
-We address this via a second zk continuation that splits \pifast into two parts: % \pisk and \pipk.
+If concerned, one could address this via a second zk continuation that
+splits \pifast into two parts: % \pisk and \pipk.
 %
 $$ \pipk = \rrSNARKweak \Setst{ J_\pk, \comring }{
  \exists \openring \textrm{\ s.t.\ }
@@ -224,8 +227,33 @@ one might consider this zk continuation to be time reversed.
 
 Insterestingly, our \pipk has become simple enough that openning
 a KZG commitment \cite{KZG} at a secret point now suffices,
- ala Caulk \cite{caulk} or Caulk+ \cite{caulk+}.
+ ala Caulk+ \cite{caulk+}, or perhaps Caulk \cite{caulk}.
 
+% \subsection{Ring blockchains}
+% \label{subsec:rvrf_side_channel}
+\smallskip
+
+\def\comblock{\ensuremath{\mathsf{comblock}}\xspace}
+\newcommand\pichain{\ensuremath{\pi_{\mathtt{chain}}}\xspace}
+
+We could build our ring using a blockchain,
+ not unlike how zcash handles their UTXOs.
+If so, we suggest \pifast provide an inner per block or per epoch ring,
+but then another proving system like Caulk+ \cite{caulk+}
+ extend this ring to the growing blockchain, like
+%
+$$ \pichain = \rrSNARKweak \Setst{ \comblock, \comring }{
+	\exists \openring \textrm{\ s.t.\ }
+	J_\pk = \rVRF.\OpenKey(\comring,\openring)
+} \mathcomma \quad\textrm{and} $$ 
+%
+$$ \pifast = \rrSNARK \Setst{ \comblock, \comring }{
+	\exists d,\openring \textrm{\ s.t.\ }
+	\genfrac{}{}{0pt}{}{ \rVRF.\OpenKey(\comblock,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
+} \mathperiod $$  
+
+Again we need a proof=of-knowledge for \comblock because it winds up opaque
+ in both of these proofs. 
 
 \endinput
 
