@@ -68,7 +68,7 @@ We say a VRF-AD-KC satisfies {\em VRF correctness} if
 $(\pk,\sk) \leftarrow \KeyGen$ and $(\compk,\openpk) \leftarrow \CommitKey(\pk,\ctx)$
 imply
 $\Verify(\compk,\msg,\aux,\Sign(\sk,\openpk,\msg,\aux)) = \Eval(\sk,\msg)$.
-% perhaps except with odds negligible in $\lambda$.
+% perhaps except with odds negligible in $\secparam$.
 \end{definition}
 
 We demand unforgability on $(\msg,\aux)$ because alone
@@ -78,7 +78,7 @@ Attackers access \CommitKey in this EUF-CMA-KC game, so if desired
 
 \begin{definition}
 We say a VRF-AD-KC satisfies {\em existential unforgability (EUF-CMA-KC)} if
-any PPT adversary $\adv$ has only a negligible advantage in $\lambda$
+any PPT adversary $\adv$ has only a negligible advantage in $\secparam$
 in the usual chosen-message game adapted to key commitments:
 \begin{itemize}
  \item First, a challenger
@@ -121,7 +121,7 @@ such that both
  $\OpenKey(\compk,\openpk_1) \ne \OpenKey(\compk,\openpk_2)$ and
  % $\CommitKey(\pk_1,\openpk_1) = \compk = \CommitKey(\pk_2,\openpk_2)$ and
  $\Verify(\compk,\msg,\aux,\Sign(\sk_i,\openpk_i,\msg,\aux))$ succeeds for $i=1,2$,
-except with odds negligible in $\lambda$.
+except with odds negligible in $\secparam$.
 \end{definition}
 
 We weaken binding like this because, from \S\ref{sec:vrf_pederson}
@@ -142,7 +142,7 @@ produces $\msg$ and $\compk_i,\openpk_i,\aux_i,\sigma_i$ for $i=1,2$
  with $\OpenKey(\compk_1,\openpk_1) = \OpenKey(\compk_2,\openpk_2)$, then
 $\Verify(\compk_1,\msg,\aux_1,\sigma_1) = \Verify(\compk_2,\msg,\aux_2,\sigma_2)$
 unless either $\Verify$ returns failure,
-except with odds negligible in $\lambda$.
+except with odds negligible in $\secparam$.
 \end{definition}
 
 If desired, one easily simplifies VRF-AD-KC to a VRF-AD by
@@ -157,7 +157,7 @@ except now the adversary knows \pk and gets chosen-message queries to \Sign.
 
 \begin{definition}
 We say a VRF-AD-KC satisfies {\em pseudo-randomness} if 
-any PPT adversary $\adv$ has only a negligible advantage in $\lambda$
+any PPT adversary $\adv$ has only a negligible advantage in $\secparam$
 in this chosen-message game:
 \begin{itemize}
  \item First, a challenger
@@ -188,7 +188,7 @@ means \adv cannot guess $F_\sk$ in the same game.
 
 \begin{definition}
 We say a VRF-AD-KC satisfies {\em unpredictability} if 
-any PPT adversary $\adv$ has only a negligible advantage in $\lambda$
+any PPT adversary $\adv$ has only a negligible advantage in $\secparam$
 in this chosen-message game:
 \begin{itemize}
  \item First, a challenger

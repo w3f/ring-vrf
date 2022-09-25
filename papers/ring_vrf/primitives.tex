@@ -1,6 +1,8 @@
 
 \section{Primitives}
-\label{sec:lambda}
+\label{sec:secparam}
+
+\def\secparam{\ensuremath{\lambda}\xspace}
 
 \def\ecE{{\mathbb{E}}}
 \def\grE{{\mathbf{E}}}
@@ -21,9 +23,9 @@ both Chaum-Pedersen DLEQ proofs and pairing based zkSNARKs.
 
 We obey mathematical and cryptographic implementation convention by using additive notation for elliptic curve and multipicative notation for eliptic curve scalar multiplications. 
 
-We always implicitly have a paramater generation procedure $\mathtt{Params}$ that takes a security level $\lambda \in \N$ and returns elliptic curve paramaters including some prime numbers and efficient algorithms for computing elliptic curve operations.  As customary, we treat $\lambda$ and the output of $\mathtt{Params}$ as fixed paramaters, which makes sense because humans run $\mathtt{Params}$ manually in practice. 
+We always implicitly have a paramater generation procedure $\mathtt{Params}$ that takes a security level $\secparam \in \N$ and returns elliptic curve paramaters including some prime numbers and efficient algorithms for computing elliptic curve operations.  As customary, we treat $\secparam$ and the output of $\mathtt{Params}$ as fixed paramaters, which makes sense because humans run $\mathtt{Params}$ manually in practice. 
 
-As implicit outputs of $\mathtt{Params}$, we work with an elliptic curve $\ecE[\F]$ over some base field $\F$ of (prime) characteristic $q_{\grE}$, along with a distinguished subgroup $\grE \le \ecE[\F]$ of prime order $p_{\grE} \approx 2^{2\lambda}$.  As $\grE$ distinguishes $\ecE[\F]$, we let $h_{\grE}$ denote the cofactor of $\grE$ in $\ecE[\F]$, meaning $\ecE[\F]$ has $h_{\grE} p_{\grE}$ points.
+As implicit outputs of $\mathtt{Params}$, we work with an elliptic curve $\ecE[\F]$ over some base field $\F$ of (prime) characteristic $q_{\grE}$, along with a distinguished subgroup $\grE \le \ecE[\F]$ of prime order $p_{\grE} \approx 2^{2\secparam}$.  As $\grE$ distinguishes $\ecE[\F]$, we let $h_{\grE}$ denote the cofactor of $\grE$ in $\ecE[\F]$, meaning $\ecE[\F]$ has $h_{\grE} p_{\grE}$ points.
 % but abbreviate $h = h_{\grE}$, $p = p_{\grE}$, and $q = q_{\grE}$ when $\grE$ is clear from context.
 We write $\grE$ without subscript, and abbreviate $h = h_{\grE}$, $p = p_{\grE}$, and $q = q_{\grE}$, when $\ecE$ is either our uinque pairing friendly curve or else the only curve in view.
 
@@ -31,7 +33,7 @@ We let $H_p : \{0,1\}^* \to \F_p$ or $H_q : \{0,1\}^* \to \F_q$ denote random or
 
 \smallskip
 
-Almost all SNARKs like \cite{Groth16} or \cite{plonk} employ a pairing friendly elliptic curve $\ecE$ over a field $\F_q$ of characteristic $q \approx 2^{2\lambda}$, which comes equipped with a type III pairing on subgroups of prime order $p \approx 2^{2\lambda}$:  We let $q_1,q_2,q_T$ denote small powers of $q$, and let $\grE_1 \le \ecE[\F_{q_1}]$ and $\grE_2 \le \ecE[\F_{q_2}]$ and $\grE_T \le \F_{q_T}^\times$ denote subgroups all of prime order $p$.  We also let $e : \grE_1 \times \grE_2 \to \grE_T$ denote a type III pairing, meaning a computable bilinear map without known efficiently computable maps between $\grE_1$ and $\grE_2$.  Also $q_i = q_{\grE_i}$ for $i=1,2$ in our above notation.  
+Almost all SNARKs like \cite{Groth16} or \cite{plonk} employ a pairing friendly elliptic curve $\ecE$ over a field $\F_q$ of characteristic $q \approx 2^{2\secparam}$, which comes equipped with a type III pairing on subgroups of prime order $p \approx 2^{2\secparam}$:  We let $q_1,q_2,q_T$ denote small powers of $q$, and let $\grE_1 \le \ecE[\F_{q_1}]$ and $\grE_2 \le \ecE[\F_{q_2}]$ and $\grE_T \le \F_{q_T}^\times$ denote subgroups all of prime order $p$.  We also let $e : \grE_1 \times \grE_2 \to \grE_T$ denote a type III pairing, meaning a computable bilinear map without known efficiently computable maps between $\grE_1$ and $\grE_2$.  Also $q_i = q_{\grE_i}$ for $i=1,2$ in our above notation.  
 
 Any pairing friendly elliptic curve $\ecE$ provides solutions to the decisional Diffie-Hellman problem (DDH).  We do however assume the computational Diffie-Hellman problem (CDH) remains hard in $\ecE$.  We remark that $H_\grE$ being a random oracle plus CDH hardness prevents computable relationships between $H_\grE$ outputs.
 

@@ -33,8 +33,8 @@ We build only a VRF-AD here which lacks the key commitments of \S\ref{sec:vrf},
 meaning $\ThinVRF.\CommitKey$ and $\ThinVRF.\OpenKey$ are trivial, and $\openpk = \emptyset$.
 
 We work solely in $\ecE$ here because we need only a basic Chaum-Pedersen DLEQ proof.
-As in \S\ref{sec:lambda} and throughout,
- $\ecE$ has order $h p$ with $p \approx 2^{2\lambda}$ prime and $h$ a small cofactor.
+As in \S\ref{sec:secparam} and throughout,
+ $\ecE$ has order $h p$ with $p \approx 2^{2\secparam}$ prime and $h$ a small cofactor.
 
 \begin{itemize}
 \item $\ThinVRF.\KeyGen$ selects a secret key \sk uniformly at random from $\F_p$ and computes the public key $\pk = \sk \, \genE$.
@@ -133,12 +133,12 @@ our forger knows some $w$ such that
 We deduce from AGM knowledge of $x,y,u,v \in \F_p$ such that
  $\pk = x \genE + y \In$ and $\Out_0 = u \genE + v \In$
  with $x + c_1 u = w$ and $y + c_1 v = c_1 w$ in $\F_p$,
- so $c_1^2 u + c_1 (x-v) - y = 0$, except with odds negligible in $\lambda$.
+ so $c_1^2 u + c_1 (x-v) - y = 0$, except with odds negligible in $\secparam$.
 At most two $c_1 \in \F_p$ satisfy this equation.
 As our $c_1$ depends upon both \pk and $\Out_0$, 
 it again follows from our random oracle assumption on $H_p$ that
  $u=0=y$ and $v = w = x \equiv \sk \bmod h$, meaning $\Out_0 = \sk \In$,
- except with odds negligible in $\lambda$.
+ except with odds negligible in $\secparam$.
 %TODO: What do we cite here?
 %PoK:
 %PoK: We know $y=0$ if we check the proof-of-knowledge for $\pk$ of course.  

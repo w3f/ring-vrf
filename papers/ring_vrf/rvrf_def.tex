@@ -84,7 +84,7 @@ but instead demand a weaker anonymity condition similar to
 \begin{definition}
 We say \rVRF satisfies {\em ring anonymity} if
 any PPT adversary $\adv$ has an advantage only
- negligible in $\lambda$ to win the game:
+ negligible in $\secparam$ to win the game:
 \begin{itemize}
 \item[]
  Assume a set $\ctx_0 = \{ \pk_1,\ldots,\pk_n \}$ of public keys from
@@ -114,7 +114,7 @@ while also capturing the uniqueness condition that limits even adversaries who k
 \begin{definition}
 We say \rVRF satisfies {\em ring unforgeability and uniqueness} if
 any PPT adversary $\adv$ has an advantage only
- negligible in $\lambda$ to win the game:
+ negligible in $\secparam$ to win the game:
 \begin{itemize}
 \item[]
  Assume a set $\ctx_0 = \{ \pk_1,\ldots,\pk_n \}$ of public keys from
@@ -233,7 +233,7 @@ TODO: Should we gives Handan's UC functionality or similar here?
 \begin{definition}
 We say \rVRF satisfies {\em ring unforgeability} if
 any PPT adversary $\adv$ has an advantage only
- negligible in $\lambda$ to win the game:
+ negligible in $\secparam$ to win the game:
 \begin{itemize}
 \item[]
  Assume a set $\ctx_0 = \{ \pk_1,\ldots,\pk_n \}$ of public keys from
@@ -258,7 +258,7 @@ We also need a uniqueness condition that limits even adversaries who know the se
 % \begin{definition}
 % We say \rVRF satisfies {\em ring uniqueness} if
 % any PPT adversary $\adv$ has an advantage only
-%  negligible in $\lambda$ to 
+%  negligible in $\secparam$ to 
 % produces a ring $\ctx$, input $\msg$, 
 % and various $\aux_i,\sigma_i$ with more than $|\ctx|$
 % many verifying outputs $\Out_i = \Verify(\CommitRing(\ctx),\msg,\aux_i,\sigma_i)$.
@@ -270,7 +270,7 @@ any PPT adversary $\adv$ who produces
  a ring $\ctx$, input $\msg$,  and various $\aux_i,\sigma_i$
 cannot produce more than $|\ctx|$ many verifying outputs
 $\Out_i = \Verify(\CommitRing(\ctx),\msg,\aux_i,\sigma_i)$,
- except with odds negligible in $\lambda$.
+ except with odds negligible in $\secparam$.
 \end{definition}
 
 
@@ -308,13 +308,13 @@ $\Out_i = \Verify(\CommitRing(\ctx),\msg,\aux_i,\sigma_i)$,
   any evaluation map $F_{\sk_i} : \msg \mapsto \Eval(\sk,\msg)$,
  even given $\ctx_0 = \{ \pk_1,\ldots,\pk_i \}$ and
   chosen-message queries to $\rVRF.\rSign(\sk_i,\openring)$,
-  except with odds negligible in $\lambda$.
+  except with odds negligible in $\secparam$.
 \end{itemize}
 
 
 \begin{definition}
 We say \rVRF satisfies {\em ring pseudo-randomness} if 
-any PPT adversary $\adv$ has only a negligible advantage in $\lambda$
+any PPT adversary $\adv$ has only a negligible advantage in $\secparam$
 in this chosen-message game:
 \begin{itemize}
  \item First, a challenger
