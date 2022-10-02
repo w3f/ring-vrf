@@ -120,19 +120,19 @@ We therefore introduce some details of Groth16 \cite{Groth16} there,
 when we tamper with Groth16's SRS and $\mathtt{Setup}$ to create zero-knowledge continuations. 
 % TODO: Do we describe Groth16 \cite{Groth16} enough?
 
-In this, we exploit several arguments given by \cite{RandomizationGroth16},
-but for now we recall that \cite{RandomizationGroth16} proves that Groth16
-satisfies: % white-box weak simulation-extractablity .
-
-\begin{definition}\label{def:nizk_weak_simulation_extractable}
-We say $\NIZK_\rel$ is {\em white-box weak simulation-extractable} if
-for any non-uniform PPT adversary \advP with oracle access to \Simulate
-who outputs a statement $x \in \lang$ and proof $\pi$,
-there exists a PPT extractor algorithm $\Extract$ that white-box observes $\advP$ and
-if \advP never queried $x$ and $\Verify(x,\pi)$ holds
-then $\Extract$ returns an $\omega$ for which $(\omega,x) \in \rel$
-(see \cite[Def. 7, \S 2.3, pap. 29]{RandomizationGroth16}).
-\end{definition}
+% In this, we exploit several arguments given by \cite{RandomizationGroth16},
+% but for now we recall that \cite{RandomizationGroth16} proves that Groth16
+% satisfies: % white-box weak simulation-extractablity .
+%
+% \begin{definition}\label{def:nizk_weak_simulation_extractable}
+% We say $\NIZK_\rel$ is {\em white-box weak simulation-extractable} if
+% for any non-uniform PPT adversary \advP with oracle access to \Simulate
+% who outputs a statement $x \in \lang$ and proof $\pi$,
+% there exists a PPT extractor algorithm $\Extract$ that white-box observes $\advP$ and
+% if \advP never queried $x$ and $\Verify(x,\pi)$ holds
+% then $\Extract$ returns an $\omega$ for which $(\omega,x) \in \rel$
+% (see \cite[Def. 7, \S 2.3, pap. 29]{RandomizationGroth16}).
+% \end{definition}
 
 TODO: AGM and Groth16 here?
 
@@ -166,7 +166,7 @@ Given a real world protocol $ \phi $ which runs some (polynomially many) functio
  $\mathsf{EXEC}_{\phi, \adv, \env}$ is indistinguishable from $\mathsf{EXEC}_{\mathcal{F},\sim, \env}$.
 \end{definition}
 
-REMARKS:  Removed excessive notation $\approx$.
+% REMARKS:  Removed excessive notation $\approx$.
 
 
 

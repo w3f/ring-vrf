@@ -8,13 +8,11 @@ Zero-knowledge continuations work by opening this key commitment
 
 We only describe the non-batchable variant analogous to
  \cite{nsec5} and \cite{VXEd25519}.
-At least two easy batch verifiable flavors exist, but
+We know easily batchable verifiable flavors exist, but
  they enlarge the VRF signature by 32 bytes.
 We need pairings to verify the SNARKs component of our ring VRF,
 which dwarfs the CPU savings from batch verification,
-so saving 32 bytes sounds more helpful.
-
-% TODO: Alternatives, like slow recursion.  Just Intro?
+so saving 32 bytes sounds more helpful for non-blockchain use cases.
 
 \newcommand{\PedVRF}{\primalgo{PedVRF}} 
 
@@ -27,9 +25,10 @@ slightly by not injecting \pk into \msg:
 \item $\PedVRF.\Eval(\sk,\msg)$ takes a secret key \sk and an input $\msg$, and
  then returns a VRF output $H'(\msg,h \, \sk \, H_{\grE}(\msg))$.
 \end{itemize}
+
 We select here an arbitrary base point $\genG$ for our public key
  because this avoids some confusion later.
-
+%
 We fix a second generator $\genB$ of $\grE$ independent from $\genG$,
 perhaps created by applying $H_\grE$ to an input outside existing usages'
 domain and also containing $\genG$. 
@@ -70,27 +69,17 @@ zero-knowledge continuations then use \OpenKey with only minor caveats.
 We obtain roughly \cite{nsec5} or \cite{VXEd25519}
 if we choose $\openpk = 0 = r_2$ in \Sign.
 
-
 \begin{lemma}\label{prop:pedersen_vrf_hiding}
-$\PedVRF$ is a correct key commitment and (perfectly) key hiding.
+$\PedVRF$ is a correct key commitment and key hiding.
 \end{lemma}
 
+Although Pedersen commitments are perfectly hiding, our $\R_\msg$ makes $\sigma$ only computationally hiding.
 
 \begin{proposition}\label{prop:pedersen_vrf}
 Assuming AGM in $\grE$, % $\ecE$ modulo $h$,
 our $\PedVRF$ satisfies VRF correctness, key binding, uniqueness,
 pseudo-randomness, and unforgeability. % (EUF-CMA-KC) on $(\msg,\aux)$.
 \end{proposition}
-
-
-
-\begin{proof}[Proof sketch]
-Correctness holds trivially.
-
-???
-\end{proof}
-
-
 
 We need this second verification equation in \PedVRF, but not in \ThinVRF,
 because otherwise our $s_2 \genB$ term provides enough freedom to tamper
@@ -110,6 +99,20 @@ and then use the \PedVRF proof for
 
 \endinput
 
+
+
+
+
+
+
+
+
+
+\begin{proof}[Proof sketch]
+	Correctness holds trivially.
+	
+	???
+\end{proof}
 
 
 
