@@ -52,17 +52,17 @@ zero-knowledge continuations then use \OpenKey with only minor caveats.
 \begin{itemize}
 \item $\PedVRF.\Sign(\sk,\openpk,\msg,\aux)$ takes a secret key \sk and blinding factor \openpk, an input $\msg$, and auxiliary data \aux, and then performs
 \begin{enumerate}
-    \item compute the VRF input point $\In := H_{\grE}(\msg)$ and pre-output $\Out_0 := \sk \, \In$,
+    \item compute the VRF input point $\In := H_{\grE}(\msg)$ and pre-output $\PreOut := \sk \, \In$,
     \item Sample random $r_1,r_2 \leftarrow \F_p$ and compute $R = r_1 \genG + r_2 \genB$ and $R_\msg = r_1 \In$.
-    \item Compute the challenge $c = H_q(\aux,\msg,\compk,\Out_0,R,R_m)$,
+    \item Compute the challenge $c = H_q(\aux,\msg,\compk,\PreOut,R,R_m)$,
      along with $s_1 = r_1 + c \sk$ and $s_2 = r_2 + c \, \openpk$.
-    \item Return the signature $(\Out_0,c,s_1,s_2)$.
+    \item Return the signature $(\PreOut,c,s_1,s_2)$.
 \end{enumerate}
-\item $\PedVRF.\Verify(\compk,\msg,\aux,\sigma)$, parses $\sigma = (\Out_0,c,s_1,s_2)$, and then 
+\item $\PedVRF.\Verify(\compk,\msg,\aux,\sigma)$, parses $\sigma = (\PreOut,c,s_1,s_2)$, and then 
 \begin{enumerate}
     \item recompute the VRF input point $\In := H_{\grE}(\msg)$,
-    \item computes $R = s_1 \genG + s_2 \genB - c \, \compk$ and $R_m = s_1 \In - c \Out_0$, and
-    \item returns $H'(\msg, h \Out_0)$ if $c = H_q(\aux,\msg,\compk,\Out_0,R,R_\msg)$ or failure otherwise.
+    \item computes $R = s_1 \genG + s_2 \genB - c \, \compk$ and $R_m = s_1 \In - c \PreOut$, and
+    \item returns $H'(\msg, h \PreOut)$ if $c = H_q(\aux,\msg,\compk,\PreOut,R,R_\msg)$ or failure otherwise.
 \end{enumerate}
 \end{itemize}
 
@@ -88,7 +88,7 @@ with the pre-ouputs.
 We could however generalize \PedVRF to $k$ messages $\msg_1,\ldots,\msg_k$
 similarly to \ThinVRF in \S\ref{subsec:vrf_thin}:  We compute for
 $j=1,\ldots,k$ the $k$ distinct
-points $\In_j := H_{\grE}(\msg_j)$, pre-outputs $\Out_0 := \sk \, \In$,
+points $\In_j := H_{\grE}(\msg_j)$, pre-outputs $\PreOut := \sk \, \In$,
 delinearization challenges
  $c_j = H_p(\aux,\msg_1,\ldots,\msg_k,\compk,\Out_{0,1},\ldots,\Out_{0,k},j)$,
 and then use the \PedVRF proof for
