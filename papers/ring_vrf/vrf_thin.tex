@@ -170,14 +170,14 @@ it again follows from our random oracle assumption on $H_p$ that
 %PoK: 
 It follows that $\ThinVRF$ satisfies uniqueness of course. 
 
-An unpredictability adversary $\adv$ guesses
+An unpredictability adversary \adv guesses
  a \msg and corresponding pre-output $h \Out_0 := h \sk H_\grE(\msg)$,
 after making chosen message queries to \Sign.
-In AGM, $\adv$ must express its guess for $h \Out_0$
+In AGM, \adv must express its guess for $h \Out_0$
  in terms of $H_\grE(\msg)$ and points arising earlier.
 ???  So simple ???
 As $H_\grE$ is a random oracle, we deduce that either
- $\adv$ solved the discrete logarithm problem, or else
+ \adv solved the discrete logarithm problem, or else
  unpredictability holds for $\ThinVRF$.
 As $H'$ is a PRF, we now argue pseudo-randomness for$\ThinVRF$ similarly
  to \cite[Proposition 1]{vrf_micali}.

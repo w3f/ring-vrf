@@ -59,7 +59,7 @@ We let \ora{Sign} denote a ring signature CMA oracle, meaning
 
 \begin{definition}
 We say \rVRF satisfies {\em ring anonymity} if
-any PPT adversary $\adv$ has an advantage only
+any PPT adversary \adv has an advantage only
  negligible in $\secparam$ to win the game:
 \begin{itemize}
 \item[]
@@ -83,18 +83,18 @@ while also capturing the uniqueness condition that limits even adversaries who k
 
 \begin{definition}
 We say \rVRF satisfies {\em ring unforgeability and uniqueness} if
-any PPT adversary $\adv$ has an advantage only
+any PPT adversary \adv has an advantage only
  negligible in $\secparam$ to win the game:
 \begin{itemize}
 \item[]
  \adv calls \ora{Sign} of Definition \ref{def:rvrf_sign_oracle} throughout,
  but also creates its own keys freely.
  %
- Finally $\adv$ outputs a ring $\ctx$ as well as
+ Finally \adv outputs a ring $\ctx$ as well as
  $k + |\ctx \setminus \ora{Sign}.\ctx_0|$ valid ring VRF signatures,
   each with distinct outputs,    % $\sigma_i$
  for $\ctx$ on a message \msg and associated data \aux.
- $\adv$ wins if they invoked $\ora{Sign}$ strictly fewer than $k$ times on $\msg$  % and some $\aux_i$,
+ \adv wins if they invoked $\ora{Sign}$ strictly fewer than $k$ times on $\msg$  % and some $\aux_i$,
   and distinct $i$ with $\pk_i \in \ctx \cap \ora{Sign}.\ctx_0$.
 \end{itemize}
 \end{definition}

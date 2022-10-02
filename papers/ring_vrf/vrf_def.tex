@@ -85,9 +85,9 @@ in the usual chosen-message game adapted to key commitments:
  \item \adv receives $\pk$ from \ora{Sign}, % of Definition \ref{def:vrf_sign_oracle}
  repeatedly queries \ora{Sign},
   and finally produces $\compk,\msg,\aux,\sigma,\openpk$.
- \item $\adv$ wins if $\Verify(\compk,\msg,\aux,\sigma)$ succeeds,
+ \item \adv wins if $\Verify(\compk,\msg,\aux,\sigma)$ succeeds,
   $\OpenKey(\compk,\openpk) = \pk$, and
-   $\adv$ never queried $\ora{Sign}(\cdot,\cdot,\msg,\aux)$.
+   \adv never queried $\ora{Sign}(\cdot,\cdot,\msg,\aux)$.
 \end{itemize}
 \end{definition}
 
@@ -99,7 +99,7 @@ Yet, we do internally employ the usual hiding definition from
 % this full strength versions suffices.
 
 \begin{definition}
-We say a VRF-AD-KC is {\em key hiding} if any PPT adversary $\adv$
+We say a VRF-AD-KC is {\em key hiding} if any PPT adversary \adv
 who creates a pair of public keys $\pk_1,\pk_2$
 has only negligible advantage for identifying which lies behind a commitment
  $\compk \leftarrow \CommitKey(\pk_i,\ctx)$.
@@ -110,7 +110,7 @@ analogous to \cite[pp.9]{cryptoeprint:2019:1185}.
 % except weakened to require the signature verify too.
 
 \begin{definition}\label{def:vrf_key_binding}
-We say a VRF-AD-KC is {\em key binding} if no PPT adversary $\adv$
+We say a VRF-AD-KC is {\em key binding} if no PPT adversary \adv
 produces \compk, \msg, \aux and $\sk_i,\openpk_i$ for $i=1,2$
 so that
  % $\CommitKey(\pk_1,\openpk_1) = \compk = \CommitKey(\pk_2,\openpk_2)$ and
@@ -127,7 +127,7 @@ Pedersen commitments to secret keys into commitments to public keys.
 %  \ctx becomes important later in analogous ring properties.
 
 \begin{definition}
-We say a VRF-AD-KC satisfies {\em uniqueness} if anytime some PPT adversary $\adv$
+We say a VRF-AD-KC satisfies {\em uniqueness} if anytime some PPT adversary \adv
 produces $\msg$ and $\compk_i,\openpk_i,\aux_i,\sigma_i$ for $i=1,2$
  with $\OpenKey(\compk_1,\openpk_1) = \OpenKey(\compk_2,\openpk_2)$, then also
 $\Verify(\compk_1,\msg,\aux_1,\sigma_1) = \Verify(\compk_2,\msg,\aux_2,\sigma_2)$
@@ -147,13 +147,13 @@ except now the adversary knows \pk and gets chosen-message queries to \Sign.
 
 \begin{definition}
 We say a VRF-AD-KC satisfies {\em pseudo-randomness} if 
-any PPT adversary $\adv$ has only a negligible advantage in $\secparam$
+any PPT adversary \adv has only a negligible advantage in $\secparam$
 in this chosen-message game:
 \begin{itemize}
- \item $\adv$ receives $\pk$ from \ora{Sign} of Definition \ref{def:vrf_sign_oracle},
+ \item \adv receives $\pk$ from \ora{Sign} of Definition \ref{def:vrf_sign_oracle},
   repeatedly queries \ora{Sign}, and produces $\compk,\openpk,\msg,\aux$. 
- \item If $\adv$ never queried $\ora{Sign}(\cdot,\cdot,\msg,\cdot)$ then
-  $\adv$ wins by distinguishing $\Eval(\sk,\msg)$ from random.
+ \item If \adv never queried $\ora{Sign}(\cdot,\cdot,\msg,\cdot)$ then
+  \adv wins by distinguishing $\Eval(\sk,\msg)$ from random.
 \end{itemize}
 \end{definition}
 
@@ -175,13 +175,13 @@ means \adv cannot guess $F_\sk$ in the same game.
 
 \begin{definition}
 We say a VRF-AD-KC satisfies {\em unpredictability} if 
-any PPT adversary $\adv$ has only a negligible advantage in $\secparam$
+any PPT adversary \adv has only a negligible advantage in $\secparam$
 in this chosen-message game:
 \begin{itemize}
- \item $\adv$ receives $\pk$ from \ora{Sign} of Definition \ref{def:vrf_sign_oracle},
+ \item \adv receives $\pk$ from \ora{Sign} of Definition \ref{def:vrf_sign_oracle},
   repeatedly queries \ora{Sign}, and produces $\Out_0,\compk,\openpk,\msg,\aux$.
- \item If $\adv$ never queried $\ora{Sign}(\cdot,\cdot,\msg,\cdot)$ then
-  $\adv$ wins if $\Out_0 = \Eval(\sk,\msg)$.
+ \item If \adv never queried $\ora{Sign}(\cdot,\cdot,\msg,\cdot)$ then
+  \adv wins if $\Out_0 = \Eval(\sk,\msg)$.
 \end{itemize}
 \end{definition}
 
