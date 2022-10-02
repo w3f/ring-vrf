@@ -1,5 +1,5 @@
 
-\section{Ring VRFs}
+\subsection{rVRF-AD security}
 \label{sec:rvrf_def}
 
 Ring VRFs are firstly ring signatures broadly interpreted, in that they
@@ -33,8 +33,6 @@ $\rVRF.\KeyGen$ and $\rVRF.\Eval$ untouched, but
 \item $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto \Out \, \lor \perp$
 \end{itemize}
 
-\subsection{rVRF-AD security}
-
 We extend the VRF-AD-KC commitment correctness condition for \CommitRing:
 
 \begin{definition}
@@ -52,7 +50,7 @@ but instead demand a weaker anonymity condition similar to
 \begin{definition}\label{def:rvrf_sign_oracle}
 We let \ora{Sign} denote a ring signature CMA oracle, meaning
 \begin{itemize}
-\item $\ora{Sign}(\mathtt{'keygen'})$ creates and logs a fresh key pair
+\item $\ora{Sign}(\oramsg{keygen})$ creates and logs a fresh key pair
  $(\pk,\sk) \leftarrow \KeyGen$ and adds $\pk$ to the set $\ctx_0$, and then returns \pk.
 \item $\ora{Sign}(\comring,\openring,\msg,\aux)$ returns
  $\Sign(\sk,\openring,\msg,\aux)$, provided it logged $(\OpenKey(\comring,\openring),\sk)$ previously.
@@ -123,85 +121,6 @@ find non-equivalent public keys $\pk_0,\pk_1$ with colliding VRF outputs.
 % (perfectly or computationally)
 % (either ever or with advantage negligible advantage in $\secparam$)
 \end{definition} 
-
-
-\subsection{Generic rVRF-AD instantiation}
-
-We instantiate a rVRF-AD from a hiding VRF-AD-KC like \PedVRF plus
-a ring commitment scheme
- $\rVRF.\{ \CommitRing, \CommitKey, \OpenKey \}$
-for which some zero-knowledge ring membership proof handles both
- $\PedVRF.\OpenKey$ and $\rVRF.\OpenKey$
-efficiently.
-
-\begin{itemize}
-\item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$ takes
- a secret key \sk, a ring opening \openring, a message \msg, and auxiliary data \aux, and then \\
- \begin{enumerate}
- \item computes the ring membership proof $\piring$ and associated \openpk,
-  $$ \piring = \NIZK \Setst{ \compk, \comring }{
-  \exists \openpk,\openring \textrm{\ s.t.\ } 
-  \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenKey(\comring,\openring)}
-  } $$
- \item computes the VRF-AD-KC signature
-  $$ \sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \piring), \quad\textrm{and} $$ % finally
- \item returns the ring VRF signature $\rho = (\compk,\piring,\sigma)$.
- \end{enumerate}
-\item $\rVRF.\rVerify$ takes $(\comring,\msg,\aux,\rho)$,
- parses $\rho$ as $(\compk,\piring,\sigma,)$,  and then returns
- $$ \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \piring,\sigma) $$
- iff $\NIZK.\Verify(\piring,\compk,\comring)$ succeeds. 
-\end{itemize}
-
-\begin{proposition}\label{prop:pedersen_rvrf}
-$\rVRF$ satisfies ring uniqueness and ring unforgeability.
-\end{proposition}
-
-
-\subsection{UC}
-
-TODO: Should we gives Handan's UC functionality or similar here? 
-
-
-
-
-
-\endinput
-
-
-
-
-
-
-
-
-
-
-% \noindent
-In this, we tie $\sigma$ to $\piring$ by expanding $\sigma$'s auxiliary data with $\piring$.
-
-% \smallskip
-
-We now prove security of \rVRF using that
-\begin{itemize}
-	\item \PedVRF is a secure hiding VRF-AD-KC, and that
-	\item our ring commitment scheme satisfies ring commitment correctness.
-\end{itemize}
-
-Pseudo-randomness holds by pseudo-randomness of \PedVRF from
-Proposition \ref{prop:pedersen_vrf}.
-
-\begin{proposition}\label{prop:pedersen_rvrf}
-	$\rVRF$ satisfies ring uniqueness and ring unforgeability.
-\end{proposition}
-
-\begin{proof}[Proof sketch]
-	???
-\end{proof}
-
-
-TODO:  Should we give an abstract pure NIZK instantiation here?  I think later probably.
-
 
 
 
