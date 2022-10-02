@@ -1,5 +1,5 @@
-\section{Pedersen keyed VRF-AD-KC}
-\label{sec:vrf_pederson}
+\subsection{Pedersen keyed VRF-AD-KC}
+\label{subsec:vrf_pederson}
 
 Anonymized VRF signatures could use Chaum-Pedersen DLEQ proofs that
 hide the true public key, which our key committing definition permits.
@@ -16,7 +16,7 @@ so saving 32 bytes sounds more helpful for non-blockchain use cases.
 
 \newcommand{\PedVRF}{\primalgo{PedVRF}} 
 
-We define \KeyGen as in \ThinVRF in \S\ref{sec:vrf_thin} but \Eval differs
+We define \KeyGen as in \ThinVRF in \S\ref{subsec:vrf_thin} but \Eval differs
 slightly by not injecting \pk into \msg:
 % by selecting a secret key \sk uniformly at random from $\F_p$ and
 % computing the public key $\pk = \sk \, \genG$.
@@ -86,7 +86,7 @@ because otherwise our $s_2 \genB$ term provides enough freedom to tamper
 with the pre-ouputs.  
 
 We could however generalize \PedVRF to $k$ messages $\msg_1,\ldots,\msg_k$
-similarly to \ThinVRF in \S\ref{sec:vrf_thin}:  We compute for
+similarly to \ThinVRF in \S\ref{subsec:vrf_thin}:  We compute for
 $j=1,\ldots,k$ the $k$ distinct
 points $\In_j := H_{\grE}(\msg_j)$, pre-outputs $\Out_0 := \sk \, \In$,
 delinearization challenges

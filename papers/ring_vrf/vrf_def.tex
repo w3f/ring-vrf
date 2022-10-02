@@ -1,14 +1,7 @@
 
-\section{Verifiable Random Functions}
-\label{sec:vrf}
+\subsection{VRF-AD-KC security}
+\label{subsec:vrf_def}
 
-Intuitively, a verifiable random function (VRF) welds a pseudo-random function into a signature scheme.
-% \cite{vrfmicali,vrflysyanskaya,vrfshort}
-% As in \cite[\S3.2 $\fvrf$]{praos}, we need a definition that both is simulation-based and provides pseudo-randomness under malicious key generation.  In other words, we demand an unpredictability property reminiscent of a random oracle even against adversaries who generate their secret and pubic key pair themselves.
-%
-VRFs have signature-like unforgeability properties, a fact which follows easily from most definitions. 
-We follow \cite{agg_dkg} in making this explicit, while also
- exposing the auxiliary data supported by our constructions. 
 
 Any signature scheme requires a \KeyGen algorithm of course, but we also
 support hiding public keys inside a commitment scheme \CommitKey and \OpenKey.
@@ -126,7 +119,7 @@ so that
 both succeed for $i=1,2$, except with odds negligible in $\secparam$.
 \end{definition}
 
-We weaken binding like this because, from \S\ref{sec:vrf_pederson}
+We weaken binding like this because, from \S\ref{subsec:vrf_pederson}
 onward, verification provides a proof-of-knowledge that turns
 Pedersen commitments to secret keys into commitments to public keys.
 % We always take $\ctx = \emptyset$ when using this ``unique'' key binding
