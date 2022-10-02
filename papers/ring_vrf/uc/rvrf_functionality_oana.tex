@@ -1,0 +1,80 @@
+\begin{figure}
+	\begin{tcolorbox}
+		{  $ \fgvrf $ runs two PPT algorithms $ \gen_W$ and $\gen_{sign} $ during the execution.
+			
+			 \begin{description}
+				
+				\item[Key Generation.] Upon receiving a message $(\msg{keygen}, \sid)$ from a party $\user_i$, send $(\msg{keygen}, \sid, \user_i)$ to the simulator $\simulator$.
+				Upon receiving a message $(\msg{verificationkey}, \sid, \pkrvrf)$ from $\simulator$, verify that $\pkrvrf$ has not been recorded before {\color{blue} at all in any session or just for this sid?}; then, store in the table $\vklist$, under $\user_i$, the value $\pkrvrf$. {\color{blue} Can multiple keys be stored per party $P_i$ and/or per session?}
+				Return $(\msg{verificationkey}, \sid, \pkrvrf)$ to $ \user_i$.
+				
+				\item[Malicious Key Generation.] Upon receiving a message $(\msg{keygen}, \sid, \pkrvrf)$ from $\simulator$, verify that $\pkrvrf$ was not yet recorded, and if so record in the table $\vklist$ the value $\pkrvrf$ under $\simulator$. Else, ignore the message.
+				
+				\item [Corruption:]  Upon receiving $ (\msg{corrupt}, \sid, \user_i) $ from $ \simulator $, remove $ \pkrvrf_i $ from $ \vklist[\user_i] $ and store $ \pkrvrf_i $ to $ \vklist $ under $ \sim $. Return $ (\msg{corrupted}, \sid,\user_i) $.
+				\item[Malicious Ring VRF Evaluation.] Upon receiving a message $(\msg{eval}, \sid, \pkring, \pkrvrf_i, W, m)$ from $\sim$, verify that $ \pkrvrf_i $ has not been recorded in $\vklist$ under an honest party's identity.
+			    If this is the case, record in the table $\vklist$ the value $\pkrvrf_i$ under $\simulator$. Else, ignore the request.  If $ \counter[m,\pkring] $ does not exist, initiate $ \counter[m,\pkring] = 0 $. If there exists ${\color{blue} W' \neq W }$ where 
+			    {\color{blue} $\anonymouskeymap[m,W',\pkring] = \pkrvrf_i$ or if $\anonymouskeymap[m,W,\pkring] \neq \pkrvrf_i$}, then abort. 
+			    Otherwise, check if $ \evaluationslist[m,W,\pkring] $ is defined. If it is not defined, let   $y \sample \bin^{\ell_\rvrf}$ and increment $ \counter[m,\pkring] $. Then, set $ \evaluationslist[m, W, \pkring] = y$, $ \anonymouskeymap[m,W,\pkring] = \pkrvrf_i $ (if not already defined).
+				Return $(\msg{evaluated}, \sid, \pkring, m, W, \evaluationslist[m, W, \pkring])$ to $ \user_i $.
+				
+		     	\item[Honest Ring VRF Signature {\color{blue}and Evaluation.}] Upon receiving a message $(\msg{sign}, \sid, \pkring, \pkrvrf_i, m)$ from $\user_i$, verify that $\pkrvrf_i \in \pkring$ and that there exists a public key $\pkrvrf_i$ associated to $\user_i$ in the table $ \vklist $. If that is not the case, just ignore the request. 	
+				If there exists no $ W' $ such that $ \anonymouskeymap[m, \pkring,W'] =  \pkrvrf_i $, run $ \gen_W(\pkring, \pkrvrf_i, m) \rightarrow W$. Then, let $y \sample \bin^{\ell_\rvrf}$ and set $ \anonymouskeymap[m,W,\pkring] = \pkrvrf_i $ and set $ \evaluationslist[m, W,\pkring] = y$.
+				If already set, obtain $ W, y $ where  $ \evaluationslist[m, W, \pkring] = y$, $ \anonymouskeymap[m,W,\pkring] =\pkrvrf_i $ and run  $ \gen_{sign}(\pkring, W, m) \rightarrow \sigma $. Verify that $ [m, W,\pkring, \sigma, 0] $ is not recorded. {\color{blue}If it is recorded}, abort. 
+				Otherwise, record $ [m, W, \pkring,\sigma, 1] $. Return $(\msg{signature}, \sid, \pkring,W,m, y, \sigma)$ to $\user_i$.
+				
+				\item[Ring VRF Verification.] Upon receiving a message $(\msg{verify}, \sid, \pkring,W, m, \sigma)$ from a party $P_i$, relay the message $(\msg{verify}, \sid, \pkring,W, m, \sigma)$ to $ \simulator $ and receive back the message $(\msg{verified}, \sid, \pkring,W, m, \sigma, b_{\simulator}, \pkrvrf_\simulator)$. Then do the following: 
+				\begin{enumerate}[label={{Cond.-} }{{\arabic*}}, start = 1]
+					\item If there exits a record $ [m,W,\pkring,\sigma, b'] $, set $ b = b' $. (This condition guarantees the completeness and consistency.)
+					\label{cond:consistency}
+					\item Else if $ \anonymouskeymap[m,W,\pkring]  $ is an honest verification key where  there exists a record $ [m, W,\pkring, \sigma', 1] $ for any $ \sigma' $, then let $ b= b_{\simulator} $ and record $ [m, W,\sigma, b_{\simulator}] $. (This condition guarantees that if $ m $ is signed by an honest party for the ring $ \pkring $ at some point and the signature is $ \sigma' \neq \sigma $, then the decision of verification is up to the adversary) \label{cond:differentsignature}
+					
+					\item Else if $\counter[m, \pkring] {\color{blue}\geq |\pkring_{\mathit{mal}}|}$, where {\color{blue} $\pkring_{\mathit{mal}}$} is the set of {\color{blue} malicious} keys in $ \pkring $, set $ b = 0 $ and record $ [m, \pkring,W,\sigma, 0] $.
+					(This condition guarantees  uniqueness meaning that the number of {\color{blue} verifying} outputs that $ \sim $ can generate for $(m, \pkring)$ 
+					is at most the  number of malicious keys in $ \pkring $.)\label{cond:uniqueness}.
+					
+					\item Else if $ \pkrvrf_\simulator $ is an honest verification key, set $ b = 0 $ and record $ [m, \pkring,W,\sigma, 0] $. (This condition guarantees unforgeability meaning that if an honest party never signs a message $ m $ for a ring $ \pkring $)\label{cond:forgery}
+				\item Else set $ b = b_\sim$. \label{cond:simulatorbit}
+				\end{enumerate}
+				In the end, if $ b = 0 $, let $ \out = \perp $. Otherwise, it does the following:
+				\begin{itemize}
+					\item if $ \evaluationslist[m,W,\pkring] $ is not defined, set $ \evaluationslist[m, W, \pkring]\sample \bin^{\ell_\rvrf}$, $ \anonymouskeymap[m,W,\pkring]  =  \pkrvrf_\simulator$. If $ \counter[m, \pkring]  $ is not defined, set $ \counter[m, \pkring]  = 0 $. Then increment $ \counter[m, \pkring]  $. Set $ \out = \evaluationslist[m, W, \pkring]$. 	
+					\item otherwise, set $ \out = \evaluationslist[m, W, \pkring]$. 	
+				\end{itemize}
+				Finally, output $(\msg{verified}, \sid, \pkring,W, m, \sigma, \out, b)$ to the party.
+				
+			\end{description}
+		
+			
+		}
+	\end{tcolorbox}
+	\caption{Functionality $\fgvrf$.\label{f:gvrf}}
+\end{figure}
+	
+
+
+\begin{figure}
+	\begin{tcolorbox}
+		{  This part of $ \fgvrf $ for the parties who want to show that they generate a particular ring signature.
+			
+		
+			\begin{description}
+				\item[Linking signature.] Upon receiving a message $(\msg{link}, \sid, \pkring, \pkrvrf_i, W, m,\sigma)$ from $\user_i$, check that $\pkrvrf_i $ is associated to $\user_i$ in $ \vklist $, $ \pkrvrf_i \in \pkring $, $ \anonymouskeymap[m,W, \pkring] = \pkrvrf_i $ and 
+				check whether $ [m, W,\pkring, \sigma, 1] $ is stored. If any of them fails, ignore the request. Otherwise,
+				send $(\msg{link}, \sid, \pkring, W, m, y)$ to $\simulator$. Upon receiving $(\msg{linkproof}, \sid, \pkring, W, m, y, \hat \sigma)$ from $\simulator$, verify that $ [m, \pkring, \pkrvrf_i, \sigma, \hat{\sigma}, 0] $ is not stored in $ \Linklist $. If not, abort. Otherwise,  record $\hat\sigma$ to $[m, \pkring, \pkrvrf_i,\sigma, \hat{\sigma}, 1]$ to $ \Linklist $ and return $(\msg{linked}, \sid, \pkring, \pkrvrf_i,W, m, y,\sigma, \hat\sigma)$ to $\user_i$.
+				\item[Linking verification.] Upon receiving a message $(\msg{verifylink}, \sid, \pkrvrf_i, \pkring, W, m,\sigma,\hat\sigma)$ from any party forward the message to the simulator and receive back  the message $(\msg{verified}, \sid, \pkrvrf_i, \pkring, W,m, \sigma,\hat\sigma,  b_{\simulator})$. Then do the following:
+				
+				\begin{itemize}
+					\item If there exits a record $ [m, \pkring,\pkrvrf_i,\sigma,\hat\sigma, 1] $ in $ \Linklist $, set $ b = 1 $ and $ \pk = \pkrvrf $. (This condition guarantees the completeness.)
+					\item Else if $ \pkvrf_i $ is a key of an honest party and there exits no record such as $ [m, \pkring,\pkrvrf_i,\sigma,\hat\sigma',  1] $ for any  $  \hat\sigma'$, then set $ b = 0 $ and record $ [m, \pkring,\pkrvrf_i,\sigma,\hat\sigma,  0] $. (This condition guarantees unforgeability meaning that if an honest party never signs a message $ m $ in the linking signature, then the verification fails.)
+					\item Else if there exists a record  such as $ [m, \pkring,\pkrvrf_i,\sigma,\hat\sigma,  b'] $, set $ b = b' $. 
+					\item Else set $ b = b_{\simulator} $ and record $ [m, \pkring,\pkrvrf_i,\sigma,\hat\sigma,  1] $. 
+				\end{itemize}
+				
+				Return $(\msg{verified}, \sid, \pkrvrf_i, \pkring, m, \hat\sigma, b).$ to the party.
+			\end{description}
+		}
+	\end{tcolorbox}
+	\caption{Functionality $\fgvrf$.\label{f:gvrf}}
+\end{figure}
+
+
