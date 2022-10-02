@@ -33,8 +33,9 @@
 	
 	\item[Ring VRF Verification.] Upon receiving a message $(\oramsg{verify}, \sid, \ringset,W, m, \sigma)$ from a party $P_i$, relay the message $(\oramsg{verify}, \sid, \ringset,W, m, \sigma)$ to $ \simulator $ and receive back the message $(\oramsg{verified}, \sid, \ringset,W, m, \sigma, b_{\simulator}, \pk_\simulator)$. Then run the following checks: 
 	\begin{enumerate}[label={{C}}{{\arabic*}}, start = 1]
-		\item If there exits a record $ [m,W,\ringset,\sigma, b'] $, set $ b = b' $. (This condition guarantees the completeness and consistency.)
+		\item If there exits a record $ [m,W,\ringset,\sigma, b'] $, set $ b = b' $. (This condition guarantees the completeness and consistency.)\footnote{ \color{blue} TODO: All parenthetical comments should become a smooth part of the text or be removed.}
 		\label{cond:consistency}
+	
 		\item Else if $ \anonymouskeymap[m,W,\ringset]  $ is an honest verification key where  there exists a record $ [m, W,\ringset, \sigma', 1] $ for any $ \sigma' $, then let $ b= b_{\simulator} $ and record $ [m, W,\sigma, b_{\simulator}] $. (This condition guarantees that if $ m $ is signed by an honest party for the ring $ \ringset $ at some point and the signature is $ \sigma' \neq \sigma $, then the decision of verification is up to the adversary) \label{cond:differentsignature}
 		
 		\item Else if $\counter[m, \ringset] \geq |\ringset_{\mathit{mal}}|$, where $\ringset_{\mathit{mal}}$ is the set of malicious keys in $ \ringset $, set $ b = 0 $ and record $ [m, \ringset,W,\sigma, 0] $.
