@@ -9,17 +9,20 @@ efficiently.
 
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$ takes
- a secret key \sk, a ring opening \openring, a message \msg, and auxiliary data \aux, and then \\
- \begin{enumerate}
- \item computes the ring membership proof $\piring$ and associated \openpk,
+ a secret key \sk, a ring opening \openring, a message \msg, and \aux, and then % auxiliary data
+ % \begin{enumerate}
+ % \item
+ generates \openpk, computes a ring membership proof $\piring$
   $$ \piring = \NIZK \Setst{ \compk, \comring }{
   \exists \openpk,\openring \textrm{\ s.t.\ } 
   \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenKey(\comring,\openring)}
   } $$
- \item computes the VRF-AD-KC signature
+ % \item
+ computes the VRF-AD-KC signature
   $$ \sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \piring), \quad\textrm{and} $$ % finally
- \item returns the ring VRF signature $\rho = (\compk,\piring,\sigma)$.
- \end{enumerate}
+ % \item
+ returns the ring VRF signature $\rho = (\compk,\piring,\sigma)$.
+ % \end{enumerate}
 \item $\rVRF.\rVerify$ takes $(\comring,\msg,\aux,\rho)$,
  parses $\rho$ as $(\compk,\piring,\sigma,)$,  and then returns
  $$ \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \piring,\sigma) $$

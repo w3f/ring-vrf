@@ -38,12 +38,12 @@ computed by scalar multiplication from the toxic waste $\tau$ and $\delta$,
  but for which nobody knows the underlying $\tau$ or $\delta$ anymore.
 
 In the SRS $S$, we distinguish the verifiers' string of elements
- $Y_1,\ldots,Y_k, [\alpha]_1 \in \grE_1$ and
+ $\Chi_1,\ldots,\Chi_k, [\alpha]_1 \in \grE_1$ and
  $[\beta]_2, [\gamma]_2, [\delta]_2 \in \grE_2$.
 % as separate from the provers' much longer string of elements in $\grE_1$ and $\grE_2$.
 A Groth16 \cite{Groth16} proof then takes the form 
  $\pi = (A,B,C) \in \grE_1 \times \grE_2 \times \grE_1$.
-A verifier then produces a $X = \sum_i^k x_i Y_i \in \grE_1$ from
+A verifier then produces a $X = \sum_i^k x_i \Chi_i \in \grE_1$ from
  the public inputs $x_i$ and then checks 
 $$ e(A,B) = e([\alpha]_1, [\beta]_2) \cdot
  e(X, [\gamma]_2) \cdot e(C, [\delta]_2) \mathperiod $$
@@ -64,7 +64,7 @@ At this point, our $x_i$ remain identical after rerandomization,
 so $X$ links $(A,B,C)$ to $(A',B',C')$.
 Alone rerandomization cannot alter public inputs $x_i$, so
 we instead need an opaque public input point $X$, which then becomes
-part of our proof and incurs its own seperate proof of correctness.
+part of our proof and incurs its own separate proof of correctness.
 
 We also need one fresh basepoint $\genB_\gamma$ independent from all others,
 again perhaps created by applying $H_\grE$ to an input outside existing usages' domain.
@@ -77,7 +77,7 @@ After this, subversion resistance could be checked like
 $$ e(\genB_\gamma, [\gamma]_2) = e(\genB_\delta, [\delta]_2) \mathperiod $$
 
 We now have a zero-knowledge continuation $(X,A,B,C)$ from which
-we produce an unlinkable $(X',A',B',C')$ by
+we produce an unlinkable instance $(X',A',B',C')$ by
  first sampling random $b,r_1,r_2 \in \F_p$ and then computing
 $$ \begin{aligned}
 X' &= X + b \genB_\gamma \\
@@ -91,55 +91,89 @@ standard Groth16 rerandomization construction above,
 
 % TODO:  Should we be saying opaque less and Pedersen more below?
 
-We still verify $(X',A',B',C')$ like 
+Along side hidden inputs in $X = \sum_i^k x_i \Chi_i$,
+our verifier would typically assemble some transparent inputs
+$Y = \sum_i^l y_i \Upsilon$ themselves.  In particular, our ring VRFs
+handle the Merkle root \comring of the ring $\ctx$ in this way below.
+
+We then verify $(X' + Y,A',B',C')$ like Groth16 
 $$ e(A',B') = e([\alpha]_1, [\beta]_2) \cdot
- e(X', [\gamma]_2) \cdot e(C', [\delta]_2) \mathcomma $$
-As our verifier does not build $X$ themselves, we proves nothing
-with this pairing equation unless the verifier seperately checks
- some proof-of-knowledge that $X' = \sum_i^k x_i Y_i$.
-We foresee some $x_i$ being transperent elements that determine the
-Merkle root of the ring $\ctx$, but any $x_i$ concerning the
- specific $\pk$ must be hidded by out blinding terms in $b$.
+ e(X' + Y, [\gamma]_2) \cdot e(C', [\delta]_2) \mathcomma $$
+As our verifier does not build $X'$ themselves, we proves nothing
+with this pairing equation unless the verifier separately checks
+ some proof-of-knowledge that $X' = \sum_i^k x_i \Chi_i$.
 
-All told, our opaque rerandomization trick transforms some conventional
-Groth16 zkSNARK $\pi$ for $\rVRF.\OpenKey$ into
- a zkSNARK $\pi'$ with an opaque and unlinkable input $X'$.
-We therefore explore two concrete $\pi$ proposals next.
+\begin{lemma}\label{lem:unlinkable}
+Our rerandomization procedure % $(X,A,B,C) \mapsto (X',A',B',C')$
+transforms honestly generated zero-knowledge continuations $(X,A,B,C)$
+into identically distributed zero-knowledge continuations $(X',A',B',C')$,
+with identical transparent inputs $y_1,\ldots,y_l$.
+\end{lemma}
 
-Importantly, rerandomization requires only
- four scalar multplicaitons on $\ecE_1$ and
- two scalar multplicaitons on $\ecE_2$,
-which  BLS12 curves make roughly equivlent to
- eight scalar multplicaitons on $\ecE_1$.
-
-% Intuitively, an adversary cannot link $(X,A,B,C)$ with $(X',A',B',C')$ because 
-
-\begin{proposition}\label{prop:unlinkable}
-Let $\sigma'$ and $\sigma''$ denote Chaum-Pedersen proofs-of-knowledge
- for $X'$ and $X''$ respectively, with nonces chosen randomly.
-Then $(X',A',B',C',\sigma)$ and $(X'',A'',B'',C'',\sigma')$ are unlinkable.
-\end{proposition}
-
-\begin{proof}[Proof stetch.]
-???
+\begin{proof}[Proof idea.]
+Adapt the proof of Theorem 3 of \cite[Appendix C, pp. 31]{RandomizationGroth16}.
 \end{proof}
 
+% \begin{corollary}\label{cor:unlinkable}
+%	If $\sigma'$ and $\sigma''$ are \PedVRF{}s then ???
+% \end{corollary}
 
-\subsection{One single continuation}
+All told, our opaque rerandomization trick converts any conventional
+Groth16 zkSNARK $\pi$ for $\rVRF.\OpenKey$ into a zkSNARK $\pi'$
+with inputs split into a transparent part $Y$ vs opaque unlinkable part $X$.
+% We explore two concrete $\pi$ proposals below.
+
+Importantly, rerandomization requires only
+ four scalar multiplications on $\ecE_1$ and
+ two scalar multiplications on $\ecE_2$,
+which  BLS12 curves make roughly equivalent to
+ eight scalar multiplications on $\ecE_1$.
+
+% TODO:
+% \begin{definition}
+% restrited knowledge soundness
+% \end{definition}
+
+\begin{lemma}\label{lem:knowledge_soundness}
+Assuming AGM plus the $(2n-1,n-1)$-DLOG assumption,
+any zero-knowledge continuation with circuit size less than $n$
+satisfies knowledge soundness, restricted to challengers
+ who learn the actual public input wire values and blinding factors.
+\end{lemma}
+
+\begin{proof}[Proof idea.]
+Adapt the proof of Theorem 2 in \cite[\S3, pp. 9]{RandomizationGroth16},
+observing that $K_\gamma$ and $K_\delta$ never interact with other elements. 
+% TODO: Check this argument!
+\end{proof}
+
+% TODO:  Oy!
+% We obtain knowledge soundness if we fold hiding Pedersen commitments
+% into the witness too.  Yet, 
+% we do not have ``knowledge soundness'' for the hidden Pedersen commitment 
+
+In fact, one could prove zero-knowledge continuations satisfy
+weak white-box simulation extractability under similar restrictions,
+much like Theorem 1 in \cite[\S3, pp. 8 \& 11]{RandomizationGroth16}.
+We depends upon the specific simulator though, which itself increases
+our dependence upon the usage of the zero knowledge continuation.
+
+
+\subsection{Single continuation}
 \label{subsec:rvrf_faster}
 
 We describe a much faster choice $\pifast$ for $\pi$
 that sets $x_1 := \sk$ and $x_0 = \comring = \CommitRing(\ctx)$ so that
-taking $\genG := Y_1$, $\genB := \genB_\gamma$, and $\openpk := b$ in \PedVRF
+taking $\genG := \Chi_1$, $\genB := \genB_\gamma$, and $\openpk := b$ in \PedVRF
 yields and incredibly fast amortized ring VRF prover.
 Also, \PedVRF itself proves knowledge of $X'$,
- or more precisely of $X' - \comring\, Y_0$ since the verifier knows \comring.
-$$ X' = \comring\, Y_0 + \sk\, Y_1 + b \genB_\gamma $$
+ or more precisely of $X' - \comring\, \Chi_0$ since the verifier knows \comring.
+$$ X' = \comring\, \Chi_0 + \sk\, \Chi_1 + b \genB_\gamma $$
 
-% TODO: Do we mention that $Y_0$ gets omitted in the proof-of-knowledge
+% TODO: Do we mention that $\Chi_0$ gets omitted in the proof-of-knowledge
 
-A priori, we do not know $Y_1$ during the trusted setup for $\pifast$,
-which prevents computing $\pk = \sk\, Y_1$ inside $\pifast$.
+A priori, we do not know $\Chi_1$ during the trusted setup for $\pifast$,
+which prevents computing $\pk = \sk\, \Chi_1$ inside $\pifast$.
 Instead, we propose $\ctx$ contain commitments to $\sk$ over
 some Jubjub curve $\ecJ$.  
 
@@ -161,9 +195,9 @@ Applying our rerandomization to $\pifast$ with opaque input yields
 a zkSNARK $\pifast'$ of exactly the form $\piring$.
 
 We explain later in \S\ref{sec:ring_hiding} how one could
-choose $Y_1$ independent before doing the trusted setup,
- and then wire $Y_1$ into $\pifast$ inside $C$.
-In ths case, we could prove $\pk = \sk\, Y_1$ inside $\pifast$, but then
+choose $\Chi_1$ independent before doing the trusted setup,
+ and then wire $\Chi_1$ into $\pifast$ inside $C$.
+In ths case, we could prove $\pk = \sk\, \Chi_1$ inside $\pifast$, but then
 non-native arithmetic makes $\pifast$ far slower.
 
 At this point, \PedVRF requires four scalar multiplications on $\ecE_1$,
@@ -186,7 +220,7 @@ to deploy group signature like constructions where the deanonymization vectors m
 \end{proposition}
 
 \begin{proof}[Proof stetch.]
-???
+Immediate from  Proposition \ref{prop:unlinkable} plus ???
 \end{proof}
 
 
@@ -225,7 +259,7 @@ There is no ``arrow of time'' among zk continuations per se, but
 as \pisk bridges between the \PedVRF and \pipk,
 one might consider this zk continuation to be time reversed.
 
-Insterestingly, our \pipk has become simple enough that openning
+Interestingly, our \pipk has become simple enough that opening
 a KZG commitment \cite{KZG} at a secret point now suffices,
  ala Caulk+ \cite{caulk+}, or perhaps Caulk \cite{caulk}.
 
@@ -254,6 +288,17 @@ $$ \pifast = \rrSNARK \Setst{ \comblock, \comring }{
 
 Again we need a proof=of-knowledge for \comblock because it winds up opaque
  in both of these proofs. 
+
+\smallskip
+
+A priori, our JubJub representations $\sk_0 \genJ_0 + \sk_1 \genJ_1$
+costs us exculpability from Definition \ref{def:rvrf_exculpability}.
+If desired, exculpability could easily be repaired by asking users
+provide $\pisk$ when joining the ring.
+
+% \begin{proposition}
+% \end{proposition}
+
 
 \endinput
 

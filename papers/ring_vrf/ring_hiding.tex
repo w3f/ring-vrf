@@ -5,7 +5,7 @@ At first, one imagines sites would accept few rings because each ring
 gives some users multiple ``Sybil'' identities within the site.
 In practice however, we think many sites benefit from accepting
 multiple overlapping rings for convenience and/or reach, but then
-tollerate the resulting few ``Sybil'' users.
+tolerate the resulting few ``Sybil'' users.
 
 As sites accept more rings, we increase risks that each user's ring
 \ctx reveals private user attributes, especially if
@@ -22,81 +22,79 @@ zero-knowledge continuation techniques or similar.
 \subsection{Unique circuit}
 
 As a first step, if all rings use the same circuit, then we hide the
-ring through openning a blinded polynomial commitment \cite{KZG} as follows. 
+ring among several rings using a second zero-knowledge continuation.
+As this closely resembles \S\ref{subsec:rvrf_side_channel}, we prefer
+a blind opening of a polynomial commitment \cite{KZG} to \comring choices,
+accomplished with Caulk+ \cite{caulk+} or Caulk \cite{caulk} or similar.
 
-In \S\ref{subsec:rvrf_faster}, our \pifast takes public input
-$X = \comring\, Y_0 + \compk$ where $\compk = \sk\, Y_1 + b \genB_\gamma$.
-Instead of revealing \comring, we prove correctness of \comring in
- $X'' = \comring\, Y_0 + d'' \genB_\gamma$.
-Or similarly \pipk in \S\ref{subsec:rvrf_side_channel}.
+As a special case, if users cannot change their keys too quickly, then
+one could reduce the frequency with which users reprove their original
+zero-knowledge by using multiple \comring choices across the history
+of the same evolving ring database.
 
-As an initial condition, we build two polynomial commitments \cite{KZG}
-on $\ecE$ with similarly indexed opennings:
-\begin{enumerate}
-\item to all our \comring choices over the basepoint $Y_0$, and
-\item to $1$ over the basepoint $\genB_\gamma$ at numerous points.
-\end{enumerate}
-We could construct or update the \comring commitment using \cite{aSVC} if desired.
-
-We now construct a commitment opening to $X''$ as desired, and
-open at a hidden index. ...
-
-TODO: Not good!  More details?
+In this, we initially reserve space in for future \comring by padding
+the polynomial commitment with say the base point, and then later
+append new \comring using \cite{aSVC}.
 
 
-\subsection{Multi circuit}
+\subsection{Multi-circuit}
 
-We handle \comring in the multi-circuit case almost like in the
-unique circuit case, except that circuit should enforce \comring
-suitability. 
+We handle \comring in the multi-circuit case somewhat like the
+unique circuit case.  We caution however that circuits should domain
+separate their enforce \comring suitably.
 
-All circuits wind up with unique $\alpha,\beta,\delta$ and
-hence unique SRS elements $[\alpha]_1 \in \ecE_1$ and
- $[\beta]_2, [\delta]_2, [\gamma]_2 \in \grE_2$,
-and perhaps a unique $\grE_T$ element $e([\alpha]_1, [\beta]_2)$.
-We could fix $\gamma=1$ across circuits, but do not require this.
+\smallskip
 
-We want polynomial commitment \cite{KZG} that prove correctness
-of these values, and which support appropriate blinding operations. 
-We prefer polynomial commitments in $\ecE$ because then
-we face a straightforward task of multipicatively blinding
-all terms identically using Chaum-Pedersen DLEQ proofs,
-and openning them all at identical hidden indices (TODO???).
+A priori, \pifast chooses $\genG = \Chi_1$, which reveals the circuit,
+due to its dependence upon the SRS like
+$$ \Chi_1 = \left[ {\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) \over \gamma} \right]_1 \mathperiod $$
 
-TODO: More details?  Actually sane?!?  $([\alpha]_1, [\beta]_2) \in grE_T$?!?  etc.
-
-Initially, we reserve space in the polynomial commitment for future
-circuits, by including commitments to the basepoint.
-As we later add circuits, we then using \cite{aSVC} construct opennings to
-$[\alpha]_1 \in \ecE_1$ and $[\beta]_2, [\delta]_2, [\gamma]_2 \in \grE_2$,
- during each circuits' trusted setup.
-We now prove the multiplicative blindings correct using Chau-Pedersen
-DLEQ proofs, and then open all these blinded polynomial commitments
-to the desired points
- ${t \over s} [\alpha]_1, t s [\beta]_2, t [\delta]_2, t [\gamma]_2$.
-
-% TODO:  Anything about using a blinded polynomial commitment \cite{KZG} over $\mathtt{BW6}$ \cite{BW6}, provided $\ecE = \mathtt{BLS12-377}$.
-
-At this point, we have blinded and proven correct both the
-ring commitment \comring and the circuit commitments $[\gamma]_2$,
-$[\delta]_2$, and $e([\alpha]_1, [\beta]_2)$.
-A priori, \pifast chooses $\genG = Y_1$, which reveals the circuit too,
-due to depending upon the SRS like
-$$ Y_1 = \left[ {\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) \over \gamma} \right]_1 \mathperiod $$
-
-Instead, we propose to stabalize the public input SRS elements:
-We choose $Y_{1,\gamma}$ independent before selecting the circuit
- or running its trusted setup.
-We then merely add an SRS element $Y_{1,\delta}$, for usage in $C$, that binds
- our independent $Y_{1,\gamma}$ to the desired definition, so
-$$ Y_{1,\delta} := \left[ {\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) - \gamma Y_{1,\gamma} \over \delta} \right]_1 \mathperiod $$
-At this point, we replace $Y_1$ by $Y_{1,\gamma}$ everywhere and
- include $\comring \, Y_{1,\delta}$ inside $C$.
+Instead, we propose to stabilize the public input SRS elements across circuits:
+We choose $\Chi_{1,\gamma}$ independent before selecting the circuit
+or running its trusted setup.
+We then merely add an SRS element $\Chi_{1,\delta}$, for usage in $C$, that binds
+our independent $\Chi_{1,\gamma}$ to the desired definition, so
+$$ \Chi_{1,\delta} := \left[ {\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) - \gamma \Chi_{1,\gamma} \over \delta} \right]_1 \mathperiod $$
+At this point, we replace $\Chi_1$ by $\Chi_{1,\gamma}$ everywhere and
+include $\comring \, \Chi_{1,\delta}$ inside $C$.
 
 In this way, all ring membership circuits could share identical
-public input SRS points $Y_{1,\gamma}$, and similarly $Y_0$ if desired.
+public input SRS points $\Chi_{1,\gamma}$, and similarly $\Chi_0$ if desired.
 
-% Interestingly the SRS ceremony could safely output points for both forms
+\smallskip
+
+In their trusted setups, all Groth16 circuits wind up with unique
+toxic waste $\alpha,\beta,\delta$ and hence unique SRS elements
+$[\alpha]_1 \in \ecE_1$ and $[\beta]_2, [\delta]_2, [\gamma]_2 \in \grE_2$,
+and a unique $\grE_T$ element $e([\alpha]_1, [\beta]_2)$.
+We hence encounter the open questions:
+How should we optimize blinding the verifier key elements derived from toxic waste?
+In particular, could we choose some toxic waste elements identically across multiple trusted setups?
+
+We could fix $\gamma=1$ across circuits for example. but in general
+this question depends upon other factors, especially if the trusted setups
+run concurrently.
+If for example, $\alpha$ and/or $\beta$ could be identical across
+concurrent trusted setups, then we avoid extensive complexity in
+ handling $([\alpha]_1, [\beta]_2) \in grE_T$ terms.
+
+We expect the $[\delta]_2$ might differ between different circuits.
+As a nice solution, our Groth16 trusted setup could construct a
+KZG polynomial commitment $\rho$ along with openings to the
+various $\delta$ as $[\delta]_2$.  At this point, our signer could
+blind open $\rho$ to the curve point $[\delta]_2$.
+We think concurrent trusted setups could skip much complexity of
+Caulk+ \cite{caulk+} or Caulk \cite{caulk} because actually the
+ trusted setup erases all knowledge of all openings of $\rho$.
+
+\endinput
+
+
+
+\subsection{Post-quantum}
+
+
+
 
 
 \subsection{SnarkPack}

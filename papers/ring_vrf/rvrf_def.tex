@@ -68,11 +68,11 @@ any PPT adversary \adv has an advantage only
  and a ring $\ctx \subset \ora{Sign}.\ctx_0$ containing $\pk_0,\pk_1$.
  Set $\comring = \CommitRing(\ctx)$.
  Next the challenger chooses $j=0$ or $j=1$ and gives
-  \adv a signature $\sigma = \rSign(\sk_i,\openring,\msg,\aux)$ with $\OpenKey(\comring,\openring) = \pk_j$.
+  \adv a signature $\sigma = \rSign(\sk_j,\openring,\msg,\aux)$ with $\OpenKey(\comring,\openring) = \pk_j$.
  %
- \adv called \ora{Sign} of Definition \ref{def:rvrf_sign_oracle} throughout,
- except \adv loses if they ever query $\ora{Sign}(\comring,\openring,\msg,\cdot)$
- on \msg with $\OpenKey(\comring,\openring) \in \{ \pk_0, \pk_1 \}$.
+ \adv callx \ora{Sign} of Definition \ref{def:rvrf_sign_oracle} throughout,
+ except \adv loses if they ever query $\ora{Sign}(\comring',\openring',\msg,\cdot)$
+ on \msg for some $\comring',\openring'$ with $\OpenKey(\comring',\openring') \in \{ \pk_0, \pk_1 \}$.
  Finally \adv guesses $j$ and wins if correct.
 \end{itemize}
 \end{definition}
@@ -114,7 +114,7 @@ Although our applications could mostly ignore key multiplicity.
 we briefly mention AML/KYC applications in \S\ref{subsec:AML_KYC},
 which demands suspects prove non-involvement using ring VRFs.
 
-\begin{definition}
+\begin{definition}\label{def:rvrf_exculpability}
 We say \rVRF is {\em exculpatory} if we have an efficient algorithm
 for equivalence of public keys, but a PPT adversary \adv cannot
 find non-equivalent public keys $\pk_0,\pk_1$ with colliding VRF outputs.
