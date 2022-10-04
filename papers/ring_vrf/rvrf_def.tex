@@ -70,7 +70,7 @@ any PPT adversary \adv has an advantage only
  Next the challenger chooses $j=0$ or $j=1$ and gives
   \adv a signature $\sigma = \rSign(\sk_j,\openring,\msg,\aux)$ with $\OpenKey(\comring,\openring) = \pk_j$.
  %
- \adv callx \ora{Sign} of Definition \ref{def:rvrf_sign_oracle} throughout,
+ \adv calls \ora{Sign} of Definition \ref{def:rvrf_sign_oracle} throughout,
  except \adv loses if they ever query $\ora{Sign}(\comring',\openring',\msg,\cdot)$
  on \msg for some $\comring',\openring'$ with $\OpenKey(\comring',\openring') \in \{ \pk_0, \pk_1 \}$.
  Finally \adv guesses $j$ and wins if correct.

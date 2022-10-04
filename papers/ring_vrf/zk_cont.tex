@@ -7,7 +7,7 @@
 \newcommand\pifast{\ensuremath{\pi_{\mathtt{fast}}}\xspace}
 % \newcommand\pifastdot{\ensuremath{\dot{\pi}_{\mathtt{fast}}}\xspace}
 \newcommand\pisk{\ensuremath{\pi_{\mathtt{sk}}}\xspace}
-\newcommand\pipk{\ensuremath{\dot{\pi}_{\mathtt{pk}}}\xspace}
+\newcommand\pipk{\ensuremath{\pi_{\mathtt{pk}}}\xspace}
 
 
 We now construct ring VRFs which achieves fast amortized prover time
@@ -215,13 +215,32 @@ Importantly, our fast ring VRF' amortized prover time now rivals
 group signature schemes' performance.  We hope this ends the temptation
 to deploy group signature like constructions where the deanonymization vectors matter.
 
-\begin{proposition}\label{prop:pifast_anonymity}
-\rVRF using \pifast satisfies ring anonymity.
-\end{proposition}
+\begin{theorem}\label{thm:knowledge_soundness}
+Our Pedersen ring VRF instantiated with \pifast satisfies knowledge soundness.
+\end{theorem}
 
 \begin{proof}[Proof stetch.]
-Immediate from  Proposition \ref{prop:unlinkable} plus ???
+An extractor for \PedVRF reveals the opening of $X$ for us,
+so our result follows from Lemma \ref{lem:unlinkable}.
 \end{proof}
+
+% \begin{corollary}\label{cor:???}
+% Our Pedersen ring VRF instantiated with \pifast satisfies ring unforgability and uniqueness.
+% \end{corollary}
+
+% \begin{theorem}\label{thm:pifast_anonymity}
+% Our Pedersen ring VRF \rVRF using \pifast satisfies zero-knowledge.
+% \end{theorem}
+%
+% \begin{proof}[Proof stetch.]
+% Assuming the same \comring, we know the zero-knowledge continuations
+% are identically distributed by Lemma \ref{lem:unlinkable}.
+% It follows the typical simulator for \PedVRF ... WHAT???
+% \end{proof}
+
+% \begin{corollary}\label{cor:???}
+% Our Pedersen ring VRF instantiated with \pifast satisfies ring anonymity.
+% \end{corollary}
 
 
 \subsection{Side channel}
