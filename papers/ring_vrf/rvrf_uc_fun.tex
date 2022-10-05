@@ -8,9 +8,10 @@
 
 
 
-\begin{figure}\scriptsize
-\begin{tcolorbox}
-{ $ \fgvrf $ runs two PPT algorithms $ \Gen_W$ and $\Gen_{sign} $ during the execution.
+% \begin{figure}\scriptsize
+\begin{tcolorbox}[colback=white]
+{ \scriptsize
+$ \fgvrf $ runs two PPT algorithms $ \Gen_W$ and $\Gen_{sign} $ during the execution.
 
 \begin{description}
 	\item[Key Generation.] Upon receiving a message $(\oramsg{keygen}, \sid)$ from a party $\user_i$, send $(\oramsg{keygen}, \sid, \user_i)$ to the simulator $\simulator$.
@@ -32,7 +33,10 @@
 	Otherwise, record $ [m, W, \ringset,\sigma, 1] $. Return $(\oramsg{signature}, \sid, \ringset,W,m, y, \sigma)$ to $\user_i$.
 	
 	\item[Ring VRF Verification.] Upon receiving a message $(\oramsg{verify}, \sid, \ringset,W, m, \sigma)$ from a party $P_i$, relay the message $(\oramsg{verify}, \sid, \ringset,W, m, \sigma)$ to $ \simulator $ and receive back the message $(\oramsg{verified}, \sid, \ringset,W, m, \sigma, b_{\simulator}, \pk_\simulator)$. Then run the following checks: 
-	\begin{enumerate}[label={{C}}{{\arabic*}}, start = 1]
+	% \begin{list}[label={{C}}{{\arabic*}}, start = 1]
+	% https://texblog.net/help/latex/ltx-260.html
+	\newcounter{FunCond}
+    \begin{list}{\hspace*{1pt} C\arabic{FunCond}}{\usecounter{FunCond}}
 		\item If there exits a record $ [m,W,\ringset,\sigma, b'] $, set $ b = b' $. (This condition guarantees the completeness and consistency.)\footnote{ \color{blue} TODO: All parenthetical comments should become a smooth part of the text or be removed.}
 		\label{cond:consistency}
 	
@@ -44,7 +48,7 @@
 		
 		\item Else if $ \pk_\simulator $ is an honest verification key, set $ b = 0 $ and record $ [m, \ringset,W,\sigma, 0] $. (This condition guarantees unforgeability meaning that if an honest party never signs a message $ m $ for a ring $ \ringset $)\label{cond:forgery}
 		\item Else set $ b = b_\sim$. \label{cond:simulatorbit}
-	\end{enumerate}
+	\end{list}
 	In the end, if $ b = 0 $, let $ \Out = \perp $. Otherwise, it does the following:
 	\begin{itemize}
 		\item if $ \evaluationslist[m,W,\ringset] $ is not defined, set sample a VRF output $\evaluationslist[m, W, \ringset]$, $ \anonymouskeymap[m,W,\ringset]  =  \pk_\simulator$. If $ \counter[m, \ringset]  $ is not defined, set $ \counter[m, \ringset]  = 0 $. Then increment $ \counter[m, \ringset]  $. Set $ \Out = \evaluationslist[m, W, \ringset]$. 	
@@ -55,14 +59,15 @@
 
 }
 \end{tcolorbox}
-\caption{Functionality $\fgvrf$.\label{f:gvrf}}
-\end{figure}
+% \caption{Functionality $\fgvrf$.\label{f:gvrf}}
+% \end{figure}
 
 
 
-\begin{figure}\scriptsize
-\begin{tcolorbox}
-{ This part of $ \fgvrf $ for the parties who want to show that they generate a particular ring signature.
+% \begin{figure}\scriptsize
+\begin{tcolorbox}[colback=white]
+{ \scriptsize
+This part of $ \fgvrf $ for the parties who want to show that they generate a particular ring signature.
 
 \begin{description}
 	\item[Linking signature.] Upon receiving a message $(\oramsg{link}, \sid, \ringset, \pk_i, W, m,\sigma)$ from $\user_i$, check that $\pk_i $ is associated to $\user_i$ in $ \vklist $, $ \pk_i \in \ringset $, $ \anonymouskeymap[m,W, \ringset] = \pk_i $ and 
@@ -83,8 +88,8 @@
 
 }
 \end{tcolorbox}
-\caption{Functionality $\fgvrf$.\label{f:gvrf2}}
-\end{figure}
+% caption{Functionality $\fgvrf$.\label{f:gvrf2}}
+% \end{figure}
 
 
 
