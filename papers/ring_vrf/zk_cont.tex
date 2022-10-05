@@ -38,12 +38,12 @@ computed by scalar multiplication from the toxic waste $\tau$ and $\delta$,
  but for which nobody knows the underlying $\tau$ or $\delta$ anymore.
 
 In the SRS $S$, we distinguish the verifiers' string of elements
- $\Chi_1,\ldots,\Chi_k, [\alpha]_1 \in \grE_1$ and
+ $\chi_1,\ldots,\chi_k, [\alpha]_1 \in \grE_1$ and
  $[\beta]_2, [\gamma]_2, [\delta]_2 \in \grE_2$.
 % as separate from the provers' much longer string of elements in $\grE_1$ and $\grE_2$.
 A Groth16 \cite{Groth16} proof then takes the form 
  $\pi = (A,B,C) \in \grE_1 \times \grE_2 \times \grE_1$.
-A verifier then produces a $X = \sum_i^k x_i \Chi_i \in \grE_1$ from
+A verifier then produces a $X = \sum_i^k x_i \chi_i \in \grE_1$ from
  the public inputs $x_i$ and then checks 
 $$ e(A,B) = e([\alpha]_1, [\beta]_2) \cdot
  e(X, [\gamma]_2) \cdot e(C, [\delta]_2) \mathperiod $$
@@ -91,7 +91,7 @@ standard Groth16 rerandomization construction above,
 
 % TODO:  Should we be saying opaque less and Pedersen more below?
 
-Along side hidden inputs in $X = \sum_i^k x_i \Chi_i$,
+Along side hidden inputs in $X = \sum_i^k x_i \chi_i$,
 our verifier would typically assemble some transparent inputs
 $Y = \sum_i^l y_i \Upsilon$ themselves.  In particular, our ring VRFs
 handle the Merkle root \comring of the ring $\ctx$ in this way below.
@@ -101,7 +101,7 @@ $$ e(A',B') = e([\alpha]_1, [\beta]_2) \cdot
  e(X' + Y, [\gamma]_2) \cdot e(C', [\delta]_2) \mathcomma $$
 As our verifier does not build $X'$ themselves, we proves nothing
 with this pairing equation unless the verifier separately checks
- some proof-of-knowledge that $X' = \sum_i^k x_i \Chi_i$.
+ some proof-of-knowledge that $X' = \sum_i^k x_i \chi_i$.
 
 \begin{lemma}\label{lem:unlinkable}
 Our rerandomization procedure % $(X,A,B,C) \mapsto (X',A',B',C')$
@@ -164,16 +164,16 @@ our dependence upon the usage of the zero knowledge continuation.
 
 We describe a much faster choice $\pifast$ for $\pi$
 that sets $x_1 := \sk$ and $x_0 = \comring = \CommitRing(\ctx)$ so that
-taking $\genG := \Chi_1$, $\genB := \genB_\gamma$, and $\openpk := b$ in \PedVRF
+taking $\genG := \chi_1$, $\genB := \genB_\gamma$, and $\openpk := b$ in \PedVRF
 yields and incredibly fast amortized ring VRF prover.
 Also, \PedVRF itself proves knowledge of $X'$,
- or more precisely of $X' - \comring\, \Chi_0$ since the verifier knows \comring.
-$$ X' = \comring\, \Chi_0 + \sk\, \Chi_1 + b \genB_\gamma $$
+ or more precisely of $X' - \comring\, \chi_0$ since the verifier knows \comring.
+$$ X' = \comring\, \chi_0 + \sk\, \chi_1 + b \genB_\gamma $$
 
-% TODO: Do we mention that $\Chi_0$ gets omitted in the proof-of-knowledge
+% TODO: Do we mention that $\chi_0$ gets omitted in the proof-of-knowledge
 
-A priori, we do not know $\Chi_1$ during the trusted setup for $\pifast$,
-which prevents computing $\pk = \sk\, \Chi_1$ inside $\pifast$.
+A priori, we do not know $\chi_1$ during the trusted setup for $\pifast$,
+which prevents computing $\pk = \sk\, \chi_1$ inside $\pifast$.
 Instead, we propose $\ctx$ contain commitments to $\sk$ over
 some Jubjub curve $\ecJ$.  
 
@@ -195,9 +195,9 @@ Applying our rerandomization to $\pifast$ with opaque input yields
 a zkSNARK $\pifast'$ of exactly the form $\piring$.
 
 We explain later in \S\ref{sec:ring_hiding} how one could
-choose $\Chi_1$ independent before doing the trusted setup,
- and then wire $\Chi_1$ into $\pifast$ inside $C$.
-In ths case, we could prove $\pk = \sk\, \Chi_1$ inside $\pifast$, but then
+choose $\chi_1$ independent before doing the trusted setup,
+ and then wire $\chi_1$ into $\pifast$ inside $C$.
+In ths case, we could prove $\pk = \sk\, \chi_1$ inside $\pifast$, but then
 non-native arithmetic makes $\pifast$ far slower.
 
 At this point, \PedVRF requires four scalar multiplications on $\ecE_1$,
