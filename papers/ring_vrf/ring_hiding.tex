@@ -45,21 +45,21 @@ separate their enforce \comring suitably.
 
 \smallskip
 
-A priori, \pifast chooses $\genG = \Chi_1$, which reveals the circuit,
+A priori, \pifast chooses $\genG = \chi_1$, which reveals the circuit,
 due to its dependence upon the SRS like
-$$ \Chi_1 = \left[ {\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) \over \gamma} \right]_1 \mathperiod $$
+$$ \chi_1 = \left[ {\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) \over \gamma} \right]_1 \mathperiod $$
 
 Instead, we propose to stabilize the public input SRS elements across circuits:
-We choose $\Chi_{1,\gamma}$ independent before selecting the circuit
+We choose $\chi_{1,\gamma}$ independent before selecting the circuit
 or running its trusted setup.
-We then merely add an SRS element $\Chi_{1,\delta}$, for usage in $C$, that binds
-our independent $\Chi_{1,\gamma}$ to the desired definition, so
-$$ \Chi_{1,\delta} := \left[ {\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) - \gamma \Chi_{1,\gamma} \over \delta} \right]_1 \mathperiod $$
-At this point, we replace $\Chi_1$ by $\Chi_{1,\gamma}$ everywhere and
-include $\comring \, \Chi_{1,\delta}$ inside $C$.
+We then merely add an SRS element $\chi_{1,\delta}$, for usage in $C$, that binds
+our independent $\chi_{1,\gamma}$ to the desired definition, so
+$$ \chi_{1,\delta} := \left[ {\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) - \gamma \chi_{1,\gamma} \over \delta} \right]_1 \mathperiod $$
+At this point, we replace $\chi_1$ by $\chi_{1,\gamma}$ everywhere and
+include $\comring \, \chi_{1,\delta}$ inside $C$.
 
 In this way, all ring membership circuits could share identical
-public input SRS points $\Chi_{1,\gamma}$, and similarly $\Chi_0$ if desired.
+public input SRS points $\chi_{1,\gamma}$, and similarly $\chi_0$ if desired.
 
 \smallskip
 
