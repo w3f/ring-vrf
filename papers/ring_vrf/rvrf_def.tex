@@ -77,12 +77,11 @@ any PPT adversary \adv has an advantage only
 \end{itemize}
 \end{definition}
 
-We similarly a ring unforgeability resembling
- \cite[pp. 7 Def. 7]{cryptoeprint:2005:304} % their definition appears broken
-while also capturing the uniqueness condition that limits even adversaries who know secret keys.
+We similarly want a ring uniqueness that limits adversaries who know secret keys,
+as well as a ring unforgeability resembling \cite[pp. 7 Def. 7]{cryptoeprint:2005:304}. % their definition appears broken
 
 \begin{definition}
-We say \rVRF satisfies {\em ring unforgeability and uniqueness} if
+We say \rVRF satisfies {\em ring uniqueness} (resp. ring unforgeability)if
 any PPT adversary \adv has an advantage only
  negligible in $\secparam$ to win the game:
 \begin{itemize}
@@ -93,9 +92,10 @@ any PPT adversary \adv has an advantage only
  Finally \adv outputs a ring $\ctx$ as well as
  $k + |\ctx \setminus \ora{Sign}.\ctx_0|$ valid ring VRF signatures,
   each with distinct outputs,    % $\sigma_i$
- for $\ctx$ on a message \msg and associated data \aux.
- \adv wins if they invoked $\ora{Sign}$ strictly fewer than $k$ times on $\msg$  % and some $\aux_i$,
-  and distinct $i$ with $\pk_i \in \ctx \cap \ora{Sign}.\ctx_0$.
+ for $\ctx$ on a message \msg (resp. and also associated data \aux).
+ \adv wins if they invoked $\ora{Sign}$ strictly fewer than $k$ times
+ on $\msg$ (respt. and also $\aux$), and
+  distinct $i$ with $\pk_i \in \ctx \cap \ora{Sign}.\ctx_0$.
 \end{itemize}
 \end{definition}
  
