@@ -1,6 +1,6 @@
 
-\section{Thin batchable EC VRF-AD}
-\label{sec:vrf_thin}
+\subsection{Thin batchable EC VRF-AD}
+\label{subsec:vrf_thin}
 
 There are VRFs built upon Chaum-Pedersen DLEQ proofs in elliptic curves,
  like \cite{nsec5} and \cite{VXEd25519}.
@@ -17,9 +17,9 @@ As such, our thin batchable variant both runs faster and simplifies heavy usage,
 and also provides a less annoying interface.
 
 Interestingly, our thin batchable EC VRF winds up literally being
-a tweaked Schnorr-like signature, which opens new proof strategies and
-use cases.  After this section, we abandon this thin batchable VRF
-because our ``fat Pedersen'' variant introduced next in \S\ref{sec:vrf_pederson}
+a tweaked Schnorr-like signature, which opens new use cases.
+After this section, we abandon this thin batchable VRF however because
+our ``fat Pedersen'' variant introduced next in \S\ref{subsec:vrf_pederson}
 fits zero-knowledge continuations better.
 
 \smallskip
@@ -33,8 +33,8 @@ We build only a VRF-AD here which lacks the key commitments of \S\ref{sec:vrf},
 meaning $\ThinVRF.\CommitKey$ and $\ThinVRF.\OpenKey$ are trivial, and $\openpk = \emptyset$.
 
 We work solely in $\ecE$ here because we need only a basic Chaum-Pedersen DLEQ proof.
-As in \S\ref{sec:lambda} and throughout,
- $\ecE$ has order $h p$ with $p \approx 2^{2\lambda}$ prime and $h$ a small cofactor.
+As in \S\ref{sec:background} and throughout,
+ $\ecE$ has order $h p$ with $p \approx 2^{2\secparam}$ prime and $h$ a small cofactor.
 
 \begin{itemize}
 \item $\ThinVRF.\KeyGen$ selects a secret key \sk uniformly at random from $\F_p$ and computes the public key $\pk = \sk \, \genE$.
@@ -45,28 +45,28 @@ As in \S\ref{sec:lambda} and throughout,
  then returns a VRF output $H'(\msg,\pk,h \, \sk \, H_{\grE}(\msg,\pk))$.
 \item $\ThinVRF.\Sign(\sk,\msg,\aux)$ takes a secret key \sk, an input $\msg$, and auxiliary data \aux, and then performs
 \begin{enumerate}
-    \item compute the VRF input $\In := H_{\grE}(\msg,\pk)$ and pre-output output $\Out_0 := \sk \, \In$, 
-    \item compute the delinearization challenge $c_1 = H_p(\aux,\msg,\pk,\Out_0)$,
+    \item compute the VRF input $\In := H_{\grE}(\msg,\pk)$ and pre-output output $\PreOut := \sk \, \In$, 
+    \item compute the delinearization challenge $c_1 = H_p(\aux,\msg,\pk,\PreOut)$,
     \item sample $r$ uniformly at random from $\F_p$ and compute $R = r (\genE + c_1 \In)$,
-    \item compute the challenge $c = H_p(\aux,\msg,\pk,\Out_0,R)$, the proof $s = r + c \, \sk$, and return the signature $\sigma = (\Out_0,R,s)$.
+    \item compute the challenge $c = H_p(\aux,\msg,\pk,\PreOut,R)$, the proof $s = r + c \, \sk$, and return the signature $\sigma = (\PreOut,R,s)$.
 \end{enumerate}
-\item $\ThinVRF.\Verify$ takes $(\pk,\msg,\aux,\sigma)$, parses $\sigma = (\Out_0,R,s)$, and then 
+\item $\ThinVRF.\Verify$ takes $(\pk,\msg,\aux,\sigma)$, parses $\sigma = (\PreOut,R,s)$, and then 
 \begin{enumerate}
 %PoK:    \item abort unless either $\msg$ contains $\pk$ or else \pk has a valid the proof-of-knowledge,
     \item recomputes the VRF input point $\In := H_{\grE}(\msg,\pk)$,
-    \item recomputes $c_1 = H_p(\aux,\msg,\pk,\Out_0)$ and $c = H_p(\aux,\msg,\pk,\Out_0,R)$, % the challenges
-    \item aborts unless $s h (\genE + c_1 \In) = h R + c h (\pk + c_1 \Out_0)$ holds, and 
-    \item returns $H'(\msg,\pk,h \Out_0)$ if nothing failed.
+    \item recomputes $c_1 = H_p(\aux,\msg,\pk,\PreOut)$ and $c = H_p(\aux,\msg,\pk,\PreOut,R)$, % the challenges
+    \item aborts unless $s h (\genE + c_1 \In) = h R + c h (\pk + c_1 \PreOut)$ holds, and 
+    \item returns $H'(\msg,\pk,h \PreOut)$ if nothing failed.
 \end{enumerate}
 \end{itemize}
 As discussed above, if we omit this final hash $H'$ making
-our output only $h \Out_0$, then we obtain only a VUF, not a VRF.
+our output only $h \PreOut$, then we obtain only a VUF, not a VRF.
 We caution that $h \ne 1$ ensures SUF-CMA fails
  by \cite[\S4.1.2]{cryptoeprint:2020:823}.
 
 If desired, one could generalize \ThinVRF to $k$ messages by
 computing for $j=1,\ldots,k$ the $k$ distinct
-points $\In_j := H_{\grE}(\msg_j)$, pre-outputs $\Out_0 := \sk \, \In$,
+points $\In_j := H_{\grE}(\msg_j)$, pre-outputs $\PreOut := \sk \, \In$,
 delinearization challenges
  $c_j = H_p(\aux,\msg_1,\ldots,\msg_k,\pk,\Out_{0,1},\ldots,\Out_{0,k},j)$,
 and then running our Schnorr-like signature with
@@ -102,12 +102,31 @@ our $\ThinVRF$ satisfies
  and existential unforgeability on $(\msg,\aux)$.
 \end{proposition}
 
-\begin{proof}[Proof sketch]
-TODO: ???
-\end{proof}
 
 
 \endinput
+
+
+
+
+
+
+
+\begin{proof}[Proof sketch]
+	TODO: ???
+\end{proof}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -129,16 +148,16 @@ We consider an adversary that produces $(\pk,\msg,\aux,\sigma)$
 %PoK:  Ignoring the first abort path, and employing our random oracle assumption on $H_p$, 
 We know from EUF-CMA security of $\primalgo{VRFInner}_{\msg}$ that
 our forger knows some $w$ such that
- $h (\pk + c_1 \Out_0) = h w (\genE + c_1 \In)$.
+ $h (\pk + c_1 \PreOut) = h w (\genE + c_1 \In)$.
 We deduce from AGM knowledge of $x,y,u,v \in \F_p$ such that
- $\pk = x \genE + y \In$ and $\Out_0 = u \genE + v \In$
+ $\pk = x \genE + y \In$ and $\PreOut = u \genE + v \In$
  with $x + c_1 u = w$ and $y + c_1 v = c_1 w$ in $\F_p$,
- so $c_1^2 u + c_1 (x-v) - y = 0$, except with odds negligible in $\lambda$.
+ so $c_1^2 u + c_1 (x-v) - y = 0$, except with odds negligible in $\secparam$.
 At most two $c_1 \in \F_p$ satisfy this equation.
-As our $c_1$ depends upon both \pk and $\Out_0$, 
+As our $c_1$ depends upon both \pk and $\PreOut$, 
 it again follows from our random oracle assumption on $H_p$ that
- $u=0=y$ and $v = w = x \equiv \sk \bmod h$, meaning $\Out_0 = \sk \In$,
- except with odds negligible in $\lambda$.
+ $u=0=y$ and $v = w = x \equiv \sk \bmod h$, meaning $\PreOut = \sk \In$,
+ except with odds negligible in $\secparam$.
 %TODO: What do we cite here?
 %PoK:
 %PoK: We know $y=0$ if we check the proof-of-knowledge for $\pk$ of course.  
@@ -151,19 +170,19 @@ it again follows from our random oracle assumption on $H_p$ that
 %PoK: 
 It follows that $\ThinVRF$ satisfies uniqueness of course. 
 
-An unpredictability adversary $\adv$ guesses
- a \msg and corresponding pre-output $h \Out_0 := h \sk H_\grE(\msg)$,
+An unpredictability adversary \adv guesses
+ a \msg and corresponding pre-output $h \PreOut := h \sk H_\grE(\msg)$,
 after making chosen message queries to \Sign.
-In AGM, $\adv$ must express its guess for $h \Out_0$
+In AGM, \adv must express its guess for $h \PreOut$
  in terms of $H_\grE(\msg)$ and points arising earlier.
 ???  So simple ???
 As $H_\grE$ is a random oracle, we deduce that either
- $\adv$ solved the discrete logarithm problem, or else
+ \adv solved the discrete logarithm problem, or else
  unpredictability holds for $\ThinVRF$.
 As $H'$ is a PRF, we now argue pseudo-randomness for$\ThinVRF$ similarly
  to \cite[Proposition 1]{vrf_micali}.
 \end{proof}
-% An adversary cannot discover $\Out_0$ without querying $\msg$,
+% An adversary cannot discover $\PreOut$ without querying $\msg$,
 % % \cite[Theorem 6]{coron02}
 % % https://eprint.iacr.org/2001/062.pdf NOT https://www.iacr.org/archive/eurocrypt2002/23320268/coron.pdf
 % but our EUF-CMA game permits doing so with alternative $\aux$. 

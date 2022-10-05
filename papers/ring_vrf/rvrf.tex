@@ -1,0 +1,20 @@
+\section{Ring VRFs}
+\label{sec:rvrf}
+
+Ring VRFs are firstly ring signatures broadly interpreted, in that they
+prove an associated public key lies inside some commitment \comring to
+the plausible signer set,
+which anyone could construct from this set of public keys.
+At the same time, ring VRFs prove correct output of a PRF keyed by
+the signer's actual secret key, and evaluated on a supplied message \msg,
+which then links ring VRF signatures sharing the same \msg.
+
+\input{rvrf_def}
+\input{rvrf_pedersen}
+\input{rvrf_uc_fun}
+% \input{rvrf_uc_proof}
+
+
+\endinput
+ 
+
