@@ -20,13 +20,13 @@ efficiently.
   } $$
  % \item
  computes the VRF-AD-KC signature
-  $$ \sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \piring), \quad\textrm{and} $$ % finally
+  $$ \sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \piring \doubleplus \comring), \quad\textrm{and} $$ % finally
  % \item
  returns the ring VRF signature $\rho = (\compk,\piring,\sigma)$.
  % \end{enumerate}
 \item $\rVRF.\rVerify$ takes $(\comring,\msg,\aux,\rho)$,
  parses $\rho$ as $(\compk,\piring,\sigma,)$,  and then returns
- $$ \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \piring,\sigma) $$
+ $$ \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \piring \doubleplus \comring,\sigma) $$
  iff $\NIZK.\Verify(\piring,\compk,\comring)$ succeeds. 
 \end{itemize}
 
