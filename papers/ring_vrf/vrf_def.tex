@@ -62,7 +62,7 @@ $\Verify(\compk,\msg,\aux,\Sign(\sk,\openpk,\msg,\aux)) = \Eval(\sk,\msg)$.
 \end{definition}
 
 We demand unforgability on $(\msg,\aux)$ because alone
- the usual VRF conditions only yield unforgability for \msg.
+ the usual VRF conditions only yield unforgeability for \msg.
 We need the usual EUF-CMA game here, except attackers access
 \CommitKey in our EUF-CMA-KC game, so if desired
  they could obtain multiple signatures under the same \compk,
@@ -78,7 +78,7 @@ provided $\pk = \OpenKey(\compk,\openpk)$, or aborting otherwise.
 
 % TODO \eprint
 \begin{definition}
-We say a VRF-AD-KC satisfies {\em existential unforgability (EUF-CMA-KC)} if
+We say a VRF-AD-KC satisfies {\em existential unforgeability (EUF-CMA-KC)} if
 any PPT adversary \adv has only a negligible advantage in $\secparam$
 in the usual chosen-message game adapted to key commitments:
 \begin{itemize}
@@ -159,24 +159,26 @@ any PPT adversary \adv has only a negligible advantage in $\secparam$
 in this chosen-message game:
 \begin{itemize}
 \item[]
- Sample a random \msg, a random function $\rho$, and a bit $b$.
+ Sample a random \msg, a random function $\rho$ with the same range as \Eval, and a bit $b$.
  \adv queries \ora{Verify} by providing both a public key \pk and
  a PPT (black-box) secret key algorithm $f_\sk$ such that
- if $(\oppk,\compk,\aux,\sigma) \leftarrow f_\sk(\msg)$ then
- $\pk = \OpenKey(\compk,\oppk)$ and
- $\Out \leftarrow \Verify(\compk,\msg,\aux,\sigma)$ succeeds.
- \ora{Verify} always returns either \Out or $\rho(\pk)$ depending upon $b$.
- \adv wins by distinguish \Verify from $\rho$ by guessing $b$.
+ if $(\openpk,\compk,\aux,\sigma) \leftarrow f_\sk(\msg)$ then
+ $\pk = \OpenKey(\compk,\openpk)$ and
+ $\Out \leftarrow \Verify(\compk,\msg,\aux,\sigma)$ succeeds (or aborts otherwise).
+ \ora{Verify} always returns \Out and $\rho(\pk)$ with their order depending upon $b$.
+ \adv wins by guessing $b$, aka by distinguish \Verify from $\rho$.
 \end{itemize}
 \end{definition}
 
-We remark that uniqueness plus pseudo-randomness together make VRFs 
-act like signatures on \msg, but say nothing about \aux, hence
-our explicit unforgability notion.
+Our pseudo-randomness winds up independent from residual pseudo-randomness
+in \cite{vrf_micali}, even adapted to the key committing framework.
+As converse to residual pseudo-randomness' weaknesses noted above,
+an ordinary PRF satisfies both pseudo-randomness and uniqueness, but
+without being a signature.  Yet, residual pseudo-randomness plus
+uniqueness yields unforgeability on \msg.  We caution that
+residual pseudo-randomness plus uniqueness says nothing about \aux, so
+even if residual pseudo-randomness users require explicit unforgeability.
 
-Our pseudo-randomness implies residual pseudo-randomness from \cite{vrf_micali},
-but not conversely.\footnote{TODO:  Prove?  Example?}
-%
 As in \cite{vrf_micali}, 
 there exists a weaker {\em unpredictability} notion where \adv queries
 only once, which defines a verifiable unpredictable function (VUF).
