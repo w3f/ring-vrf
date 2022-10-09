@@ -1,0 +1,104 @@
+\section{Ring hiding}% {Hiding rings} % ring membership circuits}
+\label{sec:ring_hiding}
+
+At first, one imagines sites would accept few rings because each ring
+gives some users multiple ``Sybil'' identities within the site.
+In practice however, we think many sites benefit from accepting
+multiple overlapping rings for convenience and/or reach, but then
+tolerate the resulting few ``Sybil'' users.
+
+As sites accept more rings, we increase risks that each user's ring
+\ctx reveals private user attributes, especially if
+ users join many rings, sites accept many rings, and
+ user agents manage the association poorly.
+As a solution, we suggest tweaking \pifast to prove the ring itself
+lies in some permitted set of rings, but hide the specific ring used.
+
+We could achieve this using recursion inside \pifast of course,
+but doing so lies out of scope.  We instead discuss using other
+zero-knowledge continuation techniques or similar.
+
+
+\subsection{Unique circuit}
+
+As a first step, if all rings use the same circuit, then we hide the
+ring among several rings using a second zero-knowledge continuation.
+As this closely resembles \S\ref{subsec:rvrf_side_channel}, we prefer
+a blind opening of a polynomial commitment \cite{KZG} to \comring choices,
+accomplished with Caulk+ \cite{caulk+} or Caulk \cite{caulk} or similar.
+
+As a special case, if users cannot change their keys too quickly, then
+one could reduce the frequency with which users reprove their original
+zero-knowledge by using multiple \comring choices across the history
+of the same evolving ring database.
+
+In this, we initially reserve space in for future \comring by padding
+the polynomial commitment with say the base point, and then later
+append new \comring using \cite{aSVC}.
+
+
+\subsection{Multi-circuit}
+
+We handle \comring in the multi-circuit case somewhat like the
+unique circuit case.  We caution however that circuits should domain
+separate their enforce \comring suitably.
+
+\smallskip
+
+A priori, \pifast chooses $\genG = \chi_1$, which reveals the circuit,
+due to its dependence upon the SRS like
+$$ \chi_1 = \left[ {\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) \over \gamma} \right]_1 \mathperiod $$
+
+Instead, we propose to stabilize the public input SRS elements across circuits:
+We choose $\chi_{1,\gamma}$ independent before selecting the circuit
+or running its trusted setup.
+We then merely add an SRS element $\chi_{1,\delta}$, for usage in $C$, that binds
+our independent $\chi_{1,\gamma}$ to the desired definition, so
+$$ \chi_{1,\delta} := \left[ {\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) - \gamma \chi_{1,\gamma} \over \delta} \right]_1 \mathperiod $$
+At this point, we replace $\chi_1$ by $\chi_{1,\gamma}$ everywhere and
+include $\comring \, \chi_{1,\delta}$ inside $C$.
+
+In this way, all ring membership circuits could share identical
+public input SRS points $\chi_{1,\gamma}$, and similarly $\chi_0$ if desired.
+
+\smallskip
+
+In their trusted setups, all Groth16 circuits wind up with unique
+toxic waste $\alpha,\beta,\delta$ and hence unique SRS elements
+$[\alpha]_1 \in \ecE_1$ and $[\beta]_2, [\delta]_2, [\gamma]_2 \in \grE_2$,
+and a unique $\grE_T$ element $e([\alpha]_1, [\beta]_2)$.
+We hence encounter the open questions:
+How should we optimize blinding the verifier key elements derived from toxic waste?
+In particular, could we choose some toxic waste elements identically across multiple trusted setups?
+
+We could fix $\gamma=1$ across circuits for example. but in general
+this question depends upon other factors, especially if the trusted setups
+run concurrently.
+If for example, $\alpha$ and/or $\beta$ could be identical across
+concurrent trusted setups, then we avoid extensive complexity in
+ handling $([\alpha]_1, [\beta]_2) \in grE_T$ terms.
+
+We expect the $[\delta]_2$ might differ between different circuits.
+As a nice solution, our Groth16 trusted setup could construct a
+KZG polynomial commitment $\rho$ along with openings to the
+various $\delta$ as $[\delta]_2$.  At this point, our signer could
+blind open $\rho$ to the curve point $[\delta]_2$.
+We think concurrent trusted setups could skip much complexity of
+Caulk+ \cite{caulk+} or Caulk \cite{caulk} because actually the
+ trusted setup erases all knowledge of all openings of $\rho$.
+
+\endinput
+
+
+
+\subsection{Post-quantum}
+
+
+
+
+
+\subsection{SnarkPack}
+
+TODO: Handle $\pi$ hashes?
+
+

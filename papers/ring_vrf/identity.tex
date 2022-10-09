@@ -1,0 +1,84 @@
+
+\section{Identity}
+
+% “We can judge our progress by the courage of our questions and the depth of our answers, our willingness to embrace what is true rather than what feels good.” 
+% - Carl Sagan
+
+% https://twitter.com/IdentityZack/status/1480631954689216516
+
+% bryan ford https://twitter.com/brynosaurus/status/1460094634567344133
+
+% answer https://twitter.com/valkenburgh/status/1442894421289103361
+% https://twitter.com/harryhalpin/status/1443053685219725315
+% https://twitter.com/OR13b/status/1442964741022830594
+% https://twitter.com/jeffburdges/status/1443539630033362948
+% https://twitter.com/Steve_Lockstep/status/1448653579330342916
+
+% https://github.com/dckc/awesome-ocap/issues/17
+
+% https://twitter.com/smdiehl/status/1459825936757493770
+
+% https://twitter.com/edri/status/1483818492646281225
+
+% reply https://twitter3e4tixl4xyajtrzo62zg5vztmjuricljdp2c5kshju4avyoid.onion/matthew_d_green/status/1511437992740761601
+%   https://twitter3e4tixl4xyajtrzo62zg5vztmjuricljdp2c5kshju4avyoid.onion/RaulACarrillo/status/1545038906776764416
+%   https://twitter3e4tixl4xyajtrzo62zg5vztmjuricljdp2c5kshju4avyoid.onion/rohangrey/status/1511808597742612481
+%   https://twitter3e4tixl4xyajtrzo62zg5vztmjuricljdp2c5kshju4avyoid.onion/coloradotravis/status/1545252419671572481
+%   https://twitter3e4tixl4xyajtrzo62zg5vztmjuricljdp2c5kshju4avyoid.onion/RaulACarrillo/status/1545038906776764416/retweets/with_comments
+
+% https://twitter3e4tixl4xyajtrzo62zg5vztmjuricljdp2c5kshju4avyoid.onion/PeterSweden7/status/1552729179568865280
+
+% Zeroth law:  A robot may not harm humanity, or, by inaction, allow humanity to come to harm.
+% First law:  A robot may not injure a human being or, through inaction, allow a human being to come to harm.
+
+
+An identity system must not harm humanity or its human users, to do otherwise is clearly unethical.  
+
+Identity systems for human users have three participants, an identity provider, an identity consumer, and the user being identified.  There exist two methods by which ethical identity systems avoid harming users, either 
+\begin{itemize}
+\item special identity systems enforce that identity consumers owe users some legal duty that prevents miss-using the user's details, or else
+\item general identity systems merely constrain user activity, often only rate limiting, but avoid providing identity consumers with any user details.
+\end{itemize}
+In other words, identity consumers should always first prove to the identity provider that they owe the user a legal duty appropriate to the details being revealed by the identity provider.
+
+\subsection{Legal duties}
+
+In this paper, we discuss only cryptographic protocols for general identity systems that avoid legal entanglements by only proving user uniqueness and not providing user details.  We first in this section briefly discuss wider examples that help motivate this problem by clarifying the legal and ethical complexities that arise when revealing user details.
+
+As an unethical example, our largest advertising companies like Google and Facebook track private users using OAuth \cite{oauth}, with the intent to waste users time with increased advertising engagement, manipulate public opinion, ensnare users into unnecessary purchases, often by harming users' psyche, and accumulate personal data users might otherwise wish kept hidden.
+
+As an only moderately harmful example, websites often prevent abuse by demanding commenters identify themselves by email address, which creates moral hazards and should expose the website operators to legal risks.
+
+As beneficial identity examples, financial institutions act as an identity provider for their own identity consumer logic by issuing login credentials, but then owe their customers some fiduciary duty and strongly discourage using the same login credentials elsewhere.  
+
+As a more nuanced example, an employer identifies employees to a personnel management service by way of an external OAuth service, but the employer has some legal relationship with the personnel management service, the OAuth service, and the employee, so any resulting harms rest upon the employer-employee relationship.  
+
+We think Google Single Sign-on or Facebook Connect cannot play the role of OAuth service even in this employer-employee example, and indeed cannot ever be used ethically, because they aggressively track the employee outside the employer-employee relationship.  At the same time, an employees' Github account might or might not serve this role depending upon the specific employee and how they use Github outside work.  
+
+... passports or medical ...
+
+\subsection{Unlinkable identity}
+
+We now lay aside such identity systems that represent a distinguished purpose tied to onerous three-way legal relationships between the parties.  Instead we turn our attention towards the range of identity systems that avoid providing any user details.  
+
+At present, CAPTCHAs provide a popular defense against automated abuse.  There also exist cryptographic tools that amplify defenses against automated abuse, like blind signatures or verifiable oblivious pseudo-random functions (VOPRFs), as used in Privacy Pass \cite{privacypass}.  These dispense single-use tokens within some limits imposed by other identity sources, rate limits, payments, or CAPTCHAs.  
+
+We think single-use tools like CAPTCHAs, blind signatures, and VOPRFs adequately deter abuse in most use cases.  Yet, there also exist situations where abusers cannot be dissuaded by solving another CAPTCHAs or spending another token, like when abuse takes a personal character, or due to a larger profit motive.  
+
+In such harder cases, we still need an anonymous credential so that identity consumers and providers cannot collude to track users, but identity consumers banning problematic users seemingly demands that users have different stable identities with each distinct identity consumer.  
+To our knowledge, this identity formulation originates with proof-of-personhood parties \cite{pop2008,pop2017}.
+% https://bford.info/pub/dec/pop-abs/
+% https://bford.info/pub/net/sybil-abs/
+
+We expect stable identities arise from multi-use anonymous credentials, like group signatures or ring signatures.  In group signatures, an identity provider holds a group manger secret key, with which they both issues credentials and deanonymize users.  We only want identity consumers to recognize returning users, making the deanonymization operation unacceptable.  
+
+Ring signatures have classically given signers' control over their anonymity set aka ``ring'', which turns out mostly useless in practice.  Instead, realistic ring signatures like Zcash's circuits \cite{zcash_prorocol} have a shared public commitment to their ``ring'', so then users need only an opening for their own public key's presence in the ring. 
+
+
+
+% sharing economy 
+% business-to-business 
+
+
+
+%   We think identity consumers should avoid imposing unnecessary constraints upon users and that rate limiting tools usually suffice.  Yet, there exist identity consumers who depend upon stronger Sybil defenses or an ability to ban problematic users.   

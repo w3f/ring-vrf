@@ -1,0 +1,149 @@
+\section{Application: Identity}
+\label{sec:app_identity}
+
+Anonymous VRFs yield anonymous identity systems:
+After a user and service establish a secure channel and
+the server authenticates itself with certificates, then
+the user authenticates themselves by providing an anonymous
+VRF signature with input \msg being the server's identity,
+thus creating an anonymous or pseudo-nonymous identified session.
+
+We expand this identified session workflow with an extra
+update operation suitable for our ring VRF's amortized prover.
+We discuss only \pifast here but all techniques apply to \pisk and \pipk similarly. 
+
+\begin{itemize}
+\item {\em Register} --
+ Adds users' public key commitments into some public ring \ctx,
+ after verifying the user does not currently exist in \ctx.
+\item {\em Update} --
+ User agents regenerate their stored SNARK \pifast every time \ctx changes,
+ likely receiving \comring and \openring from some ring management service.
+\item {\em Identify} --
+ Our user agent first opens a standard TLS connection to a server \msg,
+ both checking the server's name is \msg and checking certificate
+ transparency logs, and then computes the shared session id \aux.
+ Our user agent computes the user's identity
+  $\mathtt{id} = \PedVRF.\Eval(\sk,\msg)$ on the server \msg,
+ % Our user agent next rerandomizes \pifast, \compk, and \openpk, computes
+ %  $\sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \pifast)$
+ and finally sends the server their ring VRF signature
+ $\rVRF.\rSign(\sk,\openring,\msg,\aux)$ % $ = (\compk,\pifast,\sigma)$.
+\item {\em Verify} -- 
+ After receiving $(\compk,\pifast,\sigma)$ in channel \aux,
+ the server named \msg checks \pifast on the input $\compk + \comring$,
+ checks the VRF signature
+ $\mathtt{id} = \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \pifast,\sigma)$,
+ and obtains the user's identity $\mathtt{id}$
+\end{itemize}
+
+
+\subsection{Browsers}
+
+We must not link users' identities at different web sites, so user agents
+must disable all cross site resource loading, referrer information, etc.
+Yet, user agents could still load purely static resources, without metadata
+like cookies or referrer information, especially purely content addressable
+resources.
+
+In other words, web browsers mostly fail these baseline privacy requirements.
+We expect Tor browser and Brave both behave correctly however.
+Apple's Safari trends towards preventing invasive cross site resources too.  
+% There also do exist decentralized web aka web 3.0 projects whose stated aims
+% include more privacy.
+In any case, one could always specify rules against cross site privacy invasions
+whenever writing ring VRF browser specifications.
+
+
+\subsection{AML/KYC}\label{subsec:AML_KYC}
+
+We shall not discuss AML/KYC in detail, because the entire field lacks
+clear goals, and thus winds up being ineffective
+ \cite{doi:10.1080/25741292.2020.1725366}.
+% https://www.tandfonline.com/doi/full/10.1080/25741292.2020.1725366
+% via https://twitter.com/ronaldpol/status/1491548352189587460
+We do however observe that AML/KYC conflicts with security and privacy
+laws like GDPR.  As a compromise between these regulations,
+one needs a compliance party who know users' identities,
+ while another seperate service party knows the users' activities.
+We propose this more efficent solution:
+
+Instead our compliance party becomes an identity issuer who maintains
+a ring \ctx consisting of one unique public key for each user.
+Arbitrarily many service providers could ring VRF based identity proofs.
+If later asked or subpoenaed, users could prove their relevant identities
+to investigators, or maybe prove which services they use and do not use. 
+
+Interestingly, \PedVRF could be run ``backwards'' to prove a specific
+ring VRF output does not belong to the user, without revealing the users'
+identities to investigators. 
+
+
+\subsection{Moderation}
+\label{subsec:moderation}
+
+All discussion or collaboration sites have behavioral guidelines and
+moderation rules that deeply impact their culture and collective values.
+
+Our ring VRFs enables a simple blacklisting operation:
+If a user misbehaves, then sites could blacklist or otherwise penalizes
+their site local identity $\mathtt{id}$.
+As $\mathtt{id}$ remains unlinked from other sites, we avoid thorny
+questions about how such penalties impact the user elsewhere, and thus
+can assess and dispense justice more precisely. 
+
+At the same time, there exist sites who must forget users' histories
+eventually, such as when users invoke GDPR compliance or to give children
+room to make social mistakes.  In these cases, we suggest injecting
+approximate date information into \msg along with the site name,
+so \msg becomes site name along with the current year plus month or week.
+In this way, users have only one stable $\mathtt{id}$ within the
+approximate date range, but they obtain fresh $\mathtt{id}$s merely
+by waiting until the next month or week.
+
+We discussed in \S\ref{subsec:vrf_pederson} how one signle \PedVRF
+signature $\sigma$ could simultaneously prove multiple input-output
+pairs $(\msg_j,\mathtt{id}_j)$.  As doing so links these pairs
+together, sites could make users link pseudo-nym creation date and
+current date, so users could have multiple active pseudo-nyms,
+but only one active pseudo-nym per time period, which prevents spam.
+If instead we link only adjacent dates, then pseudo-nyms could
+be abandoned and replaced, but abandoned pseudo-nyms cannot then
+be reclaimed without linking to intervening dates.
+
+In these ways, sites encode important aspects of their moderation rules
+into the ring VRF inputs requested.  
+% We expect this makes sites' values and culture more uniform, predictable, and transparent.
+
+
+\subsection{Reduced pairings}
+\label{sec:reduced_pairings}
+
+At a high level, we distinguish moderation-like applications discussed
+above, which resemble classic identity applications like AML/KYC, from
+rate limiting applications discussed in the next section. 
+%
+In moderation-like applications, ring VRF outputs become long-term
+stable identities, so users typically reidentify themselves many times
+to the same sites.
+
+As an optimization, our zero-knowledge continuation
+should deterministically choose the coefficients $r_1,r_2,b$ used for
+rerandomization in \S\ref{sec:rvrf_cont},
+ seeded by \msg and \sk, meaning $r_1,r_2,b \leftarrow H(\sk,\msg)$. 
+%
+In this way, each $\mathtt{id}$ comes packages with the same unique
+Groth16 SNARK \pifast, so the verifier could cache valid pairs
+$(\mathtt{id},H(\pifast),\mathtt{diffdate})$, and reaccept \pifast
+without checking the Groth16 pairing equation whenever found cached.
+%
+We spend most verifier time checking the Groth16 pairing equation, so
+this saves considerable CPU time. % assuming our cache wind up fast enough.
+
+We still risk denial-of-service attacks by users who vary $r_1,r_2,b$ 
+randomly however.  We therefore set $\mathtt{diffdate}$ to be the date
+when our server last saw a different $H(\pifast)$ associated to
+$\mathtt{id}$, or empty if $\mathtt{id}$ always used the same $H(\pifast)$.
+We rate limit and verify more lazily if $\mathtt{diffdate}$ is non-empty,
+and optionally verify somewhat lazily even if no cache entry exists.
+

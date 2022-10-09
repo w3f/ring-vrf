@@ -1,0 +1,185 @@
+\section{Application: Rate limiting}
+\label{sec:app_rate_limits}
+
+We showed in \S\ref{sec:app_identity} how ring VRFs give users only
+one unique identity for each input \msg.  
+We explained in \S\ref{subsec:moderation} that choosing \msg to be
+the concatenation of a base domain and a date gives users a stream of changing identities.
+
+We next discuss giving users exactly $n > 1$ ring VRF outputs aka
+``identities'' per date, as opposed to the unique identity 
+
+
+% \subsection{Implementation}
+
+As a trivial implementation, we could include a counter $k = 1 \ldots n$
+in \msg, so $\msg = \mathtt{domain} \doubleplus \mathtt{date} \doubleplus k$.
+
+
+\subsection{Avoiding linkage}
+
+Our trivial implementation leaks information about ring VRF outputs'
+ ownership by revealing $k$:
+%
+An adversary Eve observes two ring VRF signatures with the same
+$\mathtt{domain}$ and $\mathtt{date}$ so
+$\msg_i = \mathtt{domain} \doubleplus \mathtt{date} \doubleplus k_i$
+for $i=1,2$, but with different outputs $\Out_1$ and $\Out_2$.
+If $k_1 \ne k_2$ then Eve learns nothing, but if $k_1 = k_2$ then
+ Eve learns that $sk_1 \ne \sk_2$, maybe representing different users. 
+
+We do not necessarily always care if Eve learns this much information,
+but scenarios exist in which one cares.  We therefore briefly describe
+several mitigations:
+
+If $n$ remains fixed forever, then we could simply let all users
+register $n$ ring VRF public keys in \ctx.
+If $n$ fluctuates under an upper bound $N$, then we could create $N$
+rings $\ctx_i$ for $i = 1 \ldots N$, and
+ then blind \comring in \pifast similarly to \S\ref{sec:ring_hiding}.
+
+Although simple, these two approaches require users construct $n$ or $N$
+different $\pipk$ proofs every time the ring \ctx updates.
+
+Instead of proving ring membership of one public key, $\pipk$ could
+prove ring membership of a Merkle commitment to multiple keys, so
+users have $\pisk^1,\ldots,\pisk^N$ for each of their multiple keys.
+
+As a more flexible approach,
+we could compute the hash-to-curve $\In := H_{\grE}(\msg)$ inside an
+unamortized SNARK $\pi_{\mathtt{in}}$ and reveal only a Pedersen-like commitment
+to $\In + \openpk^{-1} \genB$.  We then adjust \PedVRF to yield
+a proof-of-knowledge of $\Out/\In$ subject to soundness of this
+SNARK $\pi_{\mathtt{in}}$.
+
+TOTO: Explain better!!
+
+In all cases, we incur costs by hiding part of the input \msg, so
+deployment should seriously consider if leaking $k$ suffices.
+
+
+\subsection{Ration cards}
+
+As a species, we expect $+3^{\circ}$ C or more likely $+4^{\circ}$ C
+over the pre-industrial climate by 2100 \cite{IPCC2022}, which shall
+reduce the Earth's carrying capasity below one billion people \cite{carrying_capasity}.
+In the shorter term, we expect shortages of resources, energy, goods,
+water, and food beginning during the next several decades, due to
+climate change, ecosystem damage or collapse, and resource exhaustion
+ala peak oil.  Invariably, nations manage shortages through rationing,
+like during WWI, WWII, and the oil shocks.  
+
+Ring VRFs support anonymous rationing:
+Instead of treating ring VRF outputs like identities,
+we treat them like nullifiers which could each be spent exactly once.
+
+\def\expiry{e}
+We fix a set $U$ of limited resource types, and dynamically define
+an expiry date $\expiry_{u,d_0}$ and an availability $n_{u,d_0}$, 
+both dependent upon the resource $u \in U$ and current date $d_0$.
+We typically want a randomness beacon $r_d$ too, which prevents
+anyone learning $r_d$ much before date $d$. 
+% Among other usages, this reduces damages from key compromises.
+As ring VRF inputs, we choose
+ $\msg = u \doubleplus r_d \doubleplus d \doubleplus k$
+where $u \in U$ denotes a limited resource,
+ $d$ denotes an non-expired date meaning $\expiry_{u,d_0} < d \le d_0$,
+ and $1 \le k \le n_{u,d_0}$.
+In this way, our rationing system controls both daily consumption
+via $n_{u,d_0}$ and time shifted demand via expiry time $\expiry_{u,d_0}$.
+
+Importantly, our rationing system retains ring VRF outputs as nullifiers,
+filed under their associated date $d$ and resource $u$, so nullifiers
+expire once $d \le \expiry_{u,d_0}$ which permits purging old data rapidly.
+
+We remark that fully transferable assets could have constrained lifetimes
+too, which similarly eases nullifier management when implements using
+blind signatures, zcash sapling, etc.  Yet, all these tokens require
+an explicit issuance stage, while ring VRFs self-issue.
+
+Among the political hurdles to rationing, we know certificates have
+a considerable forgery problem, as witnessed by the long history of
+fraudulent covid and TLS certificates.  It follows citizens would
+justifiably protest to ration carts that operate by simple certificates.
+Ring VRFs avoid this political unrest by proving membership in a public list.
+
+
+\subsection{Multi-constraint rationing}
+
+We could proving multiple \ThinVRF outputs with one signatures
+in \S\ref{subsec:vrf_thin}.  We needed \PedVRF to isolate the blinding 
+factor when using a Pedersen commitment instead of a public key, but
+exactly the same technique works for proving multiple \PedVRF outputs
+in one ring VRF signature.
+
+We could therefore impose simultanious rationing constraints for multiple
+resources $u_1,\ldots,u_k$ by producing one ring VRF signature in which
+\PedVRF proves correctness of pre-ouptuts for multiple messages 
+ $\msg_j = u_j \doubleplus r_d \doubleplus d \doubleplus k$ for $j=1 \ldots k$.
+
+As an example, purchasing some prepared food product could require espending
+rations for multiple base food sources, like making a cake from wheat, butter,
+eggs, and sugar.  
+
+
+\subsection{Decommodification}
+
+There exist many reasons to decommodify important services,
+like energy, water, or internet,
+ beyond rationing real physical shortage.
+Ring VRFs fit these cases using similar \msg formulations.
+
+As an example, a municipal ISP allocates some limited bandwidth capacity
+among all residents.  It allocates bandwidth fairly by verifying ring VRFs
+signatures on hourly \msg and then tracking nullifiers until expiry.
+
+Aside from essential government services, commercial service providers
+typically offers some free service tier, usually because doing so
+familiarizes users with their intimidating technical product.
+
+Some free and paid tier examples include DuoLingo's heats on mobile, 
+continuous integration testing services, and many dating sites.
+
+A priori, rate limiting cases benefit from unlinkability among individual
+usages, not merely at some site boundary like moderation requires.
+We thus use each ring VRF output only once, which prevents our cashing
+trick of \S\ref{sec:reduced_pairings} from reducing verifier pairings.
+
+Although rationing sounds valuable enough, we foresee services like ISP,
+VPNs, or mixnets having many low value transactions.
+In such cases, ring VRFs could authorize issuing a limited number of
+fast simple single-use blind issued credentials, like blind signatures
+ala GNU Taler \cite{taler} or PrivacyPass OPRF tokens \cite{PrivacyPass},
+ which both solve the leakage of $k$ above too.
+
+In principle, commercial service providers could sell the same tokens,
+which avoids leaking whether the user uses the free or commercial tier.
+
+
+\subsection{Delegation}
+
+We sometimes want to delegate spending ring VRF outputs, without
+creating a fully transferable asset.  In particular, parents might
+delegate limited internet or streaming service access to a child,
+but without making the token full transferable.
+
+Among blind issued credential many support this, both
+GNU Taler \cite{taler} and PrivacyPass \cite{PrivacyPass} could
+be redeemed by a delegatee family member who trusts the original
+delegator not to double spend, but transactions with untrusted spenders
+risks double spending.  
+
+Ring VRFs usage typically demands spender authenticate the specific
+spending operations inside the the associated data \aux, but adjusting
+\aux requires knowing \sk, perhaps unacceptable to the delegator.
+
+We could however achieve delegation by treating the ring VRF like a
+certificate that authenticates another public key held by the delegatee.
+GNU Taler achieves delegation and other features like this.
+
+We could similarly treat the ring VRF like an adaptor certificate aka
+implicit certificate.  In other words, the delegatee learns the full
+ring VRF signatures, but then the delegatee hides $s_1$ from downstream
+recipients, and instead merely prove knowledge of $s_1$, usually via
+a key exchange or another Schnorr signature.
+

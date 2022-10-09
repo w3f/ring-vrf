@@ -1,0 +1,323 @@
+
+\section{Zero-knowledge continuations}
+\label{sec:rvrf_cont}
+
+\newcommand\rrSNARK{\primalgo{Groth16}\xspace}
+\newcommand\rrSNARKweak{\primalgo{Groth16/KZG}\xspace}
+\newcommand\pifast{\ensuremath{\pi_{\mathtt{fast}}}\xspace}
+% \newcommand\pifastdot{\ensuremath{\dot{\pi}_{\mathtt{fast}}}\xspace}
+\newcommand\pisk{\ensuremath{\pi_{\mathtt{sk}}}\xspace}
+\newcommand\pipk{\ensuremath{\pi_{\mathtt{pk}}}\xspace}
+
+
+We now construct ring VRFs which achieves fast amortized prover time
+by using a heavy zero-knowledge continuation for $\rVRF.\OpenKey$ but
+which permits updating \openpk in the $\PedVRF.\OpenKey$ invocation
+without reproving $\piring$.
+$$ \piring = \NIZK \Setst{ \compk, \comring }{
+ \exists \openpk,\openring \textrm{\ s.t.\ } 
+ \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenKey(\comring,\openring)}
+} \mathperiod $$
+
+% \smallskip
+\subsection{Rerandomization}
+% \label{sec:rvrf_groth16}
+
+Zero-knowledge continuations need rerandomizable zkSNARKs
+when being reused multiple times, meaning Groth16 \cite{Groth16},
+but unlinkability requires more than merely rerandomization.
+
+In Groth16 \cite{Groth16}, we have an SRS $S$ consisting of curve
+points in $\grE_1$ and $\grE_2$ that encode the circuit being proven.
+We follow \cite{Groth16} in discussing the SRS $S$ in terms of
+its ``toxic waste''
+ $(\alpha,\beta,\delta,\gamma,\tau^1,\tau^2,\ldots) \in \F_q^*$.
+In other words, we could write say $[ f(\tau)/\delta ]_1$ or $[\cdots]_2$
+to denote an element of our SRS $S$ in $\grE_1$ or $\grE_2$ respectively,
+computed by scalar multiplication from the toxic waste $\tau$ and $\delta$,
+ but for which nobody knows the underlying $\tau$ or $\delta$ anymore.
+
+In the SRS $S$, we distinguish the verifiers' string of elements
+ $\chi_1,\ldots,\chi_k, [\alpha]_1 \in \grE_1$ and
+ $[\beta]_2, [\gamma]_2, [\delta]_2 \in \grE_2$.
+% as separate from the provers' much longer string of elements in $\grE_1$ and $\grE_2$.
+A Groth16 \cite{Groth16} proof then takes the form 
+ $\pi = (A,B,C) \in \grE_1 \times \grE_2 \times \grE_1$.
+A verifier then produces a $X = \sum_i^k x_i \chi_i \in \grE_1$ from
+ the public inputs $x_i$ and then checks 
+$$ e(A,B) = e([\alpha]_1, [\beta]_2) \cdot
+ e(X, [\gamma]_2) \cdot e(C, [\delta]_2) \mathperiod $$
+
+We need the rerandomization algorithm from \cite[Fig.~1]{RandomizationGroth16}:
+% to build a zero-knowledge continuation:
+% https://eprint.iacr.org/2020/811
+% https://github.com/arkworks-rs/groth16/pull/16/files
+% \algo{rerandomize}
+An existing SNARK $(A,B,C)$ is transformed into a fresh
+SNARK $(A',B',C')$ by sampling random $r_1,r_2 \in \F_p$ and computing
+$$ \begin{aligned}
+A' &= {1 \over r_1} A \\
+B' &= r_1 B + r_1 r_2 [\delta]_2 \\
+C' &= C + r_2 A \mathperiod \\
+\end{aligned} $$
+At this point, our $x_i$ remain identical after rerandomization,
+so $X$ links $(A,B,C)$ to $(A',B',C')$.
+Alone rerandomization cannot alter public inputs $x_i$, so
+we instead need an opaque public input point $X$, which then becomes
+part of our proof and incurs its own separate proof of correctness.
+
+We also need one fresh basepoint $\genB_\gamma$ independent from all others,
+again perhaps created by applying $H_\grE$ to an input outside existing usages' domain.
+We now give provers the additional SRS elements
+$$ \genB_\delta := {\gamma\over\delta} \genB_\gamma $$
+Although $\genB_\gamma$ is independent, 
+we create $\genB_\delta$ during the trusted setup,
+ so the toxic waste $\gamma$ and $\delta$ remain secret.
+After this, subversion resistance could be checked like 
+$$ e(\genB_\gamma, [\gamma]_2) = e(\genB_\delta, [\delta]_2) \mathperiod $$
+
+We now have a zero-knowledge continuation $(X,A,B,C)$ from which
+we produce an unlinkable instance $(X',A',B',C')$ by
+ first sampling random $b,r_1,r_2 \in \F_p$ and then computing
+$$ \begin{aligned}
+X' &= X + b \genB_\gamma \\
+A' &= {1 \over r_1} A \\
+B' &= r_1 B + r_1 r_2 [\delta]_2 \\
+C' &= C + r_2 A + b \genB_\delta \mathperiod \\
+\end{aligned} $$
+As our two $b$ terms cancel in the pairings, we wind up with the
+standard Groth16 rerandomization construction above,
+ except with $X$ an now opaque Pedersen commitment.
+
+% TODO:  Should we be saying opaque less and Pedersen more below?
+
+Along side hidden inputs in $X = \sum_i^k x_i \chi_i$,
+our verifier would typically assemble some transparent inputs
+$Y = \sum_i^l y_i \Upsilon$ themselves.  In particular, our ring VRFs
+handle the Merkle root \comring of the ring $\ctx$ in this way below.
+
+We then verify $(X' + Y,A',B',C')$ like Groth16 
+$$ e(A',B') = e([\alpha]_1, [\beta]_2) \cdot
+ e(X' + Y, [\gamma]_2) \cdot e(C', [\delta]_2) \mathcomma $$
+As our verifier does not build $X'$ themselves, we proves nothing
+with this pairing equation unless the verifier separately checks
+ some proof-of-knowledge that $X' = \sum_i^k x_i \chi_i$.
+
+\begin{lemma}\label{lem:unlinkable}
+Our rerandomization procedure % $(X,A,B,C) \mapsto (X',A',B',C')$
+transforms honestly generated zero-knowledge continuations $(X,A,B,C)$
+into identically distributed zero-knowledge continuations $(X',A',B',C')$,
+with identical transparent inputs $y_1,\ldots,y_l$.
+\end{lemma}
+
+\begin{proof}[Proof idea.]
+Adapt the proof of Theorem 3 of \cite[Appendix C, pp. 31]{RandomizationGroth16}.
+\end{proof}
+
+% \begin{corollary}\label{cor:unlinkable}
+%	If $\sigma'$ and $\sigma''$ are \PedVRF{}s then ???
+% \end{corollary}
+
+All told, our opaque rerandomization trick converts any conventional
+Groth16 zkSNARK $\pi$ for $\rVRF.\OpenKey$ into a zkSNARK $\pi'$
+with inputs split into a transparent part $Y$ vs opaque unlinkable part $X$.
+% We explore two concrete $\pi$ proposals below.
+
+Importantly, rerandomization requires only
+ four scalar multiplications on $\ecE_1$ and
+ two scalar multiplications on $\ecE_2$,
+which  BLS12 curves make roughly equivalent to
+ eight scalar multiplications on $\ecE_1$.
+
+% TODO:
+% \begin{definition}
+% restrited knowledge soundness
+% \end{definition}
+
+\begin{lemma}\label{lem:knowledge_soundness}
+Assuming AGM plus the $(2n-1,n-1)$-DLOG assumption,
+any zero-knowledge continuation with circuit size less than $n$
+satisfies knowledge soundness, restricted to challengers
+ who learn the actual public input wire values and blinding factors.
+\end{lemma}
+
+\begin{proof}[Proof idea.]
+Adapt the proof of Theorem 2 in \cite[\S3, pp. 9]{RandomizationGroth16},
+observing that $K_\gamma$ and $K_\delta$ never interact with other elements. 
+% TODO: Check this argument!
+\end{proof}
+
+% TODO:  Oy!
+% We obtain knowledge soundness if we fold hiding Pedersen commitments
+% into the witness too.  Yet, 
+% we do not have ``knowledge soundness'' for the hidden Pedersen commitment 
+
+In fact, one could prove zero-knowledge continuations satisfy
+weak white-box simulation extractability under similar restrictions,
+much like Theorem 1 in \cite[\S3, pp. 8 \& 11]{RandomizationGroth16}.
+We depends upon the specific simulator though, which itself increases
+our dependence upon the usage of the zero knowledge continuation.
+
+
+\subsection{Single continuation}
+\label{subsec:rvrf_faster}
+
+We describe a much faster choice $\pifast$ for $\pi$
+that sets $x_1 := \sk$ and $x_0 = \comring = \CommitRing(\ctx)$ so that
+taking $\genG := \chi_1$, $\genB := \genB_\gamma$, and $\openpk := b$ in \PedVRF
+yields and incredibly fast amortized ring VRF prover.
+Also, \PedVRF itself proves knowledge of $X'$,
+ or more precisely of $X' - \comring\, \chi_0$ since the verifier knows \comring.
+$$ X' = \comring\, \chi_0 + \sk\, \chi_1 + b \genB_\gamma $$
+
+% TODO: Do we mention that $\chi_0$ gets omitted in the proof-of-knowledge
+
+A priori, we do not know $\chi_1$ during the trusted setup for $\pifast$,
+which prevents computing $\pk = \sk\, \chi_1$ inside $\pifast$.
+Instead, we propose $\ctx$ contain commitments to $\sk$ over
+some Jubjub curve $\ecJ$.  
+
+We know the large prime order group $\grJ$ of $\ecJ$ typically has
+smaller order than $\grE$, itself due to $\ecJ$ being an Edwards curve. 
+Yet, if $\sk = \sk_0 + \sk_1 \, 2^{128}$ then our public key commitments could
+take the form $\sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$,
+with independent $\genJ_0,\genJ_1,\genJ_2$.
+Interestingly, we avoid range proofs for $\sk_1$ and $\sk_2$
+by this independence. 
+
+$$ \pifast = \rrSNARK \Setst{ \sk_0 + \sk_1 2^{128}, \comring }{
+ \exists d,\openring \textrm{\ s.t.\ }
+ % 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
+ \genfrac{}{}{0pt}{}{ \rVRF.\OpenKey(\comring,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
+} $$ % \mathperiod 
+
+Applying our rerandomization to $\pifast$ with opaque input yields
+a zkSNARK $\pifast'$ of exactly the form $\piring$.
+
+We explain later in \S\ref{sec:ring_hiding} how one could
+choose $\chi_1$ independent before doing the trusted setup,
+ and then wire $\chi_1$ into $\pifast$ inside $C$.
+In ths case, we could prove $\pk = \sk\, \chi_1$ inside $\pifast$, but then
+non-native arithmetic makes $\pifast$ far slower.
+
+At this point, \PedVRF requires four scalar multiplications on $\ecE_1$,
+so together with rerandomization costing four scalar multiplications
+on $\ecE_1$ and two on $\ecE_2$, our amortized prover time
+ approaches 12 scalar multiplications on typical $\ecE_1$ curves. 
+We expect the three pairings dominate verifier time, but
+ verifiers also need five scalar multiplications on $\ecE_1$.
+
+As an aside, one could construct a second faster curve with the same
+group order as $\grE$, which speeds up two scalar multiplications
+ in both the prover and verifier. 
+
+Importantly, our fast ring VRF' amortized prover time now rivals
+group signature schemes' performance.  We hope this ends the temptation
+to deploy group signature like constructions where the deanonymization vectors matter.
+
+\begin{theorem}\label{thm:knowledge_soundness}
+Our Pedersen ring VRF instantiated with \pifast satisfies knowledge soundness.
+\end{theorem}
+
+\begin{proof}[Proof stetch.]
+An extractor for \PedVRF reveals the opening of $X$ for us,
+so our result follows from Lemma \ref{lem:knowledge_soundness}.
+\end{proof}
+
+% \begin{corollary}\label{cor:???}
+% Our Pedersen ring VRF instantiated with \pifast satisfies ring unforgability and uniqueness.
+% \end{corollary}
+
+% \begin{theorem}\label{thm:pifast_anonymity}
+% Our Pedersen ring VRF \rVRF using \pifast satisfies zero-knowledge.
+% \end{theorem}
+%
+% \begin{proof}[Proof stetch.]
+% Assuming the same \comring, we know the zero-knowledge continuations
+% are identically distributed by Lemma \ref{lem:unlinkable}.
+% It follows the typical simulator for \PedVRF ... WHAT???
+% \end{proof}
+
+% \begin{corollary}\label{cor:???}
+% Our Pedersen ring VRF instantiated with \pifast satisfies ring anonymity.
+% \end{corollary}
+
+
+\subsection{Side channel}
+\label{subsec:rvrf_side_channel}
+
+In this, we dislike exposing the secret key material inside
+ the Groth16 prover for \pifast.
+Adversaries could trigger \pifast recomputation only by updating the ring,
+but this still presents a side channel risk.
+
+If concerned, one could address this via a second zk continuation that
+splits \pifast into two parts: % \pisk and \pipk.
+%
+$$ \pipk = \rrSNARKweak \Setst{ J_\pk, \comring }{
+ \exists \openring \textrm{\ s.t.\ }
+  J_\pk = \rVRF.\OpenKey(\comring,\openring)
+} \mathcomma \quad\textrm{and} $$ 
+%
+$$ \pisk = \rrSNARK \Setst{ \sk_0 + \sk_1 2^{128}, J_\pk }{ 
+ \exists d \textrm{\ s.t.\ }
+ % 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
+ J_\pk = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2
+} \mathperiod $$
+
+We now prove \pisk only once {\it ever} during secret key generation,
+which largely eliminates any side channel risks.
+We do ask verifiers compute more pairings, but nobody cares when
+the VRF verifiers are few in number or institutional,
+ as in many applications.
+We also ask provers rerandomize both \pisk and \pipk, but this costs relatively little.
+Assuming \pipk is Groth16 then we need a proof-of-knowledge for the desired structure of $J_pk$ too.
+All totaled this almost doubles the size and complexity of our ring VRF signature.
+
+There is no ``arrow of time'' among zk continuations per se, but
+as \pisk bridges between the \PedVRF and \pipk,
+one might consider this zk continuation to be time reversed.
+
+Interestingly, our \pipk has become simple enough that opening
+a KZG commitment \cite{KZG} at a secret point now suffices,
+ ala Caulk+ \cite{caulk+}, or perhaps Caulk \cite{caulk}.
+
+% \subsection{Ring blockchains}
+% \label{subsec:rvrf_side_channel}
+\smallskip
+
+\def\comblock{\ensuremath{\mathsf{comblock}}\xspace}
+\newcommand\pichain{\ensuremath{\pi_{\mathtt{chain}}}\xspace}
+
+We could build our ring using a blockchain,
+ not unlike how zcash handles their UTXOs.
+If so, we suggest \pifast provide an inner per block or per epoch ring,
+but then another proving system like Caulk+ \cite{caulk+}
+ extend this ring to the growing blockchain, like
+%
+$$ \pichain = \rrSNARKweak \Setst{ \comblock, \comring }{
+	\exists \openring \textrm{\ s.t.\ }
+	J_\pk = \rVRF.\OpenKey(\comring,\openring)
+} \mathcomma \quad\textrm{and} $$ 
+%
+$$ \pifast = \rrSNARK \Setst{ \comblock, \comring }{
+	\exists d,\openring \textrm{\ s.t.\ }
+	\genfrac{}{}{0pt}{}{ \rVRF.\OpenKey(\comblock,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
+} \mathperiod $$  
+
+Again we need a proof=of-knowledge for \comblock because it winds up opaque
+ in both of these proofs. 
+
+\smallskip
+
+A priori, our JubJub representations $\sk_0 \genJ_0 + \sk_1 \genJ_1$
+costs us exculpability from Definition \ref{def:rvrf_exculpability}.
+If desired, exculpability could easily be repaired by asking users
+provide $\pisk$ when joining the ring.
+
+% \begin{proposition}
+% \end{proposition}
+
+
+\endinput
+
