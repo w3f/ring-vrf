@@ -28,12 +28,6 @@ Maria Borge, Eleftherios Kokoris-Kogias, Philipp Jovanovic, Linus Gasser,
 \newblock In {\em 2017 IEEE European Symposium on Security and Privacy
   Workshops (EuroS\&PW)}, pages 23--26, 2017.
 
-\bibitem{brands06}
-Stefan Brands.
-\newblock Secure user identification without privacy erosion.
-\newblock {\em University of Ottawa Law \& Technology Journal}, 3:205--223,
-  2006.
-
 \bibitem{cryptoeprint:2020:823}
 Jacqueline Brendel, Cas Cremers, Dennis Jackson, and Mang Zhao.
 \newblock The provable security of ed25519: Theory and practice.
@@ -55,13 +49,6 @@ Privacy by~Design~Foundation.
 \newblock Irma docs v0.2.0.
 \newblock \url{https://irma.app/docs/v0.2.0/overview/}.
 
-\bibitem{CP92}
-David Chaum and Torben~Pryds Pedersen.
-\newblock Wallet databases with observers.
-\newblock In Ernest~F. Brickell, editor, {\em Advances in Cryptology ---
-  CRYPTO' 92}, pages 89--105, Berlin, Heidelberg, 1993. Springer Berlin
-  Heidelberg.
-
 \bibitem{praos}
 Bernardo David, Peter Ga{\v{z}}i, Aggelos Kiayias, and Alexander Russell.
 \newblock Ouroboros {P}raos: An adaptively-secure, semi-synchronous
@@ -75,12 +62,6 @@ Alex Davidson, Ian Goldberg, Nick Sullivan, George Tankersley, and Filippo
 \newblock Privacy pass: Bypassing internet challenges anonymously.
 \newblock {\em Proceedings on Privacy Enhancing Technologies}, 2018:164--180,
   06 2018.
-
-\bibitem{cryptoeprint:2021:181}
-Jesus Diaz and Anja Lehmann.
-\newblock Group signatures with user-controlled and sequential linkability.
-\newblock Cryptology ePrint Archive, Report 2021/181, 2021.
-\newblock \url{https://eprint.iacr.org/2021/181}.
 
 \bibitem{pop2008}
 Bryan Ford and Jacob Strauss.
@@ -124,10 +105,6 @@ Aniket Kate, Gregory~M. Zaverucha, and Ian Goldberg.
 \newblock Constant-size commitments to polynomials and their applications.
 \newblock In Masayuki Abe, editor, {\em Advances in Cryptology - ASIACRYPT
   2010}, pages 177--194, Berlin, Heidelberg, 2010. Springer Berlin Heidelberg.
-
-\bibitem{pond}
-Adam Langely.
-\newblock Pond.
 
 \bibitem{group_sig_survey}
 Mark Manulis, Nils Fleischhacker, Felix G\"unther, Franziskus Kiefer, and
