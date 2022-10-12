@@ -1,36 +1,38 @@
 
-\subsection{Thin batchable EC VRF-AD}
-\label{subsec:vrf_thin}
+\section{Thin batchable EC VRF-AD}
+\label{sec:thin_vrf}
 
-There are VRFs built upon Chaum-Pedersen DLEQ proofs in elliptic curves,
- like \cite{nsec5} and \cite{VXEd25519}.
-Yet typically their proofs have one challenge scalar and one signature
-scalar, like a non-batchable Schnorr signature, while 
-their verification demands two elliptic curve multi-exponentiations.
-As a result, their naively batchable variant becomes ``fat'', requiring
-one scalar and two separate nonces, which complicates batch verification.
+\def\secparam{\ensuremath{\lambda}\xspace}
 
-We propose a new ``thin'' batchable EC VRF that merges these two nonces,
-and requires only one elliptic curve multi-exponentiation, but
-internally computes an extra delinearization challenge.
-As such, our thin batchable variant both runs faster and simplifies heavy usage,
-and also provides a less annoying interface.
+\def\ecE{{\mathbb{E}}}
+\def\grE{{\mathbf{E}}}
+\def\genE{E}
+\def\genG{G}
+\def\genB{K} %{\genE_{\mathrm{bind}}}
 
-Interestingly, our thin batchable EC VRF winds up literally being
-a tweaked Schnorr-like signature, which opens new use cases.
-After this section, we abandon this thin batchable VRF however because
-our ``fat Pedersen'' variant introduced next in \S\ref{subsec:vrf_pederson}
-fits zero-knowledge continuations better.
-
-\smallskip
+\def\ecJ{{\mathbb{J}}}
+\def\grJ{{\mathbf{J}}}
+\def\genJ{J}
 
 \newcommand{\ThinVRF}{\primalgo{ThinVRF}} 
 
-%PoK: We achieve this by always providing a proof-of-knowledge in the public key,
-%PoK:  either separately or implicitly.
+We describe our protocol first, and then discuss the security zoo later in \S\ref{sec:security}.
 
-We build only a VRF-AD here which lacks the key commitments of \S\ref{sec:vrf},
-meaning $\ThinVRF.\CommitKey$ and $\ThinVRF.\OpenKey$ are trivial, and $\openpk = \emptyset$.
+\begin{definition}
+a {\em verifiable random function with auxiliary data} (VRF-AD) consists of several algorithms:
+\begin{itemize}
+\item $\VRF.\KeyGen$ and returns a public key \pk and a secret key \sk, which one typically instantiates via come commitment scheme. 
+% \item $\VRF.\Eval : (\sk,\msg) \mapsto \Out$ takes a secret key \sk and an input $\msg$, and then returns a VRF output $\Out$.
+\item $\VRF.\Sign : (\sk,\msg,\aux) \mapsto \sigma$ takes a secret key \sk, an input \msg, and auxiliary data \aux, and then returns a VRF signature $\sigma$.
+\item $\VRF.\Verify$ takes $(\pk,\msg,\aux,\sigma)$ for a public key \pk, an input \msg, and auxiliary data \aux, and then returns either an output $\Out$ or else failure $\perp$.
+\end{itemize}
+\end{definition}
+
+% \smallskip
+
+We obey mathematical and cryptographic implementation convention by using additive notation for elliptic curve and multiplicative notation for elliptic curve scalar multiplications.  We let \secparam denote our security parameter choose an elliptic curve $\ecE[\F]$ denote over some base field $\F$ of (prime) characteristic $q$, along with a distinguished subgroup $\grE \le \ecE[\F]$ of prime order $p \approx 2^{2\secparam}$, and let $h$ denote the cofactor of $\grE$ in $\ecE[\F]$, meaning $\ecE[\F]$ has $h_{\grE} p_{\grE}$ points.
+
+We let $H_p : \{0,1\}^* \to \F_p$ or $H_q : \{0,1\}^* \to \F_q$ denote random oracles (RO) with a range $\F_p$ or $\F_q$.  We let $H_\ecE : \{0,1\}^* \to \ecE$ or $H_\grE : \{0,1\}^* \to \grE$ denote a hash-to-curve for $\ecE$ or hash-to-group for $\grE$, which we model as a random oracles too.  We note $H_\grE(x) = h H_\ecE(x)$ always works, although more efficient exist.
 
 We work solely in $\ecE$ here because we need only a basic Chaum-Pedersen DLEQ proof.
 As in \S\ref{sec:background} and throughout,
@@ -38,11 +40,9 @@ As in \S\ref{sec:background} and throughout,
 
 \begin{itemize}
 \item $\ThinVRF.\KeyGen$ selects a secret key \sk uniformly at random from $\F_p$ and computes the public key $\pk = \sk \, \genE$.
-%PoK:  and attaches a proof-of-knowledge of $\pk$ to $\pk$ given by a Schnorr signature.  
-%PoK:  All public keys must contain a valid proof-of-knowledge, or else be rejected by verifiers.
-% We define equivalence $\pk_1 \equiv \pk_2$ of public keys by $h \pk_1 = h \pk_2$.
-\item $\ThinVRF.\Eval(\sk,\msg)$ takes a secret key \sk and an input $\msg$, and
- then returns a VRF output $H'(\msg,\pk,h \, \sk \, H_{\grE}(\msg,\pk))$.
+ We define equivalence $\pk_1 \equiv \pk_2$ of public keys by $h \pk_1 = h \pk_2$.
+% \item $\ThinVRF.\Eval(\sk,\msg)$ takes a secret key \sk and an input $\msg$, and
+%  then returns a VRF output $H'(\msg,\pk,h \, \sk \, H_{\grE}(\msg,\pk))$.
 \item $\ThinVRF.\Sign(\sk,\msg,\aux)$ takes a secret key \sk, an input $\msg$, and auxiliary data \aux, and then performs
 \begin{enumerate}
     \item compute the VRF input $\In := H_{\grE}(\msg,\pk)$ and pre-output output $\PreOut := \sk \, \In$, 
@@ -59,7 +59,11 @@ As in \S\ref{sec:background} and throughout,
     \item returns $H'(\msg,\pk,h \PreOut)$ if nothing failed.
 \end{enumerate}
 \end{itemize}
-As discussed above, if we omit this final hash $H'$ making
+Implicitly, we have $\ThinVRF.\Eval(\sk,\msg) \mapsto \Out$ given by
+ $H'(\msg,\pk,h \, \sk \, H_{\grE}(\msg,\pk))$ too, but it could be
+defined using \Sign and \Verify.
+
+As discussed below, if we omit this final hash $H'$ making
 our output only $h \PreOut$, then we obtain only a VUF, not a VRF.
 We caution that $h \ne 1$ ensures SUF-CMA fails
  by \cite[\S4.1.2]{cryptoeprint:2020:823}.
@@ -72,6 +76,41 @@ delinearization challenges
 and then running our Schnorr-like signature with
  base point $\genE + \sum_{j=1}^k c_i \In_j$ and
  public key $\genE + \sum_{j=1}^k c_i \Out_j$.
+
+\smallskip
+% \subsection{Performance}
+
+\ThinVRF needs two scalar multiplications in the prover and
+then four scalar multiplications in the verifier
+just like fat EC VRFs like \cite{nsec5} or \cite{VXEd25519} do.
+We do incur an extra hashing operation and two field multiplications,
+but they cost relatively little.
+\ThinVRF reduces verifier computation by merging the these two
+multi-scalar multiplication algorithms, which outweighs the extra hashing and field operations.
+
+\ThinVRF supports batch verification or half-aggregation \cite{???}
+without altering the signature or increasing the signature size.
+We think this tips the scales as avoiding a separate batchable VRF
+signature simplifies interface over naive batch verification methods
+for \cite{nsec5} or \cite{VXEd25519}.
+
+% In principle, both \ThinVRF and EC VRF could support many Schnorr features,
+% such as adapter signatures \cite{???}, blind signatures \cite{???},
+% and 2-round multi-signatures \cite{???,???}.
+% Yet, \ThinVRF shares more code with Schnorr
+
+\endinput 
+
+
+
+
+
+
+
+
+
+
+
 
 % TODO: Proof correct?  Use same citations as schnorrkel.
 
@@ -193,38 +232,10 @@ As $H'$ is a PRF, we now argue pseudo-randomness for$\ThinVRF$ similarly
 We caution that omitting $c_1$ only demands $x + u = v$ even if $y=0$,
 which does not give a VRF.
 
-We need two scalar multiplications in the prover and
- then four scalar multiplications in the verifier
- just like \cite{nsec5} or \cite{VXEd25519} do.
-We do incur an extra hashing operation and two field multiplications,
- but they cost relatively little.
-%PoK: At frist blush, we incur two more scalar multiplications when verifying
-%PoK: the proof-of-knowledge for \pk too,
-%PoK:  which one implements by a Schnorr signature. 
-%PoK: Yet, VRF applications always require their public keys be registered in advance,
-%PoK: meaning the proof-of-knowledge should be checked in advance and amortizes.
-%PoK: 
-We believe this approach actually reduces verifier computation because
-advanced multi-scalar multiplication algorithms become more efficient when
-larger, which should outweigh the extra hashing and field operations.
-
-We also support batch verification without altering the signature or
-increasing the signature size.  We think this tips the scales because
-avoiding a separate batchable VRF signature type simplifies interface
-over naive batch verification methods for \cite{nsec5} or \cite{VXEd25519}.
-
-Aside from batch verification, we might simplify interaction with
-other protocols by building upon Schnorr signatures.
 
 
 
 
 \endinput
-
-
-
-\section{UC}
-
-
 
 

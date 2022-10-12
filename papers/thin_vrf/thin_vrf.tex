@@ -1,0 +1,85 @@
+ \documentclass[runningheads,evcountsame,a4paper,11pt,orivec]{llncs}
+% \documentclass[a4paper,11pt]{amsart}
+
+\usepackage[margin=2.5cm,includefoot]{geometry}
+
+%=================Begin:Packages===================
+\usepackage{graphicx}
+% \usepackage{enumitem}
+\usepackage{url}
+% \usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{hyperref}
+% \usepackage[capitalize,nameinlink]{cleveref}
+% \usepackage{framed}
+% \usepackage{fancybox}
+\usepackage[utf8]{inputenc}
+\usepackage{mathtools}
+% \usepackage{tcolorbox}
+\usepackage{tikz}
+% \usepackage{todonotes}
+\usepackage{xspace}
+\usepackage{xcolor}
+\usepackage[linewidth=1pt]{mdframed}
+\usepackage{ulem}
+\usetikzlibrary{arrows,chains,matrix,positioning,scopes}
+
+% TODO: Clean up macros
+\input{../macros/style.tex}
+\input{../macros/primitives.tex}
+\input{../macros/other.tex}
+
+
+% \sloppy
+
+
+\title{Thin VRF and pseudo-random frenemies}
+
+\author{Jeffrey Burdges \and Alistair Stewart}
+% \and Handan Kilinc-Alper
+% Sergey Vasilyev
+
+\date{}
+% \institute{Web 3.0 Foundation}
+
+
+\begin{document}
+	
+\maketitle
+
+\begin{abstract}
+We build a new thin(er batchable EC) VRF signature from a Schnorr
+signature by replacing the base point with a pseudo-random linear
+combination of the base point and the hashed-to-curve input.
+%
+As a Schnorr signature, thin VRF supports efficient batch verification,
+without widening the signature like other proposals.
+
+We also discuss auxiliary data signed by VRFs, multiple inputs,
+and randomness concerns in other proposals.
+\end{abstract}
+
+
+\input{intro}
+% \input{background}
+\input{protocol}
+\input{games}
+
+
+
+
+\bibliographystyle{plain}
+\bibliography{../commit,../anoncred,../sassafras,../vrf,../zkp}
+
+
+\end{document}
+
+
+
+
+
+\endinput
+
+
+

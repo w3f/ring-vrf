@@ -23,7 +23,7 @@ both Chaum-Pedersen DLEQ proofs and pairing based zkSNARKs.
 
 We obey mathematical and cryptographic implementation convention by using additive notation for elliptic curve and multipicative notation for eliptic curve scalar multiplications. 
 
-We always implicitly have a paramater generation procedure $\mathtt{Params}$ that takes a security level $\secparam \in \N$ and returns elliptic curve paramaters including some prime numbers and efficient algorithms for computing elliptic curve operations.  As customary, we treat $\secparam$ and the output of $\mathtt{Params}$ as fixed paramaters, which makes sense because humans run $\mathtt{Params}$ manually in practice. 
+We always implicitly have a parameter generation procedure $\mathtt{Params}$ that takes a security level $\secparam \in \N$ and returns elliptic curve parameters including some prime numbers and efficient algorithms for computing elliptic curve operations.  As customary, we treat $\secparam$ and the output of $\mathtt{Params}$ as fixed parameters, which makes sense because humans run $\mathtt{Params}$ manually in practice. 
 
 As implicit outputs of $\mathtt{Params}$, we work with an elliptic curve $\ecE[\F]$ over some base field $\F$ of (prime) characteristic $q_{\grE}$, along with a distinguished subgroup $\grE \le \ecE[\F]$ of prime order $p_{\grE} \approx 2^{2\secparam}$.  As $\grE$ distinguishes $\ecE[\F]$, we let $h_{\grE}$ denote the cofactor of $\grE$ in $\ecE[\F]$, meaning $\ecE[\F]$ has $h_{\grE} p_{\grE}$ points.
 % but abbreviate $h = h_{\grE}$, $p = p_{\grE}$, and $q = q_{\grE}$ when $\grE$ is clear from context.

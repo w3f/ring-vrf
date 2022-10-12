@@ -109,6 +109,8 @@ We want a commitment binding property with unique openings,
 analogous to \cite[pp.9]{cryptoeprint:2019:1185}.
 % except weakened to require the signature verify too.
 
+ADD ANOTHER KEY BINDING PROPERTY
+
 \begin{definition}\label{def:vrf_key_binding}
 We say a VRF-AD-KC is {\em key binding} if no PPT adversary \adv
 produces \compk, \msg, \aux and $\sk_i,\openpk_i$ for $i=1,2$
@@ -126,6 +128,9 @@ Pedersen commitments to secret keys into commitments to public keys.
 % condition, like in the subsequent two sections, but
 %  \ctx becomes important later in analogous ring properties.
 
+VRFs should be well-defined functions of their public key too.
+% at least up to cryptographic assumptions. 
+
 \begin{definition}
 We say a VRF-AD-KC satisfies {\em uniqueness} if anytime some PPT adversary \adv
 produces $\msg$ and $\compk_i,\openpk_i,\aux_i,\sigma_i$ for $i=1,2$
@@ -134,6 +139,18 @@ $\Verify(\compk_1,\msg,\aux_1,\sigma_1) = \Verify(\compk_2,\msg,\aux_2,\sigma_2)
 unless either $\Verify$ returns failure,
 except with odds negligible in $\secparam$.
 \end{definition}
+
+\begin{lemma}
+THIS IS FALSE
+Assume a VRF-AD-KC satisfying completeness and uniqueness.
+For any PPT adversary \adv,
+there exists a function $F : (\msg,\pk) \mapsto \Out$ such that
+\adv produces $\msg$, $\compk$, $\openpk$, $\aux$, and $\sigma$
+$\Verify(\compk,\msg,\aux,\sigma) \in \{ F(\msg,\OpenKey(\compk,\openpk)), \perp \}$
+except with odds negligible in $\secparam$.
+\end{lemma}
+
+
 
 If desired, one easily simplifies VRF-AD-KC to a VRF-AD by
  taking $\compk = \pk$ and fixing $\openpk = \mathtt{""}$,
