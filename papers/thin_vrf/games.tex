@@ -57,15 +57,20 @@ but our definition is clearly equivalent to uniqueness given in
 
 \begin{definition}
 We say a VRF-AD satisfies {\em uniqueness} if
+if anytime some PPT adversary \adv produces $\msg$, $\pk$, and $\aux_i$, $\sigma_i$ for $i=1,2$, then
+$\Verify(\pk,\msg,\aux_1,\sigma_1) = \Verify(\pk,\msg,\aux_2,\sigma_2)$
+unless either $\Verify$ returns failure, except with odds negligible in $\secparam$.
+\end{definition}
+
+\begin{definition}
+We say a VRF-AD satisfies {\em strong uniqueness} if
 there exists a (not efficiently computable) function
  $F : (\msg,\pk) \mapsto \Out$ such that
 anytime some PPT adversary \adv produces $\msg$, $\pk$, $\aux$, and $\sigma$
 then $\Verify(\pk,\msg,\aux,\sigma) \in \{ F(\msg,\pk), \perp \}$
 except with odds negligible in $\secparam$.
-% if anytime some PPT adversary \adv produces $\msg$, $\pk$, and $\aux_i$, $\sigma_i$ for $i=1,2$, then
-% $\Verify(\pk,\msg,\aux_1,\sigma_1) = \Verify(\pk,\msg,\aux_2,\sigma_2)$
-% unless either $\Verify$ returns failure, except with odds negligible in $\secparam$.
 \end{definition}
+% TODO: Keep?
 
 We say VRFs are public key analogs of PRFs, but actually this PRF analogy
 fails in the ``residual pseudo-randomness'' definitions by
@@ -90,9 +95,16 @@ In \cite{praos}, there exists a UC functionality which captures the
 desired PRF analogy, but brings unnecessary restrictions.
 
 We know a function family $\{ F_\msg : \pk \mapsto F(\msg,\pk) \}$ exists
-by uniqueness, although not efficiently computable, so intuitively
+by strong uniqueness, although not efficiently computable, so intuitively
 our VRF-AD is {\em pseudo-random} if an adversary cannot distinguish
 $F_\msg$ from a random function.
+% TODO: Keep?
+
+\bigskip
+
+MISTAKES BELOW THIS POINT
+
+\bigskip 
 
 As a formalization, we provide a black-box game-based definition which
 treats \msg as the PRF key, and handles adversarially supplied keys as
