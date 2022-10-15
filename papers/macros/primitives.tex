@@ -1,11 +1,15 @@
+\newcommand\PRF{\primalgo{PRF}}
+
+\newcommand\SNARK{\primalgo{SNARK}}
+\newcommand\NIZK{\primalgo{NIZK}}
+
+\newcommand{\adv}{\ensuremath{\mathcal{A}}\xspace}
+
 \newcommand{\KeyGen}{\primalgo{KeyGen}}
-
-% Why was this \prim before?
-\newcommand{\VRF}{\primalgo{VRF}} 
-\newcommand{\rVRF}{\primalgo{rVRF}} 
-
 \newcommand{\Sign}{\primalgo{Sign}}
 \newcommand{\Verify}{\primalgo{Verify}}
+\def\rSign{\Sign}
+\def\rVerify{\Verify}
 \newcommand{\Eval}{\primalgo{Eval}}
 \newcommand{\Prove}{\primalgo{Prove}}
 \newcommand{\Simulate}{\primalgo{Simulate}}
@@ -28,11 +32,27 @@
 
 
 
-\newcommand\SNARK{\primalgo{SNARK}}
-\newcommand\NIZK{\primalgo{NIZK}}
 
 
-\newcommand{\adv}{\ensuremath{\mathcal{A}}\xspace}
+% Why was this \prim before?
+\newcommand{\VRF}{\primalgo{VRF}} 
+\newcommand{\rVRF}{\primalgo{rVRF}} 
+
+
+\def\compk{\ensuremath{\mathsf{compk}}\xspace}
+\def\openpk{\ensuremath{\mathsf{oppk}}\xspace}
+\newcommand\CommitKey{\primalgo{CommitKey}}
+\newcommand\OpenKey{\primalgo{OpenKey}}
+
+\def\comring{\ensuremath{\mathsf{comring}}\xspace}
+\def\openring{\ensuremath{\mathsf{opring}}\xspace}
+\newcommand\CommitSec{\primalgo{CommitSec}}
+\newcommand\CheckRing{\primalgo{CheckRing}}
+\newcommand\CommitRing{\primalgo{CommitRing}}
+\newcommand\OpenRing{\primalgo{OpenRing}}
+\newcommand\piring{\ensuremath{\pi_{\mathtt{ring}}}\xspace}
+\newcommand\pieval{\ensuremath{\pi_{\mathtt{eval}}}\xspace}
+
 
 \endinput
 

@@ -42,8 +42,8 @@ zero-knowledge continuation that unlinkably proves ring membership
 of a secret key, and then cheaply proving individual VRF evaluations.
 
 As the PRF output is uniquely determined by the signed message and
-signers actual secret key, we can therefore trivially link signatures
-by the same signer that sign identical messages.
+signers actual secret key, we can therefore link signatures by the
+same signer if and only if they sign identical messages.
 In effect, ring VRFs restrict anonymity similarly to but less than
  linkable ring signatures do, which makes them multi-use and contextual.
 
@@ -53,11 +53,11 @@ many of which exist to limits the anonymity provided, ala
 %
 Ring VRFs by weakening anonymity only contextually provide a safer,
 more private, more flexible, more powerful, and more ethical
-choice for all everyday anonymous credential use cases:  % needs:  ???
+choice for all everyday anonymous credential use cases.  % needs:  ???
 
 % Second
 % \smallskip
-\paragraph{Identity:}
+\paragraph{Identity uses:}
 
 As an identity system, ring VRFs evaluated on a specific context or
 domain name output a unique identity for the user at that domain or
@@ -107,7 +107,7 @@ contextual linkability alone covers more important use cases.
 
 % Third
 % \smallskip
-\paragraph{Rationing:}
+\paragraph{Rationing uses:}
 
 Ring VRFs yield rate limiting or rationing systems, which work
 similarly to identity applications, except the VRF input should also
@@ -145,103 +145,4 @@ roots of trust can self authenticate if root keys act as domain separators.
 
 
 \endinput
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-We first in \S\ref{sec:rvrf_glue} unify a simple fast VRF signature given by a DLEQ proof together with a SNARK that proves ring membership by the public key, but here both must handle the public key as a Jubjub Pedersen commitment.  ZCash sapling uses a similar Schnorr signature scheme, without the Jubjub Pedersen commitment (TODO). 
-
-We next in \S\ref{sec:rvrf_cont} split this SNARK into a slower preliminary proof extracting the public key from the ring, and a continuations by a second faster SNARK that prepares the Jubjub Pedersen commitment.  We prefer this version whenever rings have low churn, but our first version has faster verifier time by one miller loop, making it preferable for very high churn rings.
-
-
-
-
-
-We first in \S\ref{sec:rvrf_dleq} unify a simple fast VRF signature given by a DLEQ proof together with a SNARK that proves ring membership by the public key, but here both must handle the public key as a Jubjub Pedersen commitment.  ZCash sapling uses a similar Schnorr signature scheme, without the Jubjub Pedersen commitment (TODO). 
-
-We next in \S\ref{sec:rvrf_two_snarks} split this SNARK into a slower preliminary proof extracting the public key from the ring, and a continuations by a second faster SNARK that prepares the Jubjub Pedersen commitment.  We prefer this version whenever rings have low churn, but our first version has faster verifier time by one miller loop, making it preferable for very high churn rings.
-
-
-
-
-Also, zero-knowlede continuations wind up so much faster than bruit force techniques like recursion. 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\endinput  
-
-
-
-
-
-
-
-We focus exclusively upon ring VRFs because anonymous credentials come in myriad flavors.
-In particular, there are group VRFs analogous to group signatures
-\cite{group_sig_survey}, some fairly efficient.
-%
-We distrust group signatures however because typically some group master
-has deanonymization capabilities, giving them only narrow real world uses,
-like mailbox spam defense in Pond \cite{pond}.
-%
-In this vein, attribute based credentials are frequently instantiated
-like group signatures, and thus similarly permit deanonymization by some
-group master, which makes them similarly unsuitable for general purpose
-privacy.
-%
-There exist exceptions like credentials using Brands \cite{brands06}, and
-group signatures with Byzantine anonymity \cite{cryptoeprint:2021:181}.
-
-
-
-
-like VRFs do,
-but without identifying the signer beyond revealing this specific PRF output.
-
-
-Ring VRFs avoid deanonymization by a group master, and impose coherent
-structure upon authorization conditions, with all signers' keys
-predating the authorization condition commitment \comring. 
-% TODO: Relax in \S\ref{subsec:..}
-%
-Ring VRF outputs clearly link any two ring VRF signatures with
-the same signer and input \msg, so in particular
-ring VRFs with a singleton input domain are linkable ring signatures.
-
-\smallskip
-
 

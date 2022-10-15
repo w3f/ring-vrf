@@ -1,45 +1,16 @@
 
 \subsection{rVRF-AD security}
-\label{sec:rvrf_def}
+\label{sec:rvrf_games}
 
-Ring VRFs are firstly ring signatures broadly interpreted, in that they
-prove an associated public key lies inside some commitment \comring to
-the plausible signer set,
- which anyone could construct from this set of public keys.
-At the same time, ring VRFs prove correct output of a PRF keyed by
-the signer's actual secret key, and evaluated on a supplied message \msg,
- which then links ring VRF signatures sharing the same \msg.
-
-A {\em ring verifiable random function with auxiliary data} (rVRF-AD)
-consists of the algorithms of a VRF-AD-KC, except with
- \compk and \openpk renamed to \comring and \openring,
- plus one additional algorithm:
-\begin{itemize}
-\item $\rVRF.\CommitRing : \ctx \mapsto \comring$ takes a set \ctx of
- public keys and returns a public key set commitment \comring.
-\end{itemize}
-
-\def\rSign{\Sign}
-\def\rVerify{\Verify}
-
-In this, we have renamed the commitment and opening to avoid confusion
-when we build a rVRF-AD from a VRF-AD-KC.  This fresh notation leaves
-$\rVRF.\KeyGen$ and $\rVRF.\Eval$ untouched, but
- changes the other methods' signatures:
-\begin{itemize}
-\item $\rVRF.\CommitKey : (\pk,\ctx) \mapsto (\comring,\openring)$
-\item $\rVRF.\OpenKey : (\comring,\openring) \mapsto \pk$
-\item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$
-\item $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto \Out \, \lor \perp$
-\end{itemize}
-
-We extend the VRF-AD-KC commitment correctness condition for \CommitRing:
+% We need some basic correctness conditions of course.
 
 \begin{definition}
-We say rVRF satisfies {\em ring commitment correctness} if
-commitment correctness holds, and also $\rVRF.\CommitRing$ is 
- compatible with $\rVRF.\CommitKey$ in that
-  $\rVRF.\CommitRing(\ctx) = \rVRF.\CommitKey(\pk,\ctx).0$.
+We say an rVRF-AD satisfies {\em evaluation correctness} if
+$\Eval(\sk,\msg) = \Verify(\pk,\msg,\aux,\Sign(\sk,\msg,\aux))$ % succeeds
+whenever $(\pk,\sk) \leftarrow \KeyGen$, and
+also {\em ring commitment correctness} if
+$\pk \in \ring$ implies both $\OpenRing(\CommitRing(\ring,\pk)) = \pk$
+and $\CommitRing(\ring) = \CommitRing(\ring,\pk).0$.
 \end{definition}
 
 We lack anonymity against full key exposure ala
@@ -51,7 +22,7 @@ but instead demand a weaker anonymity condition similar to
 We let \ora{Sign} denote a ring signature CMA oracle, meaning
 \begin{itemize}
 \item $\ora{Sign}(\oramsg{keygen})$ creates and logs a fresh key pair
- $(\pk,\sk) \leftarrow \KeyGen$ and adds $\pk$ to the set $\ctx_0$, and then returns \pk.
+ $(\pk,\sk) \leftarrow \KeyGen$ and adds $\pk$ to the set $\ring_0$, and then returns \pk.
 \item $\ora{Sign}(\comring,\openring,\msg,\aux)$ returns
  $\Sign(\sk,\openring,\msg,\aux)$, provided it logged $(\OpenKey(\comring,\openring),\sk)$ previously.
 \end{itemize}
@@ -64,9 +35,9 @@ any PPT adversary \adv has an advantage only
 \begin{itemize}
 \item[]
  Initially \adv outputs a message \msg, associated data \aux,
- two distinct public keys $\pk_0,\pk_1 \in \ora{Sign}.\ctx_0$ created by \ora{Sign},
- and a ring $\ctx \subset \ora{Sign}.\ctx_0$ containing $\pk_0,\pk_1$.
- Set $\comring = \CommitRing(\ctx)$.
+ two distinct public keys $\pk_0,\pk_1 \in \ora{Sign}.\ring_0$ created by \ora{Sign},
+ and a ring $\ring \subset \ora{Sign}.\ring_0$ containing $\pk_0,\pk_1$.
+ Set $\comring = \CommitRing(\ring)$.
  Next the challenger chooses $j=0$ or $j=1$ and gives
   \adv a signature $\sigma = \rSign(\sk_j,\openring,\msg,\aux)$ with $\OpenKey(\comring,\openring) = \pk_j$.
  %
@@ -89,28 +60,29 @@ any PPT adversary \adv has an advantage only
  \adv calls \ora{Sign} of Definition \ref{def:rvrf_sign_oracle} throughout,
  but also creates its own keys freely.
  %
- Finally \adv outputs a ring $\ctx$ as well as
- $k + |\ctx \setminus \ora{Sign}.\ctx_0|$ valid ring VRF signatures,
+ Finally \adv outputs a ring $\ring$ as well as
+ $k + |\ring \setminus \ora{Sign}.\ring_0|$ valid ring VRF signatures,
   each with distinct outputs,    % $\sigma_i$
- for $\ctx$ on a message \msg (resp. and also associated data \aux).
+ for $\ring$ on a message \msg (resp. and also associated data \aux).
  \adv wins if they invoked $\ora{Sign}$ strictly fewer than $k$ times
- on $\msg$ (respt. and also $\aux$), and
-  distinct $i$ with $\pk_i \in \ctx \cap \ora{Sign}.\ctx_0$.
+ on $\msg$ (resp. and also $\aux$), and
+  distinct $i$ with $\pk_i \in \ring \cap \ora{Sign}.\ring_0$.
 \end{itemize}
 \end{definition}
  
 Any ring VRF becomes a non-anonymized VRF whenever
- the ring becomes a singleton $\ctx = \{ \pk \}$ of course.
-In doing so this, our ring uniqueness reduces to
- the seperate unforgeability and uniqueness games for VRF-AD,
-meaning our uniqueness with only a trivial key commitment.
+ the ring becomes a singleton $\ring = \{ \pk \}$ of course.
+We inherit ring VRF output properties from non-anonymized VRFs
+because they wind up strongest for singleton rings, i.e. $|\ctx| = 1$.
+These include 
+ residual pseudo-randomness \cite[Def. VRF (3) \S3.2, pp. 4]{vrf_micali} and
+ residual unpredictability \cite[Def. VUF (3) \S3.2, pp. 5]{vrf_micali}
+  (also \cite[Def. 4, pp. 8]{agg_dgk}).
+% as well as collision resistance ??? and pseudo-randomness \cite{thin_vrf}.  % TODO
 
-We reuse the VRF-AD-KC pseudo-randomness definition for ring VRFs
-because pseudo-randomness is strongest for singleton rings, i.e. $|\ctx| = 1$.
+\smallskip % TODO: Move later?
 
-\smallskip 
-
-Although our applications could mostly ignore key multiplicity. 
+Although our applications   mostly ignore key multiplicity. 
 we briefly mention AML/KYC applications in \S\ref{subsec:AML_KYC},
 which demands suspects prove non-involvement using ring VRFs.
 

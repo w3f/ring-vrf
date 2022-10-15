@@ -2,14 +2,32 @@
 \label{sec:rvrf}
 
 Ring VRFs are firstly ring signatures broadly interpreted, in that they
-prove an associated public key lies inside some commitment \comring to
-the plausible signer set,
-which anyone could construct from this set of public keys.
+prove an involved public key lies inside some commitment \comring to
+the plausible signer set, known as the ring.
+Anyone could compute \comring from this set of public keys.
+%
 At the same time, ring VRFs prove correct output of a PRF keyed by
 the signer's actual secret key, and evaluated on a supplied message \msg,
-which then links ring VRF signatures sharing the same \msg.
+which then links ring VRF signatures on the same \msg.
 
-\input{rvrf_def}
+\begin{definition}
+A {\em ring verifiable random function with auxiliary data} (rVRF-AD)
+consists of several algorithms:
+\begin{itemize}
+	\item $\rVRF.\KeyGen$ and returns a public key \pk and a secret key \sk, which one typically instantiates via come commitment scheme. 
+	%
+	% \item $\rVRF.\CheckRing : \ring \mapsto \comring$ takes a set \ctx of public keys and returns a public key set commitment \comring.
+	\item $\rVRF.\CommitRing : (\ring,\pk) \mapsto (\comring,\openring)$ takes a set \ring of public keys, and returns a public key commitment \comring.  It optionally takes a public key \pk too, and then returns an opening \openring.
+	\item $\rVRF.\OpenRing : (\comring,\openring) \mapsto \pk$ returns a public key \pk, provided \openring correctly opens the ring commitment \comring, or failure $\perp$ otherwise.
+	%
+	\item $\rVRF.\Eval : (\sk,\msg) \mapsto \Out$  takes a secret key \sk and an input $\msg$, and then returns a VRF output $\Out$.
+	\item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$ takes a secret key \sk, a ring opening \openring, an input \msg, and auxiliary data \aux, and then returns a ring VRF signature $\sigma$.
+	\item $\rVRF.\rVerify$ takes $(\comring,\msg,\aux,\sigma)$ for a ring commitment \comring, an input \msg, and auxiliary data \aux, and then returns either an output $\Out$ or else failure $\perp$.
+\end{itemize}
+\end{definition}
+
+
+\input{rvrf_games}
 \input{rvrf_pedersen}
 \input{rvrf_uc_fun}
 % \input{rvrf_uc_proof}
