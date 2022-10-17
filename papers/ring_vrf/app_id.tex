@@ -65,8 +65,8 @@ clear goals, and thus winds up being ineffective
 We do however observe that AML/KYC conflicts with security and privacy
 laws like GDPR.  As a compromise between these regulations,
 one needs a compliance party who know users' identities,
- while another seperate service party knows the users' activities.
-We propose this more efficent solution:
+ while another separate service party knows the users' activities.
+We propose this more efficient solution:
 
 Instead our compliance party becomes an identity issuer who maintains
 a ring \ctx consisting of one unique public key for each user.
@@ -77,6 +77,22 @@ to investigators, or maybe prove which services they use and do not use.
 Interestingly, \PedVRF could be run ``backwards'' to prove a specific
 ring VRF output does not belong to the user, without revealing the users'
 identities to investigators. 
+
+Although our applications mostly ignore key multiplicity. 
+these AML/KYC applications in \S\ref{subsec:AML_KYC} demand
+suspects prove non-involvement using ring VRFs.
+
+\begin{definition}\label{def:rvrf_exculpability}
+We say \rVRF is {\em exculpatory} if we have an efficient algorithm
+for equivalence of public keys, but a PPT adversary \adv cannot
+find non-equivalent public keys $\pk_0,\pk_1$ with colliding VRF outputs.
+% (perfectly or computationally)
+% (either ever or with advantage negligible advantage in $\secparam$)
+\end{definition}
+
+We ad hoc rings make little sense for AML/KYC, so these ring VRFs become
+exculpatory if one merely dedupliates keys during registration , like via
+$\rVRF.\rVerify(\CommitRing(\{\pk\}),\mathsf{ring_name},\textt{""},\sigma)$.
 
 
 \subsection{Moderation}

@@ -80,19 +80,7 @@ These include
   (also \cite[Def. 4, pp. 8]{agg_dgk}).
 % as well as collision resistance ??? and pseudo-randomness \cite{thin_vrf}.  % TODO
 
-\smallskip % TODO: Move later?
 
-Although our applications   mostly ignore key multiplicity. 
-we briefly mention AML/KYC applications in \S\ref{subsec:AML_KYC},
-which demands suspects prove non-involvement using ring VRFs.
-
-\begin{definition}\label{def:rvrf_exculpability}
-We say \rVRF is {\em exculpatory} if we have an efficient algorithm
-for equivalence of public keys, but a PPT adversary \adv cannot
-find non-equivalent public keys $\pk_0,\pk_1$ with colliding VRF outputs.
-% (perfectly or computationally)
-% (either ever or with advantage negligible advantage in $\secparam$)
-\end{definition} 
 
 
 

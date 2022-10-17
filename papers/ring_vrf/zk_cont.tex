@@ -11,12 +11,12 @@
 
 
 We now construct ring VRFs which achieves fast amortized prover time
-by using a heavy zero-knowledge continuation for $\rVRF.\OpenKey$ but
+by using a heavy zero-knowledge continuation for $\rVRF.\OpenRing but
 which permits updating \openpk in the $\PedVRF.\OpenKey$ invocation
 without reproving $\piring$.
 $$ \piring = \NIZK \Setst{ \compk, \comring }{
  \exists \openpk,\openring \textrm{\ s.t.\ } 
- \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenKey(\comring,\openring)}
+ \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenRing(\comring,\openring)}
 } \mathperiod $$
 
 % \smallskip
@@ -119,7 +119,7 @@ Adapt the proof of Theorem 3 of \cite[Appendix C, pp. 31]{RandomizationGroth16}.
 % \end{corollary}
 
 All told, our opaque rerandomization trick converts any conventional
-Groth16 zkSNARK $\pi$ for $\rVRF.\OpenKey$ into a zkSNARK $\pi'$
+Groth16 zkSNARK $\pi$ for $\rVRF.\OpenRing into a zkSNARK $\pi'$
 with inputs split into a transparent part $Y$ vs opaque unlinkable part $X$.
 % We explore two concrete $\pi$ proposals below.
 
@@ -188,7 +188,7 @@ by this independence.
 $$ \pifast = \rrSNARK \Setst{ \sk_0 + \sk_1 2^{128}, \comring }{
  \exists d,\openring \textrm{\ s.t.\ }
  % 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
- \genfrac{}{}{0pt}{}{ \rVRF.\OpenKey(\comring,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
+ \genfrac{}{}{0pt}{}{ \rVRF.\OpenRing(\comring,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
 } $$ % \mathperiod 
 
 Applying our rerandomization to $\pifast$ with opaque input yields
@@ -256,7 +256,7 @@ splits \pifast into two parts: % \pisk and \pipk.
 %
 $$ \pipk = \rrSNARKweak \Setst{ J_\pk, \comring }{
  \exists \openring \textrm{\ s.t.\ }
-  J_\pk = \rVRF.\OpenKey(\comring,\openring)
+  J_\pk = \rVRF.\OpenRing(\comring,\openring)
 } \mathcomma \quad\textrm{and} $$ 
 %
 $$ \pisk = \rrSNARK \Setst{ \sk_0 + \sk_1 2^{128}, J_\pk }{ 
@@ -297,12 +297,12 @@ but then another proving system like Caulk+ \cite{caulk+}
 %
 $$ \pichain = \rrSNARKweak \Setst{ \comblock, \comring }{
 	\exists \openring \textrm{\ s.t.\ }
-	J_\pk = \rVRF.\OpenKey(\comring,\openring)
+	J_\pk = \rVRF.\OpenRing(\comring,\openring)
 } \mathcomma \quad\textrm{and} $$ 
 %
 $$ \pifast = \rrSNARK \Setst{ \comblock, \comring }{
 	\exists d,\openring \textrm{\ s.t.\ }
-	\genfrac{}{}{0pt}{}{ \rVRF.\OpenKey(\comblock,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
+	\genfrac{}{}{0pt}{}{ \rVRF.\OpenRing(\comblock,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
 } \mathperiod $$  
 
 Again we need a proof=of-knowledge for \comblock because it winds up opaque
