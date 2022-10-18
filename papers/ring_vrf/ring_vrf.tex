@@ -37,6 +37,9 @@
 
 % \sloppy
 
+% \def\eprint#1#2{#1} % eprint
+\def\eprint#1#2{#2} % PETS
+\def\eprintsmallskip{\smallskip}{}
 
 \title{Ethical identity, ring VRFs, and zero-knowledge continuations}
 
@@ -50,20 +53,22 @@
 \maketitle
 
 \begin{abstract}
-Anonymized ring VRFs are ring signatures that prove correct evaluation of some authorized signer's PRF while hiding the specific signer's identity within some set of possible signers, known as the ring.  We propose ring VRFs as a natural fulcrum around which a diverse array of zkSNARK circuits turn, making them an ideal target for optimization and eventually standards.
+Anonymized ring VRFs are ring signatures that prove correct evaluation of some authorized signer's PRF while hiding the specific signer's identity within some set of possible signers, known as the ring.
+\eprint{We propose ring VRFs as a natural fulcrum around which a diverse array of zkSNARK circuits turn, making them an ideal target for optimization and eventually standards.
 
-\smallskip
+}{}
+\eprintsmallskip
 
 We show how rerandomizable Groth16 zkSNARKs transform into reusable zero-knowledge continuations, and build a ring VRF that amortizes expensive ring membership proofs across many ring VRF signatures.
-In  fact, our ring VRF needs only eight $\mathcal{E}_1$ and two $\mathcal{E}_2$ scalar multiplications, making it the only ring signature with performance competitive with constructions like group signatures.
+In  fact, our ring VRF needs only eight $\mathcal{E}_1$ and two $\mathcal{E}_2$ scalar multiplications, making it the only ring signature with performance competitive with group signatures.
 
-\smallskip
+\eprintsmallskip
 
-Ring VRFs produce a unique identity for any give context but which remain unlinkable between different contexts.  These unlinkable but unique pseudonyms provide a far better balance between user privacy and service provider or social interests than attribute based credentials like IRMA.
+Ring VRFs produce a unique identity for any give context but remain unlinkable between different contexts.  These unlinkable but unique pseudonyms provide a far better balance between user privacy and service provider or social interests than attribute based credentials like IRMA.
 
-\smallskip
+\eprintsmallskip
 
-Ring VRFs support anonymously rationing or rate limiting resource consumption that winds up vastly more efficient than purchases via monetary transactions. 
+Ring VRFs support anonymously rationing or rate limiting resource consumption that winds up vastly more efficient than purchases via money-like protocols.
 \end{abstract}
 
 
@@ -72,7 +77,7 @@ Ring VRFs support anonymously rationing or rate limiting resource consumption th
 
 \input{overview}
 \input{games}
-\input{uc_fun}
+% \input{uc_fun} % TODO: get rid of figure so it'll fit
 
 \input{pedersen_vrf}
 \input{zk_cont}
@@ -88,7 +93,7 @@ Ring VRFs support anonymously rationing or rate limiting resource consumption th
 
 \appendix
 
-\input{background}
+% \input{background}
 
 
 
