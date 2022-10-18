@@ -106,15 +106,11 @@ Ring VRFs avoid this political unrest by proving membership in a public list.
 
 \subsection{Multi-constraint rationing}
 
-We could proving multiple \ThinVRF outputs with one signatures
-in \S\ref{subsec:vrf_thin}.  We needed \PedVRF to isolate the blinding 
-factor when using a Pedersen commitment instead of a public key, but
-exactly the same technique works for proving multiple \PedVRF outputs
-in one ring VRF signature.
-
-We could therefore impose simultanious rationing constraints for multiple
-resources $u_1,\ldots,u_k$ by producing one ring VRF signature in which
-\PedVRF proves correctness of pre-ouptuts for multiple messages 
+% \cite{PrivacyPass}
+As in \S\ref{subsec:moderation}, we could impose simultanious rationing
+constraints for multiple resources $u_1,\ldots,u_k$ by producing one
+ring VRF signature in which \PedVRF proves correctness of pre-ouptuts
+for multiple messages 
  $\msg_j = u_j \doubleplus r_d \doubleplus d \doubleplus k$ for $j=1 \ldots k$.
 
 As an example, purchasing some prepared food product could require espending

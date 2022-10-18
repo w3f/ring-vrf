@@ -6,9 +6,9 @@
 
 \begin{definition}
 We say an rVRF-AD satisfies {\em evaluation correctness} if
-$\Eval(\sk,\msg) = \Verify(\pk,\msg,\aux,\Sign(\sk,\msg,\aux))$ % succeeds
-whenever $(\pk,\sk) \leftarrow \KeyGen$, and
-also {\em ring commitment correctness} if
+$(\pk,\sk) \leftarrow \KeyGen$ implies
+$\Eval(\sk,\msg) = \Verify(\pk,\msg,\aux,\Sign(\sk,\msg,\aux))$, % succeeds
+and also {\em ring commitment correctness} if
 $\pk \in \ring$ implies both $\OpenRing(\CommitRing(\ring,\pk)) = \pk$
 and $\CommitRing(\ring) = \CommitRing(\ring,\pk).0$.
 \end{definition}
@@ -24,7 +24,8 @@ We let \ora{Sign} denote a ring signature CMA oracle, meaning
 \item $\ora{Sign}(\oramsg{keygen})$ creates and logs a fresh key pair
  $(\pk,\sk) \leftarrow \KeyGen$ and adds $\pk$ to the set $\ring_0$, and then returns \pk.
 \item $\ora{Sign}(\comring,\openring,\msg,\aux)$ returns
- $\Sign(\sk,\openring,\msg,\aux)$, provided it logged $(\OpenKey(\comring,\openring),\sk)$ previously.
+ $\Sign(\sk,\openring,\msg,\aux)$, provided it logged $(\pk,\sk)$
+ with $\pk = \OpenKey(\comring,\openring)$ previously.
 \end{itemize}
 \end{definition}
 

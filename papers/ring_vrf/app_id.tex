@@ -92,7 +92,7 @@ find non-equivalent public keys $\pk_0,\pk_1$ with colliding VRF outputs.
 
 We ad hoc rings make little sense for AML/KYC, so these ring VRFs become
 exculpatory if one merely dedupliates keys during registration , like via
-$\rVRF.\rVerify(\CommitRing(\{\pk\}),\mathsf{ring_name},\textt{""},\sigma)$.
+$\rVRF.\rVerify(\CommitRing(\{\pk\}),\mathsf{ring_name},\mathtt{""},\sigma)$.
 
 
 \subsection{Moderation}
@@ -117,12 +117,12 @@ In this way, users have only one stable $\mathtt{id}$ within the
 approximate date range, but they obtain fresh $\mathtt{id}$s merely
 by waiting until the next month or week.
 
-We discussed in \S\ref{subsec:vrf_pederson} how one signle \PedVRF
-signature $\sigma$ could simultaneously prove multiple input-output
-pairs $(\msg_j,\mathtt{id}_j)$.  As doing so links these pairs
-together, sites could make users link pseudo-nym creation date and
-current date, so users could have multiple active pseudo-nyms,
-but only one active pseudo-nym per time period, which prevents spam.
+As in \cite{PrivacyPass}, we could adjust \PedVRF to simultaneously
+prove multiple VRF input-output pairs $(\msg_j,\mathtt{id}_j)$.
+As doing so links these pairs together, sites could make users link
+pseudo-nym creation date and current date, so users could have multiple
+active pseudo-nyms, but only one active pseudo-nym per time period,
+which prevents spam.
 If instead we link only adjacent dates, then pseudo-nyms could
 be abandoned and replaced, but abandoned pseudo-nyms cannot then
 be reclaimed without linking to intervening dates.
