@@ -1,6 +1,117 @@
 \section{Protocol overview}
 \label{sec:overview}
 
+Any VRF needs a \KeyGen algorithm, which returns a secret key \sk and
+associated public key \pk, as well as an evaluaiton algorithm
+$\Eval : (\sk,\msg) \mapsto \Out$.
+%
+Although many constructions exist, we instantiate these like EC VRFs
+do \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}.  In other words,
+internally we prove a VUF output $\PreOut = \sk H_{\grE}(\msg)$,
+with a hash-to-curve $H_{\grE}$, so then applying a PRF $H'$ yields a
+VRF output $\Out = H'(\msg, h \PreOut)$ ala \cite[Prop. 1]{vrf_micali},
+using a key pair like $\pk = \sk \genG$ for a generator $\genG$.
+
+At their simplest, ring VRFs' algorithms could operate directly
+upon the signer set \ring:
+\begin{itemize}
+\item $\rVRF.\rSign : (\sk,\ring,\msg) \mapsto \sigma$
+    returns a ring VRF signature $\sigma$ for an input \msg.
+\item $\rVRF.\rVerify : (\ring,\msg,\sigma) \mapsto \Out \lor \perp$
+    returns either an output $\Out$ or else failure $\perp$.
+\end{itemize}
+
+A ring VRF like this could be instantiated using a NIZK for a relation like
+$$ \Setst{ \Out, \msg, \ring }{
+        (\pk,\sk) &\leftarrow \KeyGen, \quad %   \textrm{ and }
+        \pk &\in \ring, \quad
+        \Out &= \PRF(\sk,\msg)
+} $$
+%    \begin{aligned}
+%        (\pk,\sk) &\leftarrow \KeyGen \\
+%        \pk &\in \ring
+%        \Out &= \PRF(\sk,\msg)
+%    \end{aligned}
+
+% Although convenient for security arguments, % formalization
+We would need time $O(|\ring|)$ in \rSign and \rVerify merely to read
+this \ring argument.  Instead, any asymptotically faster ring signature
+replaces the \ring argument with some set commitment to \ring, roughly
+like what ZCash does.
+\begin{itemize}
+% \item $\rVRF.\CheckRing : \ring \mapsto \comring$ takes a set \ring of public keys and returns a public key set commitment \comring.
+\item $\rVRF.\CommitRing : (\ring,\pk) \mapsto (\comring,\openring)$
+    returns a commitment for a set \ring of public keys, and
+    optionally the operning \openring for some $\pk \in \ring$ as well.
+\item $\rVRF.\OpenRing : (\comring,\openring) \mapsto \pk \lor \perp$
+    returns a public key \pk, provided \openring correctly opens
+    the ring commitment \comring, or failure $\perp$ otherwise.
+\end{itemize}
+
+We now replace the membership condition $\pk \in \ring$ in the above
+relation and NIZK by the by the opening condition
+$\exists \openring \textrm{\ s.t.\ } \pk = \OpenRing(\comring,\openring)$.
+% $\pk = \OpenRing(\comring,\openring)$.
+%
+% $$ \pi_0 = \NIZK \Setst{ \Out, \msg, \comring }{
+%     \begin{aligned}
+%         (\pk,\sk) &\leftarrow \KeyGen,  \quad
+%           \Out = \PRF(\sk,\msg)  \\
+%         \exists \openring \textrm{\ s.t.\ }
+%           \pk &= \OpenRing(\comring,\openring)  \\      
+%     \end{aligned}
+% } $$
+
+As EC VRF does, our ring VRFs sign auxiliary data \aux too.
+% and support multiple messages $\msg_1,\ldots,\msg_n$ ala \cite{PrivacyPass}.
+It follows our algorithms for a {\em ring verifiable random function
+with auxiliary data} (rVRF-AD) really look like
+\begin{itemize}
+\item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$, and
+\item $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto (\Out_1,\ldots,\Out_n) \lor \perp$.
+\end{itemize}
+
+Although asymptotically faster, our opening \OpenRing invariably
+winds up being extremely heavy inside a zkSNARK.
+We solve this obstacle in \S\ref{sec:rvrf_cont} by introducing
+{\em zero-knowledge continuation}, a new zkSNARK technique built from
+rerandomizable Groth16s and designed for composition and reuse.
+
+In this, we should split the relation describing our ring VRF into
+a VRF evaluation relation \Reval and a reusable or continuable relation
+\Rring, which enforces our heavy $\pk = \OpenRing(\comring,\openring)$
+condition.  We shall rerandomize a Groth16 SNARK for \Rring ala
+\cite[Theorem 3, Appendix C, pp. 31]{RandomizationGroth16}.
+Anonymity requires
+
+We must join aka pass \pk from \Rring to \Reval, which demands some
+hiding commitment \compk of course.  We discovered this becomes
+incredibly efficent if one uses a Pedersen commitment to \sk.
+
+$$ \Rring = \Setst{ \sk, \comring }{
+    (\pk,\sk) \leftarrow \KeyGen, \quad % \textrm{ and }
+    \pk = \OpenRing(\comring,\openring) 
+} $$
+
+$$ \Reval = \Setst{ \Out, \msg, \aux, \pk }{ \Out = \PRF(\sk,\msg) } $$
+
+In \S\ref{sec:rvrf_cont} we rerandomize $\compk = \pk + b \, K$
+without reproving the Groth16 for \Rring, but instead requires
+expanding the trusted setup.
+%
+In \S\ref{sec:pederson_vrf}, we introduce an extremely efficient NIZK
+for \Reval, which also provides an essential proof-of-knowledge for \compk.
+
+
+
+
+
+\endinput
+
+
+
+
+
 % We define ring VRFs in \S\ref{sec:rvrf_games} and \S\ref{sec:rvrf_uc_fun} below, but
 Ring VRFs are firstly ring signatures broadly interpreted, in that they
 prove an involved public key lies inside some commitment \comring to
@@ -11,126 +122,4 @@ At the same time, ring VRFs prove correct output of a PRF keyed by
 the signer's actual secret key, and evaluated on a supplied message \msg,
 which then links ring VRF signatures on the same \msg.
 
-\begin{definition}
-A {\em ring verifiable random function with auxiliary data} (rVRF-AD)
-consists of several algorithms:
-\begin{itemize}
-	\item $\rVRF.\KeyGen$ and returns a public key \pk and a secret key \sk, which one typically instantiates via come commitment scheme. 
-	%
-	% \item $\rVRF.\CheckRing : \ring \mapsto \comring$ takes a set \ctx of public keys and returns a public key set commitment \comring.
-	\item $\rVRF.\CommitRing : (\ring,\pk) \mapsto (\comring,\openring)$ takes a set \ring of public keys, and returns a public key commitment \comring.  It optionally takes a public key \pk too, and then returns an opening \openring.
-	\item $\rVRF.\OpenRing : (\comring,\openring) \mapsto \pk$ returns a public key \pk, provided \openring correctly opens the ring commitment \comring, or failure $\perp$ otherwise.
-	%
-	\item $\rVRF.\Eval : (\sk,\msg) \mapsto \Out$  takes a secret key \sk and an input $\msg$, and then returns a VRF output $\Out$.
-	\item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$ takes a secret key \sk, a ring opening \openring, an input \msg, and auxiliary data \aux, and then returns a ring VRF signature $\sigma$.
-	\item $\rVRF.\rVerify$ takes $(\comring,\msg,\aux,\sigma)$ for a ring commitment \comring, an input \msg, and auxiliary data \aux, and then returns either an output $\Out$ or else failure $\perp$.
-\end{itemize}
-\end{definition}
-
-We could instantiate a ring VRF via NIZKs like
-
-$$ \pi_0 = \NIZK \Setst{ \Out, \msg, \comring }{
-    \exists \sk, \pk, \openring \textrm{\ s.t.\ } 
-    \begin{aligned}
-        (\pk,\sk) &\leftarrow \KeyGen  \textrm{ and } \\
-        \pk &= \OpenRing(\comring,\openring)  \textrm{ and } \\
-        \Out &= \PRF(\sk,\msg)
-    \end{aligned}
-} $$
-
-As a rule, all ring signatures work via zero-knowledge execution of
-some such \OpenRing, which invariably winds up being extremely heavy.
-In \S\ref{sec:rvrf_cont}, we resolve this major performance
-obstacle by introducing {\em zero-knowledge continuation},
-a new zkSNARK variant designed for composition and build from Groth16.
-Our zero-knowledge continuation to split $\pi_0$ into first a Groth16
-$\piring$ which runs \OpenRing and permits reuse via rerandomization
-ala \cite[Theorem 3, Appendix C, pp. 31]{RandomizationGroth16},
-and then a separate a PRF evaluation NIZK $\pieval$.
-
-$$ \piring = \NIZK \Setst{ \compk, \comring }{
-    \exists \openring \textrm{\ s.t.\ } 
-    \pk = \OpenRing(\comring,\openring) \textrm{ and } \cdots
-} $$
-
-$$ \pieval = \NIZK \Setst{ \Out, \msg, \compk }{
-    \exists \sk \textrm{\ s.t.\ }
-    (\pk,\sk) \leftarrow \KeyGen \textrm{ and }
-    \Out = \PRF(\sk,\msg) \textrm{ and } \cdots
-} $$
-
-Here wur zero-knowledge continuation passes \pk from \piring to \pieval
-using a Pedersen commitment \compk to \pk which hides \pk, and
-binds \pk as being equal in \piring and \pieval, but permits cheap
- reblinding of \compk without reproving \piring.
-As a consequence, our \compk cannot itself be a true Groth16 public input,
-or even exist inside the Groth16 inside \piring.
-
-Instead in \S\ref{sec:rvrf_cont}, we build zero-knowledge continuations
-by expanding a Groth16 trusted setup with independent blinding factors
-for Pedersen commitments, and providing proofs-of-knowledge when used,
-so that the zero-knowledge continuation's own ``public inputs'' become
-cheaply malleable in exactly the desired way.
-We then exploit the zero-knowledge continuation by wiring these
-Pedersen commitments into another NIZK.
-%
-In \S\ref{sec:pederson_vrf},
-we introduce an extremely efficient instantiation for $\pieval$, which
-also provides the required proof-of-knowledge for \compk.
-
-It's clear our NIZKs $\piring$ and $\pieval$ above look under specified
-in how they handle the Pedersen commitment \compk.  Among other issues
-they never explain the proof-of-knowledge required for \compk.
-As a rule, we found typical NIZK notation cannot distinguish the Groth16
-itself from these Pedersen commitments, and thus cannot describe the
-wiring of zero-knowledge continuations properly.
-We therefore describe only the base Groth16 in NIZK notation, and then
-separately explain how the zero-knowledge continuation wires up its
-Pedersen commitments.
-
-
-
-\endinput 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 \smallskip
-
-We explain this zero-knowledge continuation $\piring$ in detail
-in \S\ref{sec:rvrf_cont}.  Yet first in \S\ref{sec:pederson_vrf}
-we introduce an extremely efficient instantiation for $\pieval$, which
-also provides the required proof-of-knowledge for \compk.
-
-
-
-\endinput 
-
-We shall discuss several variations on $\piring$, as alterations impact
-deployment dramatically.  Yet we know interesting variations on $\pieval$
-as well, including schemes with post-quantum anonymity, but not post-quantum soundness.
-
-\endinput 
-
-  As an example, if one employs hash functions for \CommitKey
-and \PRF, and certain zkSNARKs for $\pieval$, then one obtains post-quantum
-anonymity, although not post-quantum soundness.
-
