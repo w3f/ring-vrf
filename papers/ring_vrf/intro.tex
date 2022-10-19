@@ -1,19 +1,26 @@
 % \section{Introduction}
 
+Anonymous credentials is the study of weakenings of anonymity,
+both the cryptographic techniques and the social implications.
+%
 We answer three questions:
-\begin{enumerate}
+\begin{enumerate} 
 \item
 What are the cheapest SNARK proofs?  \quad
 Ones users reuse without reproving.
+% \item
+% What 
+% Ring verifiable random functions.
 \item
-How can identity be safe for online use?  \quad
+How can identity be safe for general use online?  \quad
 By revealing nothing except users' uniqueness.
 \item
-How can ration card issuance be trusted?  \quad
+How can ration card issuance be transperent?  \quad
 By asking users trust a public list, not certificates.
 \end{enumerate}
 
 % First
+\paragraph{Zero-knowledge continuations:}
 
 Rerandomizable zkSNARKs like Groth16 \cite{Groth16} admit a
 transformation of a valid proof into another valid but unlinkable
@@ -23,7 +30,7 @@ was never deployed because the public inputs link the usages.
 We demonstrate in \S\ref{sec:rvrf_cont} a simple transformation of
 any Groth16 zkSNARK into a {\it zero-knowledge continuation} whose
 public inputs become opaque Pedersen commitments, with cheaply
-rerandomizable blinding factors and proof.
+rerandomizable blinding factors and proofs.
 These zero-knowledge continuations then prove validity of the contents
 of Pedersen commitments, but can now be reused arbitrarily many times,
 without linking the usages. 
@@ -32,7 +39,8 @@ As recursive SNARKs shall remain extremely slow,
 we expect zero-knowledge continuations via rerandomization become
 essential for zkSNARKs used outside the crypto-currency space.
 
-\smallskip 
+% \smallskip 
+\paragraph{Ring VRFs:}
 
 A {\it ring verifiable random function} (ring VRF) is a ring signature
 that proves correct evaluation of some pseudo-random function (PRF)
@@ -46,14 +54,6 @@ signers actual secret key, we can therefore link signatures by the
 same signer if and only if they sign identical messages.
 In effect, ring VRFs restrict anonymity similarly to but less than
  linkable ring signatures do, which makes them multi-use and contextual.
-
-Anonymous credentials aka anonymized signatures come in myriad flavors,
-many of which exist to limits the anonymity provided, ala
- attribute based credentials and group signatures. % \cite{group_sig_survey}.
-%
-Ring VRFs by weakening anonymity only contextually provide a safer,
-more private, more flexible, more powerful, and more ethical
-choice for all everyday anonymous credential use cases.  % needs:  ???
 
 % Second
 % \smallskip
@@ -144,5 +144,20 @@ roots of trust can self authenticate if root keys act as domain separators.
 
 
 
+
+
 \endinput
+
+
+
+
+As a field, anonymous credentials come in myriad flavors,
+many of which exist to limits the anonymity provided, ala
+ attribute based credentials and group signatures. % \cite{group_sig_survey}.
+% aka anonymized signatures
+%
+Ring VRFs by weakening anonymity only contextually provide a safer,
+more private, more flexible, more powerful, and more ethical
+choice for all everyday anonymous credential use cases.  % needs:  ???
+
 
