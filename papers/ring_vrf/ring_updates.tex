@@ -5,7 +5,7 @@ We discuss \pifast, or \pisk and \pipk, representing public keys
  in $\grE$ in $\grJ$ already,
 % along with circuit implementation details of $\PedVRF.\{ \CommitKey, \OpenKey \}$,
 but otherwise mostly treated the ring commitment scheme
-$\rVRF.\{ \CommitRing, \CommitKey, \OpenRing \}$ like a black box.
+$\rVRF.\{ \CommitRing, \OpenRing \}$ like a black box.
 
 Although our $\rVRF.\rSign$ runs fast, all users must update their
 stored zkSNARK \pipk every time the ring $\ctx$ changes.
@@ -15,7 +15,7 @@ Almost any circuit works for \pipk though,
 
 \subsection{Merkle trees} % {Poseidon}
 
-Our $\rVRF.\{ \CommitRing, \CommitKey, \OpenRing \}$ could implement a
+Our $\rVRF.\{ \CommitRing, \OpenRing \}$ could implement a
 Merkle tree using zkSNARK friendly hash functions like Poseidon \cite{poseidon}.
 %
 All users need $O(\log |\ctx|)$ data with every update, which sounds

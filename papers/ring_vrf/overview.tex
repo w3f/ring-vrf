@@ -3,29 +3,30 @@
 
 Any VRF needs a \KeyGen algorithm, which returns a secret key \sk and
 associated public key \pk, as well as an evaluaiton algorithm
-$\Eval : (\sk,\msg) \mapsto \Out$.
+$\Eval : (\sk,\msg) \mapsto \Out$. % for which many constructions exist.
 %
-Although many constructions exist, we instantiate these like EC VRFs
-do \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}.  In other words,
-internally we prove a VUF output $\PreOut = \sk H_{\grE}(\msg)$,
-with a hash-to-curve $H_{\grE}$, so then applying a PRF $H'$ yields a
-VRF output $\Out = H'(\msg, h \PreOut)$ ala \cite[Prop. 1]{vrf_micali},
-using a key pair like $\pk = \sk \genG$ for a generator $\genG$.
+Although many constructions exist,
+ ours resemble EC VRFs like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}.
+% In other words,
+% internally we prove a VUF output $\PreOut = \sk H_{\grE}(\msg)$,
+% with a hash-to-curve $H_{\grE}$, so then applying a PRF $H'$ yields a
+% VRF output $\Out = H'(\msg, h \PreOut)$ ala \cite[Prop. 1]{vrf_micali},
+% using a key pair like $\pk = \sk \genG$ for a generator $\genG$.
 
 At their simplest, ring VRFs' algorithms could operate directly
 upon the signer set \ring:
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\ring,\msg) \mapsto \sigma$
     returns a ring VRF signature $\sigma$ for an input \msg.
-\item $\rVRF.\rVerify : (\ring,\msg,\sigma) \mapsto \Out \lor \perp$
+\item $\rVRF.\rVerify : (\ring,\msg,\sigma) \mapsto \Out \, \lor \perp$
     returns either an output $\Out$ or else failure $\perp$.
 \end{itemize}
 
 A ring VRF like this could be instantiated using a NIZK for a relation like
 $$ \Setst{ \Out, \msg, \ring }{
-        (\pk,\sk) &\leftarrow \KeyGen, \quad %   \textrm{ and }
-        \pk &\in \ring, \quad
-        \Out &= \PRF(\sk,\msg)
+        (\pk,\sk) \leftarrow \KeyGen, \quad %   \textrm{ and }
+        \pk \in \ring, \quad
+        \Out = \PRF(\sk,\msg)
 } $$
 %    \begin{aligned}
 %        (\pk,\sk) &\leftarrow \KeyGen \\
@@ -35,15 +36,15 @@ $$ \Setst{ \Out, \msg, \ring }{
 
 % Although convenient for security arguments, % formalization
 We would need time $O(|\ring|)$ in \rSign and \rVerify merely to read
-this \ring argument.  Instead, any asymptotically faster ring signature
-replaces the \ring argument with some set commitment to \ring, roughly
-like what ZCash does.
+this \ring argument.  Instead, ring signatures run asymptotically faster
+by replacing the \ring argument with some set commitment to \ring,
+roughly like what ZCash does.
 \begin{itemize}
 % \item $\rVRF.\CheckRing : \ring \mapsto \comring$ takes a set \ring of public keys and returns a public key set commitment \comring.
 \item $\rVRF.\CommitRing : (\ring,\pk) \mapsto (\comring,\openring)$
     returns a commitment for a set \ring of public keys, and
     optionally the operning \openring for some $\pk \in \ring$ as well.
-\item $\rVRF.\OpenRing : (\comring,\openring) \mapsto \pk \lor \perp$
+\item $\rVRF.\OpenRing : (\comring,\openring) \mapsto \pk \, \lor \perp$
     returns a public key \pk, provided \openring correctly opens
     the ring commitment \comring, or failure $\perp$ otherwise.
 \end{itemize}
@@ -67,28 +68,33 @@ As EC VRF does, our ring VRFs sign auxiliary data \aux too.
 It follows our algorithms for a {\em ring verifiable random function
 with auxiliary data} (rVRF-AD) really look like
 \begin{itemize}
-\item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$, and
-\item $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto (\Out_1,\ldots,\Out_n) \lor \perp$.
+\item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$, \quad and
+\item $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto \Out \, \lor \perp$.
 \end{itemize}
 
 Although asymptotically faster, our opening \OpenRing invariably
 winds up being extremely heavy inside a zkSNARK.
 We solve this obstacle in \S\ref{sec:rvrf_cont} by introducing
-{\em zero-knowledge continuation}, a new zkSNARK technique built from
+{\em zero-knowledge continuations}, a new zkSNARK technique built from
 rerandomizable Groth16s and designed for composition and reuse.
 
 In this, we should split the relation describing our ring VRF into
 a VRF evaluation relation \Reval and a reusable or continuable relation
 \Rring, which enforces our heavy $\pk = \OpenRing(\comring,\openring)$
-condition.  We shall rerandomize a Groth16 SNARK for \Rring ala
-\cite[Theorem 3, Appendix C, pp. 31]{RandomizationGroth16}.
-Anonymity requires
+condition.  Anonymity requires we rerandomize a Groth16 SNARK for \Rring
+ala \cite[Theorem 3, Appendix C, pp. 31]{RandomizationGroth16}.
+%
+Yet, we must join aka pass \pk from \Rring to \Reval somehow, which
+demands some hiding commitment \compk of course.
 
-We must join aka pass \pk from \Rring to \Reval, which demands some
-hiding commitment \compk of course.  We discovered this becomes
-incredibly efficent if one uses a Pedersen commitment to \sk.
+$$ \Rring = \Setst{ \compk, \comring }{
+    \, \cdots \,\, \pk = \OpenRing(\comring,\openring) \,\, \cdots \,
+} $$
 
-$$ \Rring = \Setst{ \sk, \comring }{
+We discovered this becomes incredibly efficent if one actually uses
+a Pedersen commitment to \sk in the Groth16 itself.
+
+$$ \Rringsk = \Setst{ \sk, \comring }{
     (\pk,\sk) \leftarrow \KeyGen, \quad % \textrm{ and }
     \pk = \OpenRing(\comring,\openring) 
 } $$
@@ -97,12 +103,12 @@ $$ \Reval = \Setst{ \Out, \msg, \aux, \pk }{ \Out = \PRF(\sk,\msg) } $$
 
 In \S\ref{sec:rvrf_cont} we rerandomize $\compk = \pk + b \, K$
 without reproving the Groth16 for \Rring, but instead requires
-expanding the trusted setup.
+expanding the Groth16 trusted setup into what becomes zero-knowledge continuation.
 %
 In \S\ref{sec:pederson_vrf}, we introduce an extremely efficient NIZK
 for \Reval, which also provides an essential proof-of-knowledge for \compk.
 
-
+% We first however discuss security definitions in \S\ref{sec:???}.
 
 
 
