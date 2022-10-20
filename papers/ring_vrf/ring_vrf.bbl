@@ -28,33 +28,14 @@ Maria Borge, Eleftherios Kokoris-Kogias, Philipp Jovanovic, Linus Gasser,
 \newblock In {\em 2017 IEEE European Symposium on Security and Privacy
   Workshops (EuroS\&PW)}, pages 23--26, 2017.
 
-\bibitem{cryptoeprint:2020:823}
-Jacqueline Brendel, Cas Cremers, Dennis Jackson, and Mang Zhao.
-\newblock The provable security of ed25519: Theory and practice.
-\newblock Cryptology ePrint Archive, Report 2020/823, 2020.
-\newblock \url{https://eprint.iacr.org/2020/823}.
-
 \bibitem{taler}
 Jeffrey Burdges, Florian Dold, and Christian Grothoff.
 \newblock Robust and income-transparent online e-cash.
-
-\bibitem{cryptoeprint:2019:1185}
-David Butler, Andreas Lochbihler, David Aspinall, and Adri{\`a} Gasc{\'o}n.
-\newblock Formalising $\sigma$-protocols and commitment schemes using crypthol.
-\newblock Cryptology ePrint Archive, Report 2019/1185, 2019.
-\newblock \url{https://ia.cr/2019/1185}.
 
 \bibitem{IRMA_credentials}
 Privacy by~Design~Foundation.
 \newblock Irma docs v0.2.0.
 \newblock \url{https://irma.app/docs/v0.2.0/overview/}.
-
-\bibitem{praos}
-Bernardo David, Peter Ga{\v{z}}i, Aggelos Kiayias, and Alexander Russell.
-\newblock Ouroboros {P}raos: An adaptively-secure, semi-synchronous
-  proof-of-stake blockchain.
-\newblock In {\em Annual International Conference on the Theory and
-  Applications of Cryptographic Techniques}, pages 66--98. Springer, 2018.
 
 \bibitem{PrivacyPass}
 Alex Davidson, Ian Goldberg, Nick Sullivan, George Tankersley, and Filippo
@@ -70,12 +51,12 @@ Bryan Ford and Jacob Strauss.
   SocialNets '08, page 31–36, New York, NY, USA, 2008. Association for
   Computing Machinery.
 
-\bibitem{plonk}
-Ariel Gabizon, Zachary~J. Williamson, and Oana Ciobotaru.
-\newblock Plonk: Permutations over lagrange-bases for oecumenical
-  noninteractive arguments of knowledge.
-\newblock Cryptology ePrint Archive, Paper 2019/953, 2019.
-\newblock \url{https://eprint.iacr.org/2019/953}.
+\bibitem{draft-irtf-cfrg-vrf-10}
+Sharon Goldberg, Leonid Reyzin, Dimitrios Papadopoulos, and Jan Včelák.
+\newblock {Verifiable Random Functions (VRFs)}.
+\newblock Internet-Draft draft-irtf-cfrg-vrf-10, Internet Engineering Task
+  Force, Nov 2021.
+\newblock Work in Progress.
 
 \bibitem{poseidon}
 Lorenzo Grassi, Dmitry Khovratovich, Christian Rechberger, Arnab Roy, and
@@ -91,14 +72,6 @@ Jens Groth.
   in Cryptology -- EUROCRYPT 2016}, pages 305--326, Berlin, Heidelberg, 2016.
   Springer Berlin Heidelberg.
 \newblock IACR ePrint Archive 2016/260.
-
-\bibitem{agg_dkg}
-Kobi Gurkan, Philipp Jovanovic, Mary Maller, Sarah Meiklejohn, Gilad Stern, and
-  Alin Tomescu.
-\newblock Aggregatable distributed key generation.
-\newblock In Anne Canteaut and Fran{\c{c}}ois{-}Xavier Standaert, editors, {\em
-  {EUROCRYPT} 2021}, volume 12696 of {\em LNCS}, pages 147--176, 2021.
-\newblock \url{https://ia.cr/2021/005}.
 
 \bibitem{KZG}
 Aniket Kate, Gregory~M. Zaverucha, and Ian Goldberg.

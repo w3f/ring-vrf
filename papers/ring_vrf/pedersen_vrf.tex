@@ -99,9 +99,9 @@ $$ \Rring = \Setst{ \compk, \comring }{
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \rho$
  % takes a secret key \sk, a ring opening \openring, a message \msg, and \aux, and then % auxiliary data
- samples $\openpk \leftsample \F_p$
+ samples $\openpk \leftsample \F_p$ and
  % computes a proof $\piring$, a signature $\sigma$, and
- returns a ring VRF signature $\rho = (\compk,\piring,\sigma)$ where
+ returns $\rho = (\compk,\piring,\sigma)$ where      % a ring VRF signature
  $$ \piring = \NIZK.\Prove(\Rring,\compk,\comring,\openpk,\openring) \quad\textrm{and} $$
  $$ \sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \piring \doubleplus \comring) \mathperiod $$ % finally
 \item $\rVRF.\rVerify : (\comring,\msg,\aux,\rho) \mapsto \Out \, \lor \perp$
