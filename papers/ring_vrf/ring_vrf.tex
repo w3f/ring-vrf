@@ -1,29 +1,41 @@
- \documentclass[runningheads,evcountsame,a4paper,11pt,orivec]{llncs}
+\documentclass[runningheads,evcountsame,a4paper,11pt,orivec]{llncs}
 % \documentclass[a4paper,11pt]{amsart}
+% \usepackage[margin=2.5cm,includefoot]{geometry}
 
-\usepackage[margin=2.5cm,includefoot]{geometry}
+\def\eprint#1#2{#1} % eprint
+% \def\eprint#1#2{#2} % PETS
 
-%=================Begin:Packages===================
-\usepackage{graphicx}
-% \usepackage{enumitem}
-\usepackage{url}
+% \sloppy
+
 % \usepackage{amsthm}
 \usepackage{amsfonts}
 \usepackage{amsmath}
+\usepackage{mathtools}
+
+\usepackage[utf8]{inputenc}
+\usepackage{xspace}
+
+\usepackage{url}
 \usepackage{hyperref}
 % \usepackage[capitalize,nameinlink]{cleveref}
+
+% \usepackage{graphicx}
+% \usepackage{xcolor}
+
+% \usepackage{tikz}
+% \usetikzlibrary{arrows,chains,matrix,positioning,scopes}
+
+% \usepackage{enumitem}
+
+% Italics should be prefered over underlines..
+% \usepackage{ulem}
+
+% Avoid boxes if pssible..
 % \usepackage{framed}
 % \usepackage{fancybox}
-\usepackage[utf8]{inputenc}
-\usepackage{mathtools}
 % \usepackage{tcolorbox}
-\usepackage{tikz}
-% \usepackage{todonotes}
-\usepackage{xspace}
-\usepackage{xcolor}
-\usepackage[linewidth=1pt]{mdframed}
-\usepackage{ulem}
-\usetikzlibrary{arrows,chains,matrix,positioning,scopes}
+% ..but if required mdframe splits across pages.
+% \usepackage[linewidth=1pt]{mdframed}
 
 % TODO: Clean up macros
 \input{../macros/style.tex}
@@ -31,15 +43,8 @@
 \input{../macros/other.tex}
 \input{macros.tex}
 
-\usepackage{tcolorbox}
-% \usepackage{enumitem}
+% \usepackage{todonotes}
 
-
-% \sloppy
-
-% \def\eprint#1#2{#1} % eprint
-\def\eprint#1#2{#2} % PETS
-\def\eprintsmallskip{\smallskip}{}
 
 \title{Ethical identity, ring VRFs, and zero-knowledge continuations}
 
@@ -53,30 +58,7 @@
 \maketitle
 
 \begin{abstract}
-Anonymized ring VRFs are ring signatures that prove correct evaluation
-of some authorized signer's PRF while hiding the specific signer's
-identity within some set of possible signers, known as the ring.
-% \eprint{We propose ring VRFs as a natural fulcrum around which a diverse array of zkSNARK circuits turn, making them an ideal target for optimization and eventually standards.}{}
-
-\eprintsmallskip
-We demonstrate a reusable {\em zero-knowledge continuation} technique,
-which works by adjusting a Groth16 trusted setup to hide public inputs
-when rerandomizing the Groth16.  We then build ring VRFs that amortize
-expensive ring membership proofs across many ring VRF signatures.
-%
-Incredibly, our ring VRF needs only eight $\mathcal{E}_1$ and two
-$\mathcal{E}_2$ scalar multiplications, making it the only ring signature
-with performance competitive with group signatures.
-
-\eprintsmallskip
-Ring VRFs produce a unique identity for any give context but remain
-unlinkable between different contexts.  These unlinkable but unique
-pseudonyms provide a far better balance between user privacy and service
-provider or social interests than attribute based credentials like IRMA.
-
-\eprintsmallskip
-Ring VRFs support anonymously rationing or rate limiting resource
-consumption that winds up vastly more efficient than purchases via money-like protocols.
+\input{abstract}
 \end{abstract}
 
 
@@ -96,12 +78,13 @@ consumption that winds up vastly more efficient than purchases via money-like pr
 \input{app_id}
 \input{app_rate}
 
-\input{conclusion}
+% \input{conclusion}
 
 
 \appendix
 
 % \input{background}
+% \input{uc_proof}
 
 
 

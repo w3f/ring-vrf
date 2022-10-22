@@ -16,23 +16,26 @@ Although many constructions exist,
 At their simplest, ring VRFs' algorithms could operate directly
 upon the signer set \ring:
 \begin{itemize}
-\item $\rVRF.\rSign : (\sk,\ring,\msg) \mapsto \sigma$
+\item $\rVRF.\rSign : (\sk,\ring,\msg) \mapsto \sigma$ \,
     returns a ring VRF signature $\sigma$ for an input \msg.
-\item $\rVRF.\rVerify : (\ring,\msg,\sigma) \mapsto \Out \, \lor \perp$
+\item $\rVRF.\rVerify : (\ring,\msg,\sigma) \mapsto \Out \, \lor \perp$ \,
     returns either an output $\Out$ or else failure $\perp$.
 \end{itemize}
 
 A ring VRF like this could be instantiated using a NIZK for a relation like
 $$ \Setst{ \Out, \msg, \ring }{
+    \eprint{
         (\pk,\sk) \leftarrow \KeyGen, \quad %   \textrm{ and }
         \pk \in \ring, \quad
         \Out = \PRF(\sk,\msg)
+    }{
+        \begin{aligned}
+        & (\pk,\sk) \leftarrow \KeyGen \\
+        & \pk \in \ring \\
+        & \Out = \PRF(\sk,\msg)
+        \end{aligned}
+    }
 } $$
-%    \begin{aligned}
-%        (\pk,\sk) &\leftarrow \KeyGen \\
-%        \pk &\in \ring
-%        \Out &= \PRF(\sk,\msg)
-%    \end{aligned}
 
 % Although convenient for security arguments, % formalization
 We would need time $O(|\ring|)$ in \rSign and \rVerify merely to read
@@ -41,17 +44,17 @@ by replacing the \ring argument with some set commitment to \ring,
 roughly like what ZCash does.
 \begin{itemize}
 % \item $\rVRF.\CheckRing : \ring \mapsto \comring$ takes a set \ring of public keys and returns a public key set commitment \comring.
-\item $\rVRF.\CommitRing : (\ring,\pk) \mapsto (\comring,\openring)$
+\item $\rVRF.\CommitRing : (\ring,\pk) \mapsto (\comring,\openring)$ \,
     returns a commitment for a set \ring of public keys, and
     optionally the operning \openring for some $\pk \in \ring$ as well.
-\item $\rVRF.\OpenRing : (\comring,\openring) \mapsto \pk \, \lor \perp$
+\item $\rVRF.\OpenRing : (\comring,\openring) \mapsto \pk \, \lor \perp$ \,
     returns a public key \pk, provided \openring correctly opens
     the ring commitment \comring, or failure $\perp$ otherwise.
 \end{itemize}
 
 We now replace the membership condition $\pk \in \ring$ in the above
 relation and NIZK by the by the opening condition
-$\exists \openring \textrm{\ s.t.\ } \pk = \OpenRing(\comring,\openring)$.
+$$ \exists \openring \textrm{\ s.t.\ } \pk = \OpenRing(\comring,\openring) \mathperiod $$
 % $\pk = \OpenRing(\comring,\openring)$.
 %
 % $$ \pi_0 = \NIZK \Setst{ \Out, \msg, \comring }{
@@ -63,13 +66,13 @@ $\exists \openring \textrm{\ s.t.\ } \pk = \OpenRing(\comring,\openring)$.
 %     \end{aligned}
 % } $$
 
-As EC VRF does, our ring VRFs sign auxiliary data \aux too.
+As EC VRF does, our ring VRFs signs auxiliary data \aux too.
 % and support multiple messages $\msg_1,\ldots,\msg_n$ ala \cite{PrivacyPass}.
 It follows our algorithms for a {\em ring verifiable random function
 with auxiliary data} (rVRF-AD) really look like
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$, \quad and
-\item $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto \Out \, \lor \perp$.
+\item $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto \Out \,\, \lor \perp$.
 \end{itemize}
 
 Although asymptotically faster, our opening \OpenRing invariably
@@ -86,17 +89,25 @@ ala \cite[Theorem 3, Appendix C, pp. 31]{RandomizationGroth16}.
 %
 Yet, we must join aka pass \pk from \Rring to \Reval somehow, which
 demands some hiding commitment \compk of course.
-
+%
 $$ \Rring = \Setst{ \compk, \comring }{
-    \, \cdots \,\, \pk = \OpenRing(\comring,\openring) \,\, \cdots \,
+    \cdots \, \eprint{ \pk =}{} \OpenRing(\comring,\openring) \, \cdots
 } $$
 
 We discovered this becomes incredibly efficent if one actually uses
 a Pedersen commitment to \sk in the Groth16 itself.
 
-$$ \Rringsk = \Setst{ \sk, \comring }{
+$$ \Rring' = \Setst{ \sk, \comring }{
+    \eprint{
     (\pk,\sk) \leftarrow \KeyGen, \quad % \textrm{ and }
     \pk = \OpenRing(\comring,\openring) 
+    }{
+    \begin{aligned}
+        &(\pk,\sk) \leftarrow \KeyGen, \\
+        % \exists \openring \textrm{\ s.t.\ }
+        &\pk = \OpenRing(\comring,\openring)  \\      
+    \end{aligned}
+    }
 } $$
 
 $$ \Reval = \Setst{ \Out, \msg, \aux, \pk }{ \Out = \PRF(\sk,\msg) } $$

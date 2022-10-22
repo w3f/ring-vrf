@@ -1,5 +1,5 @@
 
-\section{rVRF-AD security}
+\section{{r}VRF-AD security}
 \label{sec:rvrf_games}
 
 % We need some basic correctness conditions of course.
@@ -7,10 +7,13 @@
 \begin{definition}
 We say an rVRF-AD satisfies {\em evaluation correctness} if
 $(\pk,\sk) \leftarrow \KeyGen$ implies
-$\Eval(\sk,\msg) = \Verify(\pk,\msg,\aux,\Sign(\sk,\msg,\aux))$, % succeeds
+$$ \Eval(\sk,\msg) = \Verify(\pk,\msg,\aux,\Sign(\sk,\msg,\aux)), $$  % succeeds
 and also {\em ring commitment correctness} if
-$\pk \in \ring$ implies both $\OpenRing(\CommitRing(\ring,\pk)) = \pk$
-and $\CommitRing(\ring) = \CommitRing(\ring,\pk).0$.
+$\pk \in \ring$ implies both 
+$$ \begin{aligned}
+  \OpenRing(\CommitRing(\ring,\pk)) = \pk \qquad\textrm{and} \\
+  \CommitRing(\ring) = \CommitRing(\ring,\pk).0  \mathperiod
+\end{aligned} $$
 \end{definition}
 
 We lack anonymity against full key exposure ala
@@ -21,11 +24,12 @@ but instead demand a weaker anonymity condition similar to
 \begin{definition}\label{def:rvrf_sign_oracle}
 We let \ora{Sign} denote a ring signature CMA oracle, meaning
 \begin{itemize}
-\item $\ora{Sign}(\oramsg{keygen})$ creates and logs a fresh key pair
- $(\pk,\sk) \leftarrow \KeyGen$ and adds $\pk$ to the set $\ring_0$, and then returns \pk.
-\item $\ora{Sign}(\comring,\openring,\msg,\aux)$ returns
- $\Sign(\sk,\openring,\msg,\aux)$, provided it logged $(\pk,\sk)$
- with $\pk = \OpenKey(\comring,\openring)$ previously.
+\item $\ora{Sign}(\oramsg{keygen})$ \, 
+ creates a fresh key pair $(\pk,\sk) \leftarrow \KeyGen$, logs it, and
+ adds $\pk$ to the set $\ring_0$, and then returns \pk.
+\item $\ora{Sign}(\comring,\openring,\msg,\aux)$ \,
+ returns the signature $\Sign(\sk,\openring,\msg,\aux)$,
+ provided it logged $(\pk,\sk)$ with $\pk = \OpenKey(\comring,\openring)$ previously.
 \end{itemize}
 \end{definition}
 
@@ -40,11 +44,12 @@ any PPT adversary \adv has an advantage only
  and a ring $\ring \subset \ora{Sign}.\ring_0$ containing $\pk_0,\pk_1$.
  Set $\comring = \CommitRing(\ring)$.
  Next the challenger chooses $j=0$ or $j=1$ and gives
-  \adv a signature $\sigma = \rSign(\sk_j,\openring,\msg,\aux)$ with $\OpenKey(\comring,\openring) = \pk_j$.
+  \adv some signature $\sigma = \rSign(\sk_j,\openring,\msg,\aux)$ with $\OpenKey(\comring,\openring) = \pk_j$.
  %
  \adv calls \ora{Sign} of Definition \ref{def:rvrf_sign_oracle} throughout,
  except \adv loses if they ever query $\ora{Sign}(\comring',\openring',\msg,\cdot)$
- on \msg for some $\comring',\openring'$ with $\OpenKey(\comring',\openring') \in \{ \pk_0, \pk_1 \}$.
+ on \msg for some $\comring',\openring'$ with
+ $$ \OpenKey(\comring',\openring') \in \{ \pk_0, \pk_1 \} \mathperiod $$
  Finally \adv guesses $j$ and wins if correct.
 \end{itemize}
 \end{definition}

@@ -3,9 +3,8 @@
 \label{sec:rvrf_cont}
 
 We now construct ring VRFs which achieves fast amortized prover time
-by using a heavy zero-knowledge continuation for $\rVRF.\OpenRing$ but
-which permits updating \openpk in the $\PedVRF.\OpenKey$ invocation
-without reproving \piring for \Rring.
+due to a zero-knowledge continuation for its $\rVRF.\OpenRing$
+invocation in \Rring. 
 
 % $$ \Rring = \Setst{ \compk, \comring }{
 %  \exists \openpk,\openring \textrm{\ s.t.\ } 
@@ -17,7 +16,9 @@ without reproving \piring for \Rring.
 % \label{sec:rvrf_groth16}
 
 Zero-knowledge continuations need rerandomizable zkSNARKs,
-meaning Groth16 \cite{Groth16}, but unlinkability requires more than merely rerandomization.
+meaning Groth16 \cite{Groth16}, but beyond rerandomization their
+unlinkability demands we update the \openpk for $\PedVRF.\OpenKey$
+invocation without reproving this heavy $\rVRF.\OpenRing$ call.
 
 In Groth16 \cite{Groth16}, we have an SRS $S$ consisting of curve
 points in $\grE_1$ and $\grE_2$ that encode the circuit being proven.
@@ -74,8 +75,8 @@ we create $\genB_\delta$ during the trusted setup,
 After this, subversion resistance could be checked like 
 $$ e(\genB_\gamma, [\gamma]_2) = e(\genB_\delta, [\delta]_2) \mathperiod $$
 
-We now have a zero-knowledge continuation $(X,A,B,C)$ from which
-we produce an unlinkable instance $(X',A',B',C')$ by
+We now have a zero-knowledge continuation $\pi = (X,A,B,C)$ from which
+we produce an unlinkable instance $\pi' = (X',A',B',C')$ by
  first sampling random $b,r_1,r_2 \in \F_p$ and then computing
 $$ \begin{aligned}
 X' &= X + b \genB_\gamma \\
@@ -92,12 +93,12 @@ standard Groth16 rerandomization construction above,
 Along side hidden inputs in $X = \sum_i^k x_i \chi_i$,
 our verifier would typically assemble some transparent inputs
 $Y = \sum_i^l y_i \Upsilon$ themselves.  In particular, our ring VRFs
-handle the Merkle root \comring of the ring $\ctx$ in this way below.
+handle the Merkle root \comring of the ring $\ring$ in this way below.
 
 We then verify $(X' + Y,A',B',C')$ like Groth16 
 $$ e(A',B') = e([\alpha]_1, [\beta]_2) \cdot
  e(X' + Y, [\gamma]_2) \cdot e(C', [\delta]_2) \mathcomma $$
-As our verifier does not build $X'$ themselves, we proves nothing
+As our verifier does not build $X'$ themselves, we prove nothing
 with this pairing equation unless the verifier separately checks
  some proof-of-knowledge that $X' = \sum_i^k x_i \chi_i$.
 
@@ -161,7 +162,7 @@ our dependence upon the usage of the zero knowledge continuation.
 \label{subsec:rvrf_faster}
 
 We describe a much faster choice $\pifast$ for $\pi$
-that sets $x_1 := \sk$ and $x_0 = \comring = \CommitRing(\ctx)$ so that
+that sets $x_1 := \sk$ and $x_0 = \comring = \CommitRing(\ring)$ so that
 taking $\genG := \chi_1$, $\genB := \genB_\gamma$, and $\openpk := b$ in \PedVRF
 yields and incredibly fast amortized ring VRF prover.
 Also, \PedVRF itself proves knowledge of $X'$,
@@ -172,7 +173,7 @@ $$ X' = \comring\, \chi_0 + \sk\, \chi_1 + b \genB_\gamma $$
 
 A priori, we do not know $\chi_1$ during the trusted setup for $\pifast$,
 which prevents computing $\pk = \sk\, \chi_1$ inside $\pifast$.
-Instead, we propose $\ctx$ contain commitments to $\sk$ over
+Instead, we propose $\ring$ contain commitments to $\sk$ over
 some Jubjub curve $\ecJ$.  
 
 We know the large prime order group $\grJ$ of $\ecJ$ typically has
@@ -183,10 +184,10 @@ with independent $\genJ_0,\genJ_1,\genJ_2$.
 Interestingly, we avoid range proofs for $\sk_1$ and $\sk_2$
 by this independence. 
 
-$$ \pifast = \rrSNARK \Setst{ \sk_0 + \sk_1 2^{128}, \comring }{
- \exists d,\openring \textrm{\ s.t.\ }
+$$ \Rfast = \Setst{ \sk_0 + 2^{128} \sk_1, \comring }{
+ \eprint{ \exists d,\openring \textrm{\ s.t.\ } }{}
  % 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
- \genfrac{}{}{0pt}{}{ \rVRF.\OpenRing(\comring,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
+ \genfrac{}{}{0pt}{}{ \eprint{\rVRF.}{}\OpenRing(\comring,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
 } $$ % \mathperiod 
 
 Applying our rerandomization to $\pifast$ with opaque input yields
@@ -250,14 +251,15 @@ Adversaries could trigger \pifast recomputation only by updating the ring,
 but this still presents a side channel risk.
 
 If concerned, one could address this via a second zk continuation that
-splits \pifast into two parts: % \pisk and \pipk.
+splits \pifast into a Groth16 \pisk and a Groth16 or KZG \pipk for two
+respective relations:
 %
-$$ \pipk = \rrSNARKweak \Setst{ J_\pk, \comring }{
+$$ \Rpk = \Setst{ J_\pk, \comring }{
  \exists \openring \textrm{\ s.t.\ }
-  J_\pk = \rVRF.\OpenRing(\comring,\openring)
-} \mathcomma \quad\textrm{and} $$ 
+  J_\pk = \eprint{\rVRF.}{}\OpenRing(\comring,\openring)
+} \mathcomma \eprint{\quad\textrm{and}}{} $$ 
 %
-$$ \pisk = \rrSNARK \Setst{ \sk_0 + \sk_1 2^{128}, J_\pk }{ 
+$$ \Rsk = \Setst{ \sk_0 + \sk_1 2^{128}, J_\pk }{ 
  \exists d \textrm{\ s.t.\ }
  % 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
  J_\pk = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2
@@ -269,12 +271,12 @@ We do ask verifiers compute more pairings, but nobody cares when
 the VRF verifiers are few in number or institutional,
  as in many applications.
 We also ask provers rerandomize both \pisk and \pipk, but this costs relatively little.
-Assuming \pipk is Groth16 then we need a proof-of-knowledge for the desired structure of $J_pk$ too.
+Assuming \pipk is Groth16 then we need a proof-of-knowledge for the desired structure of $J_\pk$ too.
 All totaled this almost doubles the size and complexity of our ring VRF signature.
 
 There is no ``arrow of time'' among zk continuations per se, but
 as \pisk bridges between the \PedVRF and \pipk,
-one might consider this zk continuation to be time reversed.
+one might consider \pisk-to-\pipk continuation to be time reversed.
 
 Interestingly, our \pipk has become simple enough that opening
 a KZG commitment \cite{KZG} at a secret point now suffices,
@@ -293,17 +295,16 @@ If so, we suggest \pifast provide an inner per block or per epoch ring,
 but then another proving system like Caulk+ \cite{caulk+}
  extend this ring to the growing blockchain, like
 %
-$$ \pichain = \rrSNARKweak \Setst{ \comblock, \comring }{
-	\exists \openring \textrm{\ s.t.\ }
-	J_\pk = \rVRF.\OpenRing(\comring,\openring)
+$$ \baseR_{\mathtt{chain}} = \Setst{ \mathtt{blk}, \mathtt{chain} }{
+	\mathtt{blk} \in \mathtt{chain}
 } \mathcomma \quad\textrm{and} $$ 
 %
-$$ \pifast = \rrSNARK \Setst{ \comblock, \comring }{
-	\exists d,\openring \textrm{\ s.t.\ }
-	\genfrac{}{}{0pt}{}{ \rVRF.\OpenRing(\comblock,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
+$$ \Rfast = \Setst{ \sk_0 + \sk_1 2^{128}, \mathtt{blk} }{
+	\eprint{\exists d,\openring \textrm{\ s.t.\ }}{}
+	\genfrac{}{}{0pt}{}{ \OpenRing(\mathtt{blk},\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
 } \mathperiod $$  
 
-Again we need a proof=of-knowledge for \comblock because it winds up opaque
+Again we need a proof-of-knowledge for $\mathtt{blk}$ because it winds up opaque
  in both of these proofs. 
 
 \smallskip

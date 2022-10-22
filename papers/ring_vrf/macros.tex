@@ -1,21 +1,30 @@
 
 \newcommand{\PedVRF}{\primalgo{PedVRF}} 
 
-\newcommand\pieval{\ensuremath{\pi_{\mathtt{eval}}}\xspace}
-\newcommand\piring{\ensuremath{\pi_{\mathtt{ring}}}\xspace}
-
 \newcommand\baseR{R}
 \newcommand\Reval{\ensuremath{\baseR_{\mathtt{eval}}}\xspace}
 \newcommand\Rring{\ensuremath{\baseR_{\mathtt{ring}}}\xspace}
-\newcommand\Rringsk{\ensuremath{\baseR_{\mathtt{ring,sk}}}\xspace}
-\newcommand\Rringcompk{\ensuremath{\baseR_{\mathtt{ring,compk}}}\xspace}
+\newcommand\Rfast{\ensuremath{\baseR_{\mathtt{fast}}}\xspace}
+\newcommand\Rsk{\ensuremath{\baseR_{\mathtt{sk}}}\xspace}
+\newcommand\Rpk{\ensuremath{\baseR_{\mathtt{pk}}}\xspace}
 
 \newcommand\rrSNARK{\primalgo{Groth16}\xspace}
 \newcommand\rrSNARKweak{\primalgo{Groth16/KZG}\xspace}
+
+\newcommand\pieval{\ensuremath{\pi_{\mathtt{eval}}}\xspace}
+\newcommand\piring{\ensuremath{\pi_{\mathtt{ring}}}\xspace}
+
 \newcommand\pifast{\ensuremath{\pi_{\mathtt{fast}}}\xspace}
 % \newcommand\pifastdot{\ensuremath{\dot{\pi}_{\mathtt{fast}}}\xspace}
 \newcommand\pisk{\ensuremath{\pi_{\mathtt{sk}}}\xspace}
 \newcommand\pipk{\ensuremath{\pi_{\mathtt{pk}}}\xspace}
 
 
+\def\maybestack#1#2{\eprint{ #1, #2 }{
+    \begin{aligned}
+        &#1, \\
+        % \exists \openring \textrm{\ s.t.\ }
+        &#2  \\      
+    \end{aligned}
+}}
 
