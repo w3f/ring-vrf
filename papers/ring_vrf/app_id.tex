@@ -32,8 +32,8 @@ We discuss only \pifast here but all techniques apply to \pisk and \pipk similar
 \item {\em Verify} -- 
  After receiving $(\compk,\pifast,\sigma)$ in channel \aux,
  the server named \msg checks \pifast on the input $\compk + \comring$,
- checks the VRF signature and obtains the user's identity $\mathtt{id}$.
- $$ \mathtt{id} = \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \pifast,\sigma) $$
+ checks the VRF signature and obtains the user's identity $\mathtt{id}$, ala \\
+ $\mathtt{id} = \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \pifast,\sigma)$.
 \end{itemize}
 
 
@@ -77,7 +77,7 @@ Interestingly, \PedVRF could be run ``backwards'' to prove a specific
 ring VRF output does not belong to the user, without revealing the users'
 identities to investigators. 
 
-Although our applications mostly ignore key multiplicity. 
+Our applications mostly ignore key multiplicity. 
 AML/KYC demands suspects prove non-involvement using ring VRFs.
 
 \begin{definition}\label{def:rvrf_exculpability}
@@ -88,9 +88,20 @@ find non-equivalent public keys $\pk_0,\pk_1$ with colliding VRF outputs.
 % (either ever or with advantage negligible advantage in $\secparam$)
 \end{definition}
 
-We ad hoc rings make little sense for AML/KYC, so these ring VRFs become
-exculpatory if one merely dedupliates keys during registration , like via
+\smallskip
+
+A priori, our JubJub representations $\sk_0 \genJ_0 + \sk_1 \genJ_1$
+used in \S\ref{subsec:rvrf_faster} and \S\ref{subsec:rvrf_side_channel}
+costs us exculpability from Definition \ref{def:rvrf_exculpability}.
+Ad hoc rings make little sense for AML/KYC though, meaning some ring
+registration procedure occurs.
+%
+If desired, exculpability could easily be repaired if joining the ring
+requires some secret key dedupliation proof, like 
 $\rVRF.\rVerify(\CommitRing(\{\pk\}),\mathsf{ring_name},\mathtt{""},\sigma)$.
+
+% \begin{proposition}
+% \end{proposition}
 
 
 \subsection{Moderation}

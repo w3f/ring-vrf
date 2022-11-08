@@ -2,7 +2,7 @@
 %%% Do NOT edit. File created by BibTeX with style
 %%% ACM-Reference-Format-Journals [18-Jan-2012].
 
-\begin{thebibliography}{22}
+\begin{thebibliography}{23}
 
 %%% ====================================================================
 %%% NOTE TO THE USER: you can override these defaults by providing
@@ -131,6 +131,15 @@
   \bibinfo{year}{[n. d.]}\natexlab{}.
 \newblock \bibinfo{title}{IRMA docs v0.2.0}.
 \newblock \bibinfo{howpublished}{\url{https://irma.app/docs/v0.2.0/overview/}}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{{Chatham House}}{{Chatham House}}{[n. d.]}]%
+        {climaterisk2021}
+\bibfield{author}{\bibinfo{person}{{Chatham House}}.} \bibinfo{year}{[n.
+  d.]}\natexlab{}.
+\newblock \bibinfo{title}{Climate change risk assessment 2021}.
+\newblock
 \newblock
 
 
@@ -347,7 +356,7 @@
 
 
 \bibitem[\protect\citeauthoryear{Spratt}{Spratt}{[n. d.]}]%
-        {carrying_capasity}
+        {carrying_capacity}
 \bibfield{author}{\bibinfo{person}{David Spratt}.} \bibinfo{year}{[n.
   d.]}\natexlab{}.
 \newblock \bibinfo{title}{At $4^{\circ}$C of warming, would a billion people

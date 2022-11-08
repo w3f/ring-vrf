@@ -276,7 +276,7 @@ All totaled this almost doubles the size and complexity of our ring VRF signatur
 
 There is no ``arrow of time'' among zk continuations per se, but
 as \pisk bridges between the \PedVRF and \pipk,
-one might consider \pisk-to-\pipk continuation to be time reversed.
+one might consider the \pisk-to-\pipk continuation to be time reversed.
 
 Interestingly, our \pipk has become simple enough that opening
 a KZG commitment \cite{KZG} at a secret point now suffices,
@@ -290,7 +290,7 @@ a KZG commitment \cite{KZG} at a secret point now suffices,
 \newcommand\pichain{\ensuremath{\pi_{\mathtt{chain}}}\xspace}
 
 We could build our ring using a blockchain,
- not unlike how zcash handles their UTXOs.
+ not unlike how ZCash handles their UTXOs.
 If so, we suggest \pifast provide an inner per block or per epoch ring,
 but then another proving system like Caulk+ \cite{caulk+}
  extend this ring to the growing blockchain, like
@@ -306,13 +306,6 @@ $$ \Rfast = \Setst{ \sk_0 + \sk_1 2^{128}, \mathtt{blk} }{
 
 Again we need a proof-of-knowledge for $\mathtt{blk}$ because it winds up opaque
  in both of these proofs. 
-
-\smallskip
-
-A priori, our JubJub representations $\sk_0 \genJ_0 + \sk_1 \genJ_1$
-costs us exculpability from Definition \ref{def:rvrf_exculpability}.
-If desired, exculpability could easily be repaired by asking users
-provide $\pisk$ when joining the ring.
 
 % \begin{proposition}
 % \end{proposition}

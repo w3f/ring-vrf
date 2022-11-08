@@ -45,29 +45,27 @@ Instead of proving ring membership of one public key, $\pipk$ could
 prove ring membership of a Merkle commitment to multiple keys, so
 users have $\pisk^1,\ldots,\pisk^N$ for each of their multiple keys.
 
-As a more flexible approach,
-we could compute the hash-to-curve $\In := H_{\grE}(\msg)$ inside an
-unamortized SNARK $\pi_{\mathtt{in}}$ and reveal only a Pedersen-like commitment
-to $\In + \openpk^{-1} \genB$.  We then adjust \PedVRF to yield
-a proof-of-knowledge of $\Out/\In$ subject to soundness of this
-SNARK $\pi_{\mathtt{in}}$.
+\small
 
-TOTO: Explain better!!
-
-In all cases, we incur costs by hiding part of the input \msg, so
-deployment should seriously consider if leaking $k$ suffices.
+In principle, there exists ring VRFs that hide parts of their input
+\msg, but still fit our abstract formulation in \S\ref{sec:overview}.
+Although interesting, we caution these bring performance concerns not
+discussed here, so deployments should consider if leaking $k$ suffices.
 
 
 \subsection{Ration cards}
 
-As a species, we expect $+3^{\circ}$ C or more likely $+4^{\circ}$ C
-over the pre-industrial climate by 2100 \cite{IPCC2022}, which shall
-reduce the Earth's carrying capasity below one billion people \cite{carrying_capasity}.
-In the shorter term, we expect shortages of resources, energy, goods,
-water, and food beginning during the next several decades, due to
+As a species, we expect $+3^{\circ}$C over the pre-industrial climate
+by 2100 \cite{IPCC2022}, or more likely above $+4^{\circ}$C given
+tipping points \cite{tipping22}.  % https://www.youtube.com/watch?v=LxoyaCSWFGs
+At these levels, we experience devastating famines as the Earth's
+carrying capacity drops below one billion people \cite{carrying_capacity}.
+In the near term, our shortages of resources, energy, goods, water,
+and food shall steadily worsen over the next several decades, due to
 climate change, ecosystem damage or collapse, and resource exhaustion
-ala peak oil.  Invariably, nations manage shortages through rationing,
-like during WWI, WWII, and the oil shocks.  
+ala peak oil.  We expect synchronous crop failures around the 2040s
+in particular \cite{climaterisk2021}. % https://nitter.it/ThierryAaron/status/1442442451541807109#m
+Invariably, nations manage shortages through rationing, like during WWI, WWII, and the oil shocks.  
 
 Ring VRFs support anonymous rationing:
 Instead of treating ring VRF outputs like identities,
