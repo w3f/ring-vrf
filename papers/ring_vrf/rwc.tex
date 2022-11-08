@@ -11,35 +11,28 @@
 
 \maketitle
 
+
+\paragraph{Abstract:} \quad 
+
+\input{abstract-long}
+
+\paragraph{Proposal:} \quad
+
 Jeffrey Burdges would love to present our zero-knowledge continuation
-technique, and how it enables extremely efficient ring verifiable
+technique, how it enables extremely efficient ring verifiable
 random functions (ring VRFs).
 
-\smallskip
-
-Our zero-knowledge continuation reuses a previously proven Groth16 SNARK
-without reproving.  We wire this SNARKs inputs into another signature,
-or another SNARK, without linking the multiple reuses.
-
-\smallskip
-
-Almost all prover time could therefore by amortized away by the application,
-dramatically improving performance.  In particular, our ring VRF has a marginal
-prover CPU cost of roughly 12 scalar multiplications!
-
-\smallskip
-
-Jeff would also discuss how ring VRFs yield one of the safest identity
-schemes, as well as their applications to rate limiting,
+In this, Jeff would focus primarily upon how ring VRFs yield one of the
+safest identity schemes, as well as their applications to rate limiting,
 including the idea of anonymous ration cards.
 
-\medskip
+\smallskip
 
 At \quad \url{https://www.youtube.com/watch?v=0i_5RW3tkVM} \quad you'll
 find Jeff's 20 minute talk on this material at the
 ZK Summit in Berlin.
 
-\medskip
+\smallskip
 
 For RWC, Jeff envisions doing a more polished talk, which better clarifies
 the problem space, and focuses more on ring VRF input structure,
@@ -80,27 +73,15 @@ specifically:
 
 
 
-Anonymized ring VRFs are ring signatures that prove correct evaluation
-of some authorized signer's PRF while hiding the specific signer's
-identity within some set of possible signers, known as the ring.
+\smallskip
 
-% \eprint{We propose ring VRFs as a natural fulcrum around which a diverse array of zkSNARK circuits turn, making them an ideal target for optimization and eventually standards.}{}
+Our zero-knowledge continuation reuses a previously proven Groth16 SNARK
+without reproving.  We wire this SNARKs inputs into another signature,
+or another SNARK, without linking the multiple reuses.
 
-We demonstrate a reusable {\em zero-knowledge continuation} technique,
-which works by adjusting a Groth16 trusted setup to hide public inputs
-when rerandomizing the Groth16.  We then build ring VRFs that amortize
-expensive ring membership proofs across many ring VRF signatures.
-%
-Incredibly, our ring VRF needs only eight $\mathcal{G}_1$ and two
-$\mathcal{G}_2$ scalar multiplications, making it the only ring signature
-with performance competitive with group signatures.
+\smallskip
 
-Ring VRFs produce a unique identity for any give context but remain
-unlinkable between different contexts.  These unlinkable but unique
-pseudonyms provide a far better balance between user privacy and service
-provider or social interests than attribute based credentials like IRMA.
-
-Ring VRFs support anonymously rationing or rate limiting resource
-consumption that winds up vastly more efficient than purchases via money-like protocols.
-
+Almost all prover time could therefore by amortized away by the application,
+dramatically improving performance.  In particular, our ring VRF has a marginal
+prover CPU cost of roughly 12 scalar multiplications!
 
