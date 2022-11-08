@@ -40,8 +40,8 @@ append new \comring using \cite{aSVC}.
 \subsection{Multi-circuit}
 
 We handle \comring in the multi-circuit case somewhat like the
-unique circuit case.  We caution however that circuits should domain
-separate their enforce \comring suitably.
+unique circuit case.  We caution however that circuits must suitably domain
+separate \comring.
 
 \smallskip
 
@@ -56,7 +56,7 @@ We then merely add an SRS element $\chi_{1,\delta}$, for usage in $C$, that bind
 our independent $\chi_{1,\gamma}$ to the desired definition, so
 $$ \chi_{1,\delta} := \left[ {\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) - \gamma \chi_{1,\gamma} \over \delta} \right]_1 \mathperiod $$
 At this point, we replace $\chi_1$ by $\chi_{1,\gamma}$ everywhere and
-include $\comring \, \chi_{1,\delta}$ inside $C$.
+our proofs add $\comring \, \chi_{1,\delta}$ to $C$.
 
 In this way, all ring membership circuits could share identical
 public input SRS points $\chi_{1,\gamma}$, and similarly $\chi_0$ if desired.

@@ -32,9 +32,8 @@ We discuss only \pifast here but all techniques apply to \pisk and \pipk similar
 \item {\em Verify} -- 
  After receiving $(\compk,\pifast,\sigma)$ in channel \aux,
  the server named \msg checks \pifast on the input $\compk + \comring$,
- checks the VRF signature
- $\mathtt{id} = \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \pifast,\sigma)$,
- and obtains the user's identity $\mathtt{id}$
+ checks the VRF signature and obtains the user's identity $\mathtt{id}$.
+ $$ \mathtt{id} = \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \pifast,\sigma) $$
 \end{itemize}
 
 
@@ -79,8 +78,7 @@ ring VRF output does not belong to the user, without revealing the users'
 identities to investigators. 
 
 Although our applications mostly ignore key multiplicity. 
-these AML/KYC applications in \S\ref{subsec:AML_KYC} demand
-suspects prove non-involvement using ring VRFs.
+AML/KYC demands suspects prove non-involvement using ring VRFs.
 
 \begin{definition}\label{def:rvrf_exculpability}
 We say \rVRF is {\em exculpatory} if we have an efficient algorithm
@@ -148,8 +146,8 @@ should deterministically choose the coefficients $r_1,r_2,b$ used for
 rerandomization in \S\ref{sec:rvrf_cont},
  seeded by \msg and \sk, meaning $r_1,r_2,b \leftarrow H(\sk,\msg)$. 
 %
-In this way, each $\mathtt{id}$ comes packages with the same unique
-Groth16 SNARK \pifast, so the verifier could cache valid pairs
+In this way, each $\mathtt{id}$ comes packages with the same unique % Groth16 SNARK
+\pifast, so the verifier could cache valid pairs
 $(\mathtt{id},H(\pifast),\mathtt{diffdate})$, and reaccept \pifast
 without checking the Groth16 pairing equation whenever found cached.
 %
