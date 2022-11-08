@@ -92,7 +92,7 @@ expire once $d \le \expiry_{u,d_0}$ which permits purging old data rapidly.
 
 We remark that fully transferable assets could have constrained lifetimes
 too, which similarly eases nullifier management when implements using
-blind signatures, zcash sapling, etc.  Yet, all these tokens require
+blind signatures, ZCash sapling, etc.  Yet, all these tokens require
 an explicit issuance stage, while ring VRFs self-issue.
 
 Among the political hurdles to rationing, we know certificates have
@@ -105,22 +105,21 @@ Ring VRFs avoid this political unrest by proving membership in a public list.
 \subsection{Multi-constraint rationing}
 
 % \cite{PrivacyPass}
-As in \S\ref{subsec:moderation}, we could impose simultanious rationing
+As in \S\ref{subsec:moderation}, we could impose simultaneous rationing
 constraints for multiple resources $u_1,\ldots,u_k$ by producing one
-ring VRF signature in which \PedVRF proves correctness of pre-ouptuts
+ring VRF signature in which \PedVRF proves correctness of pre-outputs
 for multiple messages 
  $\msg_j = u_j \doubleplus r_d \doubleplus d \doubleplus k$ for $j=1 \ldots k$.
 
-As an example, purchasing some prepared food product could require espending
+As an example, purchasing some prepared food product could require spending
 rations for multiple base food sources, like making a cake from wheat, butter,
 eggs, and sugar.  
 
 
 \subsection{Decommodification}
 
-There exist many reasons to decommodify important services,
-like energy, water, or internet,
- beyond rationing real physical shortage.
+There exist many reasons to decommodify important services, like
+energy, water, or internet, beyond rationing real physical shortages.
 Ring VRFs fit these cases using similar \msg formulations.
 
 As an example, a municipal ISP allocates some limited bandwidth capacity
@@ -131,7 +130,7 @@ Aside from essential government services, commercial service providers
 typically offers some free service tier, usually because doing so
 familiarizes users with their intimidating technical product.
 
-Some free and paid tier examples include DuoLingo's heats on mobile, 
+Some free and paid tier examples include DuoLingo's hearts on mobile, 
 continuous integration testing services, and many dating sites.
 
 A priori, rate limiting cases benefit from unlinkability among individual
@@ -157,7 +156,7 @@ creating a fully transferable asset.  In particular, parents might
 delegate limited internet or streaming service access to a child,
 but without making the token full transferable.
 
-Among blind issued credential many support this, both
+Almost all blind issued credentials support this, both
 GNU Taler \cite{taler} and PrivacyPass \cite{PrivacyPass} could
 be redeemed by a delegatee family member who trusts the original
 delegator not to double spend, but transactions with untrusted spenders
