@@ -1,0 +1,17 @@
+\section{Verifiable Random Functions}
+\label{sec:vrf}
+
+Intuitively, a verifiable random function (VRF) welds a pseudo-random function into a signature scheme.
+% \cite{vrfmicali,vrflysyanskaya,vrfshort}
+% As in \cite[\S3.2 $\fvrf$]{praos}, we need a definition that both is simulation-based and provides pseudo-randomness under malicious key generation.  In other words, we demand an unpredictability property reminiscent of a random oracle even against adversaries who generate their secret and pubic key pair themselves.
+%
+VRFs have signature-like unforgeability properties, a fact which follows easily from most definitions. 
+We follow \cite{agg_dkg} in making this explicit, while also
+ exposing the auxiliary data supported by our constructions. 
+
+\input{vrf_def}
+
+\input{vrf_thin}
+
+\input{vrf_pedersen}
+

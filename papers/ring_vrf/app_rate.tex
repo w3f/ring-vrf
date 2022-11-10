@@ -39,19 +39,19 @@ rings $\ctx_i$ for $i = 1 \ldots N$, and
  then blind \comring in \pifast similarly to \S\ref{sec:ring_hiding}.
 
 Although simple, these two approaches require users construct $n$ or $N$
-different $\pifast$ proofs every time the ring \ctx updates.
-We have nicer options if using the \pisafe approach: 
+different $\pipk$ proofs every time the ring \ctx updates.
 
-Instead of proving ring membership of one public key,
-$\pisafe$ could prove ring membership of a KZG commitment to $n$ keys.
-Our unamortized SNARK $\pisafedot$ could then open the specific key in
-zero-knowledge, which sounds acceptable once already working in the \pisafe case.
+Instead of proving ring membership of one public key, $\pipk$ could
+prove ring membership of a Merkle commitment to multiple keys, so
+users have $\pisk^1,\ldots,\pisk^N$ for each of their multiple keys.
 
-We could compute the hash-to-curve $\In := H_{\grE}(\msg)$ inside the
-unamortized SNARK $\pisafedot$ and reveal only a Pedersen-like commitment
+As a more flexible approach,
+we could compute the hash-to-curve $\In := H_{\grE}(\msg)$ inside an
+unamortized SNARK $\pi_{\mathtt{in}}$ and reveal only a Pedersen-like commitment
 to $\In + \openpk^{-1} \genB$.  We then adjust \PedVRF to yield
 a proof-of-knowledge of $\Out/\In$ subject to soundness of this
-$\pisafedot$.
+SNARK $\pi_{\mathtt{in}}$.
+
 TOTO: Explain better!!
 
 In all cases, we incur costs by hiding part of the input \msg, so
@@ -60,11 +60,14 @@ deployment should seriously consider if leaking $k$ suffices.
 
 \subsection{Ration cards}
 
-As a species, we expect shortages of resources, energy, goods, water,
-and food beginning during the next several decades, due to climate change,
-ecosystem damage or collapse, and resource exhaustion ala peak oil. 
-Invariably, nations manage shortages through rationing, like during
-WWI, WWII, and the oil shocks.  
+As a species, we expect $+3^{\circ}$ C or more likely $+4^{\circ}$ C
+over the pre-industrial climate by 2100 \cite{IPCC2022}, which shall
+reduce the Earth's carrying capasity below one billion people \cite{carrying_capasity}.
+In the shorter term, we expect shortages of resources, energy, goods,
+water, and food beginning during the next several decades, due to
+climate change, ecosystem damage or collapse, and resource exhaustion
+ala peak oil.  Invariably, nations manage shortages through rationing,
+like during WWI, WWII, and the oil shocks.  
 
 Ring VRFs support anonymous rationing:
 Instead of treating ring VRF outputs like identities,
@@ -94,11 +97,17 @@ too, which similarly eases nullifier management when implements using
 blind signatures, zcash sapling, etc.  Yet, all these tokens require
 an explicit issuance stage, while ring VRFs self-issue.
 
+Among the political hurdles to rationing, we know certificates have
+a considerable forgery problem, as witnessed by the long history of
+fraudulent covid and TLS certificates.  It follows citizens would
+justifiably protest to ration carts that operate by simple certificates.
+Ring VRFs avoid this political unrest by proving membership in a public list.
+
 
 \subsection{Multi-constraint rationing}
 
 We could proving multiple \ThinVRF outputs with one signatures
-in \S\ref{sec:vrf_thin}.  We needed \PedVRF to isolate the blinding 
+in \S\ref{subsec:vrf_thin}.  We needed \PedVRF to isolate the blinding 
 factor when using a Pedersen commitment instead of a public key, but
 exactly the same technique works for proving multiple \PedVRF outputs
 in one ring VRF signature.

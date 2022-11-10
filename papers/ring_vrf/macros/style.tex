@@ -5,6 +5,7 @@
 
 %% oracles
 \newcommand{\ora}[1]{\ensuremath{\mathcal{O}\mathsf{#1}}\xspace}
+\newcommand{\oramsg}[1]{\ensuremath{\mathsf{#1}}\xspace}
 %% algorithm
 \newcommand{\algo}[1]{{\textsc{#1}}}
 %%primitive algo
@@ -32,3 +33,23 @@
 \newcommand*\Setst[2]%
         {\left\{\,#1\vphantom{#2} \;\right|\left. #2 \vphantom{#1}\,\right\}}
 % ``set such that''; puts in a vertical bar of the right height
+
+
+\providecommand{\bin}{\ensuremath{\{0,1\}}\xspace}
+
+
+% https://tex.stackexchange.com/questions/471713/is-mathrel-always-needed
+% https://tex.stackexchange.com/questions/418740/how-to-write-left-arrow-with-a-dollar-sign/626086#626086
+\makeatletter
+\providecommand\leftsample{\leftarrow\mathrel{\mkern-2.0mu}\pc@smalldollar}
+\providecommand\rightsample{\pc@smalldollar\mathrel{\mkern-2.0mu}\rightarrow}
+%
+\newcommand{\pc@smalldollar}{\mathrel{\mathpalette\pc@small@dollar\relax}}
+\newcommand{\pc@small@dollar}[2]{%
+  \vcenter{\hbox{%
+    $#1\textnormal{\fontsize{0.7\dimexpr\f@size pt}{0}\selectfont\$\hskip-0.05em
+ plus 0.5em}$%
+  }}%
+}
+\makeatother
+

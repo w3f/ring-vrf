@@ -10,7 +10,7 @@ thus creating an anonymous or pseudo-nonymous identified session.
 
 We expand this identified session workflow with an extra
 update operation suitable for our ring VRF's amortized prover.
-We discuss only \pifast here but adapting our techniques to \pisafe appears similar. 
+We discuss only \pifast here but all techniques apply to \pisk and \pipk similarly. 
 
 \begin{itemize}
 \item {\em Register} --
@@ -55,7 +55,7 @@ In any case, one could always specify rules against cross site privacy invasions
 whenever writing ring VRF browser specifications.
 
 
-\subsection{AML/KYC}
+\subsection{AML/KYC}\label{subsec:AML_KYC}
 
 We shall not discuss AML/KYC in detail, because the entire field lacks
 clear goals, and thus winds up being ineffective
@@ -101,7 +101,7 @@ In this way, users have only one stable $\mathtt{id}$ within the
 approximate date range, but they obtain fresh $\mathtt{id}$s merely
 by waiting until the next month or week.
 
-We discussed in \S\ref{sec:vrf_pederson} how one signle \PedVRF
+We discussed in \S\ref{subsec:vrf_pederson} how one signle \PedVRF
 signature $\sigma$ could simultaneously prove multiple input-output
 pairs $(\msg_j,\mathtt{id}_j)$.  As doing so links these pairs
 together, sites could make users link pseudo-nym creation date and
