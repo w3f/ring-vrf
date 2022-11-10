@@ -32,10 +32,14 @@ Maria Borge, Eleftherios Kokoris-Kogias, Philipp Jovanovic, Linus Gasser,
 Jeffrey Burdges, Florian Dold, and Christian Grothoff.
 \newblock Robust and income-transparent online e-cash.
 
-\bibitem{IRMA_credentials}
+\bibitem{IRMAcredentials}
 Privacy by~Design~Foundation.
 \newblock Irma docs v0.2.0.
 \newblock \url{https://irma.app/docs/v0.2.0/overview/}.
+
+\bibitem{climaterisk2021}
+{Chatham House}.
+\newblock Climate change risk assessment 2021.
 
 \bibitem{PrivacyPass}
 Alex Davidson, Ian Goldberg, Nick Sullivan, George Tankersley, and Filippo
@@ -125,7 +129,7 @@ Jim Posen and Assimakis~A. Kattis.
 \newblock Cryptology ePrint Archive, Paper 2022/957, 2022.
 \newblock \url{https://eprint.iacr.org/2022/957}.
 
-\bibitem{carrying_capasity}
+\bibitem{carrying_capacity}
 David Spratt.
 \newblock At $4^{\circ}$c of warming, would a billion people survive? what
   scientists say.
