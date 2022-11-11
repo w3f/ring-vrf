@@ -1,0 +1,8 @@
+sed -i~ \
+ -e 's/\\msg/\\oramsg/g' \
+ -e 's/\\gen/\\Gen/g' \
+ -e 's/\\secpar/\\secparam/g' \
+ -e 's/\\pkrvrf/\\pk/g' \
+ -e 's/\\rvrf/\\rVRF/g' \
+ -e 's/\\sample/\\leftsample/g' \
+ -e 's/\\out/\\PreOut/g' $*

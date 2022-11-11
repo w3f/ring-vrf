@@ -77,6 +77,14 @@ Jens Groth.
   Springer Berlin Heidelberg.
 \newblock IACR ePrint Archive 2016/260.
 
+\bibitem{agg_dkg}
+Kobi Gurkan, Philipp Jovanovic, Mary Maller, Sarah Meiklejohn, Gilad Stern, and
+  Alin Tomescu.
+\newblock Aggregatable distributed key generation.
+\newblock In Anne Canteaut and Fran{\c{c}}ois{-}Xavier Standaert, editors, {\em
+  {EUROCRYPT} 2021}, volume 12696 of {\em LNCS}, pages 147--176, 2021.
+\newblock \url{https://ia.cr/2021/005}.
+
 \bibitem{KZG}
 Aniket Kate, Gregory~M. Zaverucha, and Ian Goldberg.
 \newblock Constant-size commitments to polynomials and their applications.
@@ -90,6 +98,14 @@ Mark Manulis, Nils Fleischhacker, Felix G\"unther, Franziskus Kiefer, and
 \newblock BSI, 2011.
 \newblock \url{https://www.franziskuskiefer.de/paper/GruPA.pdf} and
   \url{https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/Studies/GruPA/GruPA.pdf}.
+
+\bibitem{tipping2022}
+David I.~Armstrong McKay, Arie Staal, Jesse~F. Abrams, Ricarda Winkelmann,
+  Boris Sakschewski, Sina Loriani, Ingo Fetzer, Sarah~E. Cornell, Johan
+  Rockström, and Timothy~M. Lenton.
+\newblock Exceeding $1.5^{\circ}$c global warming could trigger multiple
+  climate tipping points.
+\newblock {\em Science}, 377(6611):286--295, Sep 2022.
 
 \bibitem{vrf_micali}
 Silvio Micali, Michael Rabin, and Salil Vadhan.
