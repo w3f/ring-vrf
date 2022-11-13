@@ -7,13 +7,17 @@
 \begin{definition}
 We say an rVRF-AD satisfies {\em evaluation correctness} if
 $(\pk,\sk) \leftarrow \KeyGen$ implies
-$$ \Eval(\sk,\msg) = \Verify(\pk,\msg,\aux,\Sign(\sk,\msg,\aux)), $$  % succeeds
+\def\tmpC{\Eval(\sk,\msg) = \Verify(\pk,\msg,\aux,\Sign(\sk,\msg,\aux))}
+\eprint{$\tmpC$, succeeds}{$$ \tmpC, $$}
 and also {\em ring commitment correctness} if
-$\pk \in \ring$ implies both 
-$$ \begin{aligned}
-  \OpenRing(\CommitRing(\ring,\pk)) = \pk \qquad\textrm{and} \\
-  \CommitRing(\ring) = \CommitRing(\ring,\pk).0  \mathperiod
-\end{aligned} $$
+$\pk \in \ring$ implies both
+\def\tmpA{\OpenRing(\CommitRing(\ring,\pk)) = \pk}
+\def\tmpB{\CommitRing(\ring) = \CommitRing(\ring,\pk).0} 
+\eprint{$$ \tmpA \quad\textrm{and}\quad \tmpB \mathperiod $$}%
+{$$ \begin{aligned}
+   \tmpA \qquad\textrm{and} \\
+   \tmpB \mathperiod
+\end{aligned} $$}
 \end{definition}
 
 We lack anonymity against full key exposure ala
@@ -49,7 +53,8 @@ any PPT adversary \adv has an advantage only
  \adv calls \ora{Sign} of Definition \ref{def:rvrf_sign_oracle} throughout,
  except \adv loses if they ever query $\ora{Sign}(\comring',\openring',\msg,\cdot)$
  on \msg for some $\comring',\openring'$ with
- $$ \OpenKey(\comring',\openring') \in \{ \pk_0, \pk_1 \} \mathperiod $$
+ \def\tmp{\OpenKey(\comring',\openring') \in \{ \pk_0, \pk_1 \}}
+ \eprint{$\tmp$.}{$$ \mathperiod $$}
  Finally \adv guesses $j$ and wins if correct.
 \end{itemize}
 \end{definition}
