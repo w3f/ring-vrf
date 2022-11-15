@@ -6,10 +6,10 @@
 
 
 \begin{figure}
-\scriptsize 
+% \scriptsize 
 % \begin{tcolorbox}
 	{  $ \fgvrf $ runs two PPT algorithms $ \Gen_W$ and $\Gen_{sign} $ during the execution.
-			
+	
 		\begin{description}
 				
 			\item[Key Generation.] upon receiving a message $(\oramsg{keygen}, \sid)$ from a party $\user_i$, send $(\oramsg{keygen}, \sid, \user_i)$ to the simulator $\simulator$.
@@ -31,12 +31,9 @@
 			Otherwise, record in the table $\vklist$ the value $\pk_i$ under $\simulator$ if $ \pk_i $ is not in $ \vklist $. If  $\anonymouskeymap[m,W]  $ is not defined before, set $ \anonymouskeymap[m,W] = \pk_i $ and let   $y \leftsample \bin^{\ell_\rVRF}$ and set $ \evaluationslist[m, W] = y$.
 			Then, set $ \evaluationslist[m, W] = y$, $ \anonymouskeymap[m,W] = \pk_i $ obtain $ y =  \evaluationslist[m, W]$. Otherwise, obtain $ y = \evaluationslist[m, W'] $.
 			Return $(\oramsg{evaluated}, \sid,  m, \pk_i,W, y)$ to $ \user_i $.
-				
-				
+
 			%upon receiving a message $(\oramsg{eval}, \sid, \pk_i, W, m)$ from $\sim$, if $ \pk_i $ is recorded under an honest party's identity or if there exists $ \anonymouskeymap[m, \pk_i] \neq W $ or if there exists a record for a key $ \pk \neq \pk_{i}$ such that $ \anonymouskeymap[m, \pk] = W $, ignore the request. Otherwise, record in the table $\vklist$ the value $\pk_i$ under $\simulator$ if $ \pk_i $ is not in $ \vklist $. If $ \anonymouskeymap[m,\pk_i]  $ is not defined, set $ \anonymouskeymap[m,\pk_i] = W $ and let   $y \leftsample \bin^{\ell_\rVRF}$ and set $ \evaluationslist[m, W] = y$.
 			%Return $(\oramsg{evaluated}, \sid,  m, W, \evaluationslist[m, W])$ to $ \user_i $.
-				
-				
 				
 			\item[Honest Ring VRF Signature and Evaluation.] upon receiving a message $(\oramsg{sign}, \sid, \ring, \pk_i, m)$ from $\user_i$, verify that $\pk_i \in \ring$ and that there exists a public key $\pk_i$ associated to $\user_i$ in the table $ \vklist $. If that wasn't the case, just ignore the request. 	
 			If there exists no $ W' $ such that $ \anonymouskeymap[m,W'] =  \pk_i $, let $ W \leftsample \{0,1\}^{w(\secparam)}$ and let $y \leftsample \bin^{\ell_\rVRF}$. If there exists $ W $ where $ \anonymouskeymap[m,W] $ is defined, then abort. Otherwise, set $ \anonymouskeymap[m,W] = \pk_i $ and set $ \evaluationslist[m, W] = y$.
@@ -71,8 +68,7 @@
 					\item Else if there exists $ W' \neq W $ where  $ \anonymouskeymap[m,W'] = \pk_\simulator $, set $ b = 0 $. \label{cond:differentWforsamepk}
 					\item Else set $ b = b_\sim$. \label{cond:simulatorbit}
 				\end{enumerate}		
-				
-				
+
 			\end{list}
 			In the end,  record $ [m,W,\ring,\sigma, 0] $ if it is not stored. If $ b = 0 $, let $ \PreOut = \perp $. Otherwise,   do the following:
 			\begin{itemize}
