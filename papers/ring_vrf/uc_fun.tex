@@ -16,7 +16,7 @@
 			Upon receiving a message $(\oramsg{verificationkey}, \sid, \pk)$ from $\simulator$, verify that $\pk$ has not been recorded before for $ \sid $; then, store in the table $\vklist$, under $\user_i$, the value $\pk$.
 			Return $(\oramsg{verificationkey}, \sid, \pk)$ to $ \user_i$.
 				
-			\textbf{[Malicious Key Generation.]} upon receiving a message $(\oramsg{keygen}, \sid, \pk)$ from $\simulator$, verify that $\pk$ was not yet recorded, and if so record in the table $\vklist$ the value $\pk$ under $\simulator$. Else, ignore the message.
+			%\textbf{[Malicious Key Generation.]} upon receiving a message $(\oramsg{keygen}, \sid, \pk)$ from $\simulator$, verify that $\pk$ was not yet recorded, and if so record in the table $\vklist$ the value $\pk$ under $\simulator$. Else, ignore the message.
 				
 			%\item[Honest Ring VRF Evaluation.] upon receiving a message $(\oramsg{eval}, \sid, \ring, \pk_i, m)$ from $\user_i$, verify that 
 			%$\pk_i \in \ring$ 
