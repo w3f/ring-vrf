@@ -1,55 +1,40 @@
 
 \section{Background}
-\label{sec:background}
+\label{sec:thin_background}
 
 % As our ring VRF is built by composing them, 
 We briefly recall the primitives and security assumptions underlying
 both Chaum-Pedersen DLEQ proofs and pairing based zkSNARKs. 
-
+% Appendix \ref{sec:extra_background} provides standard background material.
+% but a brief summary goes:
 
 \subsection{Elliptic curves}
 
-We obey mathematical and cryptographic implementation convention by using additive notation for elliptic curve and multipicative notation for eliptic curve scalar multiplications. 
+We obey mathematical and cryptographic implementation convention by 
+adopting additive notation for elliptic curve and multiplicative notation
+for elliptic curve scalar multiplications.
+%
+All objects implicitly depend a security parameter \secparam.
 
-We always implicitly have a parameter generation procedure $\mathtt{Params}$ that takes a security level $\secparam \in \N$ and returns elliptic curve parameters including some prime numbers and efficient algorithms for computing elliptic curve operations.  As customary, we treat $\secparam$ and the output of $\mathtt{Params}$ as fixed parameters, which makes sense because humans run $\mathtt{Params}$ manually in practice. 
+We have an elliptic curve $\ecE$ over a field of characteristic $q$,
+equipped with a type III pairing $e : \grE_1 \times \grE_2 \to \grE_T$,
+where the groups  $\grE_1 \le \ecE[\F_q]$, $\grE_2 \le \ecE[\F_{q^2}]$,
+and $\grE_T \le \F^*_{q^{12}}$ all have prime order $p \approx 2^{2\secparam}$.
 
-As implicit outputs of $\mathtt{Params}$, we work with an elliptic curve $\ecE[\F]$ over some base field $\F$ of (prime) characteristic $q_{\grE}$, along with a distinguished subgroup $\grE \le \ecE[\F]$ of prime order $p_{\grE} \approx 2^{2\secparam}$.  As $\grE$ distinguishes $\ecE[\F]$, we let $h_{\grE}$ denote the cofactor of $\grE$ in $\ecE[\F]$, meaning $\ecE[\F]$ has $h_{\grE} p_{\grE}$ points.
-% but abbreviate $h = h_{\grE}$, $p = p_{\grE}$, and $q = q_{\grE}$ when $\grE$ is clear from context.
-We write $\grE$ without subscript, and abbreviate $h = h_{\grE}$, $p = p_{\grE}$, and $q = q_{\grE}$, when $\ecE$ is either our uinque pairing friendly curve or else the only curve in view.
+We write $\grE$ when discussing subprotocols not dependent upon the
+pairing, but $\grE$ always denotes $\grE_1$ eventually.
+We avoid pairing unfriendly assumptions like DDH of course, but really
+we employ the algebraic group model (AGM) throughout.
+We sweep cofactor concerns under the rug too, de facto assuming
+deserialization prove elements of $\grE_1$ or $\grE_2$.
 
-We let $H_p : \{0,1\}^* \to \F_p$ or $H_q : \{0,1\}^* \to \F_q$ denote random oracles (RO) with a range $\F_p$ or $\F_q$.  We let $H_\ecE : \{0,1\}^* \to \ecE$ or $H_\grE : \{0,1\}^* \to \grE$ denote a hash-to-curve for $\ecE$ or hash-to-group for $\grE$, which we model as a random oracles too.  We note $H_\grE(x) = h H_\ecE(x)$ always works, although more efficent exist.
+We let $H_p : \{0,1\}^* \to \F_p$ and $H_\grE : \{0,1\}^* \to \grE_1$
+denote hash-to-scalar and hash-to-curve random oracles (RO) with ranges
+$\F_p$ and $\grE$, respectively.  
 
-\smallskip
-
-Almost all SNARKs like \cite{Groth16} or \cite{plonk} employ a pairing friendly elliptic curve $\ecE$ over a field $\F_q$ of characteristic $q \approx 2^{2\secparam}$, which comes equipped with a type III pairing on subgroups of prime order $p \approx 2^{2\secparam}$:  We let $q_1,q_2,q_T$ denote small powers of $q$, and let $\grE_1 \le \ecE[\F_{q_1}]$ and $\grE_2 \le \ecE[\F_{q_2}]$ and $\grE_T \le \F_{q_T}^\times$ denote subgroups all of prime order $p$.  We also let $e : \grE_1 \times \grE_2 \to \grE_T$ denote a type III pairing, meaning a computable bilinear map without known efficiently computable maps between $\grE_1$ and $\grE_2$.  Also $q_i = q_{\grE_i}$ for $i=1,2$ in our above notation.  
-
-Any pairing friendly elliptic curve $\ecE$ provides solutions to the decisional Diffie-Hellman problem (DDH).  We do however assume the computational Diffie-Hellman problem (CDH) remains hard in $\ecE$.  We remark that $H_\grE$ being a random oracle plus CDH hardness prevents computable relationships between $H_\grE$ outputs.
-
-% TODO: Pairing assumptions required by Groth16
-
-\smallskip
-
-% We shall require ZCash Sapling style ``Jubjub'' Edwards curves, whose base field characteristic divides of the order of a pairing friendly elliptic curve, thereby making Jubjub base field arithmetic SNARK friendly, and hence Jubjub elliptic curve operations as well \cite{}.
-
-We let $\ecJ$ denote a ZCash Sapling style ``JubJub'' Edwards curve associated to the pairing friendly elliptic curve $\ecE$, meaning $\ecJ$ has base field $\F_p$ whose characteristic $q_{\grJ} = p$ matches the group order $p$ of $\grE_1 \cong \grE_2 \cong \grE_T$.  As in ZCash Sapling, we now prove statements about elliptic curve operations inside $\ecJ$ by proving base field arithmetic in $\F_p$, which our $q_{\grJ} = p$ makes relatively inexpensive inside SNARKs on $\ecE$.
-
-As above, $\grJ \le \ecJ[\F_p]$ has large prime order $p_{\grJ}$ and a small cofactor $h_{\grJ}$.  We always support $4 p_{\grJ} < p$ because if $\ecJ$ is an Edwards curve then $h_{\grJ} \ge 4$ which imposes this by the Hasse bound.
-
-\smallskip
-
-We ask that deserialization prove that putative elements of $\grE$ lie in
-$\ecE[\F]$ by verifying curve equations, perhaps including twist checks.
-
-Anytime $\ecE$ represents a pairing friendly curve then we ask that
-deserialization prove elements of $\grE_1$, $\grE_2$, and $\grE_T$
-lie inside the correct subgroup of order $p$,
- which typically requires checking whether $|\grE| X = 1$ or similar.
-As our SNARKs works with points in $\ecJ$ directly, we conversely
-prefer writing $\grJ$ equations in $\ecJ[\F_p]$ and explicitly describe
-where one clears the cofactor $h_{\grJ}$.  We handled $\grE$ withr
-$\ecE$ not necessarily pairing friendly similarly to $\ecJ$.
-We scrape by with only CDH hardness for $\grJ$ for convenience,
-although DDH winds up hard in $\grJ$.
+We also let $\ecJ$ denote a ZCash Sapling style ``JubJub'' Edwards curve
+over $\F_p$, with distinguished subgroup $\grJ$ of prime order, so that
+SNARKs on $\ecE$ prove $\grJ$ arithmetic relatively cheaply.
 
 
 \subsection{Zero-knowledge proofs}
@@ -125,7 +110,7 @@ when we tamper with Groth16's SRS and $\mathtt{Setup}$ to create zero-knowledge 
 TODO: AGM and Groth16 here?
 
 
-\subsection{Universal Composable (UC) Model}
+\subsection{Universal Composability (UC) Model}
 
 TODO: Chat on why UC is here?
 
@@ -155,15 +140,6 @@ Given a real world protocol $ \phi $ which runs some (polynomially many) functio
 \end{definition}
 
 % REMARKS:  Removed excessive notation $\approx$.
-
-
-
-
-
-
-
-
-
 
 
 
