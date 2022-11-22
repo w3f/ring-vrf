@@ -1,8 +1,12 @@
 \section{Protocol overview}
 \label{sec:overview}
 
+As a beginning, we introduce the ring VRF interface, give a simple
+unamortized NIZK that realizes the ring VRF properties discussed later,
+and discuss our later amortized NIZKs.
+
 Any VRF needs a \KeyGen algorithm, which returns a secret key \sk and
-associated public key \pk, as well as an evaluaiton algorithm
+associated public key \pk, as well as an evaluation algorithm
 $\Eval : (\sk,\msg) \mapsto \Out$. % for which many constructions exist.
 %
 Although many constructions exist,
@@ -52,7 +56,7 @@ roughly like what ZCash does.
     the ring commitment \comring, or failure $\perp$ otherwise.
 \end{itemize}
 
-We now replace the membership condition $\pk \in \ring$ in the above
+We thus replace the membership condition $\pk \in \ring$ in the above
 relation and NIZK by the by the opening condition
 $$ \exists \openring \textrm{\ s.t.\ } \pk = \OpenRing(\comring,\openring) \mathperiod $$
 % $\pk = \OpenRing(\comring,\openring)$.
@@ -66,10 +70,11 @@ $$ \exists \openring \textrm{\ s.t.\ } \pk = \OpenRing(\comring,\openring) \math
 %     \end{aligned}
 % } $$
 
-As EC VRF does, our ring VRFs signs auxiliary data \aux too.
-% and support multiple messages $\msg_1,\ldots,\msg_n$ ala \cite{PrivacyPass}.
-It follows our algorithms for a {\em ring verifiable random function
-with auxiliary data} (rVRF-AD) really look like
+As EC VRF does, our ring VRFs signs auxiliary data \aux too.%
+\footnote{We suppress multiple input-output pairs until \S\ref{subsec:multi_io} below, but they work like in \cite{PrivacyPass}.}
+% and support multiple messages $\msg_1,\ldots,\msg_n$ ala .
+Our algorithms for a {\em ring verifiable random function
+with auxiliary data} (rVRF-AD) therefore really look like
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$, \quad and
 \item $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto \Out \,\, \lor \perp$.
@@ -77,7 +82,7 @@ with auxiliary data} (rVRF-AD) really look like
 
 Although asymptotically faster, our opening \OpenRing invariably
 winds up being extremely heavy inside a zkSNARK.
-We solve this obstacle in \S\ref{sec:rvrf_cont} by introducing
+We solve this obstacle in \S\ref{sec:rvrf_cont} below by introducing
 {\em zero-knowledge continuations}, a new zkSNARK technique built from
 rerandomizable Groth16s and designed for composition and reuse.
 
