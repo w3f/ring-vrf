@@ -1,0 +1,280 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{popets}[2022/08/09 Typesetting articles for the self-publication of PoPETs]
+
+% re-define copyright info
+\define@choicekey*{ACM@}{acmcopyrightmode}[%
+  \acm@copyrightinput\acm@copyrightmode]{none,popets}{%
+  \@printpermissiontrue
+  \@printcopyrighttrue
+  \@acmownedtrue
+  \ifnum\acm@copyrightmode=0\relax % none
+   \@printpermissionfalse
+   \@printcopyrightfalse
+   \@acmownedfalse
+  \fi
+  \ifnum\acm@copyrightmode=1\relax % popets
+   \@acmownedfalse
+   \AtBeginDocument{\acmPrice{}}%
+  \fi}
+\def\setcopyright#1{\setkeys{ACM@}{acmcopyrightmode=#1}}
+\setcopyright{popets}
+\def\@copyrightowner{%
+  \ifcase\acm@copyrightmode\relax % none
+  \or % popets
+  Copyright held by the owner/author(s).
+  \fi}
+\def\@formatdoi#1{\url{https://doi.org/#1}}
+\def\@copyrightpermission{%
+  \ifcase\acm@copyrightmode\relax % none
+  \or % popets
+    \begin{tabular}{@{}p{14.3pc}@{\hspace{.4pc}}p{5.3pc}}
+    This work is licensed under the Creative Commons Attribution~4.0
+    International License. To view a copy of this license
+    visit \url{https://creativecommons.org/licenses/by/4.0/} or send a&
+    \raisebox{-5.5ex}{\includegraphics[width=5.3pc]{cc-by-4.pdf}}
+    \end{tabular}
+    letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+ \fi}
+\def\copyrightyear#1{\def\@copyrightyear{#1}}
+\copyrightyear{\@acmYear}
+
+% re-define Journal/Conference format
+\renewcommand\acmConference[2][]{%
+  \gdef\acmConference@shortname{#1}%
+  \gdef\acmConference@name{#2}%
+  \gdef\acmConference@volume{\@acmVolume}%
+  \gdef\acmConference@issue{\@acmNumber}%
+  \ifx\acmConference@shortname\@empty
+    \gdef\acmConference@shortname{#2}%
+  \fi
+  \global\@ACM@journal@bibstripfalse
+}
+
+\def\maketitle{\@beginmaketitlehook
+  \@ACM@maketitle@typesettrue
+  \if@ACM@anonymous
+    % Anonymize omission of \author-s
+    \ifnum\num@authorgroups=0\author{}\fi
+  \fi
+  \begingroup
+  \let\@vspace\@vspace@orig
+  \let\@vspacer\@vspacer@orig
+  \let\@footnotemark\@footnotemark@nolink
+  \let\@footnotetext\@footnotetext@nolink
+  \renewcommand\thefootnote{\@fnsymbol\c@footnote}%
+  \hsize=\textwidth
+  \def\@makefnmark{\hbox{\@textsuperscript{\@thefnmark}}}%
+  \@mktitle\if@ACM@sigchiamode\else\@mkauthors\fi\@mkteasers
+  \@printtopmatter
+  \if@ACM@sigchiamode\@mkauthors\fi
+  \setcounter{footnote}{0}%
+  \def\@makefnmark{\hbox{\@textsuperscript{\normalfont\@thefnmark}}}%
+  \@titlenotes
+  \@subtitlenotes
+  \@authornotes
+  \let\@makefnmark\relax
+  \let\@thefnmark\relax
+  \let\@makefntext\noindent
+  \ifx\@empty\thankses\else
+    \footnotetextauthorsaddresses{%
+      \def\par{\let\par\@par}\parindent\z@\@setthanks}%
+  \fi
+  \ifx\@empty\@authorsaddresses\else
+     \if@ACM@anonymous\else
+       \if@ACM@journal@bibstrip
+         \footnotetextauthorsaddresses{%
+           \def\par{\let\par\@par}\parindent\z@\@setauthorsaddresses}%
+       \fi
+     \fi
+  \fi
+  \if@ACM@nonacm\else\footnotetextcopyrightpermission{%
+    \if@ACM@authordraft
+        \raisebox{-2ex}[\z@][\z@]{\makebox[0pt][l]{\large\bfseries
+            Unpublished working draft. Not for distribution.}}%
+       \color[gray]{0.9}%
+    \fi
+    \parindent\z@\parskip0.1\baselineskip
+    \if@ACM@authorversion\else
+      \if@printpermission\@copyrightpermission\par\fi
+    \fi
+    \if@ACM@manuscript\else
+       \if@ACM@journal@bibstrip\else % Print the conference information
+         {\itshape \acmConference@shortname~\acmConference@volume (\acmConference@issue), \@startPage--\pageref*{TotPages}}\par
+       \fi
+    \fi
+    \if@printcopyright
+      \copyright\ \@copyrightyear\ \@copyrightowner\\
+    \else
+      \@copyrightyear.\
+    \fi
+    \if@ACM@manuscript
+      Manuscript submitted to ACM\\
+    \else
+      \if@ACM@authorversion
+          This is the author's version of the work. It is posted here for
+          your personal use. Not for redistribution. The definitive Version
+          of Record was published in
+          \if@ACM@journal@bibstrip
+            \emph{\@journalName}%
+          \else
+            \emph{\@acmBooktitle}%
+          \fi
+          \ifx\@acmDOI\@empty
+          .
+          \else
+            , \@formatdoi{\@acmDOI}.
+          \fi\\
+        \else
+          \if@ACM@nonacm\else
+            \if@ACM@journal@bibstrip
+              \@permissionCodeOne/\@acmYear/\@acmMonth-ART\@acmArticle
+              \ifx\@acmPrice\@empty\else\ \$\@acmPrice\fi\\
+              \@formatdoi{\@acmDOI}%
+            \else % Conference
+              \ifx\@acmISBN\@empty\else ACM~ISBN~\@acmISBN
+              \ifx\@acmPrice\@empty.\else\dots\$\@acmPrice\fi\\\fi
+              \ifx\@acmDOI\@empty\else\@formatdoi{\@acmDOI}\fi%
+            \fi
+          \fi
+        \fi
+      \fi}
+    \fi
+  \endgroup
+  \setcounter{footnote}{0}%
+  \@mkabstract
+  \ifx\@translatedabstracts\@empty\else
+  \@translatedabstracts\fi
+  \if@ACM@printccs
+  \ifx\@concepts\@empty\else\bgroup
+      {\@specialsection{CCS Concepts}%
+         \noindent\@concepts\par}\egroup
+     \fi
+   \fi
+   \ifx\@keywords\@empty\else\bgroup
+      {\@specialsection{\keywordsname}%
+         \noindent\@keywords\par}\egroup
+   \fi
+  \ifx\@translatedkeywords\@empty\else
+     \@translatedkeywords
+  \fi
+  \let\metadata@authors=\authors
+  \nxandlist{, }{, }{, }\metadata@authors
+  \def\@ACM@checkaffil{}%
+  \hypersetup{%
+    pdfauthor={\metadata@authors},
+    pdftitle={\@title},
+    pdfsubject={\@concepts},
+    pdfkeywords={\@keywords},
+    pdfcreator={LaTeX with acmart
+      \csname ver@acmart.cls\endcsname\space
+      and hyperref
+      \csname ver@hyperref.sty\endcsname}}%
+  \andify\authors
+  \andify\shortauthors
+  \global\let\authors=\authors
+  \global\let\shortauthors=\shortauthors
+  \if@ACM@printacmref
+     \@mkbibcitation
+  \fi
+  \global\@topnum\z@ % this prevents floats from falling
+                     % at the top of page 1
+  \global\@botnum\z@ % we do not want them to be on the bottom either
+  \@printendtopmatter
+  \@afterindentfalse
+  \@afterheading
+}
+
+% re-define page style
+\AtBeginDocument{%
+\fancypagestyle{standardpagestyle}{%
+  \fancyhf{}%
+  \renewcommand{\headrulewidth}{\z@}%
+  \renewcommand{\footrulewidth}{\z@}%
+  \def\@acmArticlePage{%
+    \ifx\@acmArticle\empty%
+      \if@ACM@printfolios\thepage\fi%
+    \else%
+      \@acmArticle\if@ACM@printfolios:\thepage\fi%
+    \fi%
+  }%
+  \if@ACM@journal@bibstrip
+    \ifcase\ACM@format@nr
+    \relax % manuscript
+      \fancyhead[LE]{\ACM@linecountL\if@ACM@printfolios\thepage\fi}%
+      \fancyhead[RO]{\if@ACM@printfolios\thepage\fi}%
+      \fancyhead[RE]{\@shortauthors}%
+      \fancyhead[LO]{\ACM@linecountL\shorttitle}%
+      \if@ACM@nonacm\else%
+        \fancyfoot[RO,LE]{\footnotesize Manuscript submitted to ACM}
+      \fi%
+    \or % acmsmall
+      \fancyhead[LE]{\ACM@linecountL\@headfootfont\@acmArticlePage}%
+      \fancyhead[RO]{\@headfootfont\@acmArticlePage}%
+      \fancyhead[RE]{\@headfootfont\@shortauthors}%
+      \fancyhead[LO]{\ACM@linecountL\@headfootfont\shorttitle}%
+      \if@ACM@nonacm\else%
+        \fancyfoot[RO,LE]{\footnotesize \@journalNameShort, Vol. \@acmVolume, No.
+        \@acmNumber, Article \@acmArticle.  Publication date: \@acmPubDate.}%
+      \fi
+    \or % acmlarge
+      \fancyhead[LE]{\ACM@linecountL\@headfootfont
+      \@acmArticlePage\quad\textbullet\quad\@shortauthors}%
+      \fancyhead[LO]{\ACM@linecountL}%
+      \fancyhead[RO]{\@headfootfont
+        \shorttitle\quad\textbullet\quad\@acmArticlePage}%
+      \if@ACM@nonacm\else%
+        \fancyfoot[RO,LE]{\footnotesize \@journalNameShort, Vol. \@acmVolume, No.
+        \@acmNumber, Article \@acmArticle.  Publication date: \@acmPubDate.}%
+      \fi
+    \or % acmtog
+      \fancyhead[LE]{\ACM@linecountL\@headfootfont
+        \@acmArticlePage\quad\textbullet\quad\@shortauthors}%
+      \fancyhead[LO]{\ACM@linecountL}%
+      \fancyhead[RE]{\ACM@linecountR}%
+      \fancyhead[RO]{\@headfootfont
+        \shorttitle\quad\textbullet\quad\@acmArticlePage\ACM@linecountR}%
+      \if@ACM@nonacm\else%
+        \fancyfoot[RO,LE]{\footnotesize \@journalNameShort, Vol. \@acmVolume, No.
+        \@acmNumber, Article \@acmArticle.  Publication date: \@acmPubDate.}%
+      \fi
+    \else % Proceedings
+      \fancyfoot[C]{\if@ACM@printfolios\footnotesize\thepage\fi}%
+      \fancyhead[LO]{\ACM@linecountL\@headfootfont\shorttitle}%
+      \fancyhead[RE]{\@headfootfont\@shortauthors\ACM@linecountR}%
+      \if@ACM@nonacm
+        \fancyhead[LE]{\ACM@linecountL}%
+        \fancyhead[RO]{\ACM@linecountR}%
+      \else%
+        \fancyhead[LE]{\ACM@linecountL\@headfootfont\footnotesize
+          \acmConference@shortname,
+          \acmConference@date, \acmConference@venue}%
+        \fancyhead[RO]{\@headfootfont
+          \acmConference@shortname,
+          \acmConference@date, \acmConference@venue\ACM@linecountR}%
+      \fi
+    \fi
+  \else % Proceedings
+    \fancyfoot[C]{\if@ACM@printfolios\footnotesize\thepage\fi}%
+    \fancyhead[LO]{\ACM@linecountL\@headfootfont\shorttitle}%
+    \fancyhead[RE]{\@headfootfont\@shortauthors\ACM@linecountR}%
+    \if@ACM@nonacm
+      \fancyhead[LE]{\ACM@linecountL}%
+      \fancyhead[RO]{\ACM@linecountR}%
+    \else%
+      \fancyhead[LE]{\ACM@linecountL\@headfootfont
+        \acmConference@shortname~
+        \acmConference@volume (\acmConference@issue)}%
+      \fancyhead[RO]{\@headfootfont
+        \acmConference@shortname~
+        \acmConference@volume (\acmConference@issue\ACM@linecountR)}%
+    \fi
+  \fi
+  \if@ACM@sigchiamode
+     \fancyheadoffset[L]{\dimexpr(\marginparsep+\marginparwidth)}%
+  \fi
+  \if@ACM@timestamp
+     \fancyfoot[LO,RE]{\ACM@timestamp}
+  \fi
+}%
+\pagestyle{standardpagestyle}
+}

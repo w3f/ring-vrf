@@ -1,0 +1,23 @@
+
+% \section{Introduction}
+
+There are VRFs built upon Chaum-Pedersen DLEQ proofs in elliptic curves,
+like \cite{nsec5} and \cite{VXEd25519} and \cite{draft-irtf-cfrg-vrf-10}.
+Yet typically their proofs have one challenge scalar and one signature
+scalar, like a non-batchable Schnorr signature, while
+their verification demands two elliptic curve multi-exponentiations.
+As a result, their naively batchable variant becomes ``fat'', requiring
+one scalar and two separate nonces, which complicates batch verification
+and interfaces.
+
+We propose a new thin(er batchable EC) VRF called \ThinVRF that merges
+these two nonces, and needs only one elliptic curve multi-exponentiation
+in verification.  \ThinVRF amounts to a Schnorr signature with its
+base point, nonce, and public key terms all replaced by a pseudo-random
+linear combination of the corresponding points in the two verification
+equations of the usual fat EC VRF.
+
+Aside from slightly improving verifier time, \ThinVRF simplifies
+the interfaces for batch verification or half-aggregation \cite{???},
+without altering the signature or increasing the signature size.
+

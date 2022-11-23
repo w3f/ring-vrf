@@ -1,0 +1,241 @@
+
+\section{Thin batchable EC VRF-AD}
+\label{sec:thin_vrf}
+
+\def\secparam{\ensuremath{\lambda}\xspace}
+
+\def\ecE{{\mathbb{E}}}
+\def\grE{{\mathbf{E}}}
+\def\genE{E}
+\def\genG{G}
+\def\genB{K} %{\genE_{\mathrm{bind}}}
+
+\def\ecJ{{\mathbb{J}}}
+\def\grJ{{\mathbf{J}}}
+\def\genJ{J}
+
+\newcommand{\ThinVRF}{\primalgo{ThinVRF}} 
+
+We describe our protocol first, and then discuss the security zoo later in \S\ref{sec:security}.
+
+\begin{definition}
+a {\em verifiable random function with auxiliary data} (VRF-AD) consists of several algorithms:
+\begin{itemize}
+\item $\VRF.\KeyGen$ and returns a public key \pk and a secret key \sk, which one typically instantiates via come commitment scheme. 
+% \item $\VRF.\Eval : (\sk,\msg) \mapsto \Out$ takes a secret key \sk and an input $\msg$, and then returns a VRF output $\Out$.
+\item $\VRF.\Sign : (\sk,\msg,\aux) \mapsto \sigma$ takes a secret key \sk, an input \msg, and auxiliary data \aux, and then returns a VRF signature $\sigma$.
+\item $\VRF.\Verify$ takes $(\pk,\msg,\aux,\sigma)$ for a public key \pk, an input \msg, and auxiliary data \aux, and then returns either an output $\Out$ or else failure $\perp$.
+\end{itemize}
+\end{definition}
+
+% \smallskip
+
+We obey mathematical and cryptographic implementation convention by using additive notation for elliptic curve and multiplicative notation for elliptic curve scalar multiplications.  We let \secparam denote our security parameter choose an elliptic curve $\ecE[\F]$ denote over some base field $\F$ of (prime) characteristic $q$, along with a distinguished subgroup $\grE \le \ecE[\F]$ of prime order $p \approx 2^{2\secparam}$, and let $h$ denote the cofactor of $\grE$ in $\ecE[\F]$, meaning $\ecE[\F]$ has $h_{\grE} p_{\grE}$ points.
+
+We let $H_p : \{0,1\}^* \to \F_p$ or $H_q : \{0,1\}^* \to \F_q$ denote random oracles (RO) with a range $\F_p$ or $\F_q$.  We let $H_\ecE : \{0,1\}^* \to \ecE$ or $H_\grE : \{0,1\}^* \to \grE$ denote a hash-to-curve for $\ecE$ or hash-to-group for $\grE$, which we model as a random oracles too.  We note $H_\grE(x) = h H_\ecE(x)$ always works, although more efficient exist.
+
+We work solely in $\ecE$ here because we need only a basic Chaum-Pedersen DLEQ proof.
+As in \S\ref{sec:background} and throughout,
+ $\ecE$ has order $h p$ with $p \approx 2^{2\secparam}$ prime and $h$ a small cofactor.
+
+\begin{itemize}
+\item $\ThinVRF.\KeyGen$ selects a secret key \sk uniformly at random from $\F_p$ and computes the public key $\pk = \sk \, \genE$.
+ We define equivalence $\pk_1 \equiv \pk_2$ of public keys by $h \pk_1 = h \pk_2$.
+% \item $\ThinVRF.\Eval(\sk,\msg)$ takes a secret key \sk and an input $\msg$, and
+%  then returns a VRF output $H'(\msg,\pk,h \, \sk \, H_{\grE}(\msg,\pk))$.
+\item $\ThinVRF.\Sign(\sk,\msg,\aux)$ takes a secret key \sk, an input $\msg$, and auxiliary data \aux, and then performs
+\begin{enumerate}
+    \item compute the VRF input $\In := H_{\grE}(\msg,\pk)$ and pre-output output $\PreOut := \sk \, \In$, 
+    \item compute the delinearization challenge $c_1 = H_p(\aux,\msg,\pk,\PreOut)$,
+    \item sample $r$ uniformly at random from $\F_p$ and compute $R = r (\genE + c_1 \In)$,
+    \item compute the challenge $c = H_p(\aux,\msg,\pk,\PreOut,R)$, the proof $s = r + c \, \sk$, and return the signature $\sigma = (\PreOut,R,s)$.
+\end{enumerate}
+\item $\ThinVRF.\Verify$ takes $(\pk,\msg,\aux,\sigma)$, parses $\sigma = (\PreOut,R,s)$, and then 
+\begin{enumerate}
+%PoK:    \item abort unless either $\msg$ contains $\pk$ or else \pk has a valid the proof-of-knowledge,
+    \item recomputes the VRF input point $\In := H_{\grE}(\msg,\pk)$,
+    \item recomputes $c_1 = H_p(\aux,\msg,\pk,\PreOut)$ and $c = H_p(\aux,\msg,\pk,\PreOut,R)$, % the challenges
+    \item aborts unless $s h (\genE + c_1 \In) = h R + c h (\pk + c_1 \PreOut)$ holds, and 
+    \item returns $H'(\msg,\pk,h \PreOut)$ if nothing failed.
+\end{enumerate}
+\end{itemize}
+Implicitly, we have $\ThinVRF.\Eval(\sk,\msg) \mapsto \Out$ given by
+ $H'(\msg,\pk,h \, \sk \, H_{\grE}(\msg,\pk))$ too, but it could be
+defined using \Sign and \Verify.
+
+As discussed below, if we omit this final hash $H'$ making
+our output only $h \PreOut$, then we obtain only a VUF, not a VRF.
+We caution that $h \ne 1$ ensures SUF-CMA fails
+ by \cite[\S4.1.2]{cryptoeprint:2020:823}.
+
+If desired, one could generalize \ThinVRF to $k$ messages by
+computing for $j=1,\ldots,k$ the $k$ distinct
+points $\In_j := H_{\grE}(\msg_j)$, pre-outputs $\PreOut := \sk \, \In$,
+delinearization challenges
+ $c_j = H_p(\aux,\msg_1,\ldots,\msg_k,\pk,\Out_{0,1},\ldots,\Out_{0,k},j)$,
+and then running our Schnorr-like signature with
+ base point $\genE + \sum_{j=1}^k c_i \In_j$ and
+ public key $\genE + \sum_{j=1}^k c_i \Out_j$.
+
+\smallskip
+% \subsection{Performance}
+
+\ThinVRF needs two scalar multiplications in the prover and
+then four scalar multiplications in the verifier
+just like fat EC VRFs like \cite{nsec5} or \cite{VXEd25519} do.
+We do incur an extra hashing operation and two field multiplications,
+but they cost relatively little.
+\ThinVRF reduces verifier computation by merging the these two
+multi-scalar multiplication algorithms, which outweighs the extra hashing and field operations.
+
+\ThinVRF supports batch verification or half-aggregation \cite{???}
+without altering the signature or increasing the signature size.
+We think this tips the scales as avoiding a separate batchable VRF
+signature simplifies interface over naive batch verification methods
+for \cite{nsec5} or \cite{VXEd25519}.
+
+% In principle, both \ThinVRF and EC VRF could support many Schnorr features,
+% such as adapter signatures \cite{???}, blind signatures \cite{???},
+% and 2-round multi-signatures \cite{???,???}.
+% Yet, \ThinVRF shares more code with Schnorr
+
+\endinput 
+
+
+
+
+
+
+
+
+
+
+
+
+% TODO: Proof correct?  Use same citations as schnorrkel.
+
+% We define $H_\grG(\msg) = h H_\grE(\msg)$ and observe 
+%
+% \begin{lemma}
+% If $H_\grE$ is a random oracle then $H_\grG$ is also a random oracle.
+% \end{lemma}
+
+% \begin{lemma}
+% $\primalgo{PreEval}(\sk,\msg) = h \sk H_{\grE}(\msg,\pk)$
+% \end{lemma}
+
+We discuss chosen message queries against only one key in pseudo-randomness.  
+% TODO: What?
+In \ThinVRF, we hash the public key \pk along with the message \msg
+in $H_\grE$, aka injected \pk into \msg, to prevent
+related but different keys having algebraically related input points \In.
+We cannot employ this trick in key committing VRFs or ring VRFs however.
+Although $H'$ being a PRF mitigates problems, we still recommend caution 
+when combining identical inputs \msg with related secret keys,
+ like ``blockchain'' users often produce with ``soft key derivation''.
+
+\begin{proposition}\label{prop:thin_vrf}
+Assuming AGM in $\grE$, % $\ecE$ modulo $h$,
+our $\ThinVRF$ satisfies
+ VRF correctness, uniqueness, pseudo-randomness,
+ and existential unforgeability on $(\msg,\aux)$.
+\end{proposition}
+
+
+
+\endinput
+
+
+
+
+
+
+
+\begin{proof}[Proof sketch]
+	TODO: ???
+\end{proof}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+We expect $\ThinVRF$ to be an EUF-CMA signature scheme on $(\msg,\aux)$ too,
+but proving this requires techniques outside our scope, even assuming AGM.
+
+\begin{proof}[Proof sketch]
+Correctness holds trivially.
+
+At any fixed $\msg$ we have a Schnorr signature on $\aux$
+ over the basepoint $\genE + c_1 \In$, which we name $\primalgo{VRFInner}_{\msg}$.
+According to \cite[\S5]{cryptoeprint:2020:823},
+ $\primalgo{VRFInner}_{\msg}$ is EUF-CMA secure,
+ thanks to our random oracle assumption on $H_p$.
+
+We consider an adversary that produces $(\pk,\msg,\aux,\sigma)$
+ that pass verification, without knowing $\sk$.  
+%PoK:  Ignoring the first abort path, and employing our random oracle assumption on $H_p$, 
+We know from EUF-CMA security of $\primalgo{VRFInner}_{\msg}$ that
+our forger knows some $w$ such that
+ $h (\pk + c_1 \PreOut) = h w (\genE + c_1 \In)$.
+We deduce from AGM knowledge of $x,y,u,v \in \F_p$ such that
+ $\pk = x \genE + y \In$ and $\PreOut = u \genE + v \In$
+ with $x + c_1 u = w$ and $y + c_1 v = c_1 w$ in $\F_p$,
+ so $c_1^2 u + c_1 (x-v) - y = 0$, except with odds negligible in $\secparam$.
+At most two $c_1 \in \F_p$ satisfy this equation.
+As our $c_1$ depends upon both \pk and $\PreOut$, 
+it again follows from our random oracle assumption on $H_p$ that
+ $u=0=y$ and $v = w = x \equiv \sk \bmod h$, meaning $\PreOut = \sk \In$,
+ except with odds negligible in $\secparam$.
+%TODO: What do we cite here?
+%PoK:
+%PoK: We know $y=0$ if we check the proof-of-knowledge for $\pk$ of course.  
+%PoK: We usually suggest that \pk appear in $\msg$ as a defense against related keys, 
+%PoK: which occur if say \pk represents some account key on a blockcahin.  
+%PoK: In this case, we also know $y=0$ by the random oracle assumption on $h$.  
+%PoK: We even deduce $y=0$ after verifying two VRF signatures with distinct
+%PoK: inputs $\msg_1$ and $\msg_2$ and hence distinct $\In_1$ and $\In_2$.
+%PoK: We know $y=0$ in all cases, as desired.
+%PoK: 
+It follows that $\ThinVRF$ satisfies uniqueness of course. 
+
+An unpredictability adversary \adv guesses
+ a \msg and corresponding pre-output $h \PreOut := h \sk H_\grE(\msg)$,
+after making chosen message queries to \Sign.
+In AGM, \adv must express its guess for $h \PreOut$
+ in terms of $H_\grE(\msg)$ and points arising earlier.
+???  So simple ???
+As $H_\grE$ is a random oracle, we deduce that either
+ \adv solved the discrete logarithm problem, or else
+ unpredictability holds for $\ThinVRF$.
+As $H'$ is a PRF, we now argue pseudo-randomness for$\ThinVRF$ similarly
+ to \cite[Proposition 1]{vrf_micali}.
+\end{proof}
+% An adversary cannot discover $\PreOut$ without querying $\msg$,
+% % \cite[Theorem 6]{coron02}
+% % https://eprint.iacr.org/2001/062.pdf NOT https://www.iacr.org/archive/eurocrypt2002/23320268/coron.pdf
+% but our EUF-CMA game permits doing so with alternative $\aux$. 
+% ...
+%TODO: Actually this gets really long winded. 
+
+%PoK:  In this, we still have a VRF if $y=0$, but not exactly the one specified.  
+We caution that omitting $c_1$ only demands $x + u = v$ even if $y=0$,
+which does not give a VRF.
+
+
+
+
+
+\endinput
+
+

@@ -1,0 +1,106 @@
+\section{Ring updates}
+\label{sec:ring_updates}
+
+We discuss \pifast, or \pisk and \pipk, representing public keys
+ in $\grE$ in $\grJ$ already,
+% along with circuit implementation details of $\PedVRF.\{ \CommitKey, \OpenKey \}$,
+but otherwise mostly treated the ring commitment scheme
+$\rVRF.\{ \CommitRing, \CommitKey, \OpenKey \}$ like a black box.
+
+Although our $\rVRF.\rSign$ runs fast, all users must update their
+stored zkSNARK \pipk every time the ring $\ctx$ changes.
+Almost any circuit works for \pipk though,
+ which permits diverse optimizations depending upon usecase.
+
+
+\subsection{Merkle trees} % {Poseidon}
+
+Our $\rVRF.\{ \CommitRing, \CommitKey, \OpenKey \}$ could implement a
+Merkle tree using zkSNARK friendly hash functions like Poseidon \cite{poseidon}.
+%
+All users need $O(\log |\ctx|)$ data with every update, which sounds
+reasonable but not free.  There is a fast moving literature on securing
+and optimizing zkSNARK friendly hash functions, with different techniques
+being better suited to different zkSNARKs or even curves.
+
+TODO: Arity 9 for 300 constraints?   % \cite{Groth16} vs plookup \cite{plookup}.
+
+We leave deeper discussion of zkSNARK friendly Merkle to the literature.
+Instead we spend this section focusing upon the diversity of circuit
+designs that fit our framework.
+
+
+\subsection{Vector commitments}
+
+As noted in \S\ref{subsec:rvrf_side_channel}, our zkSNARK \pipk could use
+polynomial based vector commitments \cite{KZG}. % or so called ``Verkle trees'' \cite{??Verkle??} too.
+We need hidden opening locations of the sort discussed in Caulk \cite{caulk} and Caulk+ \cite{caulk+}.
+
+TODO: Discuss Caulk
+
+Interesstingly, we might avoid the extra proof-of-knowledge added
+in \S\ref{subsec:rvrf_side_channel} because the KZG commitment itself
+can provide the strucural proof.
+
+TODO:  Is this still true with Caulk?
+
+
+\subsection{Certificates} % \& revokation}
+
+If an authority grants ring membership, then ring membership proofs
+could simply verify some certificate by the authority, likely using
+a signature on JubJub.
+
+In this, we prefer a SNARK friendly random oracle,
+because conventional random oracles cost like 30k constraints.
+We also need a variable base scalar multiplication, which costs like
+4k constraints, as well as a couple fixed base scalar multiplication.
+A priori, these fixed base scalar multiplications cost roughly 700
+constraints each, but ocasionally they cost only half this.   
+
+We conjecture one fixed based scalar multiplication could be replaced
+by adapting implicit certificate scheme technqiues,
+ instead of simply a signature on a user provided key.
+
+We typically need expiration dates in certificates, likely demanding
+a range proof and maybe requiring that \pipk be recomputed more often.
+
+% \subsection{Revokation}
+
+As a rule, one needs some revokation path for certificates,
+despite the underlying signature not being revokable. 
+%
+We suggest maitaining a seperate revokation list and then inside
+\pipk prove non-membership in the revokation list.
+% perhaps via \cite{???}.
+In this way, we update \pipk only when the revokation list updates.
+We expect this represents a significatn savings because the revokation
+list could update far less often than the full ring \ctx itself.
+% perhaps corresponding with expiration checks
+% especially since ring membership cannot be traced across site so easily.
+
+We already trust an authority with issuing certificates, so we trust
+them with managing therevokation list too.  As such, our revokation list
+non-membership proofs merely requires proving adjacency of the revoked
+public keys lexicographically before and after our own public key.
+If the revokation list requires secrecy, then VRFs could hide its ordering,
+similarly to NSEC5 \cite{nsec5}.
+
+
+\subsection{Append only logs}
+
+If an append only log grants ring membership, then a recursive SNARK
+could validate ring membership with each recursive addition being
+relatively inexpensive.
+
+In this, we need a $\pipk^0$ similar to \pipk as well as a
+$\pipk^n$ that proves some $\comring_{n-1}$ to be the ancestor of
+its own $\comring_n$ and recursively proves some $\pifast^{n-1}$ with
+its own $\comring_{n-1}$ and the same $\sk$.
+We expect half pairing cycles fit this usage nicely, although they complicate provers.
+
+Append only logs still depand \pipk be reproven whenever
+\ctx updates however, so they only reduce bandwidth they not CPU usage.
+We shy away from such append only log optimizations, due to this
+prover complexity and our desire for revokation, but
+ they remain an interesting corner of the design space.

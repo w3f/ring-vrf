@@ -1,21 +1,21 @@
 \section{Ring updates}
 \label{sec:ring_updates}
 
-We discuss \pifast representing public keys in $\grE$ in $\grJ$ already,
+We discuss \pifast, or \pisk and \pipk, representing public keys
+ in $\grE$ in $\grJ$ already,
 % along with circuit implementation details of $\PedVRF.\{ \CommitKey, \OpenKey \}$,
 but otherwise mostly treated the ring commitment scheme
-$\rVRF.\{ \CommitRing, \CommitKey, \OpenKey \}$ like a black box.
+$\rVRF.\{ \CommitRing, \OpenRing \}$ like a black box.
 
-Although our $\rVRF.\rSign$ run fast, all users must update their
-stored zkSNARK \pifast every time the ring $\ctx$ changes.
-Almost any circuit works for \pifast though,
+Although our $\rVRF.\rSign$ runs fast, all users must update their
+stored zkSNARK \pipk every time the ring $\ctx$ changes.
+Almost any circuit works for \pipk though,
  which permits diverse optimizations depending upon usecase.
 
 
 \subsection{Merkle trees} % {Poseidon}
 
-In either \pifast and \pisafe configurations, 
-our $\rVRF.\{ \CommitRing, \CommitKey, \OpenKey \}$ could implement a
+Our $\rVRF.\{ \CommitRing, \OpenRing \}$ could implement a
 Merkle tree using zkSNARK friendly hash functions like Poseidon \cite{poseidon}.
 %
 All users need $O(\log |\ctx|)$ data with every update, which sounds
@@ -27,46 +27,22 @@ TODO: Arity 9 for 300 constraints?   % \cite{Groth16} vs plookup \cite{plookup}.
 
 We leave deeper discussion of zkSNARK friendly Merkle to the literature.
 Instead we spend this section focusing upon the diversity of circuit
-designs that fit our \pifast and \pisafe framework.
+designs that fit our framework.
 
 
 \subsection{Vector commitments}
 
-Instead of Merkle trees, our zkSNARK $\pi$ could use polynomial based
-vector commitments \cite{KZG} or so called ``Verkle trees'' \cite{??Verkle??} too.
-%
-Among these, aggregatable subvector commitments \cite{aSVC} permit
-one server to compute a KZG commitment \comring together with all users'
-ring opening \openring,  and then send each user their \openring encrypted.
-Instead of Groth16 \cite{Groth16}, our \pisafe then consists
-of additively blinding this KZG commitment and then open it in zero-knowledge.
+As noted in \S\ref{subsec:rvrf_side_channel}, our zkSNARK \pipk could use
+polynomial based vector commitments \cite{KZG}. % or so called ``Verkle trees'' \cite{??Verkle??} too.
+We need hidden opening locations of the sort discussed in Caulk \cite{caulk} and Caulk+ \cite{caulk+}.
 
-TODO: Explain zero-knowledge KZG opening positions?!?
+TODO: Discuss Caulk
 
-A priori, we cannot construct KZG commitments to secret keys,
-so \pifast cannot be replaced by a KZG commitment so simply.
-Yet, we could split \pifast into two parts similar to \pisafe and $\pisafedot$.
+Interesstingly, we might avoid the extra proof-of-knowledge added
+in \S\ref{subsec:rvrf_side_channel} because the KZG commitment itself
+can provide the strucural proof.
 
-replace $\pisafedot$ with a zero-knowledge continuation
-that swaps the KZG blinding for the secret key blinding used by \pifast.
-
-We represent public keys in $\grE_1$ over $\ecJ$ like \pifast does,
-so $J = \sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$.
-After placing these into a KZG commitment over $\ecE$, a transperent
-openning yields $J.x Y_2 + J.y Y_3$, so our blinded opening could
-then yield $J.x Y_2 + J.y Y_3 + b \genB_\gamma$.
-At this point, we need a zkSNARK \pifastdot to translate $J$ into $\sk$, so
-$$ \pifastdot = \rrSNARK \Setst{ \sk_0 + \sk_1 2^{128}, \pk }{ 
- \exists d \textrm{\ s.t.\ }
- % 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
- \pk = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2
-} \mathperiod $$
-We compute $\pifastdot$ only once ever, unlike $\pisafedot$.
-
-We must reblind the KZG commitment with each VRF signature, and
-tweak $\PedVRF$ to prove knowledge for $Y_2$ and $Y_3$, so 
-our marginal prover time winds up higher than naieve \pifast here.
-We impose additional pairings upon verifiers too, likely suboptimal.
+TODO:  Is this still true with Caulk?
 
 
 \subsection{Certificates} % \& revokation}
@@ -87,7 +63,7 @@ by adapting implicit certificate scheme technqiues,
  instead of simply a signature on a user provided key.
 
 We typically need expiration dates in certificates, likely demanding
-a range proof and maybe requiring that \pifast be recomputed more often.
+a range proof and maybe requiring that \pipk be recomputed more often.
 
 % \subsection{Revokation}
 
@@ -95,9 +71,9 @@ As a rule, one needs some revokation path for certificates,
 despite the underlying signature not being revokable. 
 %
 We suggest maitaining a seperate revokation list and then inside
-\pifast prove non-membership in the revokation list.
+\pipk prove non-membership in the revokation list.
 % perhaps via \cite{???}.
-In this way, we update \pifast only when the revokation list updates.
+In this way, we update \pipk only when the revokation list updates.
 We expect this represents a significatn savings because the revokation
 list could update far less often than the full ring \ctx itself.
 % perhaps corresponding with expiration checks
@@ -117,14 +93,14 @@ If an append only log grants ring membership, then a recursive SNARK
 could validate ring membership with each recursive addition being
 relatively inexpensive.
 
-In this, we need a $\pifast^0$ similar to \pifast as well as a
-$\pifast^n$ that proves some $\comring_{n-1}$ to be the ancestor of
+In this, we need a $\pipk^0$ similar to \pipk as well as a
+$\pipk^n$ that proves some $\comring_{n-1}$ to be the ancestor of
 its own $\comring_n$ and recursively proves some $\pifast^{n-1}$ with
 its own $\comring_{n-1}$ and the same $\sk$.
 We expect half pairing cycles fit this usage nicely, although they complicate provers.
 
-Append only logs still depand \pifast or \pisafe be reproven whenever
+Append only logs still depand \pipk be reproven whenever
 \ctx updates however, so they only reduce bandwidth they not CPU usage.
-A priori, we expect prover complexity plus update fequency makes
-append only logs suboptimal, but
+We shy away from such append only log optimizations, due to this
+prover complexity and our desire for revokation, but
  they remain an interesting corner of the design space.

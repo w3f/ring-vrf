@@ -1,0 +1,102 @@
+
+\section{Security properties}
+\label{sec:rvrf_games}
+
+We briefly give security games for rVRF-AD constructions, which broadly
+resemble existing VRF or ring signature definitions.  In this, we include
+the full key commitment procedure and auxiliary data \aux, as they impact
+implementers and applications, but we suppress multiple inputs for brevity.
+
+% We need some basic correctness conditions of course.
+
+\begin{definition}
+We say an rVRF-AD satisfies {\em evaluation correctness} if
+$(\pk,\sk) \leftarrow \KeyGen$ implies
+\def\tmpC{\Eval(\sk,\msg) = \Verify(\pk,\msg,\aux,\Sign(\sk,\msg,\aux))}
+\eprint{$\tmpC$, succeeds}{$$ \tmpC, $$}
+and also {\em ring commitment correctness} if
+$\pk \in \ring$ implies both
+\def\tmpA{\OpenRing(\CommitRing(\ring,\pk)) = \pk}
+\def\tmpB{\CommitRing(\ring) = \CommitRing(\ring,\pk).0} 
+\eprint{$$ \tmpA \quad\textrm{and}\quad \tmpB \mathperiod $$}%
+{$$ \begin{aligned}
+   \tmpA \qquad\textrm{and} \\
+   \tmpB \mathperiod
+\end{aligned} $$}
+\end{definition}
+
+We lack anonymity against full key exposure ala
+ \cite[pp. 6 Def. 4]{cryptoeprint:2005:304} of course, due to the VRF output,
+but instead demand a weaker anonymity condition similar to
+ \cite[pp. 5 Def. 3]{cryptoeprint:2005:304}:
+
+\begin{definition}\label{def:rvrf_sign_oracle}
+We let \ora{Sign} denote a ring signature CMA oracle, meaning
+\begin{itemize}
+\item $\ora{Sign}(\oramsg{keygen})$ \, 
+ creates a fresh key pair $(\pk,\sk) \leftarrow \KeyGen$, logs it, and
+ adds $\pk$ to the set $\ring_0$, and then returns \pk.
+\item $\ora{Sign}(\comring,\openring,\msg,\aux)$ \,
+ returns the signature $\Sign(\sk,\openring,\msg,\aux)$,
+ provided it logged $(\pk,\sk)$ with $\pk = \OpenKey(\comring,\openring)$ previously.
+\end{itemize}
+\end{definition}
+
+\begin{definition}
+We say \rVRF satisfies {\em ring anonymity} if
+any PPT adversary \adv has an advantage only
+ negligible in $\secparam$ to win the game:
+\begin{itemize}
+\item[]
+ Initially \adv outputs a message \msg, associated data \aux,
+ two distinct public keys $\pk_0,\pk_1 \in \ora{Sign}.\ring_0$ created by \ora{Sign},
+ and a ring $\ring \subset \ora{Sign}.\ring_0$ containing $\pk_0,\pk_1$.
+ Set $\comring = \CommitRing(\ring)$.
+ Next the challenger chooses $j=0$ or $j=1$ and gives
+  \adv some signature $\sigma = \rSign(\sk_j,\openring,\msg,\aux)$ with $\OpenKey(\comring,\openring) = \pk_j$.
+ %
+ \adv calls \ora{Sign} of Definition \ref{def:rvrf_sign_oracle} throughout,
+ except \adv loses if they ever query $\ora{Sign}(\comring',\openring',\msg,\cdot)$
+ on \msg for some $\comring',\openring'$ with
+ \def\tmp{\OpenKey(\comring',\openring') \in \{ \pk_0, \pk_1 \}}
+ \eprint{$\tmp$.}{$$ \mathperiod $$}
+ Finally \adv guesses $j$ and wins if correct.
+\end{itemize}
+\end{definition}
+
+We similarly want a ring uniqueness that limits adversaries who know secret keys,
+as well as a ring unforgeability resembling \cite[pp. 7 Def. 7]{cryptoeprint:2005:304}. % their definition appears broken
+
+\begin{definition}
+We say \rVRF satisfies {\em ring uniqueness} (resp. ring unforgeability)if
+any PPT adversary \adv has an advantage only
+ negligible in $\secparam$ to win the game:
+\begin{itemize}
+\item[]
+ \adv calls \ora{Sign} of Definition \ref{def:rvrf_sign_oracle} throughout,
+ but also creates its own keys freely.
+ %
+ Finally \adv outputs a ring $\ring$ as well as
+ $k + |\ring \setminus \ora{Sign}.\ring_0|$ valid ring VRF signatures,
+  each with distinct outputs,    % $\sigma_i$
+ for $\ring$ on a message \msg (resp. and also associated data \aux).
+ \adv wins if they invoked $\ora{Sign}$ strictly fewer than $k$ times
+ on $\msg$ (resp. and also $\aux$), and
+  distinct $i$ with $\pk_i \in \ring \cap \ora{Sign}.\ring_0$.
+\end{itemize}
+\end{definition}
+ 
+Any ring VRF becomes a non-anonymized VRF whenever
+ the ring becomes a singleton $\ring = \{ \pk \}$ of course.
+We inherit ring VRF output properties from non-anonymized VRFs
+because they wind up strongest for singleton rings, i.e. $|\ctx| = 1$.
+These include 
+ residual pseudo-randomness \cite[Def. VRF (3) \S3.2, pp. 4]{vrf_micali} and
+ residual unpredictability \cite[Def. VUF (3) \S3.2, pp. 5]{vrf_micali}
+  (also \cite[Def. 4, pp. 8]{agg_dkg}).
+% as well as collision resistance ??? and pseudo-randomness \cite{thin_vrf}.  % TODO
+
+
+
+
+

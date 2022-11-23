@@ -1,0 +1,401 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{23}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[\protect\citeauthoryear{??}{IPC}{[n. d.]}]%
+        {IPCC2022}
+ \bibinfo{year}{[n. d.]}\natexlab{}.
+\newblock \bibinfo{title}{Climate Change 2022: Impacts, Adaptation and
+  Vulnerability. Working Group II Contribution to the IPCC Sixth Assessment
+  Report}.
+\newblock \bibinfo{howpublished}{Cambridge University Press. In Press.}.
+\newblock
+\urldef\tempurl%
+\url{https://www.ipcc.ch/report/ar6/wg2/}
+\showURL{%
+\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Baghery, Kohlweiss, Siim, and Volkhov}{Baghery
+  et~al\mbox{.}}{2021}]%
+        {RandomizationGroth16}
+\bibfield{author}{\bibinfo{person}{Karim Baghery}, \bibinfo{person}{Markulf
+  Kohlweiss}, \bibinfo{person}{Janno Siim}, {and} \bibinfo{person}{Mikhail
+  Volkhov}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Another Look at Extraction and Randomization of
+  Groth's zk-SNARK}. In \bibinfo{booktitle}{\emph{Financial Cryptography and
+  Data Security}}, \bibfield{editor}{\bibinfo{person}{Nikita Borisov} {and}
+  \bibinfo{person}{Claudia Diaz}} (Eds.). \bibinfo{publisher}{Springer Berlin
+  Heidelberg}, \bibinfo{address}{Berlin, Heidelberg},
+  \bibinfo{pages}{457--475}.
+\newblock
+\showISBNx{978-3-662-64322-8}
+\urldef\tempurl%
+\url{https://ia.cr/2020/811}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{\url{https://ia.cr/2020/811}.}
+
+
+\bibitem[\protect\citeauthoryear{Bender, Katz, and Morselli}{Bender
+  et~al\mbox{.}}{2006}]%
+        {cryptoeprint:2005:304}
+\bibfield{author}{\bibinfo{person}{Adam Bender}, \bibinfo{person}{Jonathan
+  Katz}, {and} \bibinfo{person}{Ruggero Morselli}.}
+  \bibinfo{year}{2006}\natexlab{}.
+\newblock \showarticletitle{Ring Signatures: Stronger Definitions, and
+  Constructions Without Random Oracles}. In \bibinfo{booktitle}{\emph{Theory of
+  Cryptography}}, \bibfield{editor}{\bibinfo{person}{Shai Halevi} {and}
+  \bibinfo{person}{Tal Rabin}} (Eds.). \bibinfo{publisher}{Springer Berlin
+  Heidelberg}, \bibinfo{address}{Berlin, Heidelberg}, \bibinfo{pages}{60--79}.
+\newblock
+\showISBNx{978-3-540-32732-5}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/11681878_4}
+\showDOI{\tempurl}
+\newblock
+\shownote{\url{https://ia.cr/2005/304}.}
+
+
+\bibitem[\protect\citeauthoryear{Borge, Kokoris-Kogias, Jovanovic, Gasser,
+  Gailly, and Ford}{Borge et~al\mbox{.}}{2017}]%
+        {pop2017}
+\bibfield{author}{\bibinfo{person}{Maria Borge}, \bibinfo{person}{Eleftherios
+  Kokoris-Kogias}, \bibinfo{person}{Philipp Jovanovic}, \bibinfo{person}{Linus
+  Gasser}, \bibinfo{person}{Nicolas Gailly}, {and} \bibinfo{person}{Bryan
+  Ford}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Proof-of-Personhood: Redemocratizing Permissionless
+  Cryptocurrencies}. In \bibinfo{booktitle}{\emph{2017 IEEE European Symposium
+  on Security and Privacy Workshops (EuroS\&PW)}}. \bibinfo{pages}{23--26}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/EuroSPW.2017.46}
+\showDOI{\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Burdges, Dold, and Grothoff}{Burdges
+  et~al\mbox{.}}{[n. d.]}]%
+        {taler}
+\bibfield{author}{\bibinfo{person}{Jeffrey Burdges}, \bibinfo{person}{Florian
+  Dold}, {and} \bibinfo{person}{Christian Grothoff}.} \bibinfo{year}{[n.
+  d.]}\natexlab{}.
+\newblock \bibinfo{title}{Robust and Income-transparent Online E-Cash}.
+\newblock
+\newblock
+\urldef\tempurl%
+\url{https://git.taler.net/papers.git/tree/}
+\showURL{%
+\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{by~Design~Foundation}{by~Design~Foundation}{[n.
+  d.]}]%
+        {IRMAcredentials}
+\bibfield{author}{\bibinfo{person}{Privacy by Design~Foundation}.}
+  \bibinfo{year}{[n. d.]}\natexlab{}.
+\newblock \bibinfo{title}{IRMA docs v0.2.0}.
+\newblock \bibinfo{howpublished}{\url{https://irma.app/docs/v0.2.0/overview/}}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{{Chatham House}}{{Chatham House}}{[n. d.]}]%
+        {climaterisk2021}
+\bibfield{author}{\bibinfo{person}{{Chatham House}}.} \bibinfo{year}{[n.
+  d.]}\natexlab{}.
+\newblock \bibinfo{title}{Climate change risk assessment 2021}.
+\newblock
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Davidson, Goldberg, Sullivan, Tankersley, and
+  Valsorda}{Davidson et~al\mbox{.}}{2018}]%
+        {PrivacyPass}
+\bibfield{author}{\bibinfo{person}{Alex Davidson}, \bibinfo{person}{Ian
+  Goldberg}, \bibinfo{person}{Nick Sullivan}, \bibinfo{person}{George
+  Tankersley}, {and} \bibinfo{person}{Filippo Valsorda}.}
+  \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Privacy Pass: Bypassing Internet Challenges
+  Anonymously}.
+\newblock \bibinfo{journal}{\emph{Proceedings on Privacy Enhancing
+  Technologies}}  \bibinfo{volume}{2018} (\bibinfo{date}{06}
+  \bibinfo{year}{2018}), \bibinfo{pages}{164--180}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1515/popets-2018-0026}
+\showDOI{\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Ford and Strauss}{Ford and Strauss}{2008}]%
+        {pop2008}
+\bibfield{author}{\bibinfo{person}{Bryan Ford} {and} \bibinfo{person}{Jacob
+  Strauss}.} \bibinfo{year}{2008}\natexlab{}.
+\newblock \showarticletitle{An Offline Foundation for Online Accountable
+  Pseudonyms}. In \bibinfo{booktitle}{\emph{Proceedings of the 1st Workshop on
+  Social Network Systems}} \emph{(\bibinfo{series}{SocialNets '08})}.
+  \bibinfo{publisher}{Association for Computing Machinery},
+  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{31–36}.
+\newblock
+\showISBNx{9781605581248}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/1435497.1435503}
+\showDOI{\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Goldberg, Reyzin, Papadopoulos, and
+  Včelák}{Goldberg et~al\mbox{.}}{2021}]%
+        {draft-irtf-cfrg-vrf-10}
+\bibfield{author}{\bibinfo{person}{Sharon Goldberg}, \bibinfo{person}{Leonid
+  Reyzin}, \bibinfo{person}{Dimitrios Papadopoulos}, {and} \bibinfo{person}{Jan
+  Včelák}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{{Verifiable Random Functions (VRFs)}}}.
+\newblock \bibinfo{type}{Internet-Draft} draft-irtf-cfrg-vrf-10.
+  \bibinfo{institution}{Internet Engineering Task Force}.
+\newblock
+\urldef\tempurl%
+\url{https://datatracker.ietf.org/doc/draft-irtf-cfrg-vrf/10/}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{Work in Progress.}
+
+
+\bibitem[\protect\citeauthoryear{Grassi, Khovratovich, Rechberger, Roy, and
+  Schofnegger}{Grassi et~al\mbox{.}}{2019}]%
+        {poseidon}
+\bibfield{author}{\bibinfo{person}{Lorenzo Grassi}, \bibinfo{person}{Dmitry
+  Khovratovich}, \bibinfo{person}{Christian Rechberger}, \bibinfo{person}{Arnab
+  Roy}, {and} \bibinfo{person}{Markus Schofnegger}.}
+  \bibinfo{year}{2019}\natexlab{}.
+\newblock \bibinfo{title}{Poseidon: A New Hash Function for Zero-Knowledge
+  Proof Systems}.
+\newblock \bibinfo{howpublished}{Cryptology ePrint Archive, Paper 2019/458}.
+\newblock
+\urldef\tempurl%
+\url{https://eprint.iacr.org/2019/458}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{\url{https://eprint.iacr.org/2019/458}.}
+
+
+\bibitem[\protect\citeauthoryear{Groth}{Groth}{2016}]%
+        {Groth16}
+\bibfield{author}{\bibinfo{person}{Jens Groth}.}
+  \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{On the Size of Pairing-Based Non-interactive
+  Arguments}. In \bibinfo{booktitle}{\emph{Advances in Cryptology -- EUROCRYPT
+  2016}}, \bibfield{editor}{\bibinfo{person}{Marc Fischlin} {and}
+  \bibinfo{person}{Jean-S{\'e}bastien Coron}} (Eds.).
+  \bibinfo{publisher}{Springer Berlin Heidelberg}, \bibinfo{address}{Berlin,
+  Heidelberg}, \bibinfo{pages}{305--326}.
+\newblock
+\showISBNx{978-3-662-49896-5}
+\urldef\tempurl%
+\url{https://eprint.iacr.org/2016/260}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{IACR ePrint Archive 2016/260.}
+
+
+\bibitem[\protect\citeauthoryear{Kate, Zaverucha, and Goldberg}{Kate
+  et~al\mbox{.}}{2010}]%
+        {KZG}
+\bibfield{author}{\bibinfo{person}{Aniket Kate}, \bibinfo{person}{Gregory~M.
+  Zaverucha}, {and} \bibinfo{person}{Ian Goldberg}.}
+  \bibinfo{year}{2010}\natexlab{}.
+\newblock \showarticletitle{Constant-Size Commitments to Polynomials and Their
+  Applications}. In \bibinfo{booktitle}{\emph{Advances in Cryptology -
+  ASIACRYPT 2010}}, \bibfield{editor}{\bibinfo{person}{Masayuki Abe}} (Ed.).
+  \bibinfo{publisher}{Springer Berlin Heidelberg}, \bibinfo{address}{Berlin,
+  Heidelberg}, \bibinfo{pages}{177--194}.
+\newblock
+\showISBNx{978-3-642-17373-8}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-3-642-17373-8_11}
+\showDOI{\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Manulis, Fleischhacker, G\"unther, Kiefer, and
+  Poettering}{Manulis et~al\mbox{.}}{2011}]%
+        {group_sig_survey}
+\bibfield{author}{\bibinfo{person}{Mark Manulis}, \bibinfo{person}{Nils
+  Fleischhacker}, \bibinfo{person}{Felix G\"unther},
+  \bibinfo{person}{Franziskus Kiefer}, {and} \bibinfo{person}{Bertram
+  Poettering}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \bibinfo{title}{Group Signatures: Authentication with Privacy}.
+\newblock \bibinfo{howpublished}{BSI}.
+\newblock
+\newblock
+\shownote{\url{https://www.franziskuskiefer.de/paper/GruPA.pdf} and
+  \url{https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/Studies/GruPA/GruPA.pdf}.}
+
+
+\bibitem[\protect\citeauthoryear{Micali, Rabin, and Vadhan}{Micali
+  et~al\mbox{.}}{1999}]%
+        {vrf_micali}
+\bibfield{author}{\bibinfo{person}{Silvio Micali}, \bibinfo{person}{Michael
+  Rabin}, {and} \bibinfo{person}{Salil Vadhan}.}
+  \bibinfo{year}{1999}\natexlab{}.
+\newblock \showarticletitle{Verifiable random functions}. In
+  \bibinfo{booktitle}{\emph{40th annual symposium on foundations of computer
+  science (cat. No. 99CB37039)}}. IEEE, \bibinfo{pages}{120--130}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1109/SFFCS.1999.814584}
+\showDOI{\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Otto, Lee, Sletten, Burnett, Sporny, and
+  Ebert}{Otto et~al\mbox{.}}{[n. d.]}]%
+        {w3c_vc_use_cases}
+\bibfield{author}{\bibinfo{person}{Nate Otto}, \bibinfo{person}{Sunny Lee},
+  \bibinfo{person}{Brian Sletten}, \bibinfo{person}{Daniel Burnett},
+  \bibinfo{person}{Manu Sporny}, {and} \bibinfo{person}{Ken Ebert}.}
+  \bibinfo{year}{[n. d.]}\natexlab{}.
+\newblock \bibinfo{title}{Verifiable Credentials Use Cases}.
+\newblock \bibinfo{howpublished}{W3C Working Group Note 24 September 2019.
+  \url{https://www.w3.org/TR/vc-use-cases/}}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Papadopoulos, Wessels, Huque, Naor, Včelák,
+  Reyzin, and Goldberg}{Papadopoulos et~al\mbox{.}}{2017}]%
+        {nsec5}
+\bibfield{author}{\bibinfo{person}{Dimitrios Papadopoulos},
+  \bibinfo{person}{Duane Wessels}, \bibinfo{person}{Shumon Huque},
+  \bibinfo{person}{Moni Naor}, \bibinfo{person}{Jan Včelák},
+  \bibinfo{person}{Leonid Reyzin}, {and} \bibinfo{person}{Sharon Goldberg}.}
+  \bibinfo{year}{2017}\natexlab{}.
+\newblock \bibinfo{title}{Making NSEC5 Practical for DNSSEC}.
+\newblock \bibinfo{howpublished}{Cryptology ePrint Archive, Paper 2017/099}.
+\newblock
+\urldef\tempurl%
+\url{https://eprint.iacr.org/2017/099}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{\url{https://eprint.iacr.org/2017/099}.}
+
+
+\bibitem[\protect\citeauthoryear{Perrin}{Perrin}{[n. d.]}]%
+        {VXEd25519}
+\bibfield{author}{\bibinfo{person}{Trevor Perrin}.} \bibinfo{year}{[n.
+  d.]}\natexlab{}.
+\newblock \bibinfo{title}{The XEdDSA and VXEdDSA Signature Schemes}.
+\newblock \bibinfo{howpublished}{Revision 1, 2016-10-20.
+  \url{https://signal.org/docs/specifications/xeddsa/}}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Pol}{Pol}{2020}]%
+        {doi:10.1080/25741292.2020.1725366}
+\bibfield{author}{\bibinfo{person}{Ronald~F. Pol}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Anti-money laundering: The world's least effective
+  policy experiment? Together, we can fix it}.
+\newblock \bibinfo{journal}{\emph{Policy Design and Practice}}
+  \bibinfo{volume}{3}, \bibinfo{number}{1} (\bibinfo{year}{2020}),
+  \bibinfo{pages}{73--94}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1080/25741292.2020.1725366}
+\showDOI{\tempurl}
+\showeprint{https://doi.org/10.1080/25741292.2020.1725366}
+
+
+\bibitem[\protect\citeauthoryear{Posen and Kattis}{Posen and Kattis}{2022}]%
+        {caulk+}
+\bibfield{author}{\bibinfo{person}{Jim Posen} {and}
+  \bibinfo{person}{Assimakis~A. Kattis}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \bibinfo{title}{Caulk+: Table-independent lookup arguments}.
+\newblock \bibinfo{howpublished}{Cryptology ePrint Archive, Paper 2022/957}.
+\newblock
+\urldef\tempurl%
+\url{https://eprint.iacr.org/2022/957}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{\url{https://eprint.iacr.org/2022/957}.}
+
+
+\bibitem[\protect\citeauthoryear{Spratt}{Spratt}{[n. d.]}]%
+        {carrying_capacity}
+\bibfield{author}{\bibinfo{person}{David Spratt}.} \bibinfo{year}{[n.
+  d.]}\natexlab{}.
+\newblock \bibinfo{title}{At $4^{\circ}$C of warming, would a billion people
+  survive? What scientists say.}
+\newblock
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Tomescu, Abraham, Buterin, Drake, Feist, and
+  Khovratovich}{Tomescu et~al\mbox{.}}{2020}]%
+        {aSVC}
+\bibfield{author}{\bibinfo{person}{Alin Tomescu}, \bibinfo{person}{Ittai
+  Abraham}, \bibinfo{person}{Vitalik Buterin}, \bibinfo{person}{Justin Drake},
+  \bibinfo{person}{Dankrad Feist}, {and} \bibinfo{person}{Dmitry
+  Khovratovich}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \bibinfo{title}{Aggregatable Subvector Commitments for Stateless
+  Cryptocurrencies}.
+\newblock \bibinfo{howpublished}{Cryptology ePrint Archive, Report 2020/527}.
+\newblock
+\newblock
+\shownote{\url{https://ia.cr/2020/527}.}
+
+
+\bibitem[\protect\citeauthoryear{Zapico, Buterin, Khovratovich, Maller,
+  Nitulescu, and Simkin}{Zapico et~al\mbox{.}}{2022}]%
+        {caulk}
+\bibfield{author}{\bibinfo{person}{Arantxa Zapico}, \bibinfo{person}{Vitalik
+  Buterin}, \bibinfo{person}{Dmitry Khovratovich}, \bibinfo{person}{Mary
+  Maller}, \bibinfo{person}{Anca Nitulescu}, {and} \bibinfo{person}{Mark
+  Simkin}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \bibinfo{title}{Caulk: Lookup Arguments in Sublinear Time}.
+\newblock \bibinfo{howpublished}{Cryptology ePrint Archive, Paper 2022/621}.
+\newblock
+\urldef\tempurl%
+\url{https://eprint.iacr.org/2022/621}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{\url{https://eprint.iacr.org/2022/621}.}
+
+
+\end{thebibliography}

@@ -1,0 +1,222 @@
+
+@InProceedings{GK2015,
+  author        = {Jens Groth and Markulf Kohlweiss},
+  editor        = {Elisabeth Oswald and Marc Fischlin},
+  title         = {One-out-of-Many Proofs: Or How to Leak a Secret and Spend a Coin},
+  booktitle     = {Advances in Cryptology - EUROCRYPT 2015},
+  year          = {2015},
+  publisher     = {Springer Berlin Heidelberg},
+  pages         = {253--280},
+  abstract = {We construct a 3-move public coin special honest verifier zero-knowledge proof, a so-called Sigma-protocol, for a list of commitments having at least one commitment that opens to 0. It is not required for the prover to know openings of the other commitments. The proof system is efficient, in particular in terms of communication requiring only the transmission of a logarithmic number of commitments.},
+  isbn          = {978-3-662-46803-6},
+  url           = {https://eprint.iacr.org/2014/764},
+  note          = {IACR ePrint Archive 2014/764},
+}
+
+
+@InProceedings{Groth16,
+  author        = {Groth, Jens},
+  editor        = {Fischlin, Marc and Coron, Jean-S{\'e}bastien},
+  title         = {On the Size of Pairing-Based Non-interactive Arguments},
+  booktitle     = {Advances in Cryptology -- EUROCRYPT 2016},
+  year          = {2016},
+  publisher     = {Springer Berlin Heidelberg},
+  address       = {Berlin, Heidelberg},
+  pages         = {305--326},
+  isbn          = {978-3-662-49896-5},
+  url           = {https://eprint.iacr.org/2016/260},
+  note          = {IACR ePrint Archive 2016/260},
+}
+
+
+@InProceedings{RandomizationGroth16,
+    author       = {Karim Baghery and Markulf Kohlweiss and Janno Siim and Mikhail Volkhov},
+    title        = {Another Look at Extraction and Randomization of Groth's zk-SNARK},
+    editor = "Borisov, Nikita and Diaz, Claudia",
+    booktitle = "Financial Cryptography and Data Security",
+    year = "2021",
+    publisher = "Springer Berlin Heidelberg",
+    address = "Berlin, Heidelberg",
+    pages = "457--475",
+    abstract = "Due to the simplicity and performance of zk-SNARKs they are widely used in real-world cryptographic protocols, including blockchain and smart contract systems. Simulation Extractability (SE) is a necessary security property for a NIZK argument to achieve Universal Composability (UC), a common requirement for such protocols. Most of the works that investigate SE focus on its strong variant which implies proof non-malleability. In this work we investigate a relaxed weaker notion, that allows proof randomization, while guaranteeing statement non-malleability, which we argue to be a more natural security property. First, we show that it is already achievable by Groth16, arguably the most efficient and widely deployed SNARK nowadays. Second, we show that because of this, Groth16 can be efficiently transformed into a black-box weakly SE NIZK, which is sufficient for UC protocols.",
+    isbn = "978-3-662-64322-8",
+    note = {\url{https://ia.cr/2020/811}},
+    url = {https://ia.cr/2020/811},
+}
+
+
+@InProceedings{cryptoeprint:2019/1162,
+    title={Subversion-Resistant Simulation (Knowledge) Sound NIZKs},
+    author={Karim Baghery},
+    editor="Albrecht, Martin",
+    booktitle="Cryptography and Coding",
+    year="2019",
+    publisher="Springer International Publishing",
+    address="Cham",
+    pages="42--63",
+    abstract="In ASIACRYPT 2016, Bellare, Fuchsbauer and Scafuro studied security of non-interactive zero-knowledge (NIZK) arguments in the face of parameter subversion. They showed that achieving subversion soundness (soundness without trusting to the third party) and standard zero-knowledge is impossible at the same time. On the positive side, in the best case, they showed that one can achieve subversion zero-knowledge (zero-knowledge without trusting to the third party) and soundness at the same time. In this paper, we show that one can amplify their best positive result and construct NIZK arguments that can achieve subversion zero-knowledge and simulation (knowledge) soundness at the same time. Simulation (knowledge) soundness is a stronger notion in comparison with (knowledge) soundness, as it also guarantees non-malleability of proofs. Such stronger security guarantee is a must in practical systems. To prove the result, we show that given a NIZK argument that achieves Sub-ZK and (knowledge) soundness, one can use an OR-based construction to define a new language and build a NIZK argument that will guarantee Sub-ZK and simulation (knowledge) soundness at the same time. We instantiate the construction with the state-of-the-art zk-SNARK proposed by Groth [Eurocrypt 2016] and obtain an efficient SNARK that guarantees Sub-ZK and simulation knowledge soundness.",
+      doi = "10.1007/978-3-030-35199-1_3",
+      isbn="978-3-030-35199-1",
+      note = {\url{https://eprint.iacr.org/2019/1162}},
+      url = {https://eprint.iacr.org/2019/1162}
+}
+
+
+@InProceedings{cryptoeprint:2019/641,
+      author = {Shahla Atapoor and Karim Baghery},
+      title = {Simulation Extractability in Groth's zk-SNARK},
+      editor="P{\'e}rez-Sol{\`a}, Cristina and Navarro-Arribas, Guillermo and Biryukov, Alex and Garcia-Alfaro, Joaquin",
+      title="Simulation Extractability in Groth's zk-SNARK", 
+      booktitle="Data Privacy Management, Cryptocurrencies and Blockchain Technology",
+      year="2019",
+      publisher="Springer International Publishing", 
+      address="Cham",
+      pages="336--354",
+      abstract="A Simulation Extractable (SE) zk-SNARK enables a prover to prove that she knows a witness for an instance in a way that the proof: (1) is succinct and can be verified very efficiently; (2) does not leak information about the witness; (3) is simulation-extractable -an adversary cannot come out with a new valid proof unless it knows a witness, even if it has already seen arbitrary number of simulated proofs. Non-malleable succinct proofs and very efficient verification make SE zk-SNARKs an elegant tool in various privacy-preserving applications such as cryptocurrencies, smart contracts and etc. In Eurocrypt 2016, Groth proposed the most efficient pairing-based zk-SNARK in the CRS model, but its proof is vulnerable to the malleability attacks. In this paper, we show that one can efficiently achieve simulation extractability in Groth's zk-SNARK by some changes in the underlying language using an OR construction. Analysis and implementations show that in practical cases overload has minimal effects on the efficiency of original scheme which currently is the most efficient zk-SNARK. In new construction, proof size is extended with one element from {\$}{\$}{\{}{\backslash}mathbb {\{}G{\}}{\}}{\_}1{\$}{\$}, one element from {\$}{\$}{\{}{\backslash}mathbb {\{}G{\}}{\}}{\_}2{\$}{\$}, plus a bit string that totally is less than 256 bytes for 128-bit security. Its verification is dominated with 4 pairings which is the most efficient verification among current SE zk-SNARKs.",
+      doi="10.1007/978-3-030-31500-9_22",
+      isbn="978-3-030-31500-9",
+      note = {\url{https://eprint.iacr.org/2019/641}},
+      url = {https://eprint.iacr.org/2019/641},
+}
+
+
+@InProceedings{cryptoeprint:2020/1306,
+      author = {Oussama Amine and Karim Baghery and Zaira Pindado and Carla R{\`a}fols},
+      title = {Simulation Extractable Versions of Groth’s zk-SNARK Revisited},
+      booktitle="Cryptology and Network Security",
+      year="2020",
+      publisher="Springer International Publishing",
+      address="Cham",
+      pages="453--461",
+      abstract="Among various NIZK arguments, zk-SNARKs are the most efficient constructions in terms of proof size and verification which are two critical criteria for large scale applications. Currently, Groth's construction, {\$}{\$}{\backslash}textsf {\{}Groth16{\}}{\$}{\$}Groth16, from Eurocrypt'16 is the most efficient and widely deployed one. However, it is proven to achieve only knowledge soundness, which does not prevent attacks from the adversaries who have seen simulated proofs. There has been considerable progress in modifying {\$}{\$}{\backslash}textsf {\{}Groth16{\}}{\$}{\$}Groth16to achieve simulation extractability to guarantee the non-malleability of proofs. We revise the Simulation Extractable (SE) version of {\$}{\$}{\backslash}textsf {\{}Groth16{\}}{\$}{\$}Groth16proposed by Bowe and Gabizon that has the most efficient prover and {\$}{\$}{\backslash}mathsf {\{}crs{\}}{\$}{\$}crssize among the candidates, although it adds Random Oracle (RO) to the original construction. We present a new version which requires 4 parings in the verification, instead of 5. We also get rid of the RO at the cost of a collision resistant hash function and a single new element in the {\$}{\$}{\backslash}mathsf {\{}crs{\}}{\$}{\$}crs. Our construction is proven in the generic group model and seems to result in the most efficient SE variant of {\$}{\$}{\backslash}textsf {\{}Groth16{\}}{\$}{\$}Groth16in most dimensions.",
+      isbn="978-3-030-65411-5",
+      doi = "10.1007/978-3-030-65411-5_22",
+      note = {\url{https://eprint.iacr.org/2020/1306}},
+      url = {https://eprint.iacr.org/2020/1306},
+}
+
+
+@inproceedings{10.1007/11818175_5,
+    author = {Melissa Chase and Anna Lysyanskaya},
+    title = {On Signatures of Knowledge},
+    editor="Dwork, Cynthia",
+    booktitle="Advances in Cryptology - CRYPTO 2006",
+    year = {2006},
+    month = {08},
+    pages = {78-96},
+    publisher="Springer Berlin Heidelberg",
+    address="Berlin, Heidelberg",
+abstract="In a traditional signature scheme, a signature $\sigma$ on a message $m$ is issued under a public key PK, and can be interpreted as follows: ``The owner of the public key PK and its corresponding secret key has signed message $m$.'' In this paper we consider schemes that allow one to issue signatures on behalf of any NP statement, that can be interpreted as follows: ``A person in possession of a witness $w$ to the statement that $x \in L$ has signed message $m$.'' We refer to such schemes as signatures of knowledge.",
+    isbn = {978-3-540-37432-9},
+    doi = {10.1007/11818175_5},
+    note = {\url{https://eprint.iacr.org/2006/184}},
+    url = {https://eprint.iacr.org/2006/184}
+}
+
+
+
+@InProceedings{   bccgp2016,
+  author        = {Bootle, Jonathan and Cerulli, Andrea and Chaidos, Pyrros
+                  and Groth, Jens and Petit, Christophe},
+  editor        = {Fischlin, Marc and Coron, Jean-S{\'e}bastien},
+  title         = {Efficient Zero-Knowledge Arguments for Arithmetic Circuits
+                  in the Discrete Log Setting},
+  booktitle     = {Advances in Cryptology -- EUROCRYPT 2016},
+  year          = {2016},
+  publisher     = {Springer Berlin Heidelberg},
+  address       = {Berlin, Heidelberg},
+  pages         = {327--357},
+  isbn          = {978-3-662-49896-5},
+  url           = {https://eprint.iacr.org/2016/263},
+  note          = {IACR ePrint Archive 2016/263},
+}
+
+
+@InProceedings{   bulletproofs,
+  author        = {B{\"u"}nz, Benedikt and Bootle, Jonathan and Boneh, Dan and
+                  Poelstra, Andrew and Wuille, Pieter and Maxwell, Greg},
+  booktitle     = {2018 IEEE Symposium on Security and Privacy (SP)},
+  title         = {Bulletproofs: Short Proofs for Confidential Transactions
+                  and More},
+  year          = {2018},
+  month         = {May},
+  pages         = {319--338},
+  doi           = {10.1109/SP.2018.00020},
+  issn          = {2375-1207},
+  url           = {https://eprint.iacr.org/2017/1066},
+  note          = {IACR ePrint Archive 2017/1066},
+}
+
+
+@phdthesis{  RyanHenryPhD,
+  author        = {Ryan Henry},
+  title         = {Efficient Zero-Knowledge Proofs and Applications},
+  school        = {University of Waterloo},
+  year          = {2014},
+  month         = {August},
+  note          = {http://hdl.handle.net/10012/8621},
+  url           = {https://uwspace.uwaterloo.ca/bitstream/handle/10012/8621/Henry_Ryan.pdf},
+}
+
+
+@inproceedings{HenryGoldberg13,
+  author = {Henry, Ryan and Goldberg, Ian},
+  year = {2013},
+  month = {06},
+  pages = {502-517},
+  title = {Batch Proofs of Partial Knowledge},
+  doi = {10.1007/978-3-642-38980-1_32}
+}
+
+
+@inproceedings{ZEXE,
+  booktitle={2020 IEEE Symposium on Security and Privacy (SP)},   title={ZEXE: Enabling Decentralized Private Computation},
+  year={2020},
+  volume={},
+  number={},
+  pages={947--964},
+  doi={10.1109/SP40000.2020.00050},
+  author = {Sean Bowe and Alessandro Chiesa and Matthew Green and Ian Miers and Pratyush Mishra and Howard Wu},
+  title = {Zexe: Enabling Decentralized Private Computation},
+}
+
+
+@misc{plonk,
+      author = {Ariel Gabizon and Zachary J.  Williamson and Oana Ciobotaru},
+      title = {PLONK: Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge},
+      howpublished = {Cryptology ePrint Archive, Paper 2019/953},
+      year = {2019},
+      note = {\url{https://eprint.iacr.org/2019/953}},
+      url = {https://eprint.iacr.org/2019/953}
+}
+
+
+@misc{plookup,
+    author = {Ariel Gabizon and Zachary J. Williamson},
+    title = {plookup: A simplified polynomial protocol for lookup tables},
+    howpublished = {Cryptology ePrint Archive, Report 2020/315},
+    year = {2020},
+    url = {https://eprint.iacr.org/2020/315},
+}
+
+
+@misc{poseidon,
+      author = {Lorenzo Grassi and Dmitry Khovratovich and Christian Rechberger and Arnab Roy and Markus Schofnegger},
+      title = {Poseidon: A New Hash Function for Zero-Knowledge Proof Systems},
+      howpublished = {Cryptology ePrint Archive, Paper 2019/458},
+      year = {2019},
+      note = {\url{https://eprint.iacr.org/2019/458}},
+      url = {https://eprint.iacr.org/2019/458}
+}
+
+
+@misc{cryptoeprint:2019:1185,
+  title = {Formalising $\Sigma$-Protocols and Commitment Schemes using CryptHOL},
+  author = {David Butler and Andreas Lochbihler and David Aspinall and Adri{\`a} Gasc{\'o}n},
+  howpublished = {Cryptology ePrint Archive, Report 2019/1185},
+  year = {2019},
+  note = {\url{https://ia.cr/2019/1185}},
+  url = {https://ia.cr/2019/1185},
+}
+
+

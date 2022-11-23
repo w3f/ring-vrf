@@ -1,0 +1,174 @@
+\begin{thebibliography}{10}
+
+\bibitem{IPCC2022}
+Climate change 2022: Impacts, adaptation and vulnerability. working group ii
+  contribution to the ipcc sixth assessment report.
+\newblock Cambridge University Press. In Press.
+
+\bibitem{RandomizationGroth16}
+Karim Baghery, Markulf Kohlweiss, Janno Siim, and Mikhail Volkhov.
+\newblock Another look at extraction and randomization of groth's zk-snark.
+\newblock In Nikita Borisov and Claudia Diaz, editors, {\em Financial
+  Cryptography and Data Security}, pages 457--475, Berlin, Heidelberg, 2021.
+  Springer Berlin Heidelberg.
+\newblock \url{https://ia.cr/2020/811}.
+
+\bibitem{cryptoeprint:2005:304}
+Adam Bender, Jonathan Katz, and Ruggero Morselli.
+\newblock Ring signatures: Stronger definitions, and constructions without
+  random oracles.
+\newblock In Shai Halevi and Tal Rabin, editors, {\em Theory of Cryptography},
+  pages 60--79, Berlin, Heidelberg, 2006. Springer Berlin Heidelberg.
+\newblock \url{https://ia.cr/2005/304}.
+
+\bibitem{pop2017}
+Maria Borge, Eleftherios Kokoris-Kogias, Philipp Jovanovic, Linus Gasser,
+  Nicolas Gailly, and Bryan Ford.
+\newblock Proof-of-personhood: Redemocratizing permissionless cryptocurrencies.
+\newblock In {\em 2017 IEEE European Symposium on Security and Privacy
+  Workshops (EuroS\&PW)}, pages 23--26, 2017.
+
+\bibitem{cryptoeprint:2020:823}
+Jacqueline Brendel, Cas Cremers, Dennis Jackson, and Mang Zhao.
+\newblock The provable security of ed25519: Theory and practice.
+\newblock Cryptology ePrint Archive, Report 2020/823, 2020.
+\newblock \url{https://eprint.iacr.org/2020/823}.
+
+\bibitem{taler}
+Jeffrey Burdges, Florian Dold, and Christian Grothoff.
+\newblock Robust and income-transparent online e-cash.
+
+\bibitem{cryptoeprint:2019:1185}
+David Butler, Andreas Lochbihler, David Aspinall, and Adri{\`a} Gasc{\'o}n.
+\newblock Formalising $\sigma$-protocols and commitment schemes using crypthol.
+\newblock Cryptology ePrint Archive, Report 2019/1185, 2019.
+\newblock \url{https://ia.cr/2019/1185}.
+
+\bibitem{IRMA_credentials}
+Privacy by~Design~Foundation.
+\newblock Irma docs v0.2.0.
+\newblock \url{https://irma.app/docs/v0.2.0/overview/}.
+
+\bibitem{praos}
+Bernardo David, Peter Ga{\v{z}}i, Aggelos Kiayias, and Alexander Russell.
+\newblock Ouroboros {P}raos: An adaptively-secure, semi-synchronous
+  proof-of-stake blockchain.
+\newblock In {\em Annual International Conference on the Theory and
+  Applications of Cryptographic Techniques}, pages 66--98. Springer, 2018.
+
+\bibitem{PrivacyPass}
+Alex Davidson, Ian Goldberg, Nick Sullivan, George Tankersley, and Filippo
+  Valsorda.
+\newblock Privacy pass: Bypassing internet challenges anonymously.
+\newblock {\em Proceedings on Privacy Enhancing Technologies}, 2018:164--180,
+  06 2018.
+
+\bibitem{pop2008}
+Bryan Ford and Jacob Strauss.
+\newblock An offline foundation for online accountable pseudonyms.
+\newblock In {\em Proceedings of the 1st Workshop on Social Network Systems},
+  SocialNets '08, page 31–36, New York, NY, USA, 2008. Association for
+  Computing Machinery.
+
+\bibitem{plonk}
+Ariel Gabizon, Zachary~J. Williamson, and Oana Ciobotaru.
+\newblock Plonk: Permutations over lagrange-bases for oecumenical
+  noninteractive arguments of knowledge.
+\newblock Cryptology ePrint Archive, Paper 2019/953, 2019.
+\newblock \url{https://eprint.iacr.org/2019/953}.
+
+\bibitem{poseidon}
+Lorenzo Grassi, Dmitry Khovratovich, Christian Rechberger, Arnab Roy, and
+  Markus Schofnegger.
+\newblock Poseidon: A new hash function for zero-knowledge proof systems.
+\newblock Cryptology ePrint Archive, Paper 2019/458, 2019.
+\newblock \url{https://eprint.iacr.org/2019/458}.
+
+\bibitem{Groth16}
+Jens Groth.
+\newblock On the size of pairing-based non-interactive arguments.
+\newblock In Marc Fischlin and Jean-S{\'e}bastien Coron, editors, {\em Advances
+  in Cryptology -- EUROCRYPT 2016}, pages 305--326, Berlin, Heidelberg, 2016.
+  Springer Berlin Heidelberg.
+\newblock IACR ePrint Archive 2016/260.
+
+\bibitem{agg_dkg}
+Kobi Gurkan, Philipp Jovanovic, Mary Maller, Sarah Meiklejohn, Gilad Stern, and
+  Alin Tomescu.
+\newblock Aggregatable distributed key generation.
+\newblock In Anne Canteaut and Fran{\c{c}}ois{-}Xavier Standaert, editors, {\em
+  {EUROCRYPT} 2021}, volume 12696 of {\em LNCS}, pages 147--176, 2021.
+\newblock \url{https://ia.cr/2021/005}.
+
+\bibitem{KZG}
+Aniket Kate, Gregory~M. Zaverucha, and Ian Goldberg.
+\newblock Constant-size commitments to polynomials and their applications.
+\newblock In Masayuki Abe, editor, {\em Advances in Cryptology - ASIACRYPT
+  2010}, pages 177--194, Berlin, Heidelberg, 2010. Springer Berlin Heidelberg.
+
+\bibitem{group_sig_survey}
+Mark Manulis, Nils Fleischhacker, Felix G\"unther, Franziskus Kiefer, and
+  Bertram Poettering.
+\newblock Group signatures: Authentication with privacy.
+\newblock BSI, 2011.
+\newblock \url{https://www.franziskuskiefer.de/paper/GruPA.pdf} and
+  \url{https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/Studies/GruPA/GruPA.pdf}.
+
+\bibitem{vrf_micali}
+Silvio Micali, Michael Rabin, and Salil Vadhan.
+\newblock Verifiable random functions.
+\newblock In {\em 40th annual symposium on foundations of computer science
+  (cat. No. 99CB37039)}, pages 120--130. IEEE, 1999.
+
+\bibitem{w3c_vc_use_cases}
+Nate Otto, Sunny Lee, Brian Sletten, Daniel Burnett, Manu Sporny, and Ken
+  Ebert.
+\newblock Verifiable credentials use cases.
+\newblock W3C Working Group Note 24 September 2019.
+  \url{https://www.w3.org/TR/vc-use-cases/}.
+
+\bibitem{nsec5}
+Dimitrios Papadopoulos, Duane Wessels, Shumon Huque, Moni Naor, Jan Včelák,
+  Leonid Reyzin, and Sharon Goldberg.
+\newblock Making nsec5 practical for dnssec.
+\newblock Cryptology ePrint Archive, Paper 2017/099, 2017.
+\newblock \url{https://eprint.iacr.org/2017/099}.
+
+\bibitem{VXEd25519}
+Trevor Perrin.
+\newblock The xeddsa and vxeddsa signature schemes.
+\newblock Revision 1, 2016-10-20.
+  \url{https://signal.org/docs/specifications/xeddsa/}.
+
+\bibitem{doi:10.1080/25741292.2020.1725366}
+Ronald~F. Pol.
+\newblock Anti-money laundering: The world's least effective policy experiment?
+  together, we can fix it.
+\newblock {\em Policy Design and Practice}, 3(1):73--94, 2020.
+
+\bibitem{caulk+}
+Jim Posen and Assimakis~A. Kattis.
+\newblock Caulk+: Table-independent lookup arguments.
+\newblock Cryptology ePrint Archive, Paper 2022/957, 2022.
+\newblock \url{https://eprint.iacr.org/2022/957}.
+
+\bibitem{carrying_capasity}
+David Spratt.
+\newblock At $4^{\circ}$c of warming, would a billion people survive? what
+  scientists say.
+
+\bibitem{aSVC}
+Alin Tomescu, Ittai Abraham, Vitalik Buterin, Justin Drake, Dankrad Feist, and
+  Dmitry Khovratovich.
+\newblock Aggregatable subvector commitments for stateless cryptocurrencies.
+\newblock Cryptology ePrint Archive, Report 2020/527, 2020.
+\newblock \url{https://ia.cr/2020/527}.
+
+\bibitem{caulk}
+Arantxa Zapico, Vitalik Buterin, Dmitry Khovratovich, Mary Maller, Anca
+  Nitulescu, and Mark Simkin.
+\newblock Caulk: Lookup arguments in sublinear time.
+\newblock Cryptology ePrint Archive, Paper 2022/621, 2022.
+\newblock \url{https://eprint.iacr.org/2022/621}.
+
+\end{thebibliography}

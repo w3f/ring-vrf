@@ -1,0 +1,120 @@
+\subsection{Pedersen keyed VRF-AD-KC}
+\label{subsec:vrf_pederson}
+
+Anonymized VRF signatures could use Chaum-Pedersen DLEQ proofs that
+hide the true public key, which our key committing definition permits.
+Zero-knowledge continuations work by opening this key commitment
+ inside another zero-knowledge proof. % DUP
+
+We only describe the non-batchable variant analogous to
+ \cite{nsec5} and \cite{VXEd25519}.
+We know easily batchable verifiable flavors exist, but
+ they enlarge the VRF signature by 32 bytes.
+We need pairings to verify the SNARKs component of our ring VRF,
+which dwarfs the CPU savings from batch verification,
+so saving 32 bytes sounds more helpful for non-blockchain use cases.
+
+\newcommand{\PedVRF}{\primalgo{PedVRF}} 
+
+We define \KeyGen as in \ThinVRF in \S\ref{subsec:vrf_thin} but \Eval differs
+slightly by not injecting \pk into \msg:
+% by selecting a secret key \sk uniformly at random from $\F_p$ and
+% computing the public key $\pk = \sk \, \genG$.
+\begin{itemize}
+\item $\PedVRF.\KeyGen$ selects a secret key \sk uniformly at random from $\F_p$ and computes the public key $\pk = \sk \, \genG$. 
+\item $\PedVRF.\Eval(\sk,\msg)$ takes a secret key \sk and an input $\msg$, and
+ then returns a VRF output $H'(\msg,h \, \sk \, H_{\grE}(\msg))$.
+\end{itemize}
+
+We select here an arbitrary base point $\genG$ for our public key
+ because this avoids some confusion later.
+%
+We fix a second generator $\genB$ of $\grE$ independent from $\genG$,
+perhaps created by applying $H_\grE$ to an input outside existing usages'
+domain and also containing $\genG$. 
+We now form Pedersen-like commitments to this public key \pk as follows.
+\begin{itemize}
+\item $\PedVRF.\CommitKey$ selects a blinding factor $\openpk$ uniformly
+ at random from $\F_p$ and computes the commitment $\compk = \pk + \openpk \, \genB$.
+\item $\PedVRF.\OpenKey$ just returns $\pk = \compk - \openpk \, \genB$.
+\end{itemize}
+In fact, these are technically only Pedersen commitments to
+the secret key \sk, not to the public key \pk, because
+ \OpenKey does not enforce the structure of \pk.
+Instead, our \Verify proves correctness of \compk, as
+ required for our key binding condition, so
+zero-knowledge continuations then use \OpenKey with only minor caveats.
+% In particular, any VRF-AD-KC prevents adversaries from obtaining
+% extra valid outputs, but ring VRF protocols need a proof-of-knowledge
+% for the public key \pk if they demand that different \pk represent
+% different functions.
+
+\begin{itemize}
+\item $\PedVRF.\Sign(\sk,\openpk,\msg,\aux)$ takes a secret key \sk and blinding factor \openpk, an input $\msg$, and auxiliary data \aux, and then performs
+\begin{enumerate}
+    \item compute the VRF input point $\In := H_{\grE}(\msg)$ and pre-output $\PreOut := \sk \, \In$,
+    \item Sample random $r_1,r_2 \leftarrow \F_p$ and compute $R = r_1 \genG + r_2 \genB$ and $R_\msg = r_1 \In$.
+    \item Compute the challenge $c = H_q(\aux,\msg,\compk,\PreOut,R,R_m)$,
+     along with $s_1 = r_1 + c \sk$ and $s_2 = r_2 + c \, \openpk$.
+    \item Return the signature $(\PreOut,c,s_1,s_2)$.
+\end{enumerate}
+\item $\PedVRF.\Verify(\compk,\msg,\aux,\sigma)$, parses $\sigma = (\PreOut,c,s_1,s_2)$, and then 
+\begin{enumerate}
+    \item recompute the VRF input point $\In := H_{\grE}(\msg)$,
+    \item computes $R = s_1 \genG + s_2 \genB - c \, \compk$ and $R_m = s_1 \In - c \PreOut$, and
+    \item returns $H'(\msg, h \PreOut)$ if $c = H_q(\aux,\msg,\compk,\PreOut,R,R_\msg)$ or failure otherwise.
+\end{enumerate}
+\end{itemize}
+
+We obtain roughly \cite{nsec5} or \cite{VXEd25519}
+if we choose $\openpk = 0 = r_2$ in \Sign.
+
+\begin{lemma}\label{prop:pedersen_vrf_hiding}
+$\PedVRF$ is a correct key commitment and key hiding.
+\end{lemma}
+
+Although Pedersen commitments are perfectly hiding, our $\R_\msg$ makes $\sigma$ only computationally hiding.
+
+\begin{proposition}\label{prop:pedersen_vrf}
+Assuming AGM in $\grE$, % $\ecE$ modulo $h$,
+our $\PedVRF$ satisfies VRF correctness, key binding, uniqueness,
+pseudo-randomness, and unforgeability. % (EUF-CMA-KC) on $(\msg,\aux)$.
+\end{proposition}
+
+We need this second verification equation in \PedVRF, but not in \ThinVRF,
+because otherwise our $s_2 \genB$ term provides enough freedom to tamper
+with the pre-ouputs.  
+
+We could however generalize \PedVRF to $k$ messages $\msg_1,\ldots,\msg_k$
+similarly to \ThinVRF in \S\ref{subsec:vrf_thin}:  We compute for
+$j=1,\ldots,k$ the $k$ distinct
+points $\In_j := H_{\grE}(\msg_j)$, pre-outputs $\PreOut := \sk \, \In$,
+delinearization challenges
+ $c_j = H_p(\aux,\msg_1,\ldots,\msg_k,\compk,\Out_{0,1},\ldots,\Out_{0,k},j)$,
+and then use the \PedVRF proof for
+ $\In = \sum_j c_j \In_j$ and $\Out = \sum_j c_j \Out_j$.
+
+% TODO: Proof correct?  Use same citations as schnorrkel.
+
+
+\endinput
+
+
+
+
+
+
+
+
+
+
+\begin{proof}[Proof sketch]
+	Correctness holds trivially.
+	
+	???
+\end{proof}
+
+
+
+
+

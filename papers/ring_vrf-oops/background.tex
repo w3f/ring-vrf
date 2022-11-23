@@ -1,0 +1,199 @@
+
+\section{Background}
+\label{sec:background}
+
+\def\secparam{\ensuremath{\lambda}\xspace}
+
+\def\ecE{{\mathbb{E}}}
+\def\grE{{\mathbf{E}}}
+\def\genE{E}
+\def\genG{G}
+\def\genB{K} %{\genE_{\mathrm{bind}}}
+
+\def\ecJ{{\mathbb{J}}}
+\def\grJ{{\mathbf{J}}}
+\def\genJ{J}
+
+% As our ring VRF is built by composing them, 
+We briefly recall the primitives and security assumptions underlying
+both Chaum-Pedersen DLEQ proofs and pairing based zkSNARKs. 
+
+
+\subsection{Elliptic curves}
+
+We obey mathematical and cryptographic implementation convention by using additive notation for elliptic curve and multipicative notation for eliptic curve scalar multiplications. 
+
+We always implicitly have a paramater generation procedure $\mathtt{Params}$ that takes a security level $\secparam \in \N$ and returns elliptic curve paramaters including some prime numbers and efficient algorithms for computing elliptic curve operations.  As customary, we treat $\secparam$ and the output of $\mathtt{Params}$ as fixed paramaters, which makes sense because humans run $\mathtt{Params}$ manually in practice. 
+
+As implicit outputs of $\mathtt{Params}$, we work with an elliptic curve $\ecE[\F]$ over some base field $\F$ of (prime) characteristic $q_{\grE}$, along with a distinguished subgroup $\grE \le \ecE[\F]$ of prime order $p_{\grE} \approx 2^{2\secparam}$.  As $\grE$ distinguishes $\ecE[\F]$, we let $h_{\grE}$ denote the cofactor of $\grE$ in $\ecE[\F]$, meaning $\ecE[\F]$ has $h_{\grE} p_{\grE}$ points.
+% but abbreviate $h = h_{\grE}$, $p = p_{\grE}$, and $q = q_{\grE}$ when $\grE$ is clear from context.
+We write $\grE$ without subscript, and abbreviate $h = h_{\grE}$, $p = p_{\grE}$, and $q = q_{\grE}$, when $\ecE$ is either our uinque pairing friendly curve or else the only curve in view.
+
+We let $H_p : \{0,1\}^* \to \F_p$ or $H_q : \{0,1\}^* \to \F_q$ denote random oracles (RO) with a range $\F_p$ or $\F_q$.  We let $H_\ecE : \{0,1\}^* \to \ecE$ or $H_\grE : \{0,1\}^* \to \grE$ denote a hash-to-curve for $\ecE$ or hash-to-group for $\grE$, which we model as a random oracles too.  We note $H_\grE(x) = h H_\ecE(x)$ always works, although more efficent exist.
+
+\smallskip
+
+Almost all SNARKs like \cite{Groth16} or \cite{plonk} employ a pairing friendly elliptic curve $\ecE$ over a field $\F_q$ of characteristic $q \approx 2^{2\secparam}$, which comes equipped with a type III pairing on subgroups of prime order $p \approx 2^{2\secparam}$:  We let $q_1,q_2,q_T$ denote small powers of $q$, and let $\grE_1 \le \ecE[\F_{q_1}]$ and $\grE_2 \le \ecE[\F_{q_2}]$ and $\grE_T \le \F_{q_T}^\times$ denote subgroups all of prime order $p$.  We also let $e : \grE_1 \times \grE_2 \to \grE_T$ denote a type III pairing, meaning a computable bilinear map without known efficiently computable maps between $\grE_1$ and $\grE_2$.  Also $q_i = q_{\grE_i}$ for $i=1,2$ in our above notation.  
+
+Any pairing friendly elliptic curve $\ecE$ provides solutions to the decisional Diffie-Hellman problem (DDH).  We do however assume the computational Diffie-Hellman problem (CDH) remains hard in $\ecE$.  We remark that $H_\grE$ being a random oracle plus CDH hardness prevents computable relationships between $H_\grE$ outputs.
+
+% TODO: Pairing assumptions required by Groth16
+
+\smallskip
+
+% We shall require ZCash Sapling style ``Jubjub'' Edwards curves, whose base field characteristic divides of the order of a pairing friendly elliptic curve, thereby making Jubjub base field arithmetic SNARK friendly, and hence Jubjub elliptic curve operations as well \cite{}.
+
+We let $\ecJ$ denote a ZCash Sapling style ``JubJub'' Edwards curve associated to the pairing friendly elliptic curve $\ecE$, meaning $\ecJ$ has base field $\F_p$ whose characteristic $q_{\grJ} = p$ matches the group order $p$ of $\grE_1 \cong \grE_2 \cong \grE_T$.  As in ZCash Sapling, we now prove statements about elliptic curve operations inside $\ecJ$ by proving base field arithmetic in $\F_p$, which our $q_{\grJ} = p$ makes relatively inexpensive inside SNARKs on $\ecE$.
+
+As above, $\grJ \le \ecJ[\F_p]$ has large prime order $p_{\grJ}$ and a small cofactor $h_{\grJ}$.  We always support $4 p_{\grJ} < p$ because if $\ecJ$ is an Edwards curve then $h_{\grJ} \ge 4$ which imposes this by the Hasse bound.
+
+\smallskip
+
+We ask that deserialization prove that putative elements of $\grE$ lie in
+$\ecE[\F]$ by verifying curve equations, perhaps including twist checks.
+
+Anytime $\ecE$ represents a pairing friendly curve then we ask that
+deserialization prove elements of $\grE_1$, $\grE_2$, and $\grE_T$
+lie inside the correct subgroup of order $p$,
+ which typically requires checking whether $|\grE| X = 1$ or similar.
+As our SNARKs works with points in $\ecJ$ directly, we conversely
+prefer writing $\grJ$ equations in $\ecJ[\F_p]$ and explicitly describe
+where one clears the cofactor $h_{\grJ}$.  We handled $\grE$ withr
+$\ecE$ not necessarily pairing friendly similarly to $\ecJ$.
+We scrape by with only CDH hardness for $\grJ$ for convenience,
+although DDH winds up hard in $\grJ$.
+
+
+\subsection{Zero-knowledge proofs}
+
+\newcommand\rel{\ensuremath{\mathcal{R}}\xspace}
+\newcommand\lang{\ensuremath{\mathcal{L}}\xspace}
+
+% refs.
+% https://people.csail.mit.edu/silvio/Selected%20Scientific%20Papers/Zero%20Knowledge/Noninteractive_Zero-Knowkedge.pdf
+%   Alright but kinda poorly phrases
+% https://inst.eecs.berkeley.edu/~cs276/fa20/notes/Multiple%20NIZK%20from%20general%20assumptions.pdf
+%   Addresses the ZK definitions better
+% 
+
+We let \rel denote a polynomial time decidable relation, so the language
+ $\lang = \{x \mid \exists \omega (\omega,x) \in \rel \}$ lies in NP.
+All non-interactive zero-knowledge proof systems have some setup procedure $\mathtt{Setup}$ that takes our parameters generated by $\mathtt{Params}$ and some ``circuit'' description of \rel, and produces a structured reference string (SRS).
+
+A non-interactive proof system for $\rel$ consists of \Prove and \Verify PPT algorithms
+\begin{itemize}
+%\item $\NIZK.\setup(\rel) \rightarrow (crs, \tau)$ ---- Given the relation $ \rel $ it outputs a common reference string $ crs $ and a trapdoor $ \tau $ for $ \rel $.
+\item $\NIZK_\rel.\Prove(\omega, x) \mapsto \pi$ creates a proof $\pi$ for a witness and statement pair $(\omega,x) \in \rel$.
+\item $\NIZK_\rel.\Verify(x, \pi)$ returns either true of false, depending upon whether $\pi$  proves $x$.
+\end{itemize}	
+which satisfy the following completeness, zero-knowledge, and knowledge soundness definitions.
+
+\begin{definition}\label{def:nizk_completeness}
+We say $\NIZK_\rel$ is {\em complete} if $\Verify(x, \Prove(\omega,x)$ succeeds for all $(\omega,x) \in \rel$.  % with high probability
+\end{definition}
+
+\def\advV{\ensuremath{V^*}\xspace} % Why not use \adv here?
+
+\begin{definition}\label{def:nizk_zero_knowledge}
+We say $\NIZK_\rel$ is {\em zero-knowledge} if
+there exists a PPT simulator $\NIZK_\rel.\Simulate(x) \mapsto \pi$
+that outputs proofs for statement $x \in L$ alone, which are
+computationally indistinguishable from legitimate proofs by \Prove,
+i.e.\ any non-uniform PPT adversary \advV cannot distinguish pairs $(x,\pi)$
+generated by \Simulate or by \Prove except with odds negligible in \secparam
+(see \cite[Def. 9, \S A, pap. 29]{RandomizationGroth16}). %  or ...
+\end{definition}
+
+\def\advP{\ensuremath{P^*}\xspace} % Why not use \adv here?
+
+\begin{definition}\label{def:nizk_knowledge_sound}
+We say $\NIZK_\rel$ is {\em (white-box) knowledge sound} if
+for any non-uniform PPT adversary \adv who outputs a statement $x \in \lang$ and proof $\pi$
+there exists a PPT extractor algorithm $\Extract$ that white-box observes $\advP$ and
+if $\Verify(x,\pi)$ holds then $\Extract$ returns an $\omega$ for which $(\omega,x) \in \rel$
+(see \cite[Def. 7, \S A, pap. 29]{RandomizationGroth16}).
+\end{definition}
+
+Our zero-knowledge continuations in \S\ref{sec:rvrf_cont} demand
+rerandomizing existing zkSNARKs, which only Groth16 supports \cite{Groth16}.
+We therefore introduce some details of Groth16 \cite{Groth16} there,
+when we tamper with Groth16's SRS and $\mathtt{Setup}$ to create zero-knowledge continuations. 
+% TODO: Do we describe Groth16 \cite{Groth16} enough?
+
+% In this, we exploit several arguments given by \cite{RandomizationGroth16},
+% but for now we recall that \cite{RandomizationGroth16} proves that Groth16
+% satisfies: % white-box weak simulation-extractablity .
+%
+% \begin{definition}\label{def:nizk_weak_simulation_extractable}
+% We say $\NIZK_\rel$ is {\em white-box weak simulation-extractable} if
+% for any non-uniform PPT adversary \advP with oracle access to \Simulate
+% who outputs a statement $x \in \lang$ and proof $\pi$,
+% there exists a PPT extractor algorithm $\Extract$ that white-box observes $\advP$ and
+% if \advP never queried $x$ and $\Verify(x,\pi)$ holds
+% then $\Extract$ returns an $\omega$ for which $(\omega,x) \in \rel$
+% (see \cite[Def. 7, \S 2.3, pap. 29]{RandomizationGroth16}).
+% \end{definition}
+
+TODO: AGM and Groth16 here?
+
+
+\subsection{Universal Composable (UC) Model}
+
+TODO: Chat on why UC is here?
+
+A protocol $ \phi $ in the UC model is an execution between distributed interactive Turing machines (ITM). Each ITM has a storage to collect the incoming messages from other ITMs, adversary \adv or the environment $ \env $. $ \env $ is an entity to represent the external world outside of the protocol execution.  The environment $ \env $ initiates ITM instances (ITIs) and the adversary \adv with arbitrary inputs and then terminates them to collect the outputs.
+% An ITM that is initiated by $ \env $ is called ITM instance (ITI). 
+We identify an ITI with its session identity $ \sid $ and its ITM's identifier $ \pid $. In this paper, when we call an entity as a party in the UC model we mean an ITI with the identifier $ (\sid, \pid) $.
+
+We define the ideal world where there exists an ideal functionality $ \mathcal{F} $ and the real world where a protocol $ \phi $ is run as follows:
+
+\paragraph{Real world:} $ \env $ initiates ITMs and \adv to run the protocol instance with some input $ z \in \{0,1\}^* $  and a security parameter $ \secparam $. After $ \env $ terminates the protocol instance, we denote the output of the real world by the random variable $ \mathsf{EXEC}(\secparam, z)_{\phi, \adv, \env} \in \{0,1\} $. Let $ \mathsf{EXEC}_{\phi, \adv, \env} $ denote the ensemble $ \{\mathsf{EXEC}(\secparam, z)_{\phi, \adv, \env} \}_{z \in \{0,1\}^*} $.
+
+\paragraph{Ideal world:} $ \env $ initiates ITMs and a simulator $ \sim $ to contact with the ideal functionality $ \mathcal{F} $ with some input $ z \in \{0,1\}^* $  and a security parameter $ \secparam $. $ \mathcal{F} $ is trusted meaning that it cannot be corrupted.
+$ \sim $ forwards all messages forwarded by $ \env $ to $ \mathcal{F} $. The output of execution with $ \mathcal{F} $ is denoted by a random variable $ \mathsf{EXEC}(\secparam, z)_{\mathcal{F},\sim, \env} \in \{0,1\}$.  Let $ \mathsf{EXEC}_{\mathcal{F},\sim, \env} $ denote the ensemble $ \{\mathsf{EXEC}(\secparam, z)_{\mathcal{F}, \sim, \env} \}_{z \in \{0,1\}^*} $.
+
+TODO: \secparam should likely be implicit, especially since it appears in both worlds.
+
+\begin{definition}[UC-Security of $ \phi $] \label{def:uc}
+Given a real world protocol $ \phi $ and an ideal functionality $ \mathcal{F} $ for the protocol $ \phi $, we call that $ \phi $ is UC-secure if $ \phi $ UC-realizes $ \mathcal{F} $ if for all PPT adversaries \adv, there exists a simulator $ \sim  $ such that for any environment $ \env $,
+ $\mathsf{EXEC}_{\phi, \adv, \env}$ indistinguishable from $\mathsf{EXEC}_{\mathcal{F},\sim, \env}$
+\end{definition}
+
+TODO: if ... if makes no sense.  These definitions need much clearer explanation, or more likely citations to places with clear explanations. 
+
+\begin{definition}[UC-Security of $ \phi $ in the hybrid world]
+Given a real world protocol $ \phi $ which runs some (polynomially many) functionalities $ \{\mathcal{F}_1, \mathcal{F}_2, \ldots, \mathcal{F}_k\} $ in the ideal world and an ideal functionality $ \mathcal{F} $ for the protocol $ \phi $, we call that $ \phi $ is UC-secure in the hybrid model $ \{\mathcal{F}_1, \mathcal{F}_2, \ldots, \mathcal{F}_k\} $ if $ \phi $ UC-realizes $ \mathcal{F} $ if for all PPT adversaries \adv, there exists a simulator $ \sim  $ such that for any environment $ \env $,
+ $\mathsf{EXEC}_{\phi, \adv, \env}$ is indistinguishable from $\mathsf{EXEC}_{\mathcal{F},\sim, \env}$.
+\end{definition}
+
+% REMARKS:  Removed excessive notation $\approx$.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\endinput
+
+
+
+BROKEN BOLOW THIS
+
+
+
+
+We fix $J \in \ecJ$ as a generator for public keys.  Any $\KeyGen$ algorithm randomly samples a secret keys $\sk \in \F_q$ and then computes its associate public keys $\pk = \sk J$.  We shall not discuss infrastructure that authorizes public keys.  Yet although our results do not require proof-of-knowledge on $\pk$ per se, we still strongly recommend that back certifications accompany any certificates that authorize $\pk$.
+
+\smallskip
+
+
+
+

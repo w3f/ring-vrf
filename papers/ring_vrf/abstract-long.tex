@@ -1,0 +1,39 @@
+A {\it ring verifiable random function} (ring VRF) is a ring signature
+that proves correct evaluation of some pseudo-random function (PRF)
+determined by the actual key pair used in signing, but while hiding
+the actual signer's identity within some set of possible signers,
+known as the ring.
+
+\smallskip
+
+We show ring VRFs that amortize their ring membership proof across many
+ring VRF signatures.
+%
+For this, we devised a {\em zero-knowledge continuation} technique that
+reuses a previously proven Groth16 SNARK without reproving.
+We wire this Groth16 SNARKs inputs into another signature, or another SNARK, 
+but avoid linking the multiple reuses by adjusting the Groth16 trusted setup
+to reblind the public inputs when rerandomizing the Groth16.
+%
+Incredibly, our ring VRF needs only eight $\mathcal{G}_1$ and two
+$\mathcal{G}_2$ scalar multiplications, irregardless of the ring size!
+
+\smallskip
+
+Ring VRFs provide a flexible  but straightforward framework to address
+diverse deployment and privacy problems, so they could truly bring
+anonymous credentials into the main stream.
+
+Ring VRFs produce a unique identity for any give context but remain
+unlinkable between different contexts.  These unlinkable but unique
+pseudonyms provide a far better balance between user privacy and service
+provider or social interests than attribute based credentials like IRMA credentials.
+
+Ring VRFs support anonymously rationing or rate limiting resource
+consumption that winds up vastly more efficient than purchases via
+money-like protocols.  Importantly ``rings'' are far cleaner to audit
+than certificates, in principle reducing fraud and improving trust.
+
+We discuss anonymous credentials face malicious verifier problems,
+but how ring VRF inputs could include their root of trust, which
+avoids third party CAs and complexities like certificate transparency.

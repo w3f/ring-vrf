@@ -1,0 +1,243 @@
+
+\section{VRF-AD security}
+\label{sec:games}
+
+We say a VRF-AD-KC denoted \VRF is {\em secure} if it satisfies
+ correctness, uniqueness, and pseudo-randomness as defined below,
+ as well as being existentially unforgeable as a signature on $(\msg,\aux)$.
+%
+We caution that VRF security remain subtle, in part due to
+signer and forger each being adversarial in some security properties.
+%
+% At a high level however VRF security assumptions boil down to translating the PRF definition into the public key setting.
+% TODO: What of the above two lines?  Merge?
+
+% We follow \cite{agg_dkg} by distinguishing an algorithm $\VRF.\Eval$,
+%  instead of defining it by the equality in correctness,
+% which simplifies requiring that verifying honest signatures gives a well-defined function.
+% $\VRF.\Eval$ always has more optimized instantiations anyways.
+
+We demand unforgability on $(\msg,\aux)$ because alone
+the usual VRF conditions only yield unforgeability for \msg.
+
+\begin{definition}\label{def:vrf_sign_oracle}
+We let \ora{Sign} denote a CMA oracle, which creates and stores
+a key pair $(\pk,\sk) \leftarrow \KeyGen$, returning \pk, and
+thereafter answers oracle calls $\ora{Sign}(\msg,\aux)$ by 
+logging $(\msg,\aux)$ and returning $\Sign(\sk,\msg,\aux)$.
+\end{definition}
+
+\begin{definition}
+We say a VRF-AD satisfies {\em existential unforgeability (EUF-CMA-KC)} if
+any PPT adversary \adv has only a negligible advantage in $\secparam$
+in the usual chosen-message game adapted to key commitments:
+\begin{itemize}
+  \item \adv receives $\pk$ from \ora{Sign}, % of Definition \ref{def:vrf_sign_oracle}
+  repeatedly queries \ora{Sign},
+  and finally produces $\pk,\msg,\aux,\sigma$.
+  \item \adv wins if $\Verify(\pk,\msg,\aux,\sigma)$ succeeds, and
+  \adv never queried $\ora{Sign}(\msg,\aux)$.
+\end{itemize}
+\end{definition}
+
+% TODO: Any chat here?
+
+\begin{definition}
+We say a VRF-AD satisfies {\em VRF correctness} if
+ $\Out = \Verify(\pk,\msg,\aux,\Sign(\sk,\msg,\aux))$ succeeds
+whenever $(\pk,\sk) \leftarrow \KeyGen$, and
+$\Eval : (\sk,\msg) \mapsto \out$ is a well-defined function.
+\end{definition}
+% TODO: Is the second condition supurfluous?
+
+We recast the uniqueness as VRFs being well-defined functions of
+their public key too, at least up to cryptographic assumptions,
+but our definition is clearly equivalent to uniqueness given in
+\cite[Def. 2 \S3.2, pp. 4]{vrf_micali} or \cite[Def. 3, pp. 8]{agg_dgk}.
+
+\begin{definition}
+We say a VRF-AD satisfies {\em uniqueness} if
+if anytime some PPT adversary \adv produces $\msg$, $\pk$, and $\aux_i$, $\sigma_i$ for $i=1,2$, then
+$\Verify(\pk,\msg,\aux_1,\sigma_1) = \Verify(\pk,\msg,\aux_2,\sigma_2)$
+unless either $\Verify$ returns failure, except with odds negligible in $\secparam$.
+\end{definition}
+
+\begin{definition}
+We say a VRF-AD satisfies {\em strong uniqueness} if
+there exists a (not efficiently computable) function
+ $F : (\msg,\pk) \mapsto \Out$ such that
+anytime some PPT adversary \adv produces $\msg$, $\pk$, $\aux$, and $\sigma$
+then $\Verify(\pk,\msg,\aux,\sigma) \in \{ F(\msg,\pk), \perp \}$
+except with odds negligible in $\secparam$.
+\end{definition}
+% TODO: Keep?
+
+We say VRFs are public key analogs of PRFs, but actually this PRF analogy
+fails in the ``residual pseudo-randomness'' definitions by
+Micali, et al. \cite[Def. VRF (3) \S3.2, pp. 4]{vrf_micali},
+ which employs \ora{Sign} in EUF-CMA-like games,
+ but says nothing for adversarially generated keys.
+
+\begin{definition}
+We say a VRF-AD-KC satisfies {\em public keyed} or {\em residual pseudo-randomness} if 
+any PPT adversary \adv has only a negligible advantage in $\secparam$
+in this chosen-message game:
+\begin{itemize}
+	\item[]
+	\adv receives $\pk$ from \ora{Sign} of Definition \ref{def:vrf_sign_oracle},
+	repeatedly queries \ora{Sign}, and produces $\msg,\aux$.
+	If \adv never queried $\ora{Sign}(\msg,\cdot)$ then
+	\adv wins by distinguishing $\msg \mapsto \Eval(\sk,\msg)$ from a random.
+\end{itemize}
+\end{definition}
+
+In \cite{praos}, there exists a UC functionality which captures the
+desired PRF analogy, but brings unnecessary restrictions.
+
+We know a function family $\{ F_\msg : \pk \mapsto F(\msg,\pk) \}$ exists
+by strong uniqueness, although not efficiently computable, so intuitively
+our VRF-AD is {\em pseudo-random} if an adversary cannot distinguish
+$F_\msg$ from a random function.
+% TODO: Keep?
+
+\bigskip
+
+MISTAKES BELOW THIS POINT
+
+\bigskip 
+
+As a formalization, we provide a black-box game-based definition which
+treats \msg as the PRF key, and handles adversarially supplied keys as
+PRF inputs by not necessarily terminating.
+
+\begin{definition}
+We say a VRF-AD-KC satisfies {\em message keyed pseudo-randomness} if 
+any PPT adversary \adv for whom the following black-box game always
+terminates has only a negligible advantage in $\secparam$ of winning.
+\begin{itemize}
+	\item[]
+	Sample a random \msg, a random function $\rho$ with the same range as \Eval, and a bit $b$.
+	\adv queries \ora{Verify} by providing both a public key \pk and
+	a PPT (black-box) secret key algorithm $f_\sk : () \mapsto (\aux,\sigma)$
+	such that repeatedly trying $\Out \leftarrow \Verify(\pk,\msg,f_\sk(\msg))$
+	eventually succeeds.
+	\ora{Verify} always returns \Out and $\rho(\pk)$ but with their order depending upon $b$.
+	\adv wins by guessing $b$, aka by distinguish \Verify from $\rho$.
+\end{itemize}
+\end{definition}
+
+There are also verifiable unpredictable function (VUF), which replace
+pseudo-randomness by the weaker {\em unpredictability} definition from
+\cite[Def. VUF (3) \S3.2, pp. 5]{vrf_micali} or \cite[Def. 4, pp. 8]{agg_dgk}.
+Interestingly VUFs often suffice threshold security assumptions \cite{agg_dkg}.
+
+\begin{definition}
+We say a VRF-AD-KC satisfies {\em residual unpredictability} if 
+any PPT adversary \adv has only a negligible advantage in $\secparam$
+in this chosen-message game:
+\begin{itemize}
+	\item[]
+	\adv receives $\pk$ from \ora{Sign} of Definition \ref{def:vrf_sign_oracle},
+    repeatedly queries \ora{Sign}, and produces $\msg,\aux$.
+    If \adv never queried $\ora{Sign}(\msg,\cdot)$ then
+    \adv wins by guessing $\Eval(\sk,\msg)$ for an unqueried \msg.
+\end{itemize}
+\end{definition}
+
+Also, if $H'(\cdot,k)$ is a PRF then \cite[Proposition 1]{vrf_micali}
+shows computing $\Out = H'(\Verify(\cdots), \msg)$ transforms
+ residual unpredictability into a residual pseudo-randomness.
+As $H'$ is cheap, we conclude implementers should prefer VRFs over more subtle VUFs.
+
+\begin{definition}
+We say a VRF-AD-KC satisfies {\em message keyed unpredictability} if 
+any PPT adversary \adv for whom the following black-box game always
+terminates has only a negligible advantage in $\secparam$ of winning.
+\begin{itemize}
+	\item[]
+	Sample a random \msg.
+	\adv queries \ora{Verify} by providing both a public key \pk and
+	a PPT (black-box) secret key algorithm $f_\sk : () \mapsto (\aux,\sigma)$ such that
+	repeatedly trying $\Out \leftarrow \Verify(\pk,\msg,f_\sk(\msg))$ eventually succeeds.
+	\ora{Verify} always returns \Out.
+	\adv wins by correctly guessing $\Out = F(\msg,\pk)$ for an unqueried \pk. 
+\end{itemize}
+\end{definition}
+
+TODO: Justify?
+
+TODO: Relationships?  
+
+
+\subsection{Confusion}
+% \smallskip
+
+Although \cite[\S3.2 $\fvrf$]{praos} handles pseudo-randomness better than \cite{vrf_micali},
+they formalize VRFs with detached outputs via the two algorithms:
+% \begin{itemize}
+% \item
+$\VRF.\primalgo{EvalProve}(\sk,\msg,\aux) \mapsto (\Out,\sigma)$, in which $\sigma = \VRF.\Sign(\sk,\msg,\aux)$ and $\Out = \VRF.\Eval(\sk,\msg)$, and
+% \item
+$\VRF.\primalgo{VerifyProof}(\pk,\msg,\aux,\Out,\sigma)$ which returns true only if $\VRF.\Verify(\pk,\msg,\aux,\sigma)$ returns $\Out$.
+% \end{itemize}
+We strongly prefer the \Sign and \Verify formulation from \cite{agg_dkg}
+primarily because the \primalgo{EvalProve}, and \primalgo{VerifyProof}
+formulation causes implementation and deployment mistakes:
+
+EC VRF signatures have the form $\sigma = (\PreOut,\pi)$ in which some
+inner proof $\pi$ proves correctness of some associated VUF output $\PreOut$. % aka ``pre-output''.  % ``pre-pseudo-random''
+It follows $\VRF.\Eval$ never corresponds to $\PreOut$, but if one describes
+protocols with an \primalgo{EvalProve} formulation then exposing $\PreOut$
+invariably confuses developers into miss-using $\PreOut$ as the output.
+% In other words, actual code never corresponds to an \primalgo{EvalProve} and \primalgo{VerifyProof} formulation.
+
+The ``pre-output'' $\PreOut$ preserves algebraic relationships between
+secret keys, so protocols described by the \primalgo{EvalProve} formulation
+have implementations with broken pseudo-randomness, and perhaps
+ related key vulnerabilities and mishandled cofactors.
+% We need $\PreOut$ to be exposed by implementations so ...
+We avoided the VUF formalism taken by \cite{agg_dkg} in part because
+ VUFs obfuscate this difficulty to developers.
+
+As a caveat, there exist UC formalisms that appear simpler with
+the \primalgo{EvalProve} and \primalgo{VerifyProof} formulation, like in \cite{praos}.
+We therefore propose that VRFs and protocols using VRFs should always be
+described using the the \Sign and \Verify formulation, which provides
+implementers with a sensible description, but then if needed adopt
+ \primalgo{EvalProve} and \primalgo{VerifyProof} only inside the UC formulation itself.
+We feel imposing this mental translation upon paper authors and reviewers
+ beats imposing the reverse upon developers with less cryptographic knowledge.
+
+
+
+\endinput 
+
+
+
+\smallskip
+
+There exist VUFs like RSA-FDH or BLS signatures that lack auxiliary data
+% There even exist bespoke VRFs that relax correctness to some non-trivial
+% relation on the space of secret keys and messages,
+%  seemingly including some Rabin variants. 
+Yet, these all suffer from either large signature sizes (RSA) or
+ slow verification (BLS).
+%  VRFs like single-layer XMSS, .
+
+Instead, one prefers instantiating VRFs similarly to
+ \cite{nsec5} or \cite{VXEd25519} using Chaum-Pedersen DLEQ proofs \cite{CP92} % Or should it be CP93 ??
+ because they provide both small signatures and fast verification.
+In these, our auxiliary data \aux can be verified for free,
+by binding \aux into the challenge hash, like a Schnorr signature.
+VRF protocols could often reduce bandwidth and verifier time this way,
+ but some like Sassafras depend upon \aux. 
+
+
+
+
+
+\endinput % no UC VRF discussion here
+
+
+
+

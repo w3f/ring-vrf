@@ -1,0 +1,210 @@
+\section{Pedersen VRF and rVRF}
+\label{sec:pederson_vrf}
+
+% We adopt standard notaton for pairing friendly curves, so 
+
+An EC VRF like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10} consists
+of a Chaum-Pedersen DLEQ proof between the signer's public key
+$\pk = \sk \genG$ and a VUF output $\PreOut = \sk H_{\grE}(\msg)$,
+so applying a PRF yields a VRF output
+ $\Out = H'(\msg, h \PreOut)$ ala \cite[Proposition 1]{vrf_micali}.
+%
+Our {\em Pedersen VRF} \PedVRF alters the EC VRF by repalcing the
+public key by a Pedersen commitment $\pk + \openpk \, \genB$, which
+instantiates the $\Reval$ NIZK from \S\ref{sec:overview} efficently.
+\footnote{As Groth16 dominates ring VRF verification costs,
+we describe only the non-batchable variant analogous to
+\cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}, but
+ batch verifiable flavors exist.}
+
+% We define security for only our ring VRF constructions, but clearly
+%  \PedVRF consists of algorithms having superficially similar signatures.
+% \footnote{We do not define security for \PedVRF because pseudo-randomness becomes too interesting}
+
+We select a base point $\genG$ for our public key arbitrarily, % by any desired method,
+but then fix a second generator $\genB$ of $\grE$ independent from $\genG$.
+%
+We define \KeyGen exactly like EC VRF, but
+ \Eval differs by not injecting \pk into \msg:
+\begin{itemize}
+\item $\PedVRF.\KeyGen$ \quad returns $\sk \leftsample \F_p$ and $\pk = \sk \, \genG$.
+\item $\PedVRF.\Eval : (\sk,\msg) \mapsto H'(\msg, h \, \sk \, H_{\grE}(\msg))$
+\end{itemize}
+% \item $\PedVRF.\KeyGen$ selects a secret key \sk uniformly at random from $\F_p$ and computes the public key $\pk = \sk \, \genG$. 
+% \item $\PedVRF.\Eval(\sk,\msg)$ takes a secret key \sk and an input $\msg$, and
+%  then returns a VRF output $H'(\msg, h \, \sk \, H_{\grE}(\msg))$.
+
+\noindent We form Pedersen-like commitments to this public key \pk:
+\begin{itemize}
+\item $\PedVRF.\CommitKey$ \,
+returns a blinding factor $\openpk \leftsample \F_p$
+and a commitment $\compk = \pk + \openpk \, \genB$.
+\item $\PedVRF.\OpenKey$ \,
+returns $\pk = \compk - \openpk \, \genB$.
+\end{itemize}
+% \item $\PedVRF.\CommitKey$ selects a blinding factor $\openpk$ uniformly
+%  at random from $\F_p$ and computes the commitment $\compk = \pk + \openpk \, \genB$.
+% \item $\PedVRF.\OpenKey$ just returns $\pk = \compk - \openpk \, \genB$.
+Alone these hide \pk, but they only provide a binding commitment
+provided that $\PedVRF.\Verify$ below succeeds too.
+
+\begin{itemize}
+\item $\PedVRF.\Sign : (\sk,\openpk,\msg,\aux) \mapsto \sigma$ \,
+    % takes a secret key \sk and blinding factor \openpk, an input $\msg$, and auxiliary data \aux, and then performs
+    first computes $\In := H_{\grE}(\msg)$ and $\PreOut := \sk \, \In$,
+    samples $r_1,r_2 \leftsample \F_p$,
+    computes $R = r_1 \genG + r_2 \genB$, and $R_\msg = r_1 \In$, and
+    finally $c = H_p(\aux,\msg,\compk,\PreOut,R,R_m)$,
+     along with $s_1 = r_1 + c \, \sk$ and $s_2 = r_2 + c \, \openpk$.
+    and finally returns the signature $\sigma = (\PreOut,c,s_1,s_2)$.
+% \begin{enumerate}
+%    \item compute the VRF input point $\In := H_{\grE}(\msg)$ and pre-output $\PreOut := \sk \, \In$,
+%    \item Sample random $r_1,r_2 \leftarrow \F_p$ and compute $R = r_1 \genG + r_2 \genB$ and $R_\msg = r_1 \In$.
+%    \item Compute the challenge $c = H_p(\aux,\msg,\compk,\PreOut,R,R_m)$,
+%     along with $s_1 = r_1 + c \sk$ and $s_2 = r_2 + c \, \openpk$.
+%    \item Return the signature $\sigma = (\PreOut,c,s_1,s_2)$.
+% \end{enumerate}
+\item $\PedVRF.\Verify : (\compk,\msg,\aux,\sigma) \mapsto \Out \,\, \lor \perp$ \,
+    parses $\sigma = (\PreOut,c,s_1,s_2)$, 
+    recomputes $\In := H_{\grE}(\msg)$, as well as
+    $R = s_1 \genG + s_2 \genB - c \, \compk$, and
+    $R_m = s_1 \In - c \PreOut$, and finally
+    if $c = H_p(\aux,\msg,\compk,\PreOut,R,R_\msg)$ then it return $H'(\msg, h \, \PreOut)$, 
+         or failure $\perp$ otherwise.
+% \begin{enumerate}
+%    \item recompute the VRF input point $\In := H_{\grE}(\msg)$,
+%    \item computes $R = s_1 \genG + s_2 \genB - c \, \compk$ and $R_m = s_1 \In - c \PreOut$, and
+%    \item returns $H'(\msg, h \, \PreOut)$ if $c = H_p(\aux,\msg,\compk,\PreOut,R,R_\msg)$ or failure otherwise.
+% \end{enumerate}
+\end{itemize}
+
+\noindent We obtain EC VRF if we choose $\openpk = 0 = r_2$ in \Sign and demand $s_2 = 0$ in \Verify.
+%
+\eprint{We define security only for our ring VRF constructions, but clearly
+ \PedVRF consists of algorithms having superficially similar signatures.}{}
+% \footnote{We do not define security for \PedVRF because pseudo-randomness becomes too interesting}
+
+\smallskip
+% \subsection{Pedersen rVRF-AD}
+
+As described in \S\ref{sec:overview},
+we instantiate a rVRF-AD from \PedVRF plus a ring commitment scheme
+ $\rVRF.\{ \CommitRing, \OpenRing \}$.
+\rVRF inherits $\rVRF.\KeyGen = \PedVRF.\KeyGen$ and
+ $\rVRF.\Eval = \PedVRF.\Eval$ of course, but requires.
+We need zero-knowledge ring membership proof for the relation \Rring
+which handles both $\PedVRF.\OpenKey$ and $\rVRF.\OpenKey$ efficently.
+% \vspace{-0.1in}
+$$ \Rring = \Setst{ \compk, \comring }{
+    \eprint{ \exists \openpk,\openring \textrm{\ s.t.\ } }{}
+    \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenKey(\comring,\openring)}
+} \mathperiod $$
+
+\begin{itemize}
+\item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \rho$ \,
+ % takes a secret key \sk, a ring opening \openring, a message \msg, and \aux, and then % auxiliary data
+ samples $\openpk \leftsample \F_p$ and
+ % computes a proof $\piring$, a signature $\sigma$, and
+ returns $\rho = (\compk,\piring,\sigma)$ where      % a ring VRF signature
+ $$ \piring = \NIZK.\Prove(\Rring,\compk,\comring,\openpk,\openring) \quad\textrm{and} $$
+ $$ \sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \piring \doubleplus \comring) \mathperiod $$ % finally
+\item $\rVRF.\rVerify : (\comring,\msg,\aux,\rho) \mapsto \Out \,\, \lor \perp$ \,
+ parses $\rho$ as $(\compk,\piring,\sigma,)$ and returns
+ $$ \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \piring \doubleplus \comring,\sigma) $$
+ if $\NIZK.\Verify(\piring,\compk,\comring)$ succeeds too.
+\end{itemize}
+
+\begin{proposition}\label{prop:pedersen_rvrf}
+$\rVRF$ satisfies ring uniqueness, ring unforgeability, and ring anonymity.
+\end{proposition}
+
+
+
+
+
+
+\endinput
+
+
+
+
+
+TODO:  Eprint form?
+
+\begin{itemize}
+\item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$ takes
+ a secret key \sk, a ring opening \openring, a message \msg, and \aux, and then % auxiliary data
+ % \begin{enumerate}
+ % \item
+ generates \openpk, computes a ring membership proof $\piring$
+  $$ \piring = \NIZK \Setst{ \compk, \comring }{
+  \exists \openpk,\openring \textrm{\ s.t.\ } 
+  \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenKey(\comring,\openring)}
+  } $$
+ % \item
+ computes the signature
+  $$ \sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \piring \doubleplus \comring), \quad\textrm{and} $$ % finally
+ % \item
+ returns the ring VRF signature $\rho = (\compk,\piring,\sigma)$.
+ % \end{enumerate}
+\item $\rVRF.\rVerify$ takes $(\comring,\msg,\aux,\rho)$,
+ parses $\rho$ as $(\compk,\piring,\sigma,)$,  and then returns
+ $$ \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \piring \doubleplus \comring,\sigma) $$
+ iff $\NIZK.\Verify(\piring,\compk,\comring)$ succeeds. 
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{lemma}\label{prop:pedersen_vrf_hiding}
+$\PedVRF$ is a correct key commitment and key hiding.
+\end{lemma}
+
+Although Pedersen commitments are perfectly hiding, our $\R_\msg$ makes $\sigma$ only computationally hiding.
+
+\begin{proposition}\label{prop:pedersen_vrf}
+Assuming AGM in $\grE$, % $\ecE$ modulo $h$,
+our $\PedVRF$ satisfies VRF correctness, key binding, uniqueness,
+pseudo-randomness, and unforgeability. % (EUF-CMA-KC) on $(\msg,\aux)$.
+\end{proposition}
+
+We need this second verification equation in \PedVRF, but not in \ThinVRF,
+because otherwise our $s_2 \genB$ term provides enough freedom to tamper
+with the pre-ouputs.  
+
+We could however generalize \PedVRF to $k$ messages $\msg_1,\ldots,\msg_k$
+similarly to \ThinVRF in \S\ref{subsec:vrf_thin}:  We compute for
+$j=1,\ldots,k$ the $k$ distinct
+points $\In_j := H_{\grE}(\msg_j)$, pre-outputs $\PreOut := \sk \, \In$,
+delinearization challenges
+ $c_j = H_p(\aux,\msg_1,\ldots,\msg_k,\compk,\Out_{0,1},\ldots,\Out_{0,k},j)$,
+and then use the \PedVRF proof for
+ $\In = \sum_j c_j \In_j$ and $\Out = \sum_j c_j \Out_j$.
+
+% TODO: Proof correct?  Use same citations as schnorrkel.
+
+
+
+
+
+
+

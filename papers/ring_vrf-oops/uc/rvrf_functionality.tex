@@ -1,0 +1,97 @@
+\begin{figure}\scriptsize
+	\begin{tcolorbox}
+		{  $ \fgvrf $ runs two PPT algorithms $ \gen_W$ and $\gen_{sign} $ during the execution.
+			
+			 \begin{description}
+				
+				\item[Key Generation.] upon receiving a message $(\msg{keygen}, \sid)$ from a party $\user_i$, send $(\msg{keygen}, \sid, \user_i)$ to the simulator $\simulator$.
+				Upon receiving a message $(\msg{verificationkey}, \sid, \pk)$ from $\simulator$, verify that $\pk$ has not been recorded before; then, store in the table $\vklist$, under $\user_i$, the value $\pk$.
+				Return $(\msg{verificationkey}, \sid, \pk)$ to $ \user_i$.
+				
+				\item[Malicious Key Generation.] upon receiving a message $(\msg{keygen}, \sid, \pk)$ from $\simulator$, verify that $\pk$ was not yet recorded, and if so record in the table $\vklist$ the value $\pk$ under $\simulator$. Else, ignore the message.
+				
+				%\item[Honest Ring VRF Evaluation.] upon receiving a message $(\msg{eval}, \sid, \comring, \pk_i, m)$ from $\user_i$, verify that 
+				%$\pk_i \in \comring$ 
+				%and  
+				%there exists $ \pk_i $ in $\vklist $ associated with $ \user_i $. If that was not the case, just ignore the request.
+				%If there exists no $ W $ such that $ \anonymouskeymap[W] = (m, \comring, \pk_i) $, let $ W \sample \bin^\secpar $ and  $y \sample \bin^{\ell_\rvrf}$. Then, set $ \evaluationslist[m, W] = y$ and $ \anonymouskeymap[W] = (m, \comring,\pk_i) $.
+				%Return $(\msg{evaluated}, \sid, \comring, m, W, y)$ to $ \user_i $.
+				%The functionality does not check whether the evaluater's public key is in the ring because here we consider m, \comring as an input of the evaluation which is evaluated by a party who is not neccesarily in the ring. 
+				\item[Malicious Ring VRF Evaluation.] upon receiving a message $(\msg{eval}, \sid, \comring, \pk_i, W, m)$ from $\sim$, verify that $ \pk_i $ has not been recorded under an honest party's key.
+			    If it is the case record in the table $\vklist$ the value $\pk_i$ under $\simulator$. Else, ignore the request.  If $ \counter[m,\comring] $ does not exist, initiate $ \counter[m,\comring] = 0 $.
+			    If there exists $ W $ such that $ \anonymouskeymap[W] = (m',\comring', \pk)$ then do the following:
+			    \begin{itemize}
+			    	\item if $(m', \comring', \pk) \neq  (m, \comring, \pk_i)  $, ignore the request,
+			    	\item else obtain $ y = \evaluationslist[m, W]   $. 
+			    \end{itemize}
+				If there exists no $ W $ such that $ \anonymouskeymap[W] = (m, \comring, \pk_i) $, let   $y \sample \bin^{\ell_\rvrf}$ and increment $ \counter[m,\comring] $. Then, set $ \evaluationslist[m, W] = y$, $ \anonymouskeymap[W] = (m, \comring,\pk_i) $ .
+				Return $(\msg{evaluated}, \sid, \comring, m, W, y)$ to $ \user_i $.
+				
+				
+				
+				
+				\item[Honest Ring VRF Signature.] upon receiving a message $(\msg{sign}, \sid, \comring, \pk_i, m)$ from $\user_i$, verify that $\pk_i \in \comring$ and that there exists a public key $\pk_i$ associated to $\user_i$ in the table $ \vklist $. If that wasn't the case, just ignore the request. 	
+				If there exists no $ W' $ such that $ \anonymouskeymap[W'] = (m, \comring, \pk_i) $, run $ \gen_W(\comring, \pk_i, m) \rightarrow W$. Then, let $y \sample \bin^{\ell_\rvrf}$ and set $ \anonymouskeymap[W] = (m, \comring,\pk_i) $ and set $ \evaluationslist[m, W] = y$.
+%					\begin{itemize}
+%						%\item If there exists $ W \in  \anonymouskeymap  $, abort.
+%						\item Else 
+%						%TODO define what \in \anonymouskeymap mean
+%					\end{itemize}
+%			    \end{itemize}
+				Obtain $ W, y $ where  $ \evaluationslist[m, W] = y$, $ \anonymouskeymap[W] = (m, \comring,\pk_i) $ and run  $ \gen_{sign}(\comring, W, m) \rightarrow \sigma $. Verify that $ [m, W, \sigma, 0] $ is not recorded. If not, abort. Otherwise, record $ [m, W, \sigma, 1] $. Return $(\msg{signature}, \sid, \comring,W,m, y, \sigma)$ to $\user_i$.
+				
+				%\item[Malicious VRF evaluation.] upon receiving a message $(\msg{evalprove}, \sid, \comring, m)$ from $\simulator$, check that $\vklist$ has a public key associated to $\simulator$. If not, ignore the request. If $\evaluationslist[\comring, m][\simulator]$ is not set, sample $y \sample \bin^{\ell(\secpar)}$ and set $\evaluationslist[\comring, m][\simulator] \defeq y$ (and $\signaturelist[\comring,m]$ to $\emptyset$). If $\signaturelist[\comring, m]$ contains a proof (i.e., if $\signaturelist[\comring, m]$ is not empty), return $(\msg{evaluated}, \sid, y)$ to $\simulator$. Else, ignore the request.
+				
+				%\item[Verification.] upon receiving a message $(\msg{verify}, \sid, \comring, m, y, \sigma)$, from any party forward the message to the simulator. If there exists a $\pk_i$ among the values of \texttt{verification\_keys}, and there exists $\sigma \in \signaturelist[\comring, m]$, set $b = 1$. Else, set $b =0$. Finally, output $(\msg{verified}, \sid, \comring, m, y, \sigma, b)$.
+				\item[Ring VRF Verification.] upon receiving a message $(\msg{verify}, \sid, \comring,W, m, \sigma)$ from a party, relay the message $(\msg{verify}, \sid, \comring,W, m, \sigma)$ to $ \simulator $ and receive back the message $(\msg{verified}, \sid, \comring,W, m, \sigma, b_{\simulator}, \pk_\simulator)$. Then do the following: 
+				\begin{enumerate}[label={{Cond.-} }{{\arabic*}}, start = 1]
+					\item If there exits a record $ [m,W,\sigma, 1] $, set $ b = 1 $. (This condition guarantees the completeness meaning that if  $ W $ is an anonymous key that is generated for the ring $ \comring $ and  the message $ m $ and the signature $ \sigma $ is legitimately generated for $ m, W $, then the verification succeeds.)
+					\item Else if $ \pk  $ is an honest verification key where $ \anonymouskeymap[W] = (.,., \pk) $ and there exists no record $ [m, \comring, W, \sigma', 1] $ for any $ \sigma' $, then let $ b= 0  $.
+					(This condition guarantees unforgeability meaning that if an honest party never signs a message $ m $ for a ring $ \comring $, then the verification fails.)\label{cond:forgery}
+					\item Else if there exists a record  such as $ [m,W,\sigma, b'] $, set $ b = b' $. (This condition guarantees consistency meaning that all identical verification requests will output the same $ b $) \label{cond:consistency}
+					\item Else if $ \pk  $ is an honest verification key where $ \anonymouskeymap[W] = (.,., \pk) $ and there exists a record $ [m, W, \sigma', 1] $ for any $ \sigma' $, then let $ b= b_{\simulator} $ and record $ [m, W,\sigma, b_{\simulator}] $. (This condition guarantees that if $ m $ is signed by an honest party for the ring $ \comring $ at some point and the signature is $ \sigma' \neq \sigma $, then the decision of verification is up to the adversary) \label{cond:differentsignature}
+					\item \label{cond:forgerymalicious}Else if there exists $ \anonymouskeymap[W] = (m', \comring',.)  $ where $ (m', \comring') \neq (m, \comring) $ or $ \counter[m, \comring] > |\comring_m| $ where $ \comring_m $ is a set of keys in $ \comring $ which are not honest or $ b_{\simulator} = 0 $ or $ \pk_\simulator $ belongs to an honest party, set $ b = 0 $ and record $ [m, \comring,W,\sigma, 0] $. (This condition guarantees that if $ W $ is an anonymous key of a different message and ring or the number of anonymous keys of malicious parties in $ \comring $ is more than their number or     $ \simulator $ does not verify $ \sigma $, then the verification fails.)
+					\item Else set $ b = 1 $. Set $ \evaluationslist[m, W]\sample \bin^{\ell_\rvrf}$, $ \anonymouskeymap[W]  = (m, \comring, \pk_\simulator)$ and $ \counter[m, \comring, \pk_\simulator] = 0 $ if they are not defined before. Increment $ \counter[m, \comring, \pk_\simulator]  $. \label{cond:advsignature}
+				\end{enumerate}
+				In the end, if $ b = 0 $, set $ \out = \emptyset $. Otherwise,  set $ \out = \evaluationslist[m, W]$. 		Finally, output $(\msg{verified}, \sid, \comring,W, m, \sigma, \out, b)$ to the party.
+				
+			\end{description}
+		
+			
+		}
+	\end{tcolorbox}
+	\caption{Functionality $\fgvrf$.\label{f:gvrf}}
+\end{figure}
+	
+
+
+\begin{figure}\scriptsize
+	\begin{tcolorbox}
+		{  This part of $ \fgvrf $ for the parties who want to show that they generate a particular ring signature.
+			
+		
+			\begin{description}
+				\item[Linking signature.] upon receiving a message $(\msg{link}, \sid, \comring, \pk_i, W, m,\sigma)$ from $\user_i$, check that $\pk_i $ is associated to $\user_i$ in $ \vklist $, $ \anonymouskeymap[W] = (m, \comring, \pk_i) $ and 
+				check whether $ [m, W, \sigma, 1] $ is stored. If any of them fails, ignore the request. Otherwise,
+				send $(\msg{link}, \sid, \comring, W, m, y)$ to $\simulator$. Upon receiving $(\msg{linkproof}, \sid, \comring, W, m, y, \hat \sigma)$ from $\simulator$, verify that $ [m, \comring, \pk_i, \sigma, \hat{\sigma}, 0] $ is not stored in $ \Linklist $. If not, abort. Otherwise,  record $\hat\sigma$ to $[m, \comring, \pk_i,\sigma, \hat{\sigma}, 1]$ to $ \Linklist $ and return $(\msg{linked}, \sid, \comring, \pk_i,W, m, y,\sigma, \hat\sigma)$ to $\user_i$.
+				%\item[Malicious linking proof.] upon receiving a message $(\msg{link}, \sid, \comring, m, y)$ from $\simulator$, check that $\vklist$ has a key set for $\simulator$, and that it is in $R$.
+				%Check that $\evaluationslist[\comring, m][\simulator] = y$.
+				%If any of the above is not satisfied, ignore the request.
+				%Return $(\msg{linked}, \sid, y)$ to $\simulator$.
+				\item[Linking verification.] upon receiving a message $(\msg{verifylink}, \sid, \pk_i, \comring, W, m,\sigma,\hat\sigma)$ from any party forward the message to the simulator and receive back  the message $(\msg{verified}, \sid, \pk_i, \comring, W,m, \sigma,\hat\sigma,  b_{\simulator})$. Then do the following:
+				
+				\begin{itemize}
+					\item If there exits a record $ [m, \comring,\pk_i,\sigma,\hat\sigma, 1] $ in $ \Linklist $, set $ b = 1 $ and $ \pk = \pk $. (This condition guarantees the completeness.)
+					\item Else if $ \pkvrf_i $ is a key of an honest party and there exits no record such as $ [m, \comring,\pk_i,\sigma,\hat\sigma',  1] $ for any  $  \hat\sigma'$, then set $ b = 0 $ and record $ [m, \comring,\pk_i,\sigma,\hat\sigma,  0] $. (This condition guarantees unforgeability meaning that if an honest party never signs a message $ m $ in the linking signature, then the verification fails.)
+					\item Else if there exists a record  such as $ [m, \comring,\pk_i,\sigma,\hat\sigma,  b'] $, set $ b = b' $. 
+					\item Else set $ b = b_{\simulator} $ and record $ [m, \comring,\pk_i,\sigma,\hat\sigma,  1] $. 
+				\end{itemize}
+				
+				Return $(\msg{verified}, \sid, \pk_i, \comring, m, \hat\sigma, b).$ to the party.
+			\end{description}
+		}
+	\end{tcolorbox}
+	\caption{Functionality $\fgvrf$.\label{f:gvrf}}
+\end{figure}
+
+
