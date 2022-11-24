@@ -9,9 +9,9 @@ $\pk = \sk \genG$ and a VUF output $\PreOut = \sk H_{\grE}(\msg)$,
 so applying a PRF yields a VRF output
  $\Out = H'(\msg, h \PreOut)$ ala \cite[Proposition 1]{vrf_micali}.
 %
-Our {\em Pedersen VRF} \PedVRF alters the EC VRF by repalcing the
+Our {\em Pedersen VRF} \PedVRF alters the EC VRF by replacing the
 public key by a Pedersen commitment $\pk + \openpk \, \genB$, which
-instantiates the $\Reval$ NIZK from \S\ref{sec:overview} efficently.
+instantiates the $\Reval$ NIZK from \S\ref{sec:overview} efficiently.
 \footnote{As Groth16 dominates ring VRF verification costs,
 we describe only the non-batchable variant analogous to
 \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}, but
@@ -93,7 +93,7 @@ we instantiate a rVRF-AD from \PedVRF plus a ring commitment scheme
 \rVRF inherits $\rVRF.\KeyGen = \PedVRF.\KeyGen$ and
  $\rVRF.\Eval = \PedVRF.\Eval$ of course, but requires.
 We need zero-knowledge ring membership proof for the relation \Rring
-which handles both $\PedVRF.\OpenKey$ and $\rVRF.\OpenKey$ efficently.
+which handles both $\PedVRF.\OpenKey$ and $\rVRF.\OpenKey$ efficiently.
 % \vspace{-0.1in}
 $$ \Rring = \Setst{ \compk, \comring }{
     \eprint{ \exists \openpk,\openring \textrm{\ s.t.\ } }{}
@@ -189,7 +189,7 @@ pseudo-randomness, and unforgeability. % (EUF-CMA-KC) on $(\msg,\aux)$.
 
 We need this second verification equation in \PedVRF, but not in \ThinVRF,
 because otherwise our $s_2 \genB$ term provides enough freedom to tamper
-with the pre-ouputs.  
+with the pre-outputs.  
 
 We could however generalize \PedVRF to $k$ messages $\msg_1,\ldots,\msg_k$
 similarly to \ThinVRF in \S\ref{subsec:vrf_thin}:  We compute for
