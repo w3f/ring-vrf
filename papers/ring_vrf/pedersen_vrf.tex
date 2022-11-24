@@ -4,14 +4,15 @@
 % We adopt standard notaton for pairing friendly curves, so 
 
 An EC VRF like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10} consists
-of a Chaum-Pedersen DLEQ proof between the signer's public key
-$\pk = \sk \genG$ and a VUF output $\PreOut = \sk H_{\grE}(\msg)$,
-so applying a PRF yields a VRF output
+a verifiable unique function (VUF) given by a Chaum-Pedersen DLEQ proof
+between the signer's public key $\pk = \sk \, \genG$ and
+ the VUF output $\PreOut = \sk H_{\grE}(\msg)$,
+after which a PRF evaluation yields a VRF output
  $\Out = H'(\msg, h \PreOut)$ ala \cite[Proposition 1]{vrf_micali}.
 %
-Our {\em Pedersen VRF} \PedVRF alters the EC VRF by repalcing the
-public key by a Pedersen commitment $\pk + \openpk \, \genB$, which
-instantiates the $\Reval$ NIZK from \S\ref{sec:overview} efficently.
+Our {\em Pedersen VRF} \PedVRF alters the EC VRF by replacing the
+public key by a Pedersen commitment $\pk + \openpk \, \genB$.
+We claim this instantiates the $\Reval$ NIZK from \S\ref{sec:overview} efficiently.
 \footnote{As Groth16 dominates ring VRF verification costs,
 we describe only the non-batchable variant analogous to
 \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}, but
@@ -97,7 +98,7 @@ which handles both $\PedVRF.\OpenKey$ and $\rVRF.\OpenKey$ efficently.
 % \vspace{-0.1in}
 $$ \Rring = \Setst{ \compk, \comring }{
     \eprint{ \exists \openpk,\openring \textrm{\ s.t.\ } }{}
-    \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenKey(\comring,\openring)}
+    \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenRing(\comring,\openring)}
 } \mathperiod $$
 
 \begin{itemize}
