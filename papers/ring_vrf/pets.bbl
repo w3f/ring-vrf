@@ -2,7 +2,8 @@
 %%% Do NOT edit. File created by BibTeX with style
 %%% ACM-Reference-Format-Journals [18-Jan-2012].
 
-\begin{thebibliography}{25}
+
+\begin{thebibliography}{27}
 
 %%% ====================================================================
 %%% NOTE TO THE USER: you can override these defaults by providing
@@ -131,6 +132,29 @@
   \bibinfo{year}{[n. d.]}\natexlab{}.
 \newblock \bibinfo{title}{IRMA docs v0.2.0}.
 \newblock \bibinfo{howpublished}{\url{https://irma.app/docs/v0.2.0/overview/}}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Canetti}{Canetti}{2000}]%
+        {canetti1}
+\bibfield{author}{\bibinfo{person}{Ran Canetti}.}
+  \bibinfo{year}{2000}\natexlab{}.
+\newblock \bibinfo{title}{Universally Composable Security: A New Paradigm for
+  Cryptographic Protocols}.
+\newblock \bibinfo{howpublished}{Cryptology ePrint Archive, Report 2000/067}.
+\newblock
+\newblock
+\shownote{\url{https://eprint.iacr.org/2000/067}.}
+
+
+\bibitem[\protect\citeauthoryear{Canetti}{Canetti}{2001}]%
+        {canetti2}
+\bibfield{author}{\bibinfo{person}{Ran Canetti}.}
+  \bibinfo{year}{2001}\natexlab{}.
+\newblock \showarticletitle{Universally composable security: A new paradigm for
+  cryptographic protocols}. In \bibinfo{booktitle}{\emph{Proceedings 2001 IEEE
+  International Conference on Cluster Computing}}. IEEE,
+  \bibinfo{pages}{136--145}.
 \newblock
 
 
