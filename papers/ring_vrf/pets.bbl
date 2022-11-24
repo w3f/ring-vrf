@@ -2,7 +2,7 @@
 %%% Do NOT edit. File created by BibTeX with style
 %%% ACM-Reference-Format-Journals [18-Jan-2012].
 
-\begin{thebibliography}{23}
+\begin{thebibliography}{25}
 
 %%% ====================================================================
 %%% NOTE TO THE USER: you can override these defaults by providing
@@ -234,6 +234,26 @@
 \shownote{IACR ePrint Archive 2016/260.}
 
 
+\bibitem[\protect\citeauthoryear{Gurkan, Jovanovic, Maller, Meiklejohn, Stern,
+  and Tomescu}{Gurkan et~al\mbox{.}}{2021}]%
+        {agg_dkg}
+\bibfield{author}{\bibinfo{person}{Kobi Gurkan}, \bibinfo{person}{Philipp
+  Jovanovic}, \bibinfo{person}{Mary Maller}, \bibinfo{person}{Sarah
+  Meiklejohn}, \bibinfo{person}{Gilad Stern}, {and} \bibinfo{person}{Alin
+  Tomescu}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Aggregatable Distributed Key Generation}. In
+  \bibinfo{booktitle}{\emph{{EUROCRYPT} 2021}} \emph{(\bibinfo{series}{LNCS})},
+  \bibfield{editor}{\bibinfo{person}{Anne Canteaut} {and}
+  \bibinfo{person}{Fran{\c{c}}ois{-}Xavier Standaert}} (Eds.),
+  Vol.~\bibinfo{volume}{12696}. \bibinfo{pages}{147--176}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-3-030-77870-5\_6}
+\showDOI{\tempurl}
+\newblock
+\shownote{\url{https://ia.cr/2021/005}.}
+
+
 \bibitem[\protect\citeauthoryear{Kate, Zaverucha, and Goldberg}{Kate
   et~al\mbox{.}}{2010}]%
         {KZG}
@@ -265,6 +285,28 @@
 \newblock
 \shownote{\url{https://www.franziskuskiefer.de/paper/GruPA.pdf} and
   \url{https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/Studies/GruPA/GruPA.pdf}.}
+
+
+\bibitem[\protect\citeauthoryear{McKay, Staal, Abrams, Winkelmann, Sakschewski,
+  Loriani, Fetzer, Cornell, Rockström, and Lenton}{McKay
+  et~al\mbox{.}}{2022}]%
+        {tipping2022}
+\bibfield{author}{\bibinfo{person}{David I.~Armstrong McKay},
+  \bibinfo{person}{Arie Staal}, \bibinfo{person}{Jesse~F. Abrams},
+  \bibinfo{person}{Ricarda Winkelmann}, \bibinfo{person}{Boris Sakschewski},
+  \bibinfo{person}{Sina Loriani}, \bibinfo{person}{Ingo Fetzer},
+  \bibinfo{person}{Sarah~E. Cornell}, \bibinfo{person}{Johan Rockström}, {and}
+  \bibinfo{person}{Timothy~M. Lenton}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Exceeding $1.5^{\circ}$C global warming could
+  trigger multiple climate tipping points}.
+\newblock \bibinfo{journal}{\emph{Science}} \bibinfo{volume}{377},
+  \bibinfo{number}{6611} (\bibinfo{date}{Sep} \bibinfo{year}{2022}),
+  \bibinfo{pages}{286--295}.
+\newblock
+\urldef\tempurl%
+\url{https://www.youtube.com/watch?v=LxoyaCSWFGs}
+\showURL{%
+\tempurl}
 
 
 \bibitem[\protect\citeauthoryear{Micali, Rabin, and Vadhan}{Micali
