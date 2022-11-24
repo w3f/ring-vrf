@@ -7,8 +7,8 @@ An EC VRF like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10} consists
 a verifiable unique function (VUF) given by a Chaum-Pedersen DLEQ proof
 between the signer's public key $\pk = \sk \, \genG$ and
  the VUF output $\PreOut = \sk H_{\grE}(\msg)$,
-after which a PRF evaluation yields a VRF output
- $\Out = H'(\msg, h \PreOut)$ ala \cite[Proposition 1]{vrf_micali}.
+after which a PRF \eprint{evaluation}{} yields a VRF output
+ $\Out = H'(\msg, h \, \PreOut)$ ala \cite[Proposition 1]{vrf_micali}.
 %
 Our {\em Pedersen VRF} \PedVRF alters the EC VRF by replacing the
 public key by a Pedersen commitment $\pk + \openpk \, \genB$.

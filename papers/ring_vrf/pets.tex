@@ -24,8 +24,9 @@
 % \usepackage{tikz}
 % \usetikzlibrary{arrows,chains,matrix,positioning,scopes}
 
+% Remember enumitem breaks beamer https://tex.stackexchange.com/questions/28107/how-to-set-leftmargin-when-using-the-enumerate-package
 \usepackage{enumitem}
-\setlist[itemize]{leftmargin=*}
+\setlist[itemize]{leftmargin=15pt}
 
 
 % Italics should be prefered over underlines..
@@ -44,7 +45,7 @@
 \input{../macros/other.tex}
 \input{macros.tex}
 
-\renewcommand\doubleplus{\ensuremath{\middle\|}} % Jeff's ++ does not render correctly in acmart
+\renewcommand\doubleplus{\ensuremath{\|}} % Jeff's ++ does not render correctly in acmart, but why the extra \middle error?
 	
 \usepackage{tcolorbox}
 \tcbset{colback=white}
