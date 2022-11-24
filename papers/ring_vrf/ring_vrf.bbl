@@ -37,6 +37,20 @@ Privacy by~Design~Foundation.
 \newblock Irma docs v0.2.0.
 \newblock \url{https://irma.app/docs/v0.2.0/overview/}.
 
+\bibitem{canetti1}
+Ran Canetti.
+\newblock Universally composable security: A new paradigm for cryptographic
+  protocols.
+\newblock Cryptology ePrint Archive, Report 2000/067, 2000.
+\newblock \url{https://eprint.iacr.org/2000/067}.
+
+\bibitem{canetti2}
+Ran Canetti.
+\newblock Universally composable security: A new paradigm for cryptographic
+  protocols.
+\newblock In {\em Proceedings 2001 IEEE International Conference on Cluster
+  Computing}, pages 136--145. IEEE, 2001.
+
 \bibitem{climaterisk2021}
 {Chatham House}.
 \newblock Climate change risk assessment 2021.
