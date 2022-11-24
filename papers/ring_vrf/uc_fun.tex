@@ -30,7 +30,7 @@
 			
 			\textbf{[Malicious Ring VRF Evaluation.]} upon receiving a message $(\oramsg{eval}, \sid, \pk_i, W, m)$ from $\sim$, if $ \pk_i $ is recorded under an honest party's identity or if there exists $ W'\neq W $ where $ \anonymouskeymap[m,W'] = \pk_i $, ignore the request.
 			Otherwise, record in the table $\vklist$ the value $\pk_i$ under $\simulator$ if $ \pk_i $ is not in $ \vklist $. If  $\anonymouskeymap[m,W]  $ is not defined before, set $ \anonymouskeymap[m,W] = \pk_i $ and let   $y \leftsample \bin^{\ell_\rVRF}$ and set $ \evaluationslist[m, W] = y$.
-			Then, set $ \evaluationslist[m, W] = y$, $ \anonymouskeymap[m,W] = \pk_i $ and obtain $ y =  \evaluationslist[m, W]$. Otherwise, obtain $ y = \evaluationslist[m, W'] $.
+			Then, set $ \evaluationslist[m, W] = y$, $ \anonymouskeymap[m,W] = \pk_i $ and obtain $ y =  \evaluationslist[m, W]$. Otherwise, obtain $ y = \evaluationslist[m, W] $.
 			Return $(\oramsg{evaluated}, \sid,  m, \pk_i,W, y)$ to $ \user_i $.
 
 			%upon receiving a message $(\oramsg{eval}, \sid, \pk_i, W, m)$ from $\sim$, if $ \pk_i $ is recorded under an honest party's identity or if there exists $ \anonymouskeymap[m, \pk_i] \neq W $ or if there exists a record for a key $ \pk \neq \pk_{i}$ such that $ \anonymouskeymap[m, \pk] = W $, ignore the request. Otherwise, record in the table $\vklist$ the value $\pk_i$ under $\simulator$ if $ \pk_i $ is not in $ \vklist $. If $ \anonymouskeymap[m,\pk_i]  $ is not defined, set $ \anonymouskeymap[m,\pk_i] = W $ and let   $y \leftsample \bin^{\ell_\rVRF}$ and set $ \evaluationslist[m, W] = y$.
@@ -43,7 +43,9 @@
 			%\item[Malicious VRF evaluation.] upon receiving a message $(\oramsg{evalprove}, \sid, \ring, m)$ from $\simulator$, check that $\vklist$ has a public key associated to $\simulator$. If not, ignore the request. If $\evaluationslist[\ring, m][\simulator]$ is not set, sample $y \leftsample \bin^{\ell(\secparam)}$ and set $\evaluationslist[\ring, m][\simulator] \defeq y$ (and $\signaturelist[\ring,m]$ to $\emptyset$). If $\signaturelist[\ring, m]$ contains a proof (i.e., if $\signaturelist[\ring, m]$ is not empty), return $(\oramsg{evaluated}, \sid, y)$ to $\simulator$. Else, ignore the request.
 			
 			%\item[Verification.] upon receiving a message $(\oramsg{verify}, \sid, \ring, m, y, \sigma)$, from any party forward the message to the simulator. If there exists a $\pk_i$ among the values of \texttt{verification\_keys}, and there exists $\sigma \in \signaturelist[\ring, m]$, set $b = 1$. Else, set $b =0$. Finally, output $(\oramsg{verified}, \sid, \ring, m, y, \sigma, b)$.
-			\textbf{[Malicious Requests of  Signatures and Outputs.]} upon receiving a message $ (\oramsg{request}, \sid, \ring, W, m) $ from $ \simulator $, obtain all existing valid signatures $ \sigma $ such that $ [m,W,\ring,\sigma, 1] $ is recorded and add them in a list $ \lst_{\sigma} $. If $ \lst_{\sigma}  $ is not empty, obtain $ \PreOut[m,W] $ and set $ y = \PreOut[m,W]  $. Otherwise, set $ y = \perp $. Return $ (\oramsg{requests}, \sid, \ring, W,m, \lst_{\sigma},y)  $ to $ \simulator $.
+			\textbf{[Malicious Requests of  Signatures and Outputs.]} upon receiving a message $ (\oramsg{request}, \sid, \ring, W, m) $ from $ \simulator $, obtain all existing valid signatures $ \sigma $ such that $ [m,W,\ring,\sigma, 1] $ is recorded and add them in a list $ \lst_{\sigma} $. 	Return $ (\oramsg{requests}, \sid, \ring, W,m, \lst_{\sigma},y)  $ to $ \simulator $.
+			
+			
 			\textbf{[Ring VRF Verification.]} upon receiving a message $(\oramsg{verify}, \sid, \ring,W, m, \sigma)$ from a party, do the following: 
     		% \begin{list}[label={{C}}{{\arabic*}}, start = 1]
 			% https://texblog.net/help/latex/ltx-260.html
