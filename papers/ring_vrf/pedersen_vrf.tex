@@ -52,7 +52,7 @@ provided that $\PedVRF.\Verify$ below succeeds too.
 \begin{itemize}
 \item $\PedVRF.\Sign : (\sk,\openpk,\msg,\aux) \mapsto \sigma$ \,
     % takes a secret key \sk and blinding factor \openpk, an input $\msg$, and auxiliary data \aux, and then performs
-    first computes $\In := H_{\grE}(\msg)$ and $\PreOut := \sk \, \In$,
+    computes $\In := H_{\grE}(\msg)$ and $\PreOut := \sk \, \In$,
     samples $r_1,r_2 \leftsample \F_p$,
     computes $R = r_1 \genG + r_2 \genB$, and $R_\msg = r_1 \In$, and
     finally $c = H_p(\aux,\msg,\compk,\PreOut,R,R_m)$,
