@@ -1,21 +1,25 @@
 % \section{Introduction}
 
-Anonymous credentials is the study of weakenings of anonymity,
-both the cryptographic techniques and the social implications.
+\def\qaudbreak{\eprint{\quad}{\\}}
+
+We introduce ring verifiable random functions (ring VRFs) as a natural
+fulcrum around which anonymous credentials turn, in formalization,
+in optimizations, in the nuances of use-cases, and in miss-use resistance.
 %
-We answer four questions:
+Along with some formalizations, we explain portions of their unfolding
+story which address three questions:
 \begin{enumerate} 
 \item
-What are the cheapest SNARK proofs?  \quad
+What are the cheapest SNARK proofs?  \qaudbreak
 Ones users reuse without reproving.
+% \item
+% How can credentials use be contextual?  \qaudbreak
+% Prove evaluation of a secret function.
 \item
-How can credentials use be contextual?
-Prove evaluation of a secret function.
-\item
-How can identity be safe for general use?  \quad
+How can identity be safe for general use?  \qaudbreak
 By revealing nothing except users' uniqueness.
 \item
-How can ration card issuance be transperent?  \quad
+How can ration card issuance be transparent?  \qaudbreak
 By asking users trust a public list, not certificates.
 \end{enumerate}
 
@@ -109,31 +113,33 @@ ring VRFs contextual linkability covers more important use cases.
 \paragraph{Rationing uses:}
 
 Ring VRFs yield rate limiting or rationing systems, which work
-similarly to identity applications, except the VRF input should also
-include a approximate date and a bounded counter, and
+similarly to identity applications, except their VRF inputs should also
+include an approximate date and a bounded counter, and
  then their outputs should be tracked as nullifiers.
 Yet, these nullifiers need only temporarily storage, which improves 
 efficiency over anonymous money schemes like ZCash and blind signed tokens.
 
-We must expect a degree of fraud whenever deploying purely certificate
+We expect a degree of fraud whenever deploying purely certificate
 based systems, as witnessed by the litany of fraudulent TLS and covid
-certificates.  Ring VRFs help mitigate fraudulent certificates concerns
-because they permit direct public audits of ring membership.
+certificates.  Ring VRFs help mitigate fraudulent certificate concerns
+because the ring is a database and can be audited.
 
 We know governments have ultimately little choice but to institute
 rationing in response to shortages caused by climate change, ecosystem
-collapse, and peak oil.  Ring VRFs could then help avoid ration card
-fraud, and thereby reduce social unrest, while also protecting essential privacy.
+collapse, and peak oil.  Ring VRFs could help avoid ration card fraud,
+and thereby reduce social unrest, while also protecting essential privacy.
 
 Ring VRFs need heavier verifiers than single-use token credentials
 based on OPRFs \cite{PrivacyPass} or blind signatures.
-Yet, ring VRFs avoid the schemes separate issuance phase entirely,
-which reduces complexity, simplifies scaling, and increases flexibility.
+Yet, ring VRFs avoid these schemes separate issuance phase entirely,
+and sometimes even their registration phase.  Instead, fresh tokens
+merely require adjusting the approximate date in the VRF input.
+This reduces complexity, simplifies scaling, and increases flexibility.
 
 In particular, if governments issue ration cards based upon ring VRFs
-then these credentials could safely support free tiers in online services
-and games, and other limited advertiser promotions, as well as identity
-applications like simple logins and prevention of spam and online abuse.
+then these credentials could safely support other use cases, like
+free tiers in online services or games, and advertiser promotions,
+as well as identity applications like prevention of spam and online abuse.
 
 In this, we need authenticated domain separation of products or identity
 consumers in queries to users' ring VRF credentials.  We briefly discuss
