@@ -50,7 +50,7 @@
     		% \begin{list}[label={{C}}{{\arabic*}}, start = 1]
 			% https://texblog.net/help/latex/ltx-260.html
 			\newcounter{FunCond}
-			\begin{list}{\hspace*{1pt} C\arabic{FunCond}}{\usecounter{FunCond},\setlength\leftmargin{0.15in}}
+			\begin{list}{\hspace*{1pt} C\arabic{FunCond}}{\usecounter{FunCond}\setlength\leftmargin{0.15in}}
 				\item If there exits a record $ [m,W,\ring,\sigma, b'] $, set $ b = b' $. (This condition guarantees the completeness and consistency.)
 				%					\item Else if $ \pk  $ is an honest verification key where $ \anonymouskeymap[W] = (.,., \pk) $ and there exists no record $ [m, \ring, W, \sigma', 1] $ for any $ \sigma' $, then let $ b= 0  $.
 				%					(This condition guarantees unforgeability meaning that if an honest party never signs a message $ m $ for a ring $ \ring $, then the verification fails.)\label{cond:forgery}
