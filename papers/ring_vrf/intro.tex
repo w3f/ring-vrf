@@ -23,7 +23,6 @@ How can ration card issuance be transparent?  \qaudbreak
 By asking users trust a public list, not certificates.
 \end{enumerate}
 
-We model the security of ring VRFs in the universally composable (UC) \cite{canetti1,canetti2} model and  prove that our ring VRF protocol is UC secure. Thus, we guarantee the strongest security along with  practicality.
 % First
 \paragraph{Zero-knowledge continuations:}
 
@@ -60,18 +59,23 @@ same signer if and only if they sign identical messages.
 In effect, ring VRFs restrict anonymity similarly to but less than
  linkable ring signatures do, which makes them multi-use and contextual.
 
+We give security definitions for ring VRFs in both the standard model
+and in the universally composable (UC) \cite{canetti1,canetti2} model,
+but only provide proofs for our constructions in the UC model, as other
+works depend upon the UC formulation.
+
 % Second
 % \smallskip
 \paragraph{Identity uses:}
 
 As an identity system, ring VRFs evaluated on a specific context or
 domain name output a unique identity for the user at that domain or
-context (see \S\ref{sec:app_identity}), which thereby prevents
-Sybil behavior and permits banning specific users.
+in that context (see \S\ref{sec:app_identity}).  I nthis way, they
+permit banning specific users and prevent Sybil behavior.
 Yet users' activities remain unlinkable across distinct contexts or
 domains, which supports diverse ethical identity usages.
 
-We contrast this ethically straightforward ring VRF based identity
+We contrast such ethically straightforward ring VRF based identity
 with the ethically problematic case of attribute based credential
 schemes like IRMA (``I Reveal My Attributes'') credentials \cite{IRMAcredentials},
  which are now marketed as an online privacy solution.
@@ -86,9 +90,10 @@ rights than adopting online processes like IRMA.
 In particular, there are many proposals by the W3C for attribute based
 credential usage in \cite{w3c_vc_use_cases}, but broadly speaking they
 all bring matching harmful uses.  % https://www.w3.org/TR/vc-use-cases/
-As an example, if users could easily prove their employment online when
-applying for a bank account, then job application sites could similarly
-demand proof of current employment, a clear injustice.
+As an example, if users could easily prove their employment online, which
+the W3C claims helps users apply for bank accounts, then job application
+sites could similarly demand proof of current employment, a clear injustice.
+% that outweighs the convenience in opening bank accounts.
 
 In general, abuse risks dictate that IRMA verifiers should be tightly
 controlled by legislation, which becomes difficult internationally. 
@@ -107,7 +112,7 @@ contextual unique identifiers, without leaking other user attributes.
 As a rule, there exist simple VRF variants for all anonymous credentials
 like IRMA \cite{IRMAcredentials} or group signatures \cite{group_sig_survey}.
 We focus exclusively upon ring VRFs for brevity, and because alone
-ring VRFs contextual linkability covers more important use cases.
+ring VRFs contextual linkability covers the most important use cases.
 
 % Third
 % \smallskip
