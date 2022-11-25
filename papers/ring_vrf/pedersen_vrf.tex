@@ -4,14 +4,15 @@
 % We adopt standard notaton for pairing friendly curves, so 
 
 An EC VRF like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10} consists
-of a Chaum-Pedersen DLEQ proof between the signer's public key
-$\pk = \sk \genG$ and a VUF output $\PreOut = \sk H_{\grE}(\msg)$,
-so applying a PRF yields a VRF output
- $\Out = H'(\msg, h \PreOut)$ ala \cite[Proposition 1]{vrf_micali}.
+a verifiable unique function (VUF) given by a Chaum-Pedersen DLEQ proof
+between the signer's public key $\pk = \sk \, \genG$ and
+ the VUF output $\PreOut = \sk H_{\grE}(\msg)$,
+after which a PRF \eprint{evaluation}{} yields a VRF output
+ $\Out = H'(\msg, h \, \PreOut)$ ala \cite[Proposition 1]{vrf_micali}.
 %
-Our {\em Pedersen VRF} \PedVRF alters the EC VRF by repalcing the
-public key by a Pedersen commitment $\pk + \openpk \, \genB$, which
-instantiates the $\Reval$ NIZK from \S\ref{sec:overview} efficently.
+Our {\em Pedersen VRF} \PedVRF alters the EC VRF by replacing the
+public key by a Pedersen commitment $\pk + \openpk \, \genB$,
+We claim this instantiates the $\Reval$ NIZK from \S\ref{sec:overview} efficiently.
 \footnote{As Groth16 dominates ring VRF verification costs,
 we describe only the non-batchable variant analogous to
 \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}, but
@@ -51,7 +52,7 @@ provided that $\PedVRF.\Verify$ below succeeds too.
 \begin{itemize}
 \item $\PedVRF.\Sign : (\sk,\openpk,\msg,\aux) \mapsto \sigma$ \,
     % takes a secret key \sk and blinding factor \openpk, an input $\msg$, and auxiliary data \aux, and then performs
-    first computes $\In := H_{\grE}(\msg)$ and $\PreOut := \sk \, \In$,
+    computes $\In := H_{\grE}(\msg)$ and $\PreOut := \sk \, \In$,
     samples $r_1,r_2 \leftsample \F_p$,
     computes $R = r_1 \genG + r_2 \genB$, and $R_\msg = r_1 \In$, and
     finally $c = H_p(\aux,\msg,\compk,\PreOut,R,R_m)$,
@@ -93,11 +94,11 @@ we instantiate a rVRF-AD from \PedVRF plus a ring commitment scheme
 \rVRF inherits $\rVRF.\KeyGen = \PedVRF.\KeyGen$ and
  $\rVRF.\Eval = \PedVRF.\Eval$ of course, but requires.
 We need zero-knowledge ring membership proof for the relation \Rring
-which handles both $\PedVRF.\OpenKey$ and $\rVRF.\OpenKey$ efficently.
+which handles both $\PedVRF.\OpenKey$ and $\rVRF.\OpenKey$ efficiently.
 % \vspace{-0.1in}
 $$ \Rring = \Setst{ \compk, \comring }{
     \eprint{ \exists \openpk,\openring \textrm{\ s.t.\ } }{}
-    \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenKey(\comring,\openring)}
+    \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenRing(\comring,\openring)}
 } \mathperiod $$
 
 \begin{itemize}
@@ -189,7 +190,7 @@ pseudo-randomness, and unforgeability. % (EUF-CMA-KC) on $(\msg,\aux)$.
 
 We need this second verification equation in \PedVRF, but not in \ThinVRF,
 because otherwise our $s_2 \genB$ term provides enough freedom to tamper
-with the pre-ouputs.  
+with the pre-outputs.  
 
 We could however generalize \PedVRF to $k$ messages $\msg_1,\ldots,\msg_k$
 similarly to \ThinVRF in \S\ref{subsec:vrf_thin}:  We compute for

@@ -84,7 +84,7 @@ Although asymptotically faster, our opening \OpenRing invariably
 winds up being extremely heavy inside a zkSNARK.
 We solve this obstacle in \S\ref{sec:rvrf_cont} below by introducing
 {\em zero-knowledge continuations}, a new zkSNARK technique built from
-rerandomizable Groth16s and designed for composition and reuse.
+rerandomizable Groth16s \cite{Groth16} and designed for composition and reuse.
 
 In this, we should split the relation describing our ring VRF into
 a VRF evaluation relation \Reval and a reusable or continuable relation
@@ -95,8 +95,17 @@ ala \cite[Theorem 3, Appendix C, pp. 31]{RandomizationGroth16}.
 Yet, we must join aka pass \pk from \Rring to \Reval somehow, which
 demands some hiding commitment \compk of course.
 %
+\def\tmpAA{\textrm{\compk commits to\ }}
+\def\tmpBB{\OpenRing(\comring,\openring)}
 $$ \Rring = \Setst{ \compk, \comring }{
-    \cdots \, \eprint{ \pk =}{} \OpenRing(\comring,\openring) \, \cdots
+	\eprint{
+	\tmpAA \pk = \tmpBB
+	}{
+    \begin{aligned}
+	&\tmpAA \\
+	&\, \tmpBB \\
+    \end{aligned}
+	}
 } $$
 
 We discovered this becomes incredibly efficent if one actually uses

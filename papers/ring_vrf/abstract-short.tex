@@ -1,14 +1,17 @@
+
 \def\eprintsmallskip{\smallskip}{}%
-%
-Anonymized ring VRFs are ring signatures that prove correct evaluation
-of some authorized signer's PRF while hiding the specific signer's
+We introduce ring VRFs as a broadly superior approach to anonymous credentials.
+% Anonymized
+%\eprint{Ring VRFs are}{We introduce ring VRFs, which are}
+Ring VRFs are (anonymized) ring signatures that prove correct evaluation
+of some authorized signer's PRF, while hiding the specific signer's
 identity within some set of possible signers, known as the ring.
 % \eprint{We propose ring VRFs as a natural fulcrum around which a diverse array of zkSNARK circuits turn, making them an ideal target for optimization and eventually standards.}{}
 
 \eprintsmallskip
 We demonstrate a reusable {\em zero-knowledge continuation} technique,
 which works by adjusting a Groth16 trusted setup to hide public inputs
-when rerandomizing the Groth16.  We then build ring VRFs that amortize
+when rerandomizing the Groth16.  We then build ring VRFs that amortizes
 expensive ring membership proofs across many ring VRF signatures.
 %
 Incredibly, our ring VRF needs only eight $\mathcal{E}_1$ and two
@@ -23,4 +26,8 @@ provider or social interests than attribute based credentials like IRMA credenti
 
 \eprintsmallskip
 Ring VRFs support anonymously rationing or rate limiting resource
-consumption that winds up vastly more efficient than purchases via money-like protocols.
+consumption that winds up vastly more flexible and efficient than
+purchases via money-like protocols.
+
+\eprintsmallskip
+We define the security of ring VRFs in the universally composable (UC) model and show that our protocol is UC secure.

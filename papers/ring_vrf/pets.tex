@@ -16,6 +16,10 @@
 
 \usepackage{url}
 \usepackage{hyperref}
+\usepackage{algorithm}
+
+\usepackage[noend]{algpseudocode}
+
 % \usepackage[capitalize,nameinlink]{cleveref}
 
 % \usepackage{graphicx}
@@ -24,7 +28,10 @@
 % \usepackage{tikz}
 % \usetikzlibrary{arrows,chains,matrix,positioning,scopes}
 
-% \usepackage{enumitem}
+% Remember enumitem breaks beamer https://tex.stackexchange.com/questions/28107/how-to-set-leftmargin-when-using-the-enumerate-package
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=15pt}
+
 
 % Italics should be prefered over underlines..
 % \usepackage{ulem}
@@ -42,6 +49,8 @@
 \input{../macros/other.tex}
 \input{macros.tex}
 
+\renewcommand\doubleplus{\ensuremath{\|}} % Jeff's ++ does not render correctly in acmart, but why the extra \middle error?
+	
 \usepackage{tcolorbox}
 \tcbset{colback=white}
 % \usepackage{todonotes}
@@ -59,7 +68,7 @@
 \acmISBN{}
 \acmConference{Proceedings on Privacy Enhancing Technologies}
 \settopmatter{printacmref=false,printccs=false,printfolios=true}
-
+\sloppy
 
 \begin{document}%
 
@@ -119,7 +128,7 @@
 % \input{identity}
 
 \input{overview}
-\input{background/thin}
+\input{notation}
 \input{games}
 \input{uc_fun} % TODO: get rid of figure so it'll fit
 \input{uc_model}
@@ -150,8 +159,8 @@
 
 \appendix
 
-\input{background/extra}
-% \input{uc_proof}
+\input{background}
+\input{uc_proof}
 
 
 \end{document}

@@ -11,6 +11,9 @@
 \usepackage{amsfonts}
 \usepackage{amsmath}
 \usepackage{mathtools}
+\usepackage{algorithm}
+
+\usepackage[noend]{algpseudocode}
 
 \usepackage[utf8]{inputenc}
 \usepackage{xspace}
@@ -25,7 +28,9 @@
 % \usepackage{tikz}
 % \usetikzlibrary{arrows,chains,matrix,positioning,scopes}
 
-% \usepackage{enumitem}
+\usepackage{enumitem}
+% \setlist[itemize]{leftmargin=*}
+
 
 % Italics should be prefered over underlines..
 % \usepackage{ulem}
@@ -46,7 +51,7 @@
 \usepackage{tcolorbox}
 \tcbset{colback=white}
 % \usepackage{todonotes}
-
+\sloppy
 
 \title{Ethical identity, ring VRFs, and zero-knowledge continuations}
 
@@ -68,7 +73,7 @@
 % \input{identity}
 
 \input{overview}
-\input{background/thin}
+\input{notation}
 \input{games}
 \input{uc_fun}
 \input{uc_model}
@@ -87,8 +92,8 @@
 
 \appendix
 
-\input{background/extra}
-% \input{uc_proof}
+\input{background}
+\input{uc_proof}
 
 
 

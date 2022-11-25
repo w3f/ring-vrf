@@ -37,7 +37,7 @@ We let \ora{Sign} denote a ring signature CMA oracle, meaning
  creates a fresh key pair $(\pk,\sk) \leftarrow \KeyGen$, logs it, and
  adds $\pk$ to the set $\ring_0$, and then returns \pk.
 \item $\ora{Sign}(\comring,\openring,\msg,\aux)$ \,
- returns the signature $\Sign(\sk,\openring,\msg,\aux)$,
+ returns the ring VRF signature $\Sign(\sk,\openring,\msg,\aux)$,
  provided it logged $(\pk,\sk)$ with $\pk = \OpenKey(\comring,\openring)$ previously.
 \end{itemize}
 \end{definition}
@@ -56,7 +56,7 @@ any PPT adversary \adv has an advantage only
   \adv some signature $\sigma = \rSign(\sk_j,\openring,\msg,\aux)$ with $\OpenKey(\comring,\openring) = \pk_j$.
  %
  \adv calls \ora{Sign} of Definition \ref{def:rvrf_sign_oracle} throughout,
- except \adv loses if they ever query $\ora{Sign}(\comring',\openring',\msg,\cdot)$
+ except the adversary \adv loses if they ever query $\ora{Sign}(\comring',\openring',\msg,\cdot)$
  on \msg for some $\comring',\openring'$ with
  \def\tmp{\OpenKey(\comring',\openring') \in \{ \pk_0, \pk_1 \}}
  \eprint{$\tmp$.}{$$ \mathperiod $$}
