@@ -2,7 +2,7 @@
 \section{Zero-knowledge continuations}
 \label{sec:rvrf_cont}
 
-We now construct ring VRFs which achieves fast amortized prover time
+We now construct ring VRFs which achieve fast amortized prover time
 due to a zero-knowledge continuation for its $\rVRF.\OpenRing$
 invocation in \Rring. 
 
@@ -17,7 +17,7 @@ invocation in \Rring.
 
 Zero-knowledge continuations need rerandomizable zkSNARKs,
 meaning Groth16 \cite{Groth16}, but beyond rerandomization their
-unlinkability demands we update the \openpk for $\PedVRF.\OpenKey$
+unlinkability demands we update \openpk for $\PedVRF.\OpenKey$
 invocation without reproving this heavy $\rVRF.\OpenRing$ call.
 
 In Groth16 \cite{Groth16}, we have an SRS $S$ consisting of curve
@@ -160,6 +160,8 @@ our dependence upon the usage of the zero knowledge continuation.
 
 \subsection{Single continuation}
 \label{subsec:rvrf_faster}
+
+% TODO \PedVRF.\OpenKey(\compk,\openpk)
 
 We describe a much faster choice $\pifast$ for $\pi$
 that sets $x_1 := \sk$ and $x_0 = \comring = \CommitRing(\ring)$ so that

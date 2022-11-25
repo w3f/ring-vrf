@@ -1,18 +1,17 @@
-\section{Pedersen VRF and rVRF}
+\section{Ring VRFs from the Pedersen VRF}
 \label{sec:pederson_vrf}
 
-% We adopt standard notaton for pairing friendly curves, so 
-
-An EC VRF like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10} consists
+An EC VRF like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10} consists of
 a verifiable unique function (VUF) given by a Chaum-Pedersen DLEQ proof
 between the signer's public key $\pk = \sk \, \genG$ and
  the VUF output $\PreOut = \sk H_{\grE}(\msg)$,
 after which a PRF \eprint{evaluation}{} yields a VRF output
  $\Out = H'(\msg, h \, \PreOut)$ ala \cite[Proposition 1]{vrf_micali}.
-%
-Our {\em Pedersen VRF} \PedVRF alters the EC VRF by replacing the
+
+We build efficient ring VRFs from a construction we call the
+{\em Pedersen VRF} \PedVRF, which alters the EC VRF by replacing the
 public key by a Pedersen commitment $\pk + \openpk \, \genB$,
-We claim this instantiates the $\Reval$ NIZK from \S\ref{sec:overview} efficiently.
+We claim \PedVRF instantiates the $\Reval$ NIZK from \S\ref{sec:overview}.
 \footnote{As Groth16 dominates ring VRF verification costs,
 we describe only the non-batchable variant analogous to
 \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}, but
@@ -22,7 +21,7 @@ we describe only the non-batchable variant analogous to
 %  \PedVRF consists of algorithms having superficially similar signatures.
 % \footnote{We do not define security for \PedVRF because pseudo-randomness becomes too interesting}
 
-We select a base point $\genG$ for our public key arbitrarily, % by any desired method,
+We select a base point $\genG$ for our public key by any desired method,
 but then fix a second generator $\genB$ of $\grE$ independent from $\genG$.
 %
 We define \KeyGen exactly like EC VRF, but
@@ -115,9 +114,10 @@ $$ \Rring = \Setst{ \compk, \comring }{
  if $\NIZK.\Verify(\piring,\compk,\comring)$ succeeds too.
 \end{itemize}
 
-\begin{proposition}\label{prop:pedersen_rvrf}
-$\rVRF$ satisfies ring uniqueness, ring unforgeability, and ring anonymity.
-\end{proposition}
+	\begin{theorem}\label{thm:rvrf}
+	$ \rVRF $  over the group structure $ (\grE,p,\genG,\genB) $ realizes $ \fgvrf $ in Figure \ref{f:gvrf} in the random oracle model assuming that NIZK is zero-knowledge and knowledge extractable, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $. 
+\end{theorem}
+The security proof is in Appendix \ref{ap:ucproof}.
 
 
 
