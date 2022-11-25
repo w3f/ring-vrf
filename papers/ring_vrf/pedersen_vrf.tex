@@ -114,10 +114,21 @@ $$ \Rring = \Setst{ \compk, \comring }{
  if $\NIZK.\Verify(\piring,\compk,\comring)$ succeeds too.
 \end{itemize}
 
-	\begin{theorem}\label{thm:rvrf}
-	$ \rVRF $  over the group structure $ (\grE,p,\genG,\genB) $ realizes $ \fgvrf $ in Figure \ref{f:gvrf} in the random oracle model assuming that NIZK is zero-knowledge and knowledge extractable, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $. 
+Although \PedVRF itself exhibits surprising properties, our gestalt \rVRF
+satisfies sensible security definitions:
+\rVRF satisfies pseudo-randomness by reduction to singleton rings.
+Ring uniqueness, ring unforgeability, and ring anonymity resemble security
+arguments for other ring signature involving SNARKs.
+%
+% \begin{proposition}\label{prop:rvrf_games}
+% $\rVRF$ satisfies ring uniqueness, ring unforgeability, and ring anonymity.
+% \end{proposition}
+%
+Appendix \ref{ap:ucproof} contains a security proof in our UC model.
+
+\begin{theorem}\label{thm:rvrf}
+$ \rVRF $  over the group structure $ (\grE,p,\genG,\genB) $ realizes $ \fgvrf $ in Figure \ref{f:gvrf} in the random oracle model assuming that NIZK is zero-knowledge and knowledge extractable, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $. 
 \end{theorem}
-The security proof is in Appendix \ref{ap:ucproof}.
 
 
 
