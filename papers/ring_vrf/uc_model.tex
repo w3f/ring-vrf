@@ -1,12 +1,12 @@
 \section{UC functionality}
+In this section, we define the security of  a ring VRF protocol in the UC model. We introduce a ring VRF functionality $ \fgvrf $ satisfying the security properties we want to achieve in $ \rVRF $. These properties are informally as follows: \emph{randomness} meaning that an evaluation value is random and independent from the message, ring and the public key, \emph{determinism} meaning that $ \rVRF.\Eval $ outputs always the same evaluation value, \emph{anonymity} meaning that $ \rVRF.\Sign $ does not give information about its signer, \emph{unforgeability} meaning that an adversary should not generate a forged signature and \emph{uniqueness} meaning that number of verified evaluation values should not be more than the number of the keys in the public key.
 
-In Figure \ref{f:gvrf}, we give a UC functionality $\fgvrf$ for ring VRFs,
-which we ourselves shall use in other works.  In $\fgvrf$, we suppress
+In Figure \ref{f:gvrf}, we give a UC functionality $\fgvrf$ for ring VRFs.  In $\fgvrf$, we suppress
 auxiliary data and ring commitment details to make our UC functionality
 more accessible, meaning our ring commitment is simply the full ring both
 here and in Appendix \ref{sec:ringvrfconstrnoPK}.
 
-We give several important remarks that help elucidate $\fgvrf$:
+We give several important remarks that help elucidate $\fgvrf$ in Figure \ref{f:gvrf}:
 
 
 
