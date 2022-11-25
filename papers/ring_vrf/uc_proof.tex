@@ -1,5 +1,6 @@
 \newcommand{\name}{rVRF}
 \section{Security of Our Ring VRF Construction} 
+\label{ap:ucproof}
 \label{sec:ringvrfconstrnoPK}
 \newcommand{\GG}{\grE}
 \newcommand{\FF}{\F}
@@ -149,9 +150,9 @@ We next show that \name \ realizes $ \fgvrf $  in the random oracle model under 
 			\centering
 			
 			\noindent\fbox{%
-				\parbox{7cm}{%
+				\parbox{\columnwidth}{%
 					\underline{\textbf{Oracle $ \hashG $}} \\
-					\textbf{Input:} $ m, \ring $ \\
+					\textbf{Input:} $ m $ \\
 					\textbf{if} $\mathtt{oracle\_queries\_gg}[m] = \perp  $
 					
 					\tab{$ h \leftsample \FF_p $}
@@ -198,7 +199,7 @@ We next show that \name \ realizes $ \fgvrf $  in the random oracle model under 
 			\centering
 			
 			\noindent\fbox{%
-				\parbox{9cm}{%
+				\parbox{\columnwidth}{%
 					\underline{\textbf{Oracle $ \hash$}} \\
 					\textbf{Input:} $ m,W $ 
 					
@@ -256,7 +257,7 @@ We next show that \name \ realizes $ \fgvrf $  in the random oracle model under 
 			\centering
 			
 			\noindent\fbox{%
-				\parbox{10.5cm}{%
+				\parbox{\columnwidth}{%
 					\underline{\textbf{Oracle $ \hash' $}} \\
 					\textbf{Input:} $ (\ring, m,W,\compk,R,R_m) $ \\					
 					
@@ -452,7 +453,7 @@ We next show that \name \ realizes $ \fgvrf $  in the random oracle model under 
 				\centering
 				
 				\noindent\fbox{%
-					\parbox{9cm}{%
+					\parbox{\columnwidth}{%
 						\underline{\textbf{Oracle $ \hash$}} \\
 						\textbf{Input:} $ m,W $ 
 						
@@ -474,7 +475,7 @@ We next show that \name \ realizes $ \fgvrf $  in the random oracle model under 
 				\centering
 				
 				\noindent\fbox{%
-					\parbox{7cm}{%
+					\parbox{\columnwidth}{%
 						\underline{\textbf{Oracle $ \hashG $}} \\
 						\textbf{Input:} $ m$ \\
 						\textbf{if} $\mathtt{oracle\_queries\_gg}[m] = \perp  $

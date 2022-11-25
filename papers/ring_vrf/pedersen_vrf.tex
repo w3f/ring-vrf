@@ -115,9 +115,10 @@ $$ \Rring = \Setst{ \compk, \comring }{
  if $\NIZK.\Verify(\piring,\compk,\comring)$ succeeds too.
 \end{itemize}
 
-\begin{proposition}\label{prop:pedersen_rvrf}
-$\rVRF$ satisfies ring uniqueness, ring unforgeability, and ring anonymity.
-\end{proposition}
+	\begin{theorem}\label{thm:rvrf}
+	$ \rVRF $  over the group structure $ (\grE,p,\genG,\genB) $ realizes $ \fgvrf $ in Figure \ref{f:gvrf} in the random oracle model assuming that NIZK is zero-knowledge and knowledge extractable, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $. 
+\end{theorem}
+The security proof is in Appendix \ref{ap:ucproof}.
 
 
 
