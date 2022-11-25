@@ -8,8 +8,8 @@
 \begin{figure}
 \footnotesize 
 \begin{tcolorbox}[left=2pt,right=2pt]
-	{  $ \fgvrf $ runs two  PPT algorithms $ \Gen_W $ and  $\Gen_{sign} $ during the execution and is parametrized with a set $ \setsym{S}_{eval} $.
-	
+	{  $ \fgvrf $ runs a PPT algorithms  $\Gen_{sign} $ during the execution and is parametrized with  sets $ \setsym{S}_{eval} $ and $ \setsym{S}_W $.
+	%We need to select W randomly because we need it to be unique
 		
 				
 			\textbf{[Key Generation.]} upon receiving a message $(\oramsg{keygen}, \sid)$ from a party $\user_i$, send $(\oramsg{keygen}, \sid, \user_i)$ to the simulator $\simulator$.
@@ -37,7 +37,7 @@
 			%Return $(\oramsg{evaluated}, \sid,  m, W, \evaluationslist[m, W])$ to $ \user_i $.
 				
 			\textbf{[Honest Ring VRF Signature and Evaluation.]} upon receiving a message $(\oramsg{sign}, \sid, \ring, \pk_i, m)$ from $\user_i$, verify that $\pk_i \in \ring$ and that there exists a public key $\pk_i$ associated to $\user_i$ in the table $ \vklist $. If that wasn't the case, just ignore the request. 	
-			If there exists no $ W' $ such that $ \anonymouskeymap[m,W'] =  \pk_i $, let $ W \leftarrow \Gen_W(\pk,\ring) $ and let $y \leftsample \setsym{S}_{eval}$. If there exists $ W $ where $ \anonymouskeymap[m,W] $ is defined, then abort. Otherwise, set $ \anonymouskeymap[m,W] = \pk_i $ and set $ \evaluationslist[m, W] = y$.
+			If there exists no $ W' $ such that $ \anonymouskeymap[m,W'] =  \pk_i $, let $ W \leftsample \setsym{S}_W $ and let $y \leftsample \setsym{S}_{eval}$. If there exists $ W $ where $ \anonymouskeymap[m,W] $ is defined, then abort. Otherwise, set $ \anonymouskeymap[m,W] = \pk_i $ and set $ \evaluationslist[m, W] = y$.
 			Obtain $ W, y $ where $ \anonymouskeymap[m,W] =\pk_i $ and $ \evaluationslist[m, W] = y$  and run  $ \Gen_{sign}(\ring, W,\pk) \rightarrow \sigma $. Verify that $ [m, W,\ring, \sigma, 0] $ is not recorded. If it is recorded, abort. Otherwise, record $ [m, W, \ring,\sigma, 1] $. Return $(\oramsg{signature}, \sid, \ring,W,m, y, \sigma)$ to $\user_i$.
 			
 			%\item[Malicious VRF evaluation.] upon receiving a message $(\oramsg{evalprove}, \sid, \ring, m)$ from $\simulator$, check that $\vklist$ has a public key associated to $\simulator$. If not, ignore the request. If $\evaluationslist[\ring, m][\simulator]$ is not set, sample $y \leftsample \bin^{\ell(\secparam)}$ and set $\evaluationslist[\ring, m][\simulator] \defeq y$ (and $\signaturelist[\ring,m]$ to $\emptyset$). If $\signaturelist[\ring, m]$ contains a proof (i.e., if $\signaturelist[\ring, m]$ is not empty), return $(\oramsg{evaluated}, \sid, y)$ to $\simulator$. Else, ignore the request.
