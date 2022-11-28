@@ -1,4 +1,4 @@
-\section{Ring VRFs from the Pedersen VRF}
+\section{Our Ring VRF Construction from the Pedersen VRF}
 \label{sec:pederson_vrf}
 
 An EC VRF like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10} consists of
@@ -123,12 +123,12 @@ arguments for other ring signatures built from SNARKs.
 % $\rVRF$ satisfies ring uniqueness, ring unforgeability, and ring anonymity.
 % \end{proposition}
 %
-Appendix \ref{ap:ucproof} contains a security proof in our UC model.
 
-\begin{theorem}\label{thm:rvrf}
-$ \rVRF $  over the group structure $ (\grE,p,\genG,\genB) $ realizes $ \fgvrf $ in Figure \ref{f:gvrf} in the random oracle model assuming that NIZK is zero-knowledge and knowledge extractable, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $. 
+
+\begin{theorem}\label{thm:rvrfmain}
+$ \rVRF $  over the group structure $ (\grE,p,\genG,\genB) $ realizes $ \fgvrf $ in Figure \ref{f:gvrf} in the random oracle model assuming that NIZK is zero-knowledge and knowledge sound, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $. 
 \end{theorem}
-
+The security proof of Theorem \ref{thm:rvrfmain} is in Appendix \ref{ap:ucproof}.
 
 
 
