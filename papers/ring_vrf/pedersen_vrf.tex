@@ -79,9 +79,8 @@ provided that $\PedVRF.\Verify$ below succeeds too.
 \end{itemize}
 
 \noindent We obtain EC VRF if we choose $\openpk = 0 = r_2$ in \Sign and demand $s_2 = 0$ in \Verify.
-%
-\eprint{We define security only for our ring VRF constructions, but clearly
- \PedVRF consists of algorithms having superficially similar signatures.}{}
+We define security only for our ring VRF constructions, as \PedVRF itself
+exhibits surprising properties, despite having a superficially similar signature.
 % \footnote{We do not define security for \PedVRF because pseudo-randomness becomes too interesting}
 
 \smallskip
@@ -109,16 +108,16 @@ $$ \Rring = \Setst{ \compk, \comring }{
  $$ \piring = \NIZK.\Prove(\Rring,\compk,\comring,\openpk,\openring) \quad\textrm{and} $$
  $$ \sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \piring \doubleplus \comring) \mathperiod $$ % finally
 \item $\rVRF.\rVerify : (\comring,\msg,\aux,\rho) \mapsto \Out \,\, \lor \perp$ \,
- parses $\rho$ as $(\compk,\piring,\sigma,)$ and returns
- $$ \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \piring \doubleplus \comring,\sigma) $$
- if $\NIZK.\Verify(\piring,\compk,\comring)$ succeeds too.
+ parses $\rho$ as $(\compk,\piring,\sigma,)$ and
+ if $\NIZK.\Verify(\piring,\compk,\comring)$ succeeds then it returns
+ $$ \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \piring \doubleplus \comring,\sigma) \mathperiod $$
 \end{itemize}
 
-Although \PedVRF itself exhibits surprising properties, our gestalt \rVRF
-satisfies sensible security definitions:
-\rVRF satisfies pseudo-randomness by reduction to singleton rings.
+% Although \PedVRF itself exhibits surprising properties, our gestalt 
+\rVRF satisfies sensible security definitions:
+Pseudo-randomness holds by reduction to singleton rings.
 Ring uniqueness, ring unforgeability, and ring anonymity resemble security
-arguments for other ring signature involving SNARKs.
+arguments for other ring signatures built from SNARKs.
 %
 % \begin{proposition}\label{prop:rvrf_games}
 % $\rVRF$ satisfies ring uniqueness, ring unforgeability, and ring anonymity.

@@ -2,9 +2,8 @@
 \section{Zero-knowledge continuations}
 \label{sec:rvrf_cont}
 
-We now construct ring VRFs which achieve fast amortized prover time
-due to a zero-knowledge continuation for its $\rVRF.\OpenRing$
-invocation in \Rring. 
+We now develop our zero-knowledge continuation technique, called 
+{\em special Groth16}, and build ring VRFs with fast amortized prover time.
 
 % $$ \Rring = \Setst{ \compk, \comring }{
 %  \exists \openpk,\openring \textrm{\ s.t.\ } 
@@ -17,8 +16,10 @@ invocation in \Rring.
 
 Zero-knowledge continuations need rerandomizable zkSNARKs,
 meaning Groth16 \cite{Groth16}, but beyond rerandomization their
-unlinkability demands we update \openpk for $\PedVRF.\OpenKey$
-invocation without reproving this heavy $\rVRF.\OpenRing$ call.
+unlinkability demands hiding public inputs.
+In our case, we ``specialize'' Groth16 to permit alteration of \openpk
+in the $\PedVRF.\OpenKey$ invocation, but without reproving our heavy
+$\rVRF.\OpenRing$ invocation.
 
 In Groth16 \cite{Groth16}, we have an SRS $S$ consisting of curve
 points in $\grE_1$ and $\grE_2$ that encode the circuit being proven.
@@ -65,14 +66,14 @@ Alone rerandomization cannot alter public inputs $x_i$, so
 we instead need an opaque public input point $X$, which then becomes
 part of our proof and incurs its own separate proof of correctness.
 
-We also need one fresh basepoint $\genB_\gamma$ independent from all others,
-again perhaps created by applying $H_\grE$ to an input outside existing usages' domain.
-We now give provers the additional SRS elements
+We build {\em special Groth16} by adding one fresh basepoint $\genB_\gamma$
+independent from all others, including the $H_{\grE}(\msg)$ in \PedVRF, so
+ perhaps created by applying $H_\grE$ to an input outside the \msg domain.
+In the trusted setup, we build one additional prover SRS elements
 $$ \genB_\delta := {\gamma\over\delta} \genB_\gamma $$
-Although $\genB_\gamma$ is independent, 
-we create $\genB_\delta$ during the trusted setup,
- so the toxic waste $\gamma$ and $\delta$ remain secret.
-After this, subversion resistance could be checked like 
+% Although $\genB_\gamma$ is independent,  we create $\genB_\delta$ during the trusted setup,  so the toxic waste $\gamma$ and $\delta$ remain secret.
+After $\genB_\delta$ is created, our toxic waste $\gamma$ and $\delta$
+disappear and subversion resistance could be checked like 
 $$ e(\genB_\gamma, [\gamma]_2) = e(\genB_\delta, [\delta]_2) \mathperiod $$
 
 We now have a zero-knowledge continuation $\pi = (X,A,B,C)$ from which
@@ -84,8 +85,9 @@ A' &= {1 \over r_1} A \\
 B' &= r_1 B + r_1 r_2 [\delta]_2 \\
 C' &= C + r_2 A + b \genB_\delta \mathperiod \\
 \end{aligned} $$
-As our two $b$ terms cancel in the pairings, we wind up with the
-standard Groth16 rerandomization construction above,
+As our two $b$ terms cancel in the pairings, our special Groth16
+rerandomization reduces to the standard Groth16 rerandomization
+construction above,
  except with $X$ an now opaque Pedersen commitment.
 
 % TODO:  Should we be saying opaque less and Pedersen more below?
@@ -93,7 +95,7 @@ standard Groth16 rerandomization construction above,
 Along side hidden inputs in $X = \sum_i^k x_i \chi_i$,
 our verifier would typically assemble some transparent inputs
 $Y = \sum_i^l y_i \Upsilon$ themselves.  In particular, our ring VRFs
-handle the Merkle root \comring of the ring $\ring$ in this way below.
+handles the Merkle root \comring for $\ring$ in this way below.
 
 We then verify $(X' + Y,A',B',C')$ like Groth16 
 $$ e(A',B') = e([\alpha]_1, [\beta]_2) \cdot
