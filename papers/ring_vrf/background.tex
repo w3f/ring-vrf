@@ -130,7 +130,7 @@ TODO: AGM and Groth16 here?
 
 \subsection{Universal Composability (UC) Model}
 \label{subsec:uc_background}
-We define the security of ring VRFs in the UC model \cite{canetti1,canetti2}. In a nutshell, UC model works as follows:
+We define the security of ring VRFs in the UC model \cite{canetti1,canetti2}. In a nutshell, Canetti \cite{canetti1,canetti2} defines the UC model as follows:
 
 A protocol $ \phi $ in the UC model is an execution between distributed interactive Turing machines (ITM). Each ITM has a storage to collect the incoming messages from other ITMs, adversary \adv or the environment $ \env $. $ \env $ is an entity to represent the external world outside of the protocol execution.  The environment $ \env $ initiates ITM instances (ITIs) and the adversary \adv with arbitrary inputs and then terminates them to collect the outputs.
 % An ITM that is initiated by $ \env $ is called ITM instance (ITI). 
@@ -147,7 +147,7 @@ $ \simulator $ forwards all messages forwarded by $ \env $ to $ \mathcal{F} $. T
 
 \begin{definition}[UC-Security of $ \phi $] \label{def:uc}
 	Given a real world protocol $ \phi $ and an ideal functionality $ \mathcal{F} $ for the protocol $ \phi $, we call that $ \phi $ is UC-secure i.e., $ \phi $ UC-realizes $ \mathcal{F} $, if for all PPT adversaries \adv,  there exists a simulator $ \simulator  $ such that for any environment $ \env $,
-	$\mathsf{EXEC}_{\phi, \adv, \env}$ indistinguishable from $\mathsf{EXEC}_{\mathcal{F},\simulator, \env}$
+	$\mathsf{EXEC}_{\phi, \adv, \env}$ indistinguishable from $\mathsf{EXEC}_{\mathcal{F},\simulator, \env}$.
 \end{definition}
 
 
