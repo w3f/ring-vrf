@@ -1,0 +1,76 @@
+\section{Ring VRF Variations}
+
+In this section, we give ring VRF functionalities which give more security properties than the basic ring VRF functionality $ \fgvrf $ that we define in Figure \ref{f:gvrf}.
+
+\newcommand{\faux}{\fgvrf^{\mathsf{aux}}}
+\subsection{Ring VRF with Auxiliary DATA}
+We define a variation of ring VRF which signs also an auxiliary data (aux) along with a message. It is very similar to $ \fgvrf $. It additionally requires unforgeability notion for $ \aux $ as well. See Figure \ref{f:aux} for the details.
+\begin{figure}
+\begin{tcolorbox}
+	{  $ \faux $ runs two PPT algorithms $\gen_{sign} $ during the execution.
+		
+		\begin{description}
+			
+			\item[Key Generation.] Same as in $ \fgvrf $.
+			
+			\item[Malicious Ring VRF Evaluation.] Same as in $ \fgvrf $.
+			
+			\item[Honest Ring VRF Signature.] upon receiving a message $(\oramsg{sign}, \sid, \ring, \pk_i, m, \underline{aux})$ from $\user_i$, verify that $\pk_i \in \ring$ and that there exists a public key $\pk_i$ associated to $\user_i$ in the table $ \vklist $. If that wasn't the case, just ignore the request. 	
+			If there exists no $ W' $ such that $ \anonymouskeymap[m,W'] =  \pk_i $, let $ W \leftarrow \setsym{S}_W$. Then, let $y \leftsample \setsym{S}_{eval}$ and set $ \anonymouskeymap[W] = (m,\pk_i) $ and set $ \evaluationslist[m, W] = y$.
+			%					\begin{itemize}
+				%						%\item If there exists $ W \in  \anonymouskeymap  $, abort.
+				%						\item Else 
+				%						%TODO define what \in \anonymouskeymap mean
+				%					\end{itemize}
+			%			    \end{itemize}
+		Obtain $ W, y $ where  $ \evaluationslist[m, W] = y$, $ \anonymouskeymap[m,W] = \pk_i $ and run  $ \gen_{sign}(\ring, W, m,\underline{aux}) \rightarrow \sigma $. Verify that $ [m, \underline{aux},W, \sigma, 0] $ is not recorded. If not, abort. Otherwise, record $ [m,\underline{aux}, W, \sigma, 1] $. Return $(\oramsg{signature}, \sid, \ring,W,m,\underline{aux}, y, \sigma)$ to $\user_i$.
+		\item[Ring VRF Verification.] Same as in $ \fgvrf $ except that $ \faux $ checks records $  [m,\underline{aux},W,\ring,\sigma, b]   $ in the places where $ \fgvrf $ checks $ [m,W,\ring,\sigma, b] $.
+	\end{description}
+	
+}
+\end{tcolorbox}
+\caption{Functionality $\faux$.\label{f:aux}}
+\end{figure}
+
+
+
+%
+%\begin{theorem}
+%\name \ with AD over the group structure $ (\GG,p,\genG,\genB) $ realizes $ \faux $ in Figure \ref{f:aux} in the random oracle model assuming that NIZK is zero-knowledge and knowledge extractable, the decisional Diffie-Hellman (DDH) problem are hard in $ (\GG,p,\genG,\genB)  $. 
+%\end{theorem}
+%
+%\begin{proof}
+%The proof is similar to the proof of Theorem \ref{thm:rvrf}. $ \gen_{sign} $ as well as $ \mathtt{oracle\_queries\_h\_schnor} $ simulated by $ \bdv $ takes the input $ aux $ in Algorithm \ref{alg:gensignbdv}.
+%\end{proof}
+
+
+
+
+\newcommand{\frvrfsec}{\fgvrf^s}
+\subsection{Secret Ring VRF}
+We also define another version of $ \fgvrf $ that we call $ \frvrfsec $. $ \frvrfsec $ operates as $ \fgvrf $. In addition, it also lets a party generate a secret  element to check whether it satisfies a certain relation i.e., $ ((m,y), (\eta, \pk_i)) \in \rel $ where $ \eta $ is the secret random element. If it satisfies the relation, then $ \frvrfsec $ generates a proof. Proving works as $ \mathcal{F}_{zk} $ \cite{zkfunc} except that a part of the witness ($ \eta $) is generated randomly by the functionality. $ \frvrfsec $ is useful in applications where a party wants to show that the random output $ y $ satisfies a certain relation without revealing his identity.
+
+\begin{figure}
+	%	\sassafras{\scriptsize}{\scriptsize}
+	\begin{tcolorbox}
+		{
+			%\par\hrulefill\\
+			$ \frvrfsec$ for a relation $ \mathcal{R} $ behaves exactly as $ \fgvrf $. Differently, it has an algorithm $ \gen_{\pi} $ and  it additionally does the following:
+			\begin{description}
+				\item [Secret Element Generation of Malicious Parties.]upon receiving a message $(\oramsg{secret\_rand}, \sid, \ring,\pk,W, m)$ from $\simulator$, verify that $ \anonymouskeymap[m,W] =  \pk_i $. If that was not the case, just ignore the request. If $ \evaluationsecretlist[m,W] $ is not defined, obtain $ y = \evaluationslist[m, W] $. Then, run $ \gen_{\eta}(m,\pk_i, y) \rightarrow \eta  $ and store $ \evaluationsecretlist[m,W] = \eta $. Obtain $ \eta = \evaluationsecretlist[m,W] $  and return $(\oramsg{secret\_rand}, \sid, \ring, W, \eta)$ to $ \user_i $.
+				
+				\item[Secret Random Element Proof.] upon receiving a message $(\oramsg{secret\_rand}, \sid, \pk, W, m)$ from $\user_i$, verify that $ \anonymouskeymap[m,W] =  \pk_i $. If that was not the case, just ignore the request. If $ \evaluationsecretlist[m,W] $ is not defined, run  $ \gen_{\eta}(m,\pk_i, y) \rightarrow \eta  $ and store $ \evaluationsecretlist[m,W] = \eta $. Obtain $ \eta \leftarrow\evaluationsecretlist[m,W] $ and $ y \leftarrow \evaluationslist[m,W] $. If $ ((m, y),(\eta,\pk_i)) \in \mathcal{R} $,  run  $ \gen_\pi(W, m) \rightarrow \pi $ and add $ \pi $ to a list $ \proofzklist[m, W] $. Else, let $ \pi  $ be $ \perp $. Return $(\oramsg{secret\_rand}, \sid, W, \eta, \pi)$ to $ \user_i $.
+				
+				\item[Secret Verification.] upon receiving a message $(\oramsg{secret\_verify}, \sid, W, m, \pi)$, relay the message to $ \simulator $ and receive $(\oramsg{secret\_verify}, \sid, W, m, \pi, \pk,\eta)$. Then,
+				
+				\begin{itemize}
+					\item if $ \pi \in \proofzklist[m,W,\ring] $, set $ b = 1 $.
+					\item else if $ \evaluationsecretlist[W,m] = \eta$ and $ ((m, y, \ring),(\eta,\pk_i)) \in \mathcal{R} $, set $ b = 1 $ and add to the list $ \proofzklist[m,W,\ring] $.
+					\item else set $ b = 0 $.
+				\end{itemize}
+				Send $(\oramsg{verification}, \sid, \ring, W, m, \pi, b)$ to $ \user_i $.
+			\end{description}
+		}
+	\end{tcolorbox}
+	\caption{Functionality  $ \frvrfsec $.\label{f:gvrfzk}}
+\end{figure}
