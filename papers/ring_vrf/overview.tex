@@ -87,17 +87,17 @@ We solve this obstacle in \S\ref{sec:rvrf_cont} below by introducing
 rerandomizable Groth16s \cite{Groth16} and designed for composition and reuse.
 
 In this, we should split the relation describing our ring VRF into
-a VRF evaluation relation \Reval and a reusable or continuable relation
-\Rring, which enforces our heavy $\pk = \OpenRing(\comring,\openring)$
-condition.  Anonymity requires we rerandomize a Groth16 SNARK for \Rring
+a VRF evaluation relation \Leval and a reusable or continuable relation
+\Lring, which enforces our heavy $\pk = \OpenRing(\comring,\openring)$
+condition.  Anonymity requires we rerandomize a Groth16 SNARK for \Lring
 ala \cite[Theorem 3, Appendix C, pp. 31]{RandomizationGroth16}.
 %
-Yet, we must join aka pass \pk from \Rring to \Reval somehow, which
+Yet, we must join aka pass \pk from \Lring to \Leval somehow, which
 demands some hiding commitment \compk of course.
 %
 \def\tmpAA{\textrm{\compk commits to\ }}
 \def\tmpBB{\OpenRing(\comring,\openring)}
-$$ \Rring = \Setst{ \compk, \comring }{
+$$ \Lring = \Setst{ \compk, \comring }{
 	\eprint{
 	\tmpAA \pk = \tmpBB
 	}{
@@ -109,10 +109,10 @@ $$ \Rring = \Setst{ \compk, \comring }{
 } $$
 
 We discovered this becomes incredibly efficient if one specializes
-the Groth16 construction:  An inner true Groth16 for $\Rring'$ handles
+the Groth16 construction:  An inner true Groth16 for $\Lring'$ handles
 the secret key \sk directly, while our Pedersen commitment \compk is
 built outside this Groth16.
-$$ \Rring' = \Setst{ \sk, \comring}{
+$$ \Lring' = \Setst{ \sk, \comring}{
     \eprint{
     (\pk,\sk) \leftarrow \KeyGen, \quad % \textrm{ and }
     \pk = \OpenRing(\comring,\openring) 
@@ -125,7 +125,7 @@ $$ \Rring' = \Setst{ \sk, \comring}{
     }
 } $$
 
-$$ \Reval = \Setst{ \Out, \msg, \aux, \compk }{
+$$ \Leval = \Setst{ \Out, \msg, \aux, \compk }{
     \begin{aligned}
 	&\Out = \PRF(\sk,\msg), \\
 	&\textrm{\compk commits to\ \sk} \\
@@ -133,11 +133,11 @@ $$ \Reval = \Setst{ \Out, \msg, \aux, \compk }{
 } $$
 
 In \S\ref{sec:rvrf_cont} we rerandomize $\compk = \pk + b \, K$
-without reproving the Groth16 for \Rring, but instead requires
+without reproving the Groth16 for \Lring, but instead requires
 expanding the Groth16 trusted setup into what becomes zero-knowledge continuation.
 %
 In \S\ref{sec:pederson_vrf}, we introduce an extremely efficient NIZK
-for \Reval, which also provides an essential proof-of-knowledge for \compk.
+for \Leval, which also provides an essential proof-of-knowledge for \compk.
 
 
 \endinput

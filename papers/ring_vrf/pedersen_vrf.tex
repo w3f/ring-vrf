@@ -11,7 +11,7 @@ after which a PRF \eprint{evaluation}{} yields a VRF output
 We build efficient ring VRFs from a construction we call the
 {\em Pedersen VRF} \PedVRF, which alters the EC VRF by replacing the
 public key by a Pedersen commitment $\pk + \openpk \, \genB$,
-We claim \PedVRF instantiates the $\Reval$ NIZK from \S\ref{sec:overview}.
+We claim \PedVRF instantiates the $\Leval$ NIZK from \S\ref{sec:overview}.
 \footnote{As Groth16 dominates ring VRF verification costs,
 we describe only the non-batchable variant analogous to
 \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}, but
@@ -91,10 +91,10 @@ we instantiate a rVRF-AD from \PedVRF plus a ring commitment scheme
  $\rVRF.\{ \CommitRing, \OpenRing \}$.
 \rVRF inherits $\rVRF.\KeyGen = \PedVRF.\KeyGen$ and
  $\rVRF.\Eval = \PedVRF.\Eval$ of course, but requires.
-We need zero-knowledge ring membership proof for the relation \Rring
+We need zero-knowledge ring membership proof for the relation \Lring
 which handles both $\PedVRF.\OpenKey$ and $\rVRF.\OpenKey$ efficiently.
 % \vspace{-0.1in}
-$$ \Rring = \Setst{ \compk, \comring }{
+$$ \Lring = \Setst{ \compk, \comring }{
     \eprint{ \exists \openpk,\openring \textrm{\ s.t.\ } }{}
     \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenRing(\comring,\openring)}
 } \mathperiod $$
@@ -105,7 +105,7 @@ $$ \Rring = \Setst{ \compk, \comring }{
  samples $\openpk \leftsample \F_p$ and
  % computes a proof $\piring$, a signature $\sigma$, and
  returns $\rho = (\compk,\piring,\sigma)$ where      % a ring VRF signature
- $$ \piring = \NIZK.\Prove(\Rring,\compk,\comring,\openpk,\openring) \quad\textrm{and} $$
+ $$ \piring = \NIZK.\Prove(\Lring,\compk,\comring,\openpk,\openring) \quad\textrm{and} $$
  $$ \sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \piring \doubleplus \comring) \mathperiod $$ % finally
 \item $\rVRF.\rVerify : (\comring,\msg,\aux,\rho) \mapsto \Out \,\, \lor \perp$ \,
  parses $\rho$ as $(\compk,\piring,\sigma,)$ and

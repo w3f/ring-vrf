@@ -37,12 +37,12 @@ If concerned, one could address this via a second zk continuation that
 splits \pifast into a Groth16 \pisk and a Groth16 or KZG \pipk for two
 respective relations:
 %
-$$ \Rpk = \Setst{ J_\pk, \comring }{
+$$ \Lpk = \Setst{ J_\pk, \comring }{
 	\exists \openring \textrm{\ s.t.\ }
 	J_\pk = \eprint{\rVRF.}{}\OpenRing(\comring,\openring)
 } \mathcomma \eprint{\quad\textrm{and}}{} $$ 
 %
-$$ \Rsk = \Setst{ \sk_0 + \sk_1 2^{128}, J_\pk }{ 
+$$ \Lsk = \Setst{ \sk_0 + \sk_1 2^{128}, J_\pk }{ 
 	\exists d \textrm{\ s.t.\ }
 	% 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
 	J_\pk = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2
@@ -80,17 +80,17 @@ We clearly benefit from much faster ring updates this way, but pay in
 
 We could build \ring using append only structures like some blockchains,
 in which case we should split $\rVRF.\OpenRing$ differently between
-an inner ring block or epoch proof $\baseR_{\mathtt{block}}$,
+an inner ring block or epoch proof $\baseL_{\mathtt{block}}$,
  which we only prove once like \pisk above, and
-a chain state proof $\baseR_{\mathtt{chain}}$,
+a chain state proof $\baseL_{\mathtt{chain}}$,
  which extends this inner ring to the growing blockchain, and
  admits alternatives like KZG and Caulk+ \cite{caulk+}.
 %
-$$ \baseR_{\mathtt{chain}} = \Setst{ \mathtt{blk}, \mathtt{chain} }{
+$$ \baseL_{\mathtt{chain}} = \Setst{ \mathtt{blk}, \mathtt{chain} }{
 	\mathtt{blk} \in \mathtt{chain}
 } \mathcomma \quad\textrm{and} $$ 
 %
-$$ \baseR_{\mathtt{block}} = \Setst{ \sk_0 + \sk_1 2^{128}, \mathtt{blk} }{
+$$ \baseL_{\mathtt{block}} = \Setst{ \sk_0 + \sk_1 2^{128}, \mathtt{blk} }{
 	\eprint{\exists d,\openring \textrm{\ s.t.\ }}{}
 	\genfrac{}{}{0pt}{}{ \OpenRing(\mathtt{blk},\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
 } \mathperiod $$  
@@ -108,8 +108,8 @@ All certificates need expiry dates because certificates are inherently
 ``append only''.  We think all append only \ring constructions similarly
 benefit from expiration dates, including append only blockchains, and
 also proof-of-personhood parties \cite{pop2008,pop2017}.
-We suggest \pisk or $\baseR_{\mathtt{block}}$ emit the expiration date
-alongside the secret key in $X$, and \pipk or $\baseR_{\mathtt{chain}}$
+We suggest \pisk or $\baseL_{\mathtt{block}}$ emit the expiration date
+alongside the secret key in $X$, and \pipk or $\baseL_{\mathtt{chain}}$
 enforce expiration, but really even \PedVRF could enforce expiration.
 
 % In this, we prefer a SNARK friendly random oracle, because conventional random oracles cost like 30k constraints.
@@ -127,9 +127,9 @@ revocation improves all append only \ring designs.
 %
 We suggest revocation list be maintained separately from an append only
 blockchain and then do a non-membership proof from the revocation list
-in \pipk or $\baseR_{\mathtt{chain}}$.  % perhaps via \cite{???}.
+in \pipk or $\baseL_{\mathtt{chain}}$.  % perhaps via \cite{???}.
 These non-revocation proofs provide more nuanced \ring membership
-control, without reproving \pisk or $\baseR_{\mathtt{block}}$.
+control, without reproving \pisk or $\baseL_{\mathtt{block}}$.
 We expect a revocation list update only rarely compared with \ring itself.
 
 % We already trust an authority with issuing certificates, so we trust them with managing the revocation list too.  

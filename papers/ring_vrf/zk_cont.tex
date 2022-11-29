@@ -5,7 +5,7 @@
 We now develop our zero-knowledge continuation technique, called 
 {\em special Groth16}, and build ring VRFs with fast amortized prover time.
 
-% $$ \Rring = \Setst{ \compk, \comring }{
+% $$ \Lring = \Setst{ \compk, \comring }{
 %  \exists \openpk,\openring \textrm{\ s.t.\ } 
 %  \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenRing(\comring,\openring)}
 % } \mathperiod $$
@@ -188,7 +188,7 @@ with independent $\genJ_0,\genJ_1,\genJ_2$.
 Interestingly, we avoid range proofs for $\sk_1$ and $\sk_2$
 by this independence. 
 
-$$ \Rfast = \Setst{ \sk_0 + 2^{128} \sk_1, \comring }{
+$$ \Lfast = \Setst{ \sk_0 + 2^{128} \sk_1, \comring }{
  \eprint{ \exists d,\openring \textrm{\ s.t.\ } }{}
  % 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
  \genfrac{}{}{0pt}{}{ \eprint{\rVRF.}{}\OpenRing(\comring,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
