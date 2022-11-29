@@ -27,7 +27,7 @@ upon the signer set \ring:
 \end{itemize}
 
 A ring VRF like this could be instantiated using a NIZK for a relation like
-$$ \Setst{ (\Out, (\msg, \ring)) }{
+$$ \Setst{ \Out, \msg, \ring}{
     \eprint{
         (\pk,\sk) \leftarrow \KeyGen, \quad %   \textrm{ and }
         \pk \in \ring, \quad
@@ -40,7 +40,6 @@ $$ \Setst{ (\Out, (\msg, \ring)) }{
         \end{aligned}
     }
 } $$
-where $ \Out $ is a witness and $ (\msg,\ring) $ is a statement.
 % Although convenient for security arguments, % formalization
 
 We would need time $O(|\ring|)$ in \rSign and \rVerify merely to read
@@ -98,7 +97,7 @@ demands some hiding commitment \compk of course.
 %
 \def\tmpAA{\textrm{\compk commits to\ }}
 \def\tmpBB{\OpenRing(\comring,\openring)}
-$$ \Rring = \Setst{ (\compk, \comring) }{
+$$ \Rring = \Setst{ \compk, \comring }{
 	\eprint{
 	\tmpAA \pk = \tmpBB
 	}{
@@ -112,7 +111,7 @@ $$ \Rring = \Setst{ (\compk, \comring) }{
 We discovered this becomes incredibly efficient if one actually uses
 a Pedersen commitment to \sk in the Groth16 itself.
 
-$$ \Rring' = \Setst{ (\sk, \comring) }{
+$$ \Rring' = \Setst{ \sk, \comring}{
     \eprint{
     (\pk,\sk) \leftarrow \KeyGen, \quad % \textrm{ and }
     \pk = \OpenRing(\comring,\openring) 
