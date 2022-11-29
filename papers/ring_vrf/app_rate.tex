@@ -30,16 +30,16 @@ If $k_1 \ne k_2$ then Eve learns nothing, but if $k_1 = k_2$ then
 
 We do not necessarily always care if Eve learns this much information,
 but scenarios exist in which one cares.  We therefore briefly describe
-several mitigations:
+several mitigation:
 
 If $n$ remains fixed forever, then we could simply let all users
-register $n$ ring VRF public keys in \ctx.
+register $n$ ring VRF public keys in \ring.
 If $n$ fluctuates under an upper bound $N$, then we could create $N$
-rings $\ctx_i$ for $i = 1 \ldots N$, and
+rings $\ring_i$ for $i = 1 \ldots N$, and
  then blind \comring in \pifast similarly to \S\ref{sec:ring_hiding}.
 
 Although simple, these two approaches require users construct $n$ or $N$
-different $\pipk$ proofs every time the ring \ctx updates.
+different $\pipk$ proofs every time \ring updates.
 
 Instead of proving ring membership of one public key, $\pipk$ could
 prove ring membership of a Merkle commitment to multiple keys, so

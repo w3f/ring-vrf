@@ -1,90 +1,147 @@
 \section{Ring updates}
 \label{sec:ring_updates}
 
-We discuss \pifast, or \pisk and \pipk, representing public keys
- in $\grE$ in $\grJ$ already,
-% along with circuit implementation details of $\PedVRF.\{ \CommitKey, \OpenKey \}$,
-but otherwise mostly treated the ring commitment scheme
-$\rVRF.\{ \CommitRing, \OpenRing \}$ like a black box.
+% We discussed \pifast, or \pisk and \pipk, representing public keys
+%  in $\grE$ in $\grJ$ already,
+% % along with circuit implementation details of $\PedVRF.\{ \CommitKey, \OpenKey \}$,
+% but otherwise mostly treated the ring commitment scheme
+% $\rVRF.\{ \CommitRing, \OpenRing \}$ like a black box.
 
 Although our $\rVRF.\rSign$ runs fast, all users must update their
-stored zkSNARK \pipk every time the ring $\ctx$ changes.
-Almost any circuit works for \pipk though,
- which permits diverse optimizations depending upon usecase.
+stored zkSNARK \pifast every time \ring changes, which requires reproving \OpenRing.
 
 
 \subsection{Merkle trees} % {Poseidon}
 
-Our $\rVRF.\{ \CommitRing, \OpenRing \}$ could implement a
-Merkle tree using zkSNARK friendly hash functions like Poseidon \cite{poseidon}.
+Our $\rVRF.\{ \CommitRing, \OpenRing \}$ could implement a Merkle tree
+using a zkSNARK friendly hash function like Poseidon \cite{poseidon},
+giving $O(\log |\ring|)$ prover time.
 %
-All users need $O(\log |\ctx|)$ data with every update, which sounds
-reasonable but not free.  There is a fast moving literature on securing
-and optimizing zkSNARK friendly hash functions, with different techniques
-being better suited to different zkSNARKs or even curves.
+At least one Poseidon \cite{poseidon} provides arity four with only
+600 R1CS constraints.  We need roughly 700 r1CS constraints for each
+fixed based scalar multiplication too, so the flavor of \pifast costs
+under 12k R1CS constraints for a ring with four billion people.
 
-TODO: Arity 9 for 300 constraints?   % \cite{Groth16} vs plookup \cite{plookup}.
-
-We leave deeper discussion of zkSNARK friendly Merkle to the literature.
-Instead we spend this section focusing upon the diversity of circuit
-designs that fit our framework.
+% TODO: Arity 9 for 300 constraints?   % \cite{Groth16} vs plookup \cite{plookup}.
 
 
-\subsection{Vector commitments}
+\subsection{Side channels}
+\label{subsec:rvrf_side_channel}
 
-As noted in \S\ref{subsec:rvrf_side_channel}, our zkSNARK \pipk could use
-polynomial based vector commitments \cite{KZG}. % or so called ``Verkle trees'' \cite{??Verkle??} too.
-We need hidden opening locations of the sort discussed in Caulk \cite{caulk} and Caulk+ \cite{caulk+}.
+In \pifast, one might dislike processing secret key material inside
+the Groth16 prover for \pifast.
+Adversaries could trigger \pifast recomputation only by updating the ring,
+but this still presents a side channel risk.
 
-TODO: Discuss Caulk
-
-Interesstingly, we might avoid the extra proof-of-knowledge added
-in \S\ref{subsec:rvrf_side_channel} because the KZG commitment itself
-can provide the strucural proof.
-
-TODO:  Is this still true with Caulk?
-
-
-\subsection{Certificates} % \& revokation}
-
-If an authority grants ring membership, then ring membership proofs
-could simply verify some certificate by the authority, likely using
-a signature on JubJub.
-
-In this, we prefer a SNARK friendly random oracle,
-because conventional random oracles cost like 30k constraints.
-We also need a variable base scalar multiplication, which costs like
-4k constraints, as well as a couple fixed base scalar multiplication.
-A priori, these fixed base scalar multiplications cost roughly 700
-constraints each, but ocasionally they cost only half this.   
-
-We conjecture one fixed based scalar multiplication could be replaced
-by adapting implicit certificate scheme technqiues,
- instead of simply a signature on a user provided key.
-
-We typically need expiration dates in certificates, likely demanding
-a range proof and maybe requiring that \pipk be recomputed more often.
-
-% \subsection{Revokation}
-
-As a rule, one needs some revokation path for certificates,
-despite the underlying signature not being revokable. 
+If concerned, one could address this via a second zk continuation that
+splits \pifast into a Groth16 \pisk and a Groth16 or KZG \pipk for two
+respective relations:
 %
-We suggest maitaining a seperate revokation list and then inside
-\pipk prove non-membership in the revokation list.
-% perhaps via \cite{???}.
-In this way, we update \pipk only when the revokation list updates.
-We expect this represents a significatn savings because the revokation
-list could update far less often than the full ring \ctx itself.
-% perhaps corresponding with expiration checks
-% especially since ring membership cannot be traced across site so easily.
+$$ \Rpk = \Setst{ J_\pk, \comring }{
+	\exists \openring \textrm{\ s.t.\ }
+	J_\pk = \eprint{\rVRF.}{}\OpenRing(\comring,\openring)
+} \mathcomma \eprint{\quad\textrm{and}}{} $$ 
+%
+$$ \Rsk = \Setst{ \sk_0 + \sk_1 2^{128}, J_\pk }{ 
+	\exists d \textrm{\ s.t.\ }
+	% 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
+	J_\pk = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2
+} \mathperiod $$
 
-We already trust an authority with issuing certificates, so we trust
-them with managing therevokation list too.  As such, our revokation list
-non-membership proofs merely requires proving adjacency of the revoked
-public keys lexicographically before and after our own public key.
-If the revokation list requires secrecy, then VRFs could hide its ordering,
-similarly to NSEC5 \cite{nsec5}.
+We now prove \pisk only once {\it ever} during secret key generation,
+which largely eliminates any side channel risks.
+We do ask verifiers compute more pairings, but nobody cares when
+the VRF verifiers are few in number or institutional,
+as in many applications.
+We also ask provers rerandomize both \pisk and \pipk, but this costs relatively little.
+Assuming \pipk is Groth16 then we need a proof-of-knowledge for the desired structure of $J_\pk$ too.
+All totaled this almost doubles the size and complexity of our ring VRF signature.
+
+There is no ``arrow of time'' among zk continuations per se, but
+as \pisk bridges between the \PedVRF and \pipk,
+one might consider the \pisk-to-\pipk continuation to be time reversed.
+
+
+\subsection{Polynomial commitments}
+
+As \pipk became rather simple, % in \S\ref{subsec:rvrf_side_channel},
+there exists an alternative formulation:  
+\comring could be a KZG polynomial commitment \cite{KZG} to users' $J_\pk$s,
+while \pipk itself becomes an opening at a secret location, like
+Caulk+ \cite{caulk+} or Caulk \cite{caulk}.
+We clearly benefit from much faster ring updates this way, but pay in
+ increased verifier time and increased marginal prover time.
+
+
+\subsection{Append only blockchains}
+
+\def\comblock{\ensuremath{\mathsf{comblock}}\xspace}
+\newcommand\pichain{\ensuremath{\pi_{\mathtt{chain}}}\xspace}
+
+We could build \ring using append only structures like some blockchains,
+in which case we should split $\rVRF.\OpenRing$ differently between
+an inner ring block or epoch proof $\baseR_{\mathtt{block}}$,
+ which we only prove once like \pisk above, and
+a chain state proof $\baseR_{\mathtt{chain}}$,
+ which extends this inner ring to the growing blockchain, and
+ admits alternatives like KZG and Caulk+ \cite{caulk+}.
+%
+$$ \baseR_{\mathtt{chain}} = \Setst{ \mathtt{blk}, \mathtt{chain} }{
+	\mathtt{blk} \in \mathtt{chain}
+} \mathcomma \quad\textrm{and} $$ 
+%
+$$ \baseR_{\mathtt{block}} = \Setst{ \sk_0 + \sk_1 2^{128}, \mathtt{blk} }{
+	\eprint{\exists d,\openring \textrm{\ s.t.\ }}{}
+	\genfrac{}{}{0pt}{}{ \OpenRing(\mathtt{blk},\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
+} \mathperiod $$  
+
+Again here we need a proof-of-knowledge for $\mathtt{blk}$ because
+it winds up opaque to verifiers.
+
+
+\subsection{Expiration} % {Certificates} % \& revokation}
+
+We could build \piring or \pipk that merely check a certificate or
+credential issued by some authority too.
+We do not explore this direction except to observe: 
+All certificates need expiry dates because certificates are inherently
+``append only''.  We think all append only \ring constructions similarly
+benefit from expiration dates, including append only blockchains, and
+also proof-of-personhood parties \cite{pop2008,pop2017}.
+We suggest \pisk or $\baseR_{\mathtt{block}}$ emit the expiration date
+alongside the secret key in $X$, and \pipk or $\baseR_{\mathtt{chain}}$
+enforce expiration, but really even \PedVRF could enforce expiration.
+
+% In this, we prefer a SNARK friendly random oracle, because conventional random oracles cost like 30k constraints.
+% We also need a variable base scalar multiplication, which costs like 4k constraints, as well as a couple fixed base scalar multiplication.
+% A priori, these fixed base scalar multiplications cost roughly 700 constraints each, but occasionally they cost only half this.   
+%
+% We conjecture one fixed based scalar multiplication could be replaced by adapting implicit certificate scheme techniques,  instead of simply a signature on a user provided key.
+
+
+\subsection{Revocation}
+
+As a rule, one needs some revocation path for certificates,
+despite the underlying signature not being revocable, but again
+revocation improves all append only \ring designs.
+%
+We suggest revocation list be maintained separately from an append only
+blockchain and then do a non-membership proof from the revocation list
+in \pipk or $\baseR_{\mathtt{chain}}$.  % perhaps via \cite{???}.
+These non-revocation proofs provide more nuanced \ring membership
+control, without reproving \pisk or $\baseR_{\mathtt{block}}$.
+We expect a revocation list update only rarely compared with \ring itself.
+
+% We already trust an authority with issuing certificates, so we trust them with managing the revocation list too.  
+% As such, our revocation list non-membership proofs merely requires proving adjacency of the revoked public keys lexicographically before and after our own public key.
+% If the revocation list requires secrecy, then VRFs could hide its ordering,
+% similarly to NSEC5 \cite{nsec5}.
+
+
+
+\endinput
+
+
 
 
 \subsection{Append only logs}
@@ -99,8 +156,8 @@ its own $\comring_n$ and recursively proves some $\pifast^{n-1}$ with
 its own $\comring_{n-1}$ and the same $\sk$.
 We expect half pairing cycles fit this usage nicely, although they complicate provers.
 
-Append only logs still depand \pipk be reproven whenever
-\ctx updates however, so they only reduce bandwidth they not CPU usage.
+Append only logs still depend \pipk be reproven whenever
+\ring updates however, so they only reduce bandwidth they not CPU usage.
 We shy away from such append only log optimizations, due to this
-prover complexity and our desire for revokation, but
+prover complexity and our desire for revocation, but
  they remain an interesting corner of the design space.

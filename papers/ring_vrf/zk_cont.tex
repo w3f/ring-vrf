@@ -18,7 +18,7 @@ Zero-knowledge continuations need rerandomizable zkSNARKs,
 meaning Groth16 \cite{Groth16}, but beyond rerandomization their
 unlinkability demands hiding public inputs.
 In our case, we ``specialize'' Groth16 to permit alteration of \openpk
-in the $\PedVRF.\OpenKey$ invocation, but without reproving our heavy
+in the $\PedVRF.\OpenKey$ invocation without reproving our heavy
 $\rVRF.\OpenRing$ invocation.
 
 In Groth16 \cite{Groth16}, we have an SRS $S$ consisting of curve
@@ -36,7 +36,7 @@ In the SRS $S$, we distinguish the verifiers' string of elements
  $\chi_1,\ldots,\chi_k, [\alpha]_1 \in \grE_1$ and
  $[\beta]_2, [\gamma]_2, [\delta]_2 \in \grE_2$.
 % as separate from the provers' much longer string of elements in $\grE_1$ and $\grE_2$.
-A Groth16 \cite{Groth16} proof then takes the form 
+A Groth16 \cite{Groth16} proof takes the form 
  $\pi = (A,B,C) \in \grE_1 \times \grE_2 \times \grE_1$.
 A verifier then produces a $X = \sum_i^k x_i \chi_i \in \grE_1$ from
  the public inputs $x_i$ and then checks 
@@ -88,7 +88,7 @@ C' &= C + r_2 A + b \genB_\delta \mathperiod \\
 As our two $b$ terms cancel in the pairings, our special Groth16
 rerandomization reduces to the standard Groth16 rerandomization
 construction above,
- except with $X$ an now opaque Pedersen commitment.
+ except with $X$ now an opaque Pedersen commitment.
 
 % TODO:  Should we be saying opaque less and Pedersen more below?
 
@@ -102,7 +102,7 @@ $$ e(A',B') = e([\alpha]_1, [\beta]_2) \cdot
  e(X' + Y, [\gamma]_2) \cdot e(C', [\delta]_2) \mathcomma $$
 As our verifier does not build $X'$ themselves, we prove nothing
 with this pairing equation unless the verifier separately checks
- some proof-of-knowledge that $X' = \sum_i^k x_i \chi_i$.
+ some proof-of-knowledge that $X' = b \genB_\gamma + \sum_i^k x_i \chi_i$.
 
 \begin{lemma}\label{lem:unlinkable}
 Our rerandomization procedure % $(X,A,B,C) \mapsto (X',A',B',C')$
@@ -245,75 +245,4 @@ so our result follows from Lemma \ref{lem:knowledge_soundness}.
 % Our Pedersen ring VRF instantiated with \pifast satisfies ring anonymity.
 % \end{corollary}
 
-
-\subsection{Side channel}
-\label{subsec:rvrf_side_channel}
-
-In this, we dislike exposing the secret key material inside
- the Groth16 prover for \pifast.
-Adversaries could trigger \pifast recomputation only by updating the ring,
-but this still presents a side channel risk.
-
-If concerned, one could address this via a second zk continuation that
-splits \pifast into a Groth16 \pisk and a Groth16 or KZG \pipk for two
-respective relations:
-%
-$$ \Rpk = \Setst{ J_\pk, \comring }{
- \exists \openring \textrm{\ s.t.\ }
-  J_\pk = \eprint{\rVRF.}{}\OpenRing(\comring,\openring)
-} \mathcomma \eprint{\quad\textrm{and}}{} $$ 
-%
-$$ \Rsk = \Setst{ \sk_0 + \sk_1 2^{128}, J_\pk }{ 
- \exists d \textrm{\ s.t.\ }
- % 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
- J_\pk = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2
-} \mathperiod $$
-
-We now prove \pisk only once {\it ever} during secret key generation,
-which largely eliminates any side channel risks.
-We do ask verifiers compute more pairings, but nobody cares when
-the VRF verifiers are few in number or institutional,
- as in many applications.
-We also ask provers rerandomize both \pisk and \pipk, but this costs relatively little.
-Assuming \pipk is Groth16 then we need a proof-of-knowledge for the desired structure of $J_\pk$ too.
-All totaled this almost doubles the size and complexity of our ring VRF signature.
-
-There is no ``arrow of time'' among zk continuations per se, but
-as \pisk bridges between the \PedVRF and \pipk,
-one might consider the \pisk-to-\pipk continuation to be time reversed.
-
-Interestingly, our \pipk has become simple enough that opening
-a KZG commitment \cite{KZG} at a secret point now suffices,
- ala Caulk+ \cite{caulk+}, or perhaps Caulk \cite{caulk}.
-
-% \subsection{Ring blockchains}
-% \label{subsec:rvrf_side_channel}
-\smallskip
-
-\def\comblock{\ensuremath{\mathsf{comblock}}\xspace}
-\newcommand\pichain{\ensuremath{\pi_{\mathtt{chain}}}\xspace}
-
-We could build our ring using a blockchain,
- not unlike how ZCash handles their UTXOs.
-If so, we suggest \pifast provide an inner per block or per epoch ring,
-but then another proving system like Caulk+ \cite{caulk+}
- extend this ring to the growing blockchain, like
-%
-$$ \baseR_{\mathtt{chain}} = \Setst{ \mathtt{blk}, \mathtt{chain} }{
-	\mathtt{blk} \in \mathtt{chain}
-} \mathcomma \quad\textrm{and} $$ 
-%
-$$ \Rfast = \Setst{ \sk_0 + \sk_1 2^{128}, \mathtt{blk} }{
-	\eprint{\exists d,\openring \textrm{\ s.t.\ }}{}
-	\genfrac{}{}{0pt}{}{ \OpenRing(\mathtt{blk},\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
-} \mathperiod $$  
-
-Again we need a proof-of-knowledge for $\mathtt{blk}$ because it winds up opaque
- in both of these proofs. 
-
-% \begin{proposition}
-% \end{proposition}
-
-
-\endinput
 
