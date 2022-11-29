@@ -147,7 +147,7 @@ $ \simulator $ forwards all messages forwarded by $ \env $ to $ \mathcal{F} $. T
 
 \begin{definition}[UC-Security of $ \phi $] \label{def:uc}
 	Given a real world protocol $ \phi $ and an ideal functionality $ \mathcal{F} $ for the protocol $ \phi $, we call that $ \phi $ is UC-secure i.e., $ \phi $ UC-realizes $ \mathcal{F} $, if for all PPT adversaries \adv,  there exists a simulator $ \simulator  $ such that for any environment $ \env $,
-	$\mathsf{EXEC}_{\phi, \adv, \env}$ indistinguishable from $\mathsf{EXEC}_{\mathcal{F},\simulator, \env}$.
+	$\mathsf{EXEC}_{\phi, \adv, \env}$ is indistinguishable from $\mathsf{EXEC}_{\mathcal{F},\simulator, \env}$.
 \end{definition}
 
 
