@@ -125,7 +125,12 @@ $$ \Rring' = \Setst{ \sk, \comring}{
     }
 } $$
 
-$$ \Reval = \Setst{ \Out, \msg, \aux, \pk }{ \Out = \PRF(\sk,\msg) } $$
+$$ \Reval = \Setst{ \Out, \msg, \aux, \compk }{
+    \begin{aligned}
+	&\Out = \PRF(\sk,\msg), \\
+	&\textrm{\compk commits to\ \sk} \\
+    \end{aligned}
+} $$
 
 In \S\ref{sec:rvrf_cont} we rerandomize $\compk = \pk + b \, K$
 without reproving the Groth16 for \Rring, but instead requires
