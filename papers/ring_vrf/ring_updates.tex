@@ -7,8 +7,10 @@
 % but otherwise mostly treated the ring commitment scheme
 % $\rVRF.\{ \CommitRing, \OpenRing \}$ like a black box.
 
-Although our $\rVRF.\rSign$ runs fast, all users must update their
-stored zkSNARK \pifast every time \ring changes, which requires reproving \OpenRing.
+We now discuss the performance of \pifast.
+Although our $\rVRF.\rSign$ runs fast, all users should update their
+stored zkSNARK \pifast every time \ring changes, % which requires reproving \OpenRing.
+but zero knowledge continuations help here too.
 
 
 \subsection{Merkle trees} % {Poseidon}

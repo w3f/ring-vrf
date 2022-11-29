@@ -7,19 +7,19 @@ In practice however, we think many sites benefit from accepting
 multiple overlapping rings for convenience and/or reach, but then
 tolerate the resulting few ``Sybil'' users.
 
-As sites accept more rings, we increase risks that each user's ring
-\ctx reveals private user attributes, especially if
+As sites accept more rings, we increase risks that each user's \ring
+reveals private user attributes, especially if
  users join many rings, sites accept many rings, and
  user agents manage the association poorly.
 As a solution, we suggest tweaking \pifast to prove the ring itself
 lies in some permitted set of rings, but hide the specific ring used.
 
-We could achieve this using recursion inside \pifast of course,
-but doing so lies out of scope.  We instead discuss using other
-zero-knowledge continuation techniques or similar.
+% We could achieve this using recursion inside \pifast of course,
+% but doing so lies out of scope.  We instead discuss using other
+% zero-knowledge continuation techniques or similar.
 
 
-\subsection{Unique circuit}
+\subsection{Identical circuit}
 
 As a first step, if all rings use the same circuit, then we hide the
 ring among several rings using a second zero-knowledge continuation.
@@ -50,7 +50,7 @@ due to its dependence upon the SRS like
 $$ \chi_1 = \left[ {\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) \over \gamma} \right]_1 \mathperiod $$
 
 Instead, we propose to stabilize the public input SRS elements across circuits:
-We choose $\chi_{1,\gamma}$ independent before selecting the circuit
+We choose $\chi_{1,\gamma}$ independently before selecting the circuit
 or running its trusted setup.
 We then merely add an SRS element $\chi_{1,\delta}$, for usage in $C$, that binds
 our independent $\chi_{1,\gamma}$ to the desired definition, so
@@ -83,7 +83,7 @@ As a nice solution, our Groth16 trusted setup could construct a
 KZG polynomial commitment $\rho$ along with openings to the
 various $\delta$ as $[\delta]_2$.  At this point, our signer could
 blind open $\rho$ to the curve point $[\delta]_2$.
-We think concurrent trusted setups could skip much complexity of
+We suspect concurrent trusted setups could skip much complexity of
 Caulk+ \cite{caulk+} or Caulk \cite{caulk} because actually the
  trusted setup erases all knowledge of all openings of $\rho$.
 
