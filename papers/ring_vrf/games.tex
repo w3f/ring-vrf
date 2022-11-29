@@ -6,10 +6,11 @@ In this section, we model the security of ring VRF in both standard model and UC
 \subsection{Standard model}
 \label{subsec:rvrf_games}
 
-We briefly give security games for rVRF-AD constructions, which broadly
-resemble existing VRF or ring signature definitions.  In this, we include
-the full key commitment procedure and auxiliary data \aux, as they impact
-implementers and applications, but we suppress multiple inputs for brevity.
+We briefly give security games for a {\em ring verifiable random
+function with auxiliary data} rVRF-AD constructions, which broadly
+resemble existing VRF or ring signature definitions.  In this,
+we include the full key commitment procedure and auxiliary data \aux,
+as they impact implementers and applications, but we suppress multiple inputs for brevity.
 
 % We need some basic correctness conditions of course.
 
@@ -39,7 +40,7 @@ We let \ora{Sign} denote a ring signature CMA oracle, meaning
 \begin{itemize}
 \item $\ora{Sign}(\oramsg{keygen})$ \, 
  creates a fresh key pair $(\pk,\sk) \leftarrow \KeyGen$, logs it, and
- adds $\pk$ to the set $\ring_0$, and then returns \pk.
+ adds $\pk$ to a set $\ring_0$ it maintains, and then returns \pk.
 \item $\ora{Sign}(\comring,\openring,\msg,\aux)$ \,
  returns the ring VRF signature $\Sign(\sk,\openring,\msg,\aux)$,
  provided it logged $(\pk,\sk)$ with $\pk = \OpenKey(\comring,\openring)$ previously.
@@ -63,7 +64,7 @@ any PPT adversary \adv has an advantage only
  except the adversary \adv loses if they ever query $\ora{Sign}(\comring',\openring',\msg,\cdot)$
  on \msg for some $\comring',\openring'$ with
  \def\tmp{\OpenKey(\comring',\openring') \in \{ \pk_0, \pk_1 \}}
- \eprint{$\tmp$.}{$$ \mathperiod $$}
+ \eprint{$\tmp$.}{$$ \tmp \mathperiod $$}
  Finally \adv guesses $j$ and wins if correct.
 \end{itemize}
 \end{definition}

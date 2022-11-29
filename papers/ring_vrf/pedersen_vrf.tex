@@ -90,8 +90,9 @@ As described in \S\ref{sec:overview},
 we instantiate a rVRF-AD from \PedVRF plus a ring commitment scheme
  $\rVRF.\{ \CommitRing, \OpenRing \}$.
 \rVRF inherits $\rVRF.\KeyGen = \PedVRF.\KeyGen$ and
- $\rVRF.\Eval = \PedVRF.\Eval$ of course, but requires.
-We need zero-knowledge ring membership proof for the relation \Lring
+ $\rVRF.\Eval = \PedVRF.\Eval$ of course,
+except its public keys maybe expanded by additional representations in practice.
+We need a zero-knowledge ring membership proof for the relation \Lring
 which handles both $\PedVRF.\OpenKey$ and $\rVRF.\OpenKey$ efficiently.
 % \vspace{-0.1in}
 $$ \Lring = \Setst{ \compk, \comring }{
