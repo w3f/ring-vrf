@@ -2,7 +2,7 @@
 %%% Do NOT edit. File created by BibTeX with style
 %%% ACM-Reference-Format-Journals [18-Jan-2012].
 
-\begin{thebibliography}{27}
+\begin{thebibliography}{29}
 
 %%% ====================================================================
 %%% NOTE TO THE USER: you can override these defaults by providing
@@ -166,6 +166,20 @@
 \newblock
 
 
+\bibitem[\protect\citeauthoryear{David, Ga{\v{z}}i, Kiayias, and Russell}{David
+  et~al\mbox{.}}{2018}]%
+        {praos}
+\bibfield{author}{\bibinfo{person}{Bernardo David}, \bibinfo{person}{Peter
+  Ga{\v{z}}i}, \bibinfo{person}{Aggelos Kiayias}, {and}
+  \bibinfo{person}{Alexander Russell}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Ouroboros {P}raos: An adaptively-secure,
+  semi-synchronous proof-of-stake blockchain}. In
+  \bibinfo{booktitle}{\emph{Annual International Conference on the Theory and
+  Applications of Cryptographic Techniques}}. Springer,
+  \bibinfo{pages}{66--98}.
+\newblock
+
+
 \bibitem[\protect\citeauthoryear{Davidson, Goldberg, Sullivan, Tankersley, and
   Valsorda}{Davidson et~al\mbox{.}}{2018}]%
         {PrivacyPass}
@@ -255,6 +269,19 @@
 \tempurl}
 \newblock
 \shownote{IACR ePrint Archive 2016/260.}
+
+
+\bibitem[\protect\citeauthoryear{Groth, Ostrovsky, and Sahai}{Groth
+  et~al\mbox{.}}{2012}]%
+        {zkfunc}
+\bibfield{author}{\bibinfo{person}{Jens Groth}, \bibinfo{person}{Rafail
+  Ostrovsky}, {and} \bibinfo{person}{Amit Sahai}.}
+  \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{New techniques for noninteractive zero-knowledge}.
+\newblock \bibinfo{journal}{\emph{Journal of the ACM (JACM)}}
+  \bibinfo{volume}{59}, \bibinfo{number}{3} (\bibinfo{year}{2012}),
+  \bibinfo{pages}{1--35}.
+\newblock
 
 
 \bibitem[\protect\citeauthoryear{Gurkan, Jovanovic, Maller, Meiklejohn, Stern,

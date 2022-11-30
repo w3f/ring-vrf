@@ -70,11 +70,18 @@ $$ \exists \openring \textrm{\ s.t.\ } \pk = \OpenRing(\comring,\openring) \math
 %     \end{aligned}
 % } $$
 
-As EC VRF does, our ring VRFs sign auxiliary data \aux too.%
+
+Aside from proving a PRF evaluation, an EC VRF should typically sign
+some auxiliary data \aux by hashing \aux when computing its challenge,
+but doing so only saves one redundant signature verification for EC VRF.
+Auxiliary data becomes critical for ring VRFs, because otherwise
+unmoored ring VRFs invariably permit replay attacks.
+As an example, if ring VRFs authorized creating blocks in an anonymous
+praos \cite{praos} blockchain then \aux must include the block being
+created, or else others could steal the block production turn.%
 \footnote{We suppress multiple input-output pairs until \S\ref{subsec:multi_io} below, but they work like in \cite{PrivacyPass}.}
-% and support multiple messages $\msg_1,\ldots,\msg_n$ ala .
-Our algorithms for a {\em ring verifiable random function
-with auxiliary data} (rVRF-AD) therefore really look like
+
+Our algorithms for a {\em ring verifiable random function with auxiliary data} (rVRF-AD) therefore look like
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$, \quad and
 \item $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto \Out \,\, \lor \perp$.

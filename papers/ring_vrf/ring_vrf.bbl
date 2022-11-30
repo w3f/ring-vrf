@@ -55,6 +55,13 @@ Ran Canetti.
 {Chatham House}.
 \newblock Climate change risk assessment 2021.
 
+\bibitem{praos}
+Bernardo David, Peter Ga{\v{z}}i, Aggelos Kiayias, and Alexander Russell.
+\newblock Ouroboros {P}raos: An adaptively-secure, semi-synchronous
+  proof-of-stake blockchain.
+\newblock In {\em Annual International Conference on the Theory and
+  Applications of Cryptographic Techniques}, pages 66--98. Springer, 2018.
+
 \bibitem{PrivacyPass}
 Alex Davidson, Ian Goldberg, Nick Sullivan, George Tankersley, and Filippo
   Valsorda.
@@ -90,6 +97,11 @@ Jens Groth.
   in Cryptology -- EUROCRYPT 2016}, pages 305--326, Berlin, Heidelberg, 2016.
   Springer Berlin Heidelberg.
 \newblock IACR ePrint Archive 2016/260.
+
+\bibitem{zkfunc}
+Jens Groth, Rafail Ostrovsky, and Amit Sahai.
+\newblock New techniques for noninteractive zero-knowledge.
+\newblock {\em Journal of the ACM (JACM)}, 59(3):1--35, 2012.
 
 \bibitem{agg_dkg}
 Kobi Gurkan, Philipp Jovanovic, Mary Maller, Sarah Meiklejohn, Gilad Stern, and
