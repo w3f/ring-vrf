@@ -15,10 +15,10 @@ We discuss only \pifast here but all techniques apply to \pisk and \pipk similar
 
 \begin{itemize}
 \item {\em Register} --
- Adds users' public key commitments into some public ring \ctx,
- after verifying the user does not currently exist in \ctx.
+ Adds users' public key commitments into some \ring,
+ after verifying the user does not currently exist in \ring.
 \item {\em Update} --
- User agents regenerate their stored SNARK \pifast every time \ctx changes,
+ User agents regenerate their stored SNARK \pifast every time \ring changes,
  likely receiving \comring and \openring from some ring management service.
 \item {\em Identify} --
  Our user agent first opens a standard TLS connection to a server \msg,
@@ -41,18 +41,21 @@ We discuss only \pifast here but all techniques apply to \pisk and \pipk similar
 \subsection{Browsers}
 
 We must not link users' identities at different web sites, so user agents
-must disable all cross site resource loading, referrer information, etc.
-Yet, user agents could still load purely static resources, without metadata
-like cookies or referrer information, especially purely content addressable
-resources.
+should carefully limit cross site resource loading, referrer information, etc.
+User agents could always load purely static resources, without metadata
+like cookies or referrer information.
+% especially purely content addressable resources.
+At least Tor browser already takes cross site resource concerns seriously,
+while Safari and Brave may limit invasive cross site resources too.
+% In any case, one could always specify rules against cross site privacy invasions
+% whenever writing ring VRF browser specifications.
 
-In other words, web browsers mostly fail these baseline privacy requirements.
-We expect Tor browser and Brave both behave correctly however.
-Apple's Safari trends towards preventing invasive cross site resources too.  
-% There also do exist decentralized web aka web 3.0 projects whose stated aims
-% include more privacy.
-In any case, one could always specify rules against cross site privacy invasions
-whenever writing ring VRF browser specifications.
+We somewhat trust the CAs and CT log system with users' identities in
+the above protocol, in that users could login to a site with fraudulent
+credentials.  We think cross site restrictions limit this attack vector.
+If stronger defenses are desired then instead of \msg being the site name,
+\msg could be a public ``root'' key for the specific site, which then
+also certifies its TLS certificate.  Ideally its secret key remains air gaped.
 
 
 \subsection{AML/KYC}\label{subsec:AML_KYC}

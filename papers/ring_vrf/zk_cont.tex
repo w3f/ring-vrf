@@ -160,7 +160,7 @@ We depends upon the specific simulator though, which itself increases
 our dependence upon the usage of the zero knowledge continuation.
 
 
-\subsection{Single continuation}
+\subsection{Continuation}
 \label{subsec:rvrf_faster}
 
 % TODO \PedVRF.\OpenKey(\compk,\openpk)
@@ -219,7 +219,7 @@ group signature schemes' performance.  We hope this ends the temptation
 to deploy group signature like constructions where the deanonymization vectors matter.
 
 \begin{theorem}\label{thm:knowledge_soundness}
-Our Pedersen ring VRF instantiated with \pifast satisfies knowledge soundness.
+\rVRF instantiated with \pifast and \PedVRF satisfies knowledge soundness.
 \end{theorem}
 
 \begin{proof}[Proof stetch.]
@@ -232,7 +232,7 @@ so our result follows from Lemma \ref{lem:knowledge_soundness}.
 % \end{corollary}
 
 % \begin{theorem}\label{thm:pifast_anonymity}
-% Our Pedersen ring VRF \rVRF using \pifast satisfies zero-knowledge.
+% Our ring VRF \rVRF using \pifast and \PedVRF satisfies zero-knowledge.
 % \end{theorem}
 %
 % \begin{proof}[Proof stetch.]
