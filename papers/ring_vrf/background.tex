@@ -38,13 +38,15 @@ where pairings demand deserialization prove group membership in $\grE_1$
 or $\grE_2$.  We explicitly multiply by the cofactor $h$ when doing
 Chaum-Pedersen DLEQ proofs though, as not doing so risks miss-readings by implementers.
 
-We let $H_p : \{0,1\}^* \to \F_p$ and $H_\grE : \{0,1\}^* \to \grE_1$
-denote hash-to-scalar and hash-to-curve random oracles (RO) with ranges
-$\F_p$ and $\grE$, respectively.  
-
 We also let $\ecJ$ denote a ZCash Sapling style ``JubJub'' Edwards curve
 over $\F_p$, with distinguished subgroup $\grJ$ of prime order, so that
 SNARKs on $\ecE$ prove $\grJ$ arithmetic relatively cheaply.
+Aside from Jubjub, we optionally want a ``sister'' Edwards curve $\crE$,
+with a subgroup $\grE$ of the same order $p$ $\grE$, but which lacks any pairing.
+
+We let $H_p : \{0,1\}^* \to \F_p$ and $H_{\grE} : \{0,1\}^* \to \grE_1$
+denote hash-to-scalar and hash-to-curve random oracles (RO) with ranges
+$\F_p$ and $\grE'$, respectively.  
 
 
 \subsection{Zero-knowledge proofs}
