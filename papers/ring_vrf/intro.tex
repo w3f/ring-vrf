@@ -2,6 +2,8 @@
 
 \def\qaudbreak{\eprint{\quad}{\\}}
 
+% A {\it ring verifiable random function} (ring VRF) is a ring signature that proves correct evaluation of some pseudo-random function (PRF) determined by the actual key pair used in signing. 
+
 We introduce ring verifiable random functions (ring VRFs) as a natural
 fulcrum around which anonymous credentials turn, in formalization,
 in optimizations, in the nuances of use-cases, and in miss-use resistance.
@@ -46,9 +48,20 @@ essential for zkSNARKs used outside the crypto-currency space.
 % \smallskip 
 \paragraph{Ring VRFs:}
 
-A {\it ring verifiable random function} (ring VRF) is a ring signature
-that proves correct evaluation of some pseudo-random function (PRF)
-determined by the actual key pair used in signing. % (see \S\ref{sec:rvrf_games}).
+A ring signature proves only that its actual signer lies in a ``ring''
+of public keys, without revealing which signed.
+A {\it verifiable random function} (VRF) is a signature that proves
+correct evaluation of a PRF defined by the signer's key.
+% but nuances exist .
+
+A {\it ring verifiable random function} (ring VRF) is a ring signature, in
+that it anonymizes its actual signer within a ring of plausible signers,
+but also proves correct evaluation of a pseudo-random function (PRF)
+defined by the actual signer's key. % (see \S\ref{sec:rvrf_games}).
+%
+Ring VRF outputs provide linking proofs between different signatures iff
+the signatures have identical inputs, as well as pseudo-randomness.
+
 We build extremely efficient and flexible ring VRFs by amortizing a
 zero-knowledge continuation that unlinkably proves ring membership
 of a secret key, and then cheaply proving individual VRF evaluations.
@@ -69,19 +82,21 @@ works depend upon the UC formulation.
 \paragraph{Identity uses:}
 
 As an identity system, ring VRFs evaluated on a specific context or
-domain name output a unique identity for the user at that domain or
-in that context (see \S\ref{sec:app_identity}).  In this way, they
-permit banning specific users and prevent Sybil behavior.
+domain name output a unique identity for the signer at that domain or
+in that context (see \S\ref{sec:app_identity}).
+In this way, they permit banning specific users and prevent Sybil behavior.
 Yet users' activities remain unlinkable across distinct contexts or
-domains, which supports diverse ethical identity usages.
+domains, meaning correctly deployed ring VRF based credentials
+only deSybil users, nothing more.  We argue this yields diverse
+legally and ethically straightforward identity usages.
 
-We contrast such ethically straightforward ring VRF based identity
-with the ethically problematic case of attribute based credential
-schemes like IRMA (``I Reveal My Attributes'') credentials \cite{IRMAcredentials},
- which are now marketed as an online privacy solution.
-IRMA could improve privacy in narrow situations of course, but
+As a problematic contract, attribute based credential schemes like
+IRMA (``I Reveal My Attributes'') credentials \cite{IRMAcredentials}
+are being marketed as an online privacy solution, but only deSybil
+users if they reveal numerous attributes, meaning they provide little or no privacy.
+IRMA might improve privacy in narrow situations of course, but
 overall attribute based credentials should {\it never} be considered
-fit for general purpose usage, like the prevention of Sybil behavior.
+fit for general purpose usage, aka the prevention of Sybil behavior.
 
 Aside from general purpose identity, our existing offline
 verification processes often better protect user privacy and human
@@ -93,10 +108,10 @@ all bring matching harmful uses.  % https://www.w3.org/TR/vc-use-cases/
 As an example, if users could easily prove their employment online, which
 the W3C claims helps users apply for bank accounts, then job application
 sites could similarly demand proof of current employment, a clear injustice.
-% that outweighs the convenience in opening bank accounts.
+Average users apply for jobs far more often than they open bank accounts.
 
-In general, abuse risks dictate that IRMA verifiers should be tightly
-controlled by legislation, which becomes difficult internationally. 
+In general, abuse risks like this dictate that IRMA verifiers should be
+tightly controlled by legislation, which becomes difficult internationally. 
 %
 Ring VRFs avoid these abuse risks by being truly unlinkable, and thus
 yield anonymous credentials which safely avoid legal restrictions.
@@ -109,10 +124,11 @@ We credit Bryan Ford's work on proof-of-personhood parties \cite{pop2008,pop2017
 with first espousing the idea that anonymous credentials should produce
 contextual unique identifiers, without leaking other user attributes.
 
-As a rule, there exist simple VRF variants for all anonymous credentials
-like IRMA \cite{IRMAcredentials} or group signatures \cite{group_sig_survey}.
+As a rule, there exist simple VRF variants for all anonymous credentials,
+including IRMA \cite{IRMAcredentials} or group signatures \cite{group_sig_survey}.
 We focus exclusively upon ring VRFs for brevity, and because alone
 ring VRFs contextual linkability covers the most important use cases.
+% and our optimizations make ring VRFs extremely efficient.
 
 % Third
 % \smallskip
@@ -149,9 +165,10 @@ as well as identity applications like prevention of spam and online abuse.
 
 In this, we need authenticated domain separation of products or identity
 consumers in queries to users' ring VRF credentials.  We briefly discuss
-some sensible patterns in \S\ref{???} below, but overall authenticated
-domain separation resemble TLS certificates except simpler in that
-roots of trust can self authenticate if root keys act as domain separators.
+some sensible patterns in \S\ref{subsec:app_ration_carts} below, but
+overall authenticated domain separation resemble TLS certificates except
+simpler in that roots of trust can self authenticate if root keys act as
+domain separators.
 
 % \paragraph{Outline:}
 
