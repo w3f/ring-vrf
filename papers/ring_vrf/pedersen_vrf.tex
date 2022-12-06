@@ -106,19 +106,23 @@ $$ \Lring = \Setst{ \compk, \comring }{
     \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenRing(\comring,\openring)}
 } \mathperiod $$
 
+
+\def\tmpaux{\aux \doubleplus \compk \doubleplus \piring \doubleplus \comring}
+\def\tmpeprintaux{\eprint{\aux'}{\tmpaux}}
+\def\tmpindent{\hspace*{5pt}}
 \begin{itemize}
-\item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \rho$ \,
- % takes a secret key \sk, a ring opening \openring, a message \msg, and \aux, and then % auxiliary data
- samples $\openpk \leftsample \F_p$ and
- % computes a proof $\piring$, a signature $\sigma$, and
- returns $\rho = (\compk,\piring,\sigma)$ where      % a ring VRF signature
- $$ \piring = \NIZK.\Prove(\Lring,\compk,\comring,\openpk,\openring) \quad\textrm{and} $$
- $$ \sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \piring \doubleplus \comring) \mathperiod $$ % finally
+\item $\rVRF.\rSign\eprint{ : }{}(\sk,\openring,\msg,\aux)\eprint{ \mapsto \rho}{}$
+	returns $\rho = (\compk,\piring,\sigma)$ \eprint{where \\}{\\ where} 
+	\tmpindent $(\openpk,\compk) \leftarrow \PedVRF.\CommitKey$,  \\
+	\tmpindent $\piring \leftarrow \NIZK_{\Lring}.\Prove(\compk,\comring,\openpk,\openring)$, \\
+	\tmpindent $\aux' \leftarrow \tmpaux$,  \\
+	\tmpindent $\sigma \leftarrow \PedVRF.\Sign(\sk,\openpk,\msg, \aux')$.
 \item $\rVRF.\rVerify : (\comring,\msg,\aux,\rho) \mapsto \Out \,\, \lor \perp$ \,
- parses $\rho$ as $(\compk,\piring,\sigma,)$ and
- if $\NIZK.\Verify(\piring,\compk,\comring)$ succeeds then it returns
- $$ \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \piring \doubleplus \comring,\sigma) \mathperiod $$
+	parses $\rho$ as $(\compk,\piring,\sigma)$, \eprint{next }{}sets $\aux' \leftarrow \tmpaux$,
+	aborts if $\NIZK_{\Lring}.\Verify(\piring,\compk,\comring)$ fails,
+	and returns $\PedVRF.\Verify(\compk,\msg, \aux', \sigma)$.
 \end{itemize}
+
 
 % Although \PedVRF itself exhibits surprising properties, our gestalt 
 \rVRF satisfies sensible security definitions:
