@@ -5,12 +5,12 @@ As a beginning, we introduce the ring VRF interface, give a simple
 unamortized NIZK that realizes the ring VRF properties discussed later,
 and give some intuition for our later amortization trick.
 
-Any VRF needs a \KeyGen algorithm, which returns a secret key \sk and
-associated public key \pk, as well as an evaluation algorithm
+Any VRF or ring VRF needs a \KeyGen algorithm, which returns a secret key \sk
+and associated public key \pk, as well as an evaluation algorithm
 $\Eval : (\sk,\msg) \mapsto \Out$. % for which many constructions exist.
 %
-Although many constructions exist,
- ours resemble EC VRFs like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}.
+% Although many constructions exist,
+Our \KeyGen and \Eval initially resemble EC VRFs like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}.
 % In other words,
 % internally we prove a VUF output $\PreOut = \sk H_{\grE}(\msg)$,
 % with a hash-to-curve $H_{\grE}$, so then applying a PRF $H'$ yields a
