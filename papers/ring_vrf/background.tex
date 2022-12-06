@@ -39,7 +39,7 @@ or $\grE_2$.  We explicitly multiply by the cofactor $h$ when doing
 Chaum-Pedersen DLEQ proofs though, as not doing so risks miss-readings by implementers.
 
 We also let $\ecJ$ denote a ZCash Sapling style ``JubJub'' Edwards curve
-over $\F_p$, with distinguished subgroup $\grJ$ of prime order, so that
+over $\F_p$, with distinguished subgroup $\grJ$ of prime order $p_\grJ$, so that
 SNARKs on $\ecE$ prove $\grJ$ arithmetic relatively cheaply.
 Aside from Jubjub, we optionally want a ``sister'' Edwards curve $\ecE$,
 with a subgroup $\grE$ of the same order $p$ $\grE$, but which lacks any pairing.
