@@ -57,7 +57,7 @@ roughly like what ZCash does.
 \end{itemize}
 
 We thus replace the membership condition $\pk \in \ring$ in the above
-relation and NIZK by the by the opening condition
+language and NIZK by the by the opening condition
 $$ \exists \openring \textrm{\ s.t.\ } \pk = \OpenRing(\comring,\openring) \mathperiod $$
 % $\pk = \OpenRing(\comring,\openring)$.
 %
@@ -93,8 +93,8 @@ We solve this obstacle in \S\ref{sec:rvrf_cont} below by introducing
 {\em zero-knowledge continuations}, a new zkSNARK technique built from
 rerandomizable Groth16s \cite{Groth16} and designed for composition and reuse.
 
-In this, we should split the relation describing our ring VRF into
-a VRF evaluation relation \Leval and a reusable or continuable relation
+In this, we should split the language describing our ring VRF into
+a VRF evaluation language \Leval and a reusable or continuable language
 \Lring, which enforces our heavy $\pk = \OpenRing(\comring,\openring)$
 condition.  Anonymity requires we rerandomize a Groth16 SNARK for \Lring
 ala \cite[Theorem 3, Appendix C, pp. 31]{RandomizationGroth16}.
@@ -110,7 +110,7 @@ $$ \Lring = \Setst{ \compk, \comring }{
 	}{
     \begin{aligned}
 	&\tmpAA \\
-	&\, \tmpBB \\
+	&\, \pk = \tmpBB \\
     \end{aligned}
 	}
 } $$
