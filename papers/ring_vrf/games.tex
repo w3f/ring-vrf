@@ -22,7 +22,7 @@ $(\pk,\sk) \leftarrow \KeyGen$ implies
 and also {\em ring commitment correctness} if
 $\pk \in \ring$ implies both
 \def\tmpA{\OpenRing(\CommitRing(\ring,\pk)) = \pk}
-\def\tmpB{\CommitRing(\ring) = \CommitRing(\ring,\pk).0} 
+\def\tmpB{\CommitRing(\ring) = \CommitRing(\ring,\pk)[0]} 
 \eprint{$$ \tmpA \quad\textrm{and}\quad \tmpB \mathperiod $$}%
 {$$ \begin{aligned}
    \tmpA \qquad\textrm{and} \\
@@ -40,7 +40,8 @@ We let \ora{Sign} denote a ring signature CMA oracle, meaning
 \begin{itemize}
 \item $\ora{Sign}(\oramsg{keygen})$ \, 
  creates a fresh key pair $(\pk,\sk) \leftarrow \KeyGen$, logs it, and
- adds $\pk$ to a set $\ring_0$ it maintains, and then returns \pk.
+ adds $\pk$ to a master public key set $\ring_0$ it maintains, and then
+ returns \pk.
 \item $\ora{Sign}(\comring,\openring,\msg,\aux)$ \,
  returns the ring VRF signature $\Sign(\sk,\openring,\msg,\aux)$,
  provided it logged $(\pk,\sk)$ with $\pk = \OpenKey(\comring,\openring)$ previously.
@@ -81,16 +82,16 @@ any PPT adversary \adv has an advantage only
  \adv calls \ora{Sign} of Definition \ref{def:rvrf_sign_oracle} throughout,
  but also creates its own keys freely.
  %
- Finally \adv outputs a ring $\ring$ as well as
- $k + |\ring \setminus \ora{Sign}.\ring_0|$ valid ring VRF signatures,
-  each with distinct outputs,    % $\sigma_i$
- for $\ring$ on a message \msg (resp. and also associated data \aux).
- \adv wins if they invoked $\ora{Sign}$ strictly fewer than $k$ times
- on $\msg$ (resp. and also $\aux$), and
+ Finally \adv outputs a set $\ring$, a message \msg, and $k$ valid
+ ring VRF signatures for $\ring$ on \msg (resp. and also associated data \aux).
+  each with distinct outputs.    % $\sigma_i$
+ Set $k' := |\ring \setminus \ora{Sign}.\ring_0|$.
+ \adv wins if $k > k'$ and they invoked $\ora{Sign}$ strictly fewer than
+ $k - k'$ times on $\msg$ (resp. and also $\aux$), and
   distinct $i$ with $\pk_i \in \ring \cap \ora{Sign}.\ring_0$.
 \end{itemize}
 \end{definition}
- 
+
 Any ring VRF becomes a non-anonymized VRF whenever
  the ring becomes a singleton $\ring = \{ \pk \}$ of course.
 We inherit ring VRF output properties from non-anonymized VRFs
