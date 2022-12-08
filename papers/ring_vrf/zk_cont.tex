@@ -4,6 +4,9 @@
 
 We now develop our zero-knowledge continuation technique, called 
 {\em special Groth16}, and build ring VRFs with fast amortized prover time.
+Anonymity demands we finalize the amortized ``continuation'' multiple
+times, with each time being unlinkable to the others, meaning our rVRF
+stays zero-knowledge even with the continuation being reused.
 
 % $$ \Lring = \Setst{ \compk, \comring }{
 %  \exists \openpk,\openring \textrm{\ s.t.\ } 
