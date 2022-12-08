@@ -1,0 +1,125 @@
+%%% Theorem Enviroments %%%
+
+\theoremstyle{plain} %% requires amsthm
+
+\ifx\thesection\undefined
+  \newtheorem{lemma}{Lemma}
+\else
+  \ifx\thelemma\undefined
+    \newtheorem{lemma}{Lemma}[section]
+  \else
+%    \newtheorem{lemma}[lemma]{Lemma}
+  \fi
+\fi
+\newtheorem{theorem}[lemma]{Theorem}
+\newtheorem{corollary}[lemma]{Corollary}
+\newtheorem{proposition}[lemma]{Proposition}
+\newtheorem{fact}[lemma]{Fact}
+
+\newtheorem*{rawnamedtheorem}{\therawnamedtheorem}
+\newcommand{\therawnamedtheorem}{\error}
+\newenvironment{namedtheorem}[1]{\renewcommand{\therawnamedtheorem}{#1}
+   \begin{rawnamedtheorem}}
+  {\end{rawnamedtheorem}}
+% One day I will get this to work with hyperref
+
+
+%%% Claim Enviroments %%%
+
+%\makeatletter
+%\newtheoremstyle{claim}
+%  {\topsep}% Space above
+%  {\topsep}% Space below
+%  {}%         Body font
+%  {}%         Indent amount (empty = no indent, \parindent = para indent)
+%  {\itshape}% Thm head font
+%  {:}%        Punctuation after thm head
+%  {.5em}%     Space after thm head: " " = normal interword space;
+%        %       \newline = linebreak
+%  {}%         Thm head spec (can be left empty, meaning `normal')
+%% Its the head spec which really needs to get changed.
+%\makeatother
+%\theoremstyle{claim}
+
+\newtheorem{Claim}[lemma]{Claim}
+
+\newtheorem{claim}{Claim}[lemma]
+\renewcommand{\theclaim}{\arabic{claim}}
+\newtheorem{subclaim}{Subclaim}[claim]
+
+\newtheorem{case}{Case}[lemma]
+\renewcommand{\thecase}{\arabic{case}}
+\newtheorem{subcase}{Subcase}[case]
+
+
+%%% Definition Enviroments %%%
+
+\theoremstyle{definition} %% requires amsthm
+
+\newtheorem{definition}[lemma]{Definition}
+\newtheorem{hypothesis}[lemma]{Hypothesis}
+\newtheorem{notation}[lemma]{Notation}
+\newtheorem{axiom}{Axiom}
+
+\newtheorem*{rawnameddefinition}{\therawnameddefinition}
+\newcommand{\therawnameddefinition}{\error}
+\newenvironment{nameddefinition}[1]{\renewcommand{\therawnameddefinition}{#1}
+   \begin{rawnameddefinition}}
+  {\end{rawnameddefinition}}
+% One day I will get this to work with hyperref
+
+
+
+%%% Remark Enviroments %%%
+
+\theoremstyle{remark} %% requires amsthm
+
+\newtheorem{remark}[lemma]{Remark}
+\newtheorem{example}[lemma]{Example}
+\newtheorem{problem}{Problem}
+\newtheorem{question}[lemma]{Question}
+\newtheorem{conjecture}{Conjecture}%[section]
+
+
+
+%%% Proof Enviroments %%%
+
+\newenvironment{analysis}[1][Analysis]%
+   {\begin{proof}[#1]\renewcommand{\qedsymbol}{\innerqedsymbol}}{\end{proof}}
+\newenvironment{verification}[1][Verification]%
+   {\begin{proof}[#1]\renewcommand{\qedsymbol}{\innerqedsymbol}}{\end{proof}}
+\let\outerqedsymbol=\qedsymbol
+\newcommand\innerqedsymbol{$\Diamond$}%{$\lozenge$}
+\newcommand\bothqedmode{\renewcommand\qedsymbol{\innerqedsymbol\quad\outerqedsymbol}}
+\newcommand\noqedmode{\renewcommand\qedsymbol{}}
+
+% I do not know why this does not work.
+% \let\oldproof=\proof
+% \let\oldqed=\qed
+% \renewcommand{\proof}{\protect\begin{proof}}
+% \renewcommand{\qed}{\end{proof}}
+
+
+%%%  %%%
+
+
+\newcounter{hypothesis}
+\newenvironment{hypotheses}%
+   {\begin{list}{\alph{hypothesis}.}{\usecounter{hypothesis}}}{\end{list}}
+\newcounter{conclusion}
+\newenvironment{conclusions}%
+   {\begin{list}{\arabic{conclusion}.}{\usecounter{conclusion}}}{\end{list}}
+\newenvironment{TFAE}%
+   {\begin{conclusions}}{\end{conclusions}}
+% Need to make a version which handles spacing automagically
+
+\newenvironment{texteqn}[2][0.8\linewidth]
+   {\begin{equation} #2 \begin{minipage}{#1}}
+   {\end{minipage}\end{equation}}
+% \newenvironment{texteqn}%
+%    {\begin{equation} \begin{minipage}{0.9\linewidth}}
+%    {\end{minipage} \end{equation}}
+
+% need tagged texteqn?
+
+
