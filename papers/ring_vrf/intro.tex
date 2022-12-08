@@ -4,9 +4,9 @@
 
 % A {\it ring verifiable random function} (ring VRF) is a ring signature that proves correct evaluation of some pseudo-random function (PRF) determined by the actual key pair used in signing. 
 
-We introduce ring verifiable random functions (ring VRFs) as a natural
-fulcrum around which anonymous credentials turn, in formalization,
-in optimizations, in the nuances of use-cases, and in miss-use resistance.
+We introduce ring verifiable random functions (ring VRFs) as a framework
+for anonymous credentials turn, in formalization, in optimizations,
+in the nuances of use-cases, and in miss-use resistance.
 %
 Along with some formalizations, we explain portions of their unfolding
 story which address three questions:
@@ -31,7 +31,7 @@ By asking users trust a public list, not certificates.
 Rerandomizable zkSNARKs like Groth16 \cite{Groth16} admit a
 transformation of a valid proof into another valid but unlinkable
 proof of the exact same statement.  In practice, rerandomization
-was never deployed because the public inputs link the usages.
+never gets deployed because the public inputs link the usages.
 
 We demonstrate in \S\ref{sec:rvrf_cont} a simple transformation of
 any Groth16 zkSNARK into a {\it zero-knowledge continuation} whose
