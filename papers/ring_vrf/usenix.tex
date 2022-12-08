@@ -1,0 +1,167 @@
+% https://petsymposium.org/authors.php#submission-guidelines
+
+\documentclass[sigconf,anonymous,review,balance=false]{acmart}
+\usepackage{popets}
+
+\def\eprint#1#2{#2} % PETS
+
+
+% \usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{mathtools}
+
+\usepackage[utf8]{inputenc}
+\usepackage{xspace}
+
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{algorithm}
+
+\usepackage[noend]{algpseudocode}
+
+% \usepackage[capitalize,nameinlink]{cleveref}
+
+% \usepackage{graphicx}
+% \usepackage{xcolor}
+
+% \usepackage{tikz}
+% \usetikzlibrary{arrows,chains,matrix,positioning,scopes}
+
+% Remember enumitem breaks beamer https://tex.stackexchange.com/questions/28107/how-to-set-leftmargin-when-using-the-enumerate-package
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=15pt}
+
+
+% Italics should be prefered over underlines..
+% \usepackage{ulem}
+
+% Avoid boxes if pssible..
+% \usepackage{framed}
+% \usepackage{fancybox}
+% \usepackage{tcolorbox}
+% ..but if required mdframe splits across pages.
+% \usepackage[linewidth=1pt]{mdframed}
+
+% TODO: Clean up macros
+\input{../macros/style.tex}
+\input{../macros/primitives.tex}
+\input{../macros/other.tex}
+\input{macros.tex}
+
+\renewcommand\doubleplus{\ensuremath{\|}} % Jeff's ++ does not render correctly in acmart, but why the extra \middle error?
+	
+\usepackage{tcolorbox}
+\tcbset{colback=white}
+% \usepackage{todonotes}
+
+
+% Copyright
+\setcopyright{popets}
+\copyrightyear{YYYY}
+
+% Issue info
+\acmYear{YYYY}
+\acmVolume{YYYY}
+\acmNumber{X}
+\acmDOI{XXXXXXX.XXXXXXX}
+\acmISBN{}
+\acmConference{Proceedings on Privacy Enhancing Technologies}
+\settopmatter{printacmref=false,printccs=false,printfolios=true}
+\sloppy
+
+\begin{document}%
+
+%% The "title" command has an optional parameter,
+%% allowing the author to define a "short title" to be used in page headers.
+\title[Ring VRF from zk continuations]{Ethical identity, ring VRFs, and zero-knowledge continuations}
+
+%%%%%%%%%%%%%%%% Authors' Info %%%%%%%%%%%%%%%%%
+
+%TODO:  https://tex.stackexchange.com/questions/271627/shared-author-affiliation-in-acm-sig-proc?noredirect=1&lq=1
+
+\def\webthree{%
+\affiliation{%
+  \institution{Web 3.0 Foundation}
+  \city{Zug}
+  % \state{ZG}
+  \country{Switzerland}}
+}
+
+\author{Jeffrey Burdges}
+\email{jeff@web3.foundation}
+
+\author{Handan Kilinc-Alper}
+\webthree
+\email{handan@web3.foundation}
+
+\author{Alistair Stewart}
+\webthree
+\email{alistair@web3.foundation}
+
+\author{Sergey Vasilyev}
+\webthree
+\email{sergey@web3.foundation}
+
+%% By default, the full list of authors will be used in the page
+%% headers. Often, this list is too long, and will overlap
+%% other information printed in the page headers. This command allows
+%% the author to define a more concise list
+%% of authors' names for this purpose.
+
+\renewcommand{\shortauthors}{Burdges et al.} % Jeffrey Burdges \and Handan Kilinc-Alper \and Alistair Stewart \and Sergey Vasilyev
+
+
+\begin{abstract}
+\input{abstract-short}
+\end{abstract}
+
+%% Keywords. The author(s) should pick words that accurately describe
+%% the work being presented. Separate the keywords with commas.
+\keywords{anonymity, anonymous credential, identity, rationing, ring signature, VRF, zkSNARKs, Groth16}
+
+
+\maketitle
+
+
+\input{intro}
+% \input{identity}
+
+\input{overview}
+\input{background}
+\input{games}
+\input{uc_fun} % TODO: get rid of figure so it'll fit
+\input{uc_model}
+
+\input{pedersen_vrf}
+\input{zk_cont}
+
+\input{ring_updates}
+\input{ring_hiding}
+
+\input{app_id}
+\input{app_rate}
+
+% \input{conclusion}
+
+%% The acknowledgments section is defined using the "acks" environment
+%% (and NOT an unnumbered section). This ensures the proper
+%% identification of the section in the article metadata, and the
+%% consistent spelling of the heading.
+% \begin{acks}
+% To Robert, for the bagels and explaining CMYK and color spaces.
+% \end{acks}
+
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{../climate,../commit,../anoncred,../sassafras,../identity,../vrf,../zkp}
+
+
+\appendix
+
+\input{uc_proof}
+\input{more_uc_funcs}
+
+\end{document}
+
+\endinput
