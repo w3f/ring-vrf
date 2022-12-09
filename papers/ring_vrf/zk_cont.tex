@@ -17,6 +17,7 @@ stays zero-knowledge even with the continuation being reused.
 \subsection{Rerandomization}
 % \label{sec:rvrf_groth16}
 
+Zero-knowledge invariably comes from random blinding factors.
 Zero-knowledge continuations need rerandomizable zkSNARKs,
 meaning Groth16 \cite{Groth16}, but beyond rerandomization their
 unlinkability demands hiding public inputs.
@@ -95,12 +96,13 @@ construction above,
 
 % TODO:  Should we be saying opaque less and Pedersen more below?
 
-Along side hidden inputs in $X = \sum_i^k x_i \chi_i$,
-our verifier would typically assemble some transparent inputs
-$Y = \sum_i^l y_i \Upsilon$ themselves.  In particular, our ring VRFs
-handles the Merkle root \comring for $\ring$ in this way below.
+Along side opaque inputs in $X = \sum_i^k x_i \chi_i$,
+our verifier should typically enforce specific values by assembling
+a few {\em transparent} inputs $Y = \sum_i^l y_i \Upsilon_i$ themselves.
+In particular, our ring VRF verifiers should enforce the commitment
+\comring for $\ring$, even if they outsource computing \comring.
 
-We then verify $(X' + Y,A',B',C')$ like Groth16 
+We now verify $(X' + Y,A',B',C')$ like Groth16 
 $$ e(A',B') = e([\alpha]_1, [\beta]_2) \cdot
  e(X' + Y, [\gamma]_2) \cdot e(C', [\delta]_2) \mathcomma $$
 As our verifier does not build $X'$ themselves, we prove nothing
@@ -111,7 +113,8 @@ with this pairing equation unless the verifier separately checks
 Our rerandomization procedure % $(X,A,B,C) \mapsto (X',A',B',C')$
 transforms honestly generated zero-knowledge continuations $(X,A,B,C)$
 into identically distributed zero-knowledge continuations $(X',A',B',C')$,
-with identical transparent inputs $y_1,\ldots,y_l$.
+with identical opaque inputs $x_1,\ldots,x_k$ and
+ identical transparent inputs $y_1,\ldots,y_l$.
 \end{lemma}
 
 \begin{proof}[Proof idea.]
@@ -211,10 +214,11 @@ choose $\chi_1$ independent before doing the trusted setup,
 In this case, we could prove $\pk = \sk\, \chi_1$ inside $\pifast$, but then
 non-native arithmetic makes $\pifast$ far slower.
 
-At this point, \PedVRF requires four scalar multiplications on $\ecE_1$,
+At this point, $\PedVRF.\Sign$ requires two scalar multiplications on $\ecE_1$
+ and two on $\ecE'$,
 so together with rerandomization costing four scalar multiplications
 on $\ecE_1$ and two on $\ecE_2$, our amortized prover time
- approaches 12 scalar multiplications on typical $\ecE_1$ curves. 
+ comes under 12 scalar multiplications on typical $\ecE_1$ curves. 
 We expect the three pairings dominate verifier time, but
  verifiers also need five scalar multiplications on $\ecE_1$.
 

@@ -20,7 +20,7 @@ using a zkSNARK friendly hash function like Poseidon \cite{poseidon},
 giving $O(\log |\ring|)$ prover time.
 %
 At least one Poseidon \cite{poseidon} provides arity four with only
-600 R1CS constraints.  We need roughly 700 r1CS constraints for each
+600 R1CS constraints.  We need roughly 700 R1CS constraints for each
 fixed based scalar multiplication too, so the flavor of \pifast costs
 under 12k R1CS constraints for a ring with four billion people.
 
@@ -37,7 +37,7 @@ but this still presents a side channel risk.
 
 If concerned, one could address this via a second zk continuation that
 splits \pifast into a Groth16 \pisk and a Groth16 or KZG \pipk for two
-respective relations:
+respective languages:
 %
 $$ \Lpk = \Setst{ J_\pk, \comring }{
 	\exists \openring \textrm{\ s.t.\ }
@@ -61,7 +61,8 @@ All totaled this almost doubles the size and complexity of our ring VRF signatur
 
 There is no ``arrow of time'' among zk continuations per se, but
 as \pisk bridges between the \PedVRF and \pipk,
-one might consider the \pisk-to-\pipk continuation to be time reversed.
+one might consider the \pisk-to-\pipk continuation to be ``time reversed'',
+ in that the ``middle'' continuation is proved first.
 
 
 \subsection{Polynomial commitments}
@@ -86,7 +87,7 @@ an inner ring block or epoch proof $\baseL_{\mathtt{block}}$,
  which we only prove once like \pisk above, and
 a chain state proof $\baseL_{\mathtt{chain}}$,
  which extends this inner ring to the growing blockchain, and
- admits alternatives like KZG and Caulk+ \cite{caulk+}.
+ admits KZG based alternatives like Caulk+ \cite{caulk+}.
 %
 $$ \baseL_{\mathtt{chain}} = \Setst{ \mathtt{blk}, \mathtt{chain} }{
 	\mathtt{blk} \in \mathtt{chain}
