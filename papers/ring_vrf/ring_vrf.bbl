@@ -123,6 +123,12 @@ Kobi Gurkan, Philipp Jovanovic, Mary Maller, Sarah Meiklejohn, Gilad Stern, and
   {EUROCRYPT} 2021}, volume 12696 of {\em LNCS}, pages 147--176, 2021.
 \newblock \url{https://ia.cr/2021/005}.
 
+\bibitem{zcash_protocol}
+Daira Hopwood, Sean Bowe, Taylor Hornby, and Nathan Wilcox.
+\newblock {ZCash} protocol specification.
+\newblock \url{https://zips.z.cash/protocol/protocol.pdf}.
+\newblock Version 2022.3.8 [NU5], 15 September 2022.
+
 \bibitem{KZG}
 Aniket Kate, Gregory~M. Zaverucha, and Ian Goldberg.
 \newblock Constant-size commitments to polynomials and their applications.
