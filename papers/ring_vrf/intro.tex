@@ -14,12 +14,12 @@ the nuances of use-cases, and miss-use resistance.
 Along with some formalizations, we address three questions within
 the unfolding ring VRF story:
 \begin{enumerate} 
-\item
-What are the cheapest SNARK proofs?  \qaudbreak
-Ones users reuse without reproving.
 % \item
 % How can credentials use be contextual?  \qaudbreak
 % Prove evaluation of a secret function.
+\item
+What are the cheapest SNARK proofs?  \qaudbreak
+Ones users reuse without reproving.
 \item
 How can identity be safe for general use?  \qaudbreak
 By revealing nothing except users' uniqueness.
@@ -28,7 +28,48 @@ How can ration card issuance be transparent?  \qaudbreak
 By asking users trust a public list, not certificates.
 \end{enumerate}
 
+% After briefly introducing ring VRFs, we discuss these three questions,
+% which we later elaborate upon in
+%  \S\ref{sec:rvrf_cont}, \S\ref{sec:app_identity}, and \S\ref{sec:app_rate_limits} 
+
+% \smallskip 
+\paragraph{Ring VRFs:}
+
+A ring signature proves only that its actual signer lies in a ``ring''
+of public keys, without revealing which signer really signed the message.
+A {\it verifiable random function} (VRF) is a signature that proves
+correct evaluation of a PRF defined by the signer's key.
+% but nuances exist .
+
+A {\it ring verifiable random function} (ring VRF) is a ring signature, in
+that it anonymizes its actual signer within a ring of plausible signers,
+but also proves correct evaluation of a pseudo-random function (PRF)
+defined by the actual signer's key. % (see \S\ref{sec:rvrf_games}).
+%
+Ring VRF outputs then provide linking proofs between different signatures
+iff the signatures have identical inputs, as well as pseudo-randomness.
+
+As this pseudo-random output is uniquely determined by the signed message
+and signer's actual secret key, we can therefore link signatures by the
+same signer if and only if they sign identical messages.
+In effect, ring VRFs restrict anonymity similarly to but less than
+linkable ring signatures do, which makes them multi-use and contextual.
+
+We define the security of ring VRFs in both the standard model
+and in the universally composable (UC) \cite{canetti1,canetti2} model. 
+We show that our ring VRF protocol is secure in the UC model.
+
+In \S\ref{sec:rvrf_cont}, we build extremely efficient and flexible
+ring VRFs by amortizing a zero-knowledge continuation that unlinkably
+proves ring membership of a secret key, and then cheaply proving
+individual VRF evaluations.
+
+% We discuss the applications to identity in \S\ref{sec:app_identity} and
+% to rationing in \S\ref{sec:app_rate_limits}.
+% As a highly multi-use primitive, ring VRFs also present a multi-use
+
 % First
+% \smallskip 
 \paragraph{Zero-knowledge continuations:}
 
 Rerandomizable zkSNARKs like Groth16 \cite{Groth16} admit a
@@ -54,37 +95,6 @@ Groth16 verification.
 As recursive SNARKs shall remain extremely slow,
 we expect zero-knowledge continuations via rerandomization become
 essential for zkSNARKs used in identity and elsewhere outside the crypto-currency space.
-
-% \smallskip 
-\paragraph{Ring VRFs:}
-
-A ring signature proves only that its actual signer lies in a ``ring''
-of public keys, without revealing which signer really signed the message.
-A {\it verifiable random function} (VRF) is a signature that proves
-correct evaluation of a PRF defined by the signer's key.
-% but nuances exist .
-
-A {\it ring verifiable random function} (ring VRF) is a ring signature, in
-that it anonymizes its actual signer within a ring of plausible signers,
-but also proves correct evaluation of a pseudo-random function (PRF)
-defined by the actual signer's key. % (see \S\ref{sec:rvrf_games}).
-%
-Ring VRF outputs then provide linking proofs between different signatures
-iff the signatures have identical inputs, as well as pseudo-randomness.
-
-We build extremely efficient and flexible ring VRFs by amortizing a
-zero-knowledge continuation that unlinkably proves ring membership
-of a secret key, and then cheaply proving individual VRF evaluations.
-
-As the PRF output is uniquely determined by the signed message and
-signer's actual secret key, we can therefore link signatures by the
-same signer if and only if they sign identical messages.
-In effect, ring VRFs restrict anonymity similarly to but less than
- linkable ring signatures do, which makes them multi-use and contextual.
-
-We define the security of ring VRFs in both the standard model
-and in the universally composable (UC) \cite{canetti1,canetti2} model. 
-We show that our ring VRF protocol is secure in the UC model.
 
 % Second
 % \smallskip
@@ -178,6 +188,7 @@ We define single-use tokens to be ring VRF signatures whose VRF input
 consists of a resource name, an approximate date, and a bounded counter.
 Now merchants reports each anonymous token back to some authority who
 enforces rate limits by rejecting duplicate ring VRF outputs.
+(See \S\ref{sec:app_rate_limits})
 
 In other words, our rate limiting authority treats outputs like the
 ``nullifiers'' in anonymous payment schemes.
