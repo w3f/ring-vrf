@@ -38,8 +38,9 @@ upon the plausible signer set \ring:
     returns either an output $\Out$ or else failure $\perp$.
 \end{itemize}
 
-After success, our verifier should be convinced that $\pk \in \ring$ and
-$\Out = \rVRF.\Eval(\sk,\msg)$ for some $(\pk,\sk) \leftarrow \KeyGen$.
+After success, our verifier should be convinced that $\pk \in \ring$, that
+$\Out = \rVRF.\Eval(\sk,\msg)$ for some $(\pk,\sk) \leftarrow \KeyGen$,
+ and that $\Out$ is pseudo-random.
 In other words, this simplified ring VRF could be instantiated using
 a NIZK for a language like
 $$ \Setst{ \Out, \msg, \ring}{
