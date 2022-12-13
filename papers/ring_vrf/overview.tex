@@ -6,8 +6,9 @@ unamortized non-interactive zero-knowledge (NIZK) protocol that
 realizes the ring VRF properties discussed later,
 and give some intuition for our later amortization trick.
 
-As VRFs do \cite{vrf_micali}, a ring VRF needs a $\rVRF.\KeyGen$ algorithm,
-which creates a random secret key \sk and associated public key \pk,
+As VRFs do \cite{vrf_micali},
+all ring VRFs need $\rVRF.\KeyGen$ algorithm,
+ which creates a random secret key \sk and associated public key \pk,
 as well as a deterministic evaluation algorithm
 \begin{itemize}
 \item $\rVRF.\Eval : (\sk,\msg) \mapsto \Out$ which computes the VRF output \Out from a secret key \sk and a message \msg.
@@ -21,17 +22,18 @@ Our \KeyGen and \Eval initially resemble EC VRFs like \cite{nsec5,VXEd25519,draf
 % VRF output $\Out = H'(\msg, h \PreOut)$ ala \cite[Prop. 1]{vrf_micali},
 % using a key pair like $\pk = \sk \genG$ for a generator $\genG$.
 We demand pseudo-randomness properties from \Eval, which could mirror
-\cite{vrf_micali} if desired.  We provide a a UC definition resembling
-\cite{praos,ucvrf} which handles adversarial keys better though.
+\cite{vrf_micali} if desired.  We provide a UC definition resembling
+\cite{praos,ucvrf} which handles adversarial keys better however.
 
+% TODO: Should this text be moved elsewhere?
 Ring VRFs differ from VRFs in that they do not expose a specific signer,
 and instead prove the signer's key lies in some plausible signer set \ring,
  much like how ring signatures differ from signatures.
-Ring VRFs differ from ring signatures in that they have a VRF output \Out
-and prove it corresponds to $\rVRF.\Eval$ for some plausible signer.
+Ring VRFs differ from ring signatures in that they prove a VRF output \Out.
+% and prove it corresponds to $\rVRF.\Eval$ for some plausible signer.
 
-At their simplest, ring VRFs' algorithms could operate directly
-upon the plausible signer set \ring:
+At their simplest, ring VRFs' other algorithms could operate directly
+upon the plausible signer set \ring, like:
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\ring,\msg) \mapsto \sigma$ \,
     returns a ring VRF signature $\sigma$ for an input \msg.
