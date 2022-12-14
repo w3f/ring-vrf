@@ -32,8 +32,10 @@ and instead prove the signer's key lies in some plausible signer set \ring,
 Ring VRFs differ from ring signatures in that they prove a VRF output \Out.
 % and prove it corresponds to $\rVRF.\Eval$ for some plausible signer.
 
-At their simplest, ring VRFs' other algorithms could operate directly
-upon the plausible signer set \ring, like:
+% As an instructive but insecure over simplification, 
+At their simplest,
+ring VRFs' other algorithms might operate directly upon
+ the plausible signer set \ring, like:
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\ring,\msg) \mapsto \sigma$ \,
     returns a ring VRF signature $\sigma$ for an input \msg.
@@ -44,18 +46,18 @@ upon the plausible signer set \ring, like:
 After success, our verifier should be convinced that $\pk \in \ring$, that
 $\Out = \rVRF.\Eval(\sk,\msg)$ for some $(\pk,\sk) \leftarrow \KeyGen$,
  and that $\Out$ is pseudo-random.
-In other words, this simplified ring VRF could be instantiated using
-a NIZK for a language like
+In other words, this simplified ring VRF could be instantiated by making
+\Eval a pseudo-random (hash) function, and using a NIZK for a language like
 $$ \Setst{ \Out, \msg, \ring}{
     \eprint{
         (\pk,\sk) \leftarrow \KeyGen, \quad %   \textrm{ and }
         \pk \in \ring, \quad
-        \Out = \PRF(\sk,\msg)
+        \Out = \Eval(\sk,\msg)
     }{
         \begin{aligned}
         & (\pk,\sk) \leftarrow \KeyGen \\
         & \pk \in \ring \\
-        & \Out = \PRF(\sk,\msg)
+        & \Out = \Eval(\sk,\msg)
         \end{aligned}
     }
 } $$
