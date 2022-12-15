@@ -70,8 +70,35 @@ for the specific signer, but only within the context of \msg.
 
 % \smallskip
 
+Aside from proving a PRF evaluation, 
+we always need \rSign and \rVerify to sign some auxiliary data \aux,
+as otherwise the ring VRF signature become unmoored and permits replay attacks.
+%
+As an example, our identity protocol below in \S\ref{sec:app_identity}
+yields the same ring VRF outputs each time the same user logs into the
+same site, which suffers replay attacks unless \aux binds the
+ring VRF signature to the TLS session.
+
+Indeed, regular (non-anonymous) VRF uses always encounter similar tension
+with VRF inputs \msg being smaller than full message bodies $(\msg,\aux)$.
+As an example, Praos \cite{praos} binds their VRF public key together
+with a second public key for another (forward secure) signature scheme,
+with which they sign their \aux, the block itself.
+%
+An EC VRF should expose an \aux parameter which it hashes when computing
+its challenge hashes.  Aside from saving redundant signatures, exposing
+\aux avoids user key handling mistakes that create replay attacks.
+
+Ring VRFs cannot so easily be combined with another signatures, which
+makes \aux essential,%
+\footnote{If ring VRFs authorized creating blocks in an anonymous Praos blockchain then \aux must include the block being created, or else others could steal their block production turn.}
+but thankfully our ring VRFs expose \aux exactly like EC VRFs do in \S\ref{sec:pederson_vrf}.%
+\footnote{We suppress multiple input-output pairs until \S\ref{subsec:multi_io} below, but they work like in \cite{PrivacyPass} too.}
+
+% \smallskip
+
 We would need time $O(|\ring|)$ in \rSign and \rVerify merely to read
-this \ring argument, which severely limits applicability.  Instead,
+this \ring argument though, which severely limits applications.  Instead,
 ring signatures run asymptotically faster by replacing the \ring argument
 with some set commitment to \ring, roughly like what ZCash does \cite{zcash_protocol}.
 \begin{itemize}
@@ -100,27 +127,16 @@ $$ \exists \openring \textrm{\ s.t.\ } \pk = \OpenRing(\comring,\openring) \math
 
 % \smallskip
 
-Aside from proving a PRF evaluation, an EC VRF should typically sign
-some auxiliary data \aux by hashing \aux when computing its challenge,
-but doing so only saves one redundant signature verification for EC VRF.
-Auxiliary data becomes critical for ring VRFs though, because otherwise
-unmoored ring VRFs invariably permit replay attacks,
- which makes them almost completely useless.
-
-As an example, if ring VRFs authorized creating blocks in an anonymous
-praos \cite{praos} blockchain then \aux must include the block being
-created, or else others could steal their block production turn.%
-\footnote{We suppress multiple input-output pairs until \S\ref{subsec:multi_io} below, but they work like in \cite{PrivacyPass}.}
-
-Our algorithms for a {\em ring verifiable random function with auxiliary data} (rVRF-AD)
- therefore instead look like
+After these corrections,  our algorithms for a
+{\em ring verifiable random function with auxiliary data} (rVRF-AD)
+now really look like
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$, \quad and
 \item $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto \Out \,\, \lor \perp$.
 \end{itemize}
 
-Although asymptotically faster, our opening \OpenRing invariably
-winds up being extremely heavy inside a zkSNARK.
+Although an asymptotic improvement, our opening \OpenRing invariably
+still winds up being extremely heavy inside a zkSNARK.
 We solve this obstacle in \S\ref{sec:rvrf_cont} below by introducing
 {\em zero-knowledge continuations}, a new zkSNARK technique built from
 rerandomizable Groth16s \cite{Groth16} and designed for composition and reuse.
