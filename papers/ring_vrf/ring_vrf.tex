@@ -31,6 +31,14 @@
 \usepackage{enumitem}
 % \setlist[itemize]{leftmargin=*}
 
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd{\@maketitle}% <cmd>
+{\end{center}}% <search>
+{\bigskip\small\@date
+\end{center}}% <replace>
+{}{}% <success><failure>
+\makeatother
 
 % Italics should be prefered over underlines..
 % \usepackage{ulem}
@@ -55,11 +63,11 @@
 
 \title{Ethical identity, ring VRFs, and zero-knowledge continuations}
 
-\author{Jeffrey Burdges \and Handan Kilinc-Alper \and Alistair Stewart \and Sergey Vasilyev}
-\date{}
+\author{Jeffrey Burdges \and Handan K{\i}l{\i}nç Alper \and Alistair Stewart \and Sergey Vasilyev}
+
 \institute{Web 3.0 Foundation}
 
-
+\date{\today}
 \begin{document}
 	
 \maketitle

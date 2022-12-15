@@ -121,11 +121,11 @@ Before we start to analyse our protocol, we should define the algorithm $ \gen_{
 \end{algorithm}
 
 
-\begin{lemma} $ \fgvrf $ running Algorithm \ref{alg:gensign} satisfies anonymity defined in Definition \ref{def:anonymity} assuming that $ \NIZK_{\rsnark} $ is zero-knowledge.
+\begin{lemma} \label{lem:anonymity} $ \fgvrf $ running Algorithm \ref{alg:gensign} satisfies anonymity defined in Definition \ref{def:anonymity} assuming that $ \NIZK_{\rsnark} $ is zero-knowledge and Pedersen commitment is perfectly hiding.
 \end{lemma}
 
 \begin{proof}
-	We run a simulated copy of $ \env $ and simulate $ \fgvrf $ with Algorithm \ref{alg:gensign} against $ \mathcal{D} $. Assume that the advantage of $ \mathcal{D} $ is $ \epsilon $. Now, we reduce the anonymity game to the following game where we change the simulation of $ \fgvrf $ by changing the Algorithm \ref{alg:gensign}. In our change, we let $ \pi_{ring} \leftarrow \NIZK_{\rsnark}.\mathsf{Simulate}((\genG,\genB,\GG,\ring, \compk))) $. Since $ \NIZK_{\rsnark} $ is zero knowledge, there exists an algorithm  $ \NIZK_{\rsnark}.\mathsf{Simulate} $ which generates a proof which is indistinguishable from the proof generated from $ \NIZK_{\rsnark}.\Prove $. Therefore, our reduced game is indistinguishable from the anonymity game. Since in this game, no public key is used while generating the signature, the probability that  $ \mathcal{D} $ wins the game is $ \frac{1}{2} $. This means that $ \epsilon $ is negligible.		
+	We run a simulated copy of $ \env $ and simulate $ \fgvrf $ with Algorithm \ref{alg:gensign} against $ \mathcal{D} $. Assume that the advantage of $ \mathcal{D} $ is $ \epsilon $. Now, we reduce the anonymity game to the following game where we change the simulation of $ \fgvrf $ by changing the Algorithm \ref{alg:gensign}. In our change, we let $ \pi_{ring} \leftarrow \NIZK_{\rsnark}.\mathsf{Simulate}((\genG,\genB,\GG,\ring, \compk))) $. Since $ \NIZK_{\rsnark} $ is zero knowledge, there exists an algorithm  $ \NIZK_{\rsnark}.\mathsf{Simulate} $ which generates a proof which is indistinguishable from the proof generated from $ \NIZK_{\rsnark}.\Prove $. Therefore, our reduced game is indistinguishable from the anonymity game. Since in this game, no public key is used while generating the proof and $ W $ and $ \compk $ is perfectly hiding, the probability that  $ \mathcal{D} $ wins the game is $ \frac{1}{2} $. This means that $ \epsilon $ is negligible.		
 \end{proof}
 
 We next show that \name \ realizes $ \fgvrf $  in the random oracle model under the assumption of the hardness of the decisional Diffie Hellman (DDH).
@@ -397,7 +397,7 @@ We next show that \name \ realizes $ \fgvrf $  in the random oracle model under 
 		
 		Next we show that the simulation executed by $ \simulator $ against $ \adv $ is indistinguishable from the real protocol execution.
 		
-		\begin{lemma} 
+		\begin{lemma} \label{lem:simulation-ind}
 			The view of $ \adv $ in its interaction with the simulator $ \simulator $ is indistinguishable from the view of $ \adv $ in its interaction with real honest parties assuming that CDH is hard in $ \GG $, $ \hash' $ is a random oracle and $ \NIZK_{\rcom} $ and $ \NIZK_{\rsnark} $ are knowledge sound.
 		\end{lemma}
 		
