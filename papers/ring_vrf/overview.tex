@@ -178,7 +178,7 @@ $$ \Lring = \Setst{ \compk, \comring }{
 We discovered this becomes incredibly efficient if one specializes
 the Groth16 construction:  An inner true Groth16 for $\Lring'$ handles
 the secret key \sk directly, while our Pedersen commitment \compk is
-built outside this Groth16.
+built outside this Groth16.  
 $$ \Lring' = \Setst{ \sk, \comring}{
     \eprint{
     (\pk,\sk) \leftarrow \KeyGen, \, % \textrm{\,and }
@@ -192,9 +192,11 @@ $$ \Lring' = \Setst{ \sk, \comring}{
     }
 } $$
 
-In \S\ref{sec:rvrf_cont} we rerandomize $\compk = \pk + b \, K$
-without reproving the Groth16 \Lring', but instead requires
-expanding the Groth16 trusted setup into what becomes zero-knowledge continuation.
+Our zero-knowledge continuation in \S\ref{sec:rvrf_cont} rerandomizes
+$\compk = \pk + b \, K$ without reproving the Groth16 $\Lring'$.
+For this, the secret key \sk must be a public input of $\Lring'$, and
+the Groth16 trusted setup must be expanded by a multiple of
+ the otherwise independent point $K$.
 %
 In \S\ref{sec:pederson_vrf}, we introduce an extremely efficient NIZK
 for \Leval, which also provides an essential proof-of-knowledge for \compk.
