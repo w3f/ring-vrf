@@ -80,16 +80,18 @@ breaking privacy.
 
 We demonstrate in \S\ref{sec:rvrf_cont} a simple transformation of
 any Groth16 zkSNARK into a {\it zero-knowledge continuation} whose
-public inputs become opaque Pedersen commitments, with cheaply
+public inputs involve opaque Pedersen commitments, with cheaply
 rerandomizable blinding factors and proofs.
 These zero-knowledge continuations then prove validity of the contents
 of Pedersen commitments, but can now be reused arbitrarily many times,
 without linking the usages.
 
-In brief, we merely adjust the trusted setup of the Groth16 to additionally
+In brief, we adjust the trusted setup of the Groth16 to additionally
 produce an independent blinding factor base for the Groth16 public input, 
 along with an absorbing base that cancels out this blinding factor in the
-Groth16 verification.  
+Groth16 verification.
+As our public inputs involve opaque Pedersen commitments,
+they now require proofs-of-knowledge resentment of to \cite{LegoSNARK}. 
 % In essence, this specializes the Groth16 
 
 As recursive SNARKs shall remain extremely slow,
