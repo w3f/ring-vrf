@@ -22,7 +22,7 @@ $(\pk,\sk) \leftarrow \KeyGen$ implies
 and also {\em ring commitment correctness} if
 $\pk \in \ring$ implies both
 \def\tmpA{\OpenRing(\CommitRing(\ring,\pk)) = \pk}
-\def\tmpB{\CommitRing(\ring) = \CommitRing(\ring,\pk)[0]} 
+\def\tmpB{\CommitRing(\ring) = \CommitRing(\ring,\pk).\comring} % [0] 
 \eprint{$$ \tmpA \quad\textrm{and}\quad \tmpB \mathperiod $$}%
 {$$ \begin{aligned}
    \tmpA \qquad\textrm{and} \\

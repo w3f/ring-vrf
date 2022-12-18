@@ -1,7 +1,7 @@
 \section{Application: Identity}
 \label{sec:app_identity}
 
-Anonymous VRFs yield anonymous identity systems:
+Ring VRFs yield anonymous identity systems:
 After a user and service establish a secure channel and
 the server authenticates itself with certificates, then
 the user authenticates themselves by providing an anonymous
@@ -73,15 +73,16 @@ one needs a compliance party who know users' identities,
 We propose a safer and more efficient solution:
 
 Instead our compliance party becomes an identity issuer who maintains
-a public \ring, and privately tracks each users' public key.
-Arbitrarily many service providers could employ ring VRF based identity
-proofs for diverse purposes.
+a public \ring, and privately knows the users behind each public key.
+As above, identity systems could employ \ring freely for diverse purposes.
 If later asked or subpoenaed, users could prove their relevant identities
 to investigators, or maybe prove which services they use and do not use. 
 
-Interestingly, \PedVRF could be run ``backwards'' to prove a specific
-ring VRF output does not belong to the user, without revealing the users'
-identities to investigators. 
+Interestingly \PedVRF could run ``backwards'' like
+ $H_{\grE'}(\msg) \ne \sk^{-1} \, \PreOut$
+to show a ring VRF output associated to $\PreOut$
+does not belong to the user, without revealing the users'
+identity $H'(\msg, \sk \, H_{\grE'}(\msg))$ to investigators. 
 
 Our applications mostly ignore key multiplicity. 
 AML/KYC demands suspects prove non-involvement using ring VRFs.
@@ -97,12 +98,17 @@ find non-equivalent public keys $\pk_0,\pk_1$ with colliding VRF outputs.
 A priori, our JubJub representations $\sk_0 \genJ_0 + \sk_1 \genJ_1$
 used in \S\ref{subsec:rvrf_faster} and \S\ref{subsec:rvrf_side_channel}
 costs us exculpability from Definition \ref{def:rvrf_exculpability}.
-Ad hoc rings make little sense for AML/KYC though, meaning they already
-require some ring registration procedure.
-%
-If desired, exculpability could easily be repaired if joining the ring
-requires some secret key deduplication proof, like 
-$\rVRF.\rVerify(\CommitRing(\{\pk\}),\mathsf{ring_name},\mathtt{""},\sigma)$.
+% Ad hoc rings ...
+% Rings used for AML/KYC would be maintained by an authority and require
+% some registration procedure, using government issued identity documents.
+
+There is however a natural {\em exculpable public key} flavor $(\pk,\sigma)$,
+in which
+ $\sigma = \Sign(\sk, \CommitRing(\{ \pk \},\pk).\openring, \mathtt{ring\_name}, \mathtt{""})$.
+The singleton ring $\{ \pk \}$ ensure that 
+$\rVerify(\CommitRing(\{\pk\}), \mathtt{ring\_name}, \mathtt{""}, \sigma)$
+uniquely determines the secret key, so exculpability holds
+ if joining the ring requires $(\pk,\sigma)$.
 
 % \begin{proposition}
 % \end{proposition}
@@ -122,26 +128,45 @@ questions about how such penalties impact the user elsewhere, and thus
 can assess and dispense justice more precisely. 
 
 At the same time, there exist sites who must forget users' histories
-eventually, such as when users invoke GDPR compliance or to give children
-room to make social mistakes.  In these cases, we suggest injecting
-approximate date information into \msg along with the site name,
-so \msg becomes site name along with the current year plus month or week.
+eventually, like under some ``right to be forgotten'' principle, either
+GDPR compliance or an ethical principle of social mistakes being ephemeral.
+
+We obtain ephemeral identities if \msg consists of the site name plus
+the current year and month, or some other approximate date.
 In this way, users have only one stable $\mathtt{id}$ within the
 approximate date range, but they obtain fresh $\mathtt{id}$s merely
-by waiting until the next month or week.
+by waiting until the next month.
 
-As in \cite{PrivacyPass}, we could adjust \PedVRF to simultaneously
-prove multiple VRF input-output pairs $(\msg_j,\mathtt{id}_j)$.
-As doing so links these pairs together, sites could make users link
-pseudo-nym creation date and current date, so users could have multiple
-active pseudo-nyms, but only one active pseudo-nym per time period,
-which prevents spam.
-If instead we link only adjacent dates, then pseudo-nyms could
-be abandoned and replaced, but abandoned pseudo-nyms cannot then
-be reclaimed without linking to intervening dates.
+We could adjust \PedVRF to simultaneously prove multiple VRF input-output
+pairs $(\msg_j,\mathtt{id}_j)$.
+As in \cite{PrivacyPass}, we merely delinearize \In and \PreOut in
+\rSign and \rVerify like:
+\begin{align*}
+x &= H(\msg_j,\mathtt{id}_j,\ldots,\msg_j,\mathtt{id}_j) \\
+\In &= \sum_j H_p(x,j) \In_j \\
+\PreOut &= \sum_j H_p(x,j) \PreOut_j \\
+\end{align*}
+
+As doing so links these pairs together,
+we could link together two or more ephemeral identities like this
+to obtain a semi-permanent identity with user controlled revocation:
+As login, our site demands two linked input-output pairs given by
+ $\msg_1 = \mathtt{site\_name} \doubleplus \mathtt{current\_month}$ and
+ $\msg_2 = \mathtt{site\_name} \doubleplus \mathtt{registration\_month}$,
+so users could have multiple active pseudo-nyms given by $\mathtt{id}_2$,
+but only one active pseudo-nym per month, enforced by deduplicating
+ $\mathtt{id}_1$, which still prevents spam and abuse.
+
+If instead our site associates pseudo-nyms to their most recently seen
+$\mathtt{id}_1$, then we could link adjacent months, meaning $\msg_j$
+is defined by the $j$th previous month, until reaching a previously used $\mathtt{id}_1$.
+In this model, pseudo-nyms could be abandoned and replaced, but
+abandoned pseudo-nyms cannot then be reclaimed without linking intervening dates.
+Although more costly, sites could permanently bans a few problematic
+users via the inequality proofs described in \S\ref{subsec:AML_KYC} too.
 
 In these ways, sites encode important aspects of their moderation rules
-into the ring VRF inputs requested.  
+into the ring VRF inputs they demand.  
 % We expect this makes sites' values and culture more uniform, predictable, and transparent.
 
 
@@ -154,25 +179,24 @@ rate limiting applications discussed in the next section.
 %
 In moderation-like applications, ring VRF outputs become long-term
 stable identities, so users typically reidentify themselves many times
-to the same sites.
+to the same sites, reusing the exact same \msg.
 
-As an optimization, our zero-knowledge continuation
-should deterministically choose the coefficients $r_1,r_2,b$ used for
-rerandomization in \S\ref{sec:rvrf_cont},
- seeded by \msg and \sk, meaning $r_1,r_2,b \leftarrow H(\sk,\msg)$. 
-%
-In this way, each $\mathtt{id}$ comes packages with the same unique % Groth16 SNARK
-\pifast, so the verifier could cache valid pairs
-$(\mathtt{id},H(\compk \doubleplus \pifast),\mathtt{diffdate})$, and reaccept \pifast
-without checking the Groth16 pairing equation whenever found cached.
-%
-We spend most verifier time checking the Groth16 pairing equation, so
-this saves considerable CPU time. % assuming our cache wind up fast enough.
+As an optimization, our zero-knowledge continuation could reuse the
+same \compk and \pifast for the same \msg, so that verifiers could
+memoize their verifications of \pifast.  We spend most verifier time
+checking the Groth16 pairing equation, so this saves considerable CPU time. % assuming our cache wind up fast enough.
 
-We still risk denial-of-service attacks by users who vary $r_1,r_2,b$ 
-randomly however.  We therefore set $\mathtt{diffdate}$ to be the date
-when our server last saw a different $H(\pifast)$ associated to
-$\mathtt{id}$, or empty if $\mathtt{id}$ always used the same $H(\pifast)$.
-We rate limit and verify more lazily if $\mathtt{diffdate}$ is non-empty,
-and optionally verify somewhat lazily even if no cache entry exists.
+As a concrete example, our coefficients $r_1,r_2,b$ used for
+rerandomization in \S\ref{sec:rvrf_cont} could be chosen
+deterministically like $r_1,r_2,b \leftarrow H(\sk,\msg)$.
+In this way, each (helpful) user's $\mathtt{id}$ has a unique \pifast,
+which verifiers could memoize by storing
+ $(\mathtt{id},H(\compk \doubleplus \pifast),\mathtt{dates})$
+after their first verification, but then skipping the Groth16 check
+ after merely rechecking the hash $H(\compk \doubleplus \pifast)$.
+
+We could risk denial-of-service attacks by users who vary $r_1,r_2,b$ 
+randomly however.  We therefore suggest $\mathtt{dates}$ record the last
+several previous dates when $H(\compk \doubleplus \pifast)$ changed.
+We rate limit or verify more lazily users with many nearby login dates
 
