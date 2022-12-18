@@ -50,12 +50,12 @@ In other words, this simplified ring VRF could be instantiated by making
 \Eval a pseudo-random (hash) function, and using a NIZK for a language like
 $$ \Setst{ \Out, \msg, \ring}{
     \eprint{
-        (\pk,\sk) \leftarrow \KeyGen, \quad %   \textrm{ and }
+        \exists (\pk,\sk) \leftarrow \KeyGen, \quad %   \textrm{ and }
         \pk \in \ring, \quad
         \Out = \Eval(\sk,\msg)
     }{
         \begin{aligned}
-        & (\pk,\sk) \leftarrow \KeyGen \\
+        & \exists (\pk,\sk) \leftarrow \KeyGen \\
         & \pk \in \ring \\
         & \Out = \Eval(\sk,\msg)
         \end{aligned}
@@ -118,7 +118,7 @@ $$ \exists \openring \textrm{\ s.t.\ } \pk = \OpenRing(\comring,\openring) \math
 %
 % $$ \pi_0 = \NIZK \Setst{ \Out, \msg, \comring }{
 %     \begin{aligned}
-%         (\pk,\sk) &\leftarrow \KeyGen,  \quad
+%         \exists (\pk,\sk) &\leftarrow \KeyGen,  \quad
 %           \Out = \PRF(\sk,\msg)  \\
 %         \exists \openring \textrm{\ s.t.\ }
 %           \pk &= \OpenRing(\comring,\openring)  \\      
