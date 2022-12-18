@@ -43,6 +43,13 @@ Privacy by~Design~Foundation.
 \newblock Irma docs v0.2.0.
 \newblock \url{https://irma.app/docs/v0.2.0/overview/}.
 
+\bibitem{LegoSNARK}
+Matteo Campanelli, Dario Fiore, and Anaïs Querol.
+\newblock Legosnark: Modular design and composition of succinct zero-knowledge
+  proofs.
+\newblock Cryptology ePrint Archive, Paper 2019/142, 2019.
+\newblock \url{https://eprint.iacr.org/2019/142}.
+
 \bibitem{canetti1}
 Ran Canetti.
 \newblock Universally composable security: A new paradigm for cryptographic
@@ -80,6 +87,11 @@ Alex Davidson, Ian Goldberg, Nick Sullivan, George Tankersley, and Filippo
 \newblock Privacy pass: Bypassing internet challenges anonymously.
 \newblock {\em Proceedings on Privacy Enhancing Technologies}, 2018:164--180,
   06 2018.
+
+\bibitem{HdVBatchEd25519}
+Henry de~Valence.
+\newblock It’s 255:19am. do you know what your validation criteria are?
+\newblock \url{https://hdevalence.ca/blog/2020-10-04-its-25519am}.
 
 \bibitem{pop2008}
 Bryan Ford and Jacob Strauss.
