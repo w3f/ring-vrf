@@ -60,7 +60,7 @@ and in the universally composable (UC) \cite{canetti1,canetti2} model.
 We show that our ring VRF protocol is secure in the UC model.
 
 In \S\ref{sec:rvrf_cont}, we build extremely efficient and flexible
-ring VRFs by amortizing a zero-knowledge continuation that unlinkably
+ring VRFs by amortizing a ``zero-knowledge continuation'' that unlinkably
 proves ring membership of a secret key, and then cheaply proving
 individual VRF evaluations.
 
@@ -94,7 +94,7 @@ As our public inputs involve opaque Pedersen commitments,
 they now require proofs-of-knowledge resentment of to \cite{LegoSNARK}. 
 % In essence, this specializes the Groth16 
 
-As recursive SNARKs shall remain extremely slow,
+As recursive SNARKs might remain slow,
 we expect zero-knowledge continuations via rerandomization become
 essential for zkSNARKs used in identity and elsewhere outside the crypto-currency space.
 

@@ -5,14 +5,14 @@ We construct ring VRFs with an efficient evaluation proof, which
 we call the Pedersen VRF and denote \PedVRF.
 \PedVRF instantiates the NIZK for the language $\Leval$ defined in \S\ref{sec:overview}.
 
-An EC VRF like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}
-consists of a verifiable unique function (VUF) given by a
+An EC VRF like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10} 
+consists of first a verifiable unique function (VUF) given by a
 Chaum-Pedersen DLEQ proof between the signer's public key $\pk = \sk \, \genG$ and
  the VUF output $\PreOut = \sk H_{\grE}(\msg)$,
 after which a PRF \eprint{evaluation}{} yields a VRF output
  $\Out = H'(\msg, h \, \PreOut)$ ala \cite[Proposition 1]{vrf_micali}.
 %
-\PedVRF alters the EC VRF by replacing the public key by
+Our \PedVRF alters the EC VRF by replacing the public key by
 a Pedersen commitment $\pk + \openpk \, \genB$ to the secret key \sk.%
 
 % We define security for only our ring VRF constructions, but clearly
