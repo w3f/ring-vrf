@@ -73,22 +73,24 @@ there exists an alternative formulation:
 \comring could be a KZG polynomial commitment \cite{KZG} to users' $J_\pk$s,
 while \pipk itself becomes an opening at a secret location, like
 Caulk+ \cite{caulk+} or Caulk \cite{caulk}.
-We clearly benefit from much faster ring updates this way, but pay in
+We benefit from faster ring updates this way, but pay in
  increased verifier time and increased marginal prover time.
 
 
-\subsection{Append only blockchains}
+\subsection{Append only rings}
 
-\def\comblock{\ensuremath{\mathsf{comblock}}\xspace}
 \newcommand\pichain{\ensuremath{\pi_{\mathtt{chain}}}\xspace}
 
-We could build \ring using append only structures like some blockchains,
+As a slight variation,
+we could build \ring using append only structures like some blockchains,
 in which case we should split $\rVRF.\OpenRing$ differently between
 an inner ring block or epoch proof $\baseL_{\mathtt{block}}$,
  which we only prove once like \pisk above, and
 a chain state proof $\baseL_{\mathtt{chain}}$,
- which extends this inner ring to the growing blockchain, and
- admits KZG based alternatives like Caulk+ \cite{caulk+}.
+ which extends this inner ring to the growing blockchain.
+Now our inner SNARKs pass a $\mathtt{blk}$ parameter, which 
+our zero-knowledge continuation transforms into a opaque commitment
+$\mathtt{comblk}$, thereby requiring a proof-of-knowledge.
 %
 $$ \baseL_{\mathtt{chain}} = \Setst{ \mathtt{blk}, \mathtt{chain} }{
 	\mathtt{blk} \in \mathtt{chain}
@@ -98,70 +100,32 @@ $$ \baseL_{\mathtt{block}} = \Setst{ \sk_0 + \sk_1 2^{128}, \mathtt{blk} }{
 	\eprint{\exists d,\openring \textrm{\ s.t.\ }}{}
 	\genfrac{}{}{0pt}{}{ \OpenRing(\mathtt{blk},\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
 } \mathperiod $$  
-
-Again here we need a proof-of-knowledge for $\mathtt{blk}$ because
-it winds up opaque to verifiers.
-
-
-\subsection{Expiration} % {Certificates} % \& revokation}
-
-We could build \piring or \pipk that merely check a certificate or
-credential issued by some authority too.
-We do not explore this direction except to observe: 
-All certificates need expiry dates because certificates are inherently
-``append only''.  We think all append only \ring constructions similarly
-benefit from expiration dates, including append only blockchains, and
-also proof-of-personhood parties \cite{pop2008,pop2017}.
-We suggest \pisk or $\baseL_{\mathtt{block}}$ emit the expiration date
-alongside the secret key in $X$, and \pipk or $\baseL_{\mathtt{chain}}$
-enforce expiration, but really even \PedVRF could enforce expiration.
-
-% In this, we prefer a SNARK friendly random oracle, because conventional random oracles cost like 30k constraints.
-% We also need a variable base scalar multiplication, which costs like 4k constraints, as well as a couple fixed base scalar multiplication.
-% A priori, these fixed base scalar multiplications cost roughly 700 constraints each, but occasionally they cost only half this.   
 %
-% We conjecture one fixed based scalar multiplication could be replaced by adapting implicit certificate scheme techniques,  instead of simply a signature on a user provided key.
+We suggest appending $\mathtt{blk}$ to a polynomial commitment using
+\cite{aSVC}, which then $\baseL_{\mathtt{chain}}$ blind opens
+via Caulk+ \cite{caulk+} as above.
 
 
-\subsection{Revocation}
+\subsection{Expiration and revocation}
 
-As a rule, one needs some revocation path for certificates,
-despite the underlying signature not being revocable, but again
-revocation improves all append only \ring designs.
-%
-We suggest revocation list be maintained separately from an append only
-blockchain and then do a non-membership proof from the revocation list
-in \pipk or $\baseL_{\mathtt{chain}}$.  % perhaps via \cite{???}.
-These non-revocation proofs provide more nuanced \ring membership
-control, without reproving \pisk or $\baseL_{\mathtt{block}}$.
-We expect a revocation list update only rarely compared with \ring itself.
+We expect expiration and revocation would be required for append only
+rings like blockchains, or say a zero-knowledge proof of a certificate.
+% proof-of-personhood parties \cite{pop2008,pop2017}
+
+For expiry, we suggest \pisk or $\baseL_{\mathtt{block}}$ commit to
+the expiration date alongside the secret key in their $X$, and
+then \pipk or $\baseL_{\mathtt{chain}}$ enforce expiration, but
+ really even \PedVRF could enforce expiration.
+
+A revocation list could be enforced by a non-membership proof in
+\pipk or $\baseL_{\mathtt{chain}}$.
+We expect a revocation list updates only rarely compared with \ring
+itself though, which makes doing this non-membership proof inside some
+separate zero-knowledge continuation tempting too.
+A deployment faces should make this choice carefully.
 
 % We already trust an authority with issuing certificates, so we trust them with managing the revocation list too.  
 % As such, our revocation list non-membership proofs merely requires proving adjacency of the revoked public keys lexicographically before and after our own public key.
 % If the revocation list requires secrecy, then VRFs could hide its ordering,
 % similarly to NSEC5 \cite{nsec5}.
 
-
-
-\endinput
-
-
-
-
-\subsection{Append only logs}
-
-If an append only log grants ring membership, then a recursive SNARK
-could validate ring membership with each recursive addition being
-relatively inexpensive.
-
-In this, we need a $\pipk^0$ similar to \pipk as well as a
-$\pipk^n$ that proves some $\comring_{n-1}$ to be the ancestor of
-its own $\comring_n$ and recursively proves some $\pifast^{n-1}$ with
-its own $\comring_{n-1}$ and the same $\sk$.
-We expect half pairing cycles fit this usage nicely, although they complicate provers.
-
-Append only logs still depend \pipk be reproven whenever
-\ring updates however, so they only reduce bandwidth they not CPU usage.
-We shy away from such append only log optimizations, due to this
-prover complexity and our desire for revocation, but
- they remain an interesting corner of the design space.
