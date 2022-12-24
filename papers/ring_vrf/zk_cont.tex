@@ -70,9 +70,10 @@ Alone rerandomization cannot alter public inputs $x_i$, so
 we instead need an opaque public input point $X$, which then becomes
 part of our proof and incurs its own separate proof of correctness.
 
-We build {\em special Groth16} by adding one fresh basepoint $\genB_\gamma$
-independent from all others, including the $H_{\grE}(\msg)$ in \PedVRF, so
- perhaps created by applying $H_\grE$ to an input outside the \msg domain.
+We build {\em special Groth16} aka \SpecialG by adding one fresh
+basepoint $\genB_\gamma$ independent from all others,
+ including the $H_{\grE}(\msg)$ in \PedVRF.%
+\footnote{Apply the underlying $H_\grE$ to an input outside the \msg domain for example.}
 In the trusted setup, we build one additional prover SRS elements
 $$ \genB_\delta := {\gamma\over\delta} \genB_\gamma $$
 % Although $\genB_\gamma$ is independent,  we create $\genB_\delta$ during the trusted setup,  so the toxic waste $\gamma$ and $\delta$ remain secret.
@@ -81,7 +82,8 @@ disappear and subversion resistance could be checked like
 $$ e(\genB_\gamma, [\gamma]_2) = e(\genB_\delta, [\delta]_2) \mathperiod $$
 
 We now have a zero-knowledge continuation $\pi = (X,A,B,C)$ from which
-we produce an unlinkable instance $\pi' = (X',A',B',C')$ by
+our algorithm $\SpecialG.\Reprove : (X,A,B,C) \mapsto ((X',A',B',C'); b)$ produces an
+unlinkable instance $\pi' = (X',A',B',C')$ by
  first sampling random $b,r_1,r_2 \in \F_p$ and then computing
 $$ \begin{aligned}
 X' &= X + b \genB_\gamma \\
@@ -101,13 +103,19 @@ our verifier should typically enforce specific values by assembling
 a few {\em transparent} inputs $Y = \sum_i^l y_i \Upsilon_i$ themselves.
 In particular, our ring VRF verifiers should enforce the commitment
 \comring for $\ring$, even if they outsource computing \comring.
+We thus write $\SpecialG.\Preprove : (\bar{y}, \bar{x}; \bar{\omega}) \mapsto (X,A,B,C)$
+where $(A,B,C) = \primalgo{Groth16}.\Prove(\bar{y}, \bar{x}; \bar{\omega})$,
+so a full \Prove algorithm works by composing \Preprove and \Reprove.
 
-We now verify $(X' + Y,A',B',C')$ like Groth16 
+At this point $\SpecialG.\Verify(\bar{y}; (X',A',B',C') )$
+ computes $X' + Y = X' + \sum_i^l y_i \Upsilon_i$ and checks
+ the tuple $(X' + Y,A',B',C')$ like Groth16 does,
 $$ e(A',B') = e([\alpha]_1, [\beta]_2) \cdot
- e(X' + Y, [\gamma]_2) \cdot e(C', [\delta]_2) \mathcomma $$
+ e(X' + Y, [\gamma]_2) \cdot e(C', [\delta]_2) \mathperiod $$
 As our verifier does not build $X'$ themselves, we prove nothing
 with this pairing equation unless the verifier separately checks
- some proof-of-knowledge that $X' = b \genB_\gamma + \sum_i^k x_i \chi_i$.
+ a proof-of-knowledge that $X' = b \genB_\gamma + \sum_i^k x_i \chi_i$
+ for some unknown $b,\bar{x}$.
 
 \begin{lemma}\label{lem:unlinkable}
 Our rerandomization procedure % $(X,A,B,C) \mapsto (X',A',B',C')$
@@ -127,7 +135,7 @@ Adapt the proof of Theorem 3 in \cite[Appendix C, pp. 31]{RandomizationGroth16}.
 
 All told, our opaque rerandomization trick converts any conventional
 Groth16 zkSNARK $\pi$ for $\rVRF.\OpenRing$ into a zkSNARK $\pi'$
-with inputs split into a transparent part $Y$ vs opaque unlinkable part $X$.
+with inputs split into a transparent part $\bar{y}$ vs opaque unlinkable part $X$.
 % We explore two concrete $\pi$ proposals below.
 
 Importantly, rerandomization requires only
@@ -136,33 +144,25 @@ Importantly, rerandomization requires only
 which  BLS12 curves make roughly equivalent to
  eight scalar multiplications on $\ecE_1$.
 
-% TODO:
-% \begin{definition}
-% restrited knowledge soundness
-% \end{definition}
-
 \begin{lemma}\label{lem:knowledge_soundness}
 Assuming AGM plus the $(2n-1,n-1)$-DLOG assumption,
 any zero-knowledge continuation with circuit size less than $n$
-satisfies knowledge soundness, restricted to challengers
- who learn the actual public input wire values and blinding factors.
+satisfies knowledge soundness.
 \end{lemma}
 
 \begin{proof}[Proof idea.]
+As our \Prove is composed from \Preprove and \Reprove, our challenger
+learns the actual public input wire values and blinding factors.
 Adapt the proof of Theorem 2 in \cite[\S3, pp. 9]{RandomizationGroth16},
 observing that $K_\gamma$ and $K_\delta$ never interact with other elements. 
-% TODO: Check this argument!
+%TODO: Alistair or Oana, Do we even need the first sentense here?  nything more to say about the second?
 \end{proof}
 
-% TODO:  Oy!
-% We obtain knowledge soundness if we fold hiding Pedersen commitments
-% into the witness too.  Yet, 
-% we do not have ``knowledge soundness'' for the hidden Pedersen commitment 
-
 In fact, one could prove zero-knowledge continuations satisfy
-weak white-box simulation extractability under similar restrictions,
+weak white-box simulation extractability,  % under similar restrictions,
 much like Theorem 1 in \cite[\S3, pp. 8 \& 11]{RandomizationGroth16}.
-We depends upon the specific simulator though, which itself increases
+%TODO:  Alistair or Oana, what the hell did I mean by this?  -Jeff
+We depend upon the specific simulator though, which itself increases
 our dependence upon the usage of the zero knowledge continuation.
 
 
@@ -171,16 +171,14 @@ our dependence upon the usage of the zero knowledge continuation.
 
 % TODO \PedVRF.\OpenKey(\compk,\openpk)
 
-\def\longeq{=\mathrel{\mkern-7mu}=}% {=\joinrel=} % https://tex.stackexchange.com/questions/35404/is-there-a-wider-equal-sign
-We describe a much faster choice $\pifast$ for $\pi$
-that sets $x_1 \longeq \sk$ and $x_0 \longeq \comring = \CommitRing(\ring)$ so that
-taking $\genG \longeq \chi_1$, $\genB \longeq \genB_\gamma$, and $\openpk \longeq b$ in \PedVRF
-yields and incredibly fast amortized ring VRF prover.
-Also, \PedVRF itself proves knowledge of $X'$,
- or more precisely of $X' - \comring\, \chi_0$ since the verifier knows \comring.
-$$ X' = \comring\, \chi_0 + \sk\, \chi_1 + b \genB_\gamma $$
-
-% TODO: Do we mention that $\chi_0$ gets omitted in the proof-of-knowledge
+\def\longeq{=\mathrel{\mkern-10mu}=}% {=\joinrel=} % https://tex.stackexchange.com/questions/35404/is-there-a-wider-equal-sign
+We describe a much faster choice \pifast for \piring
+that sets $x_1 \longeq \sk$ and $x_0 \longeq \comring$ so that taking
+ $\genG \longeq \chi_1$, $\genB \longeq \genB_\gamma$, and $\openpk \longeq b$
+in \PedVRF yields an incredibly fast amortized ring VRF prover.
+Also \PedVRF itself proves knowledge of $X' =  \sk\, \chi_1 + b \genB_\gamma $,
+ as required by $\SpecialG\Verify$.
+% $$ X' + Y = \comring\, \Upsilon_1 + \sk\, \chi_1 + b \genB_\gamma $$
 
 A priori, we do not know $\chi_1$ during the trusted setup for $\pifast$,
 which prevents computing $\pk = \sk\, \chi_1$ inside $\pifast$.
@@ -190,23 +188,24 @@ some Jubjub curve $\ecJ$.
 We know the large subgroup $\grJ$ of $\ecJ$ typically has smaller prime
 order $p_\grJ$ than $\grE$, itself due to $\ecJ$ being an Edwards curve. 
 We thus choose $\sk_0,\sk_1 < p_\grJ$ so that
- $\PedVRF.\sk := \sk_0 + \sk_1 \, 2^{128}$, and so
+ $\PedVRF.\sk = \sk_0 + \sk_1 \, 2^{128} \mod p_\grE$, and so
 our $\rVRF.\KeyGen$ \eprint{returns}{shall now return}
 a secret key of the form $\rVRF.\sk = (\sk_0,\sk_1,d)$
  with $d \leftsample \F_{p_\grJ}$ and
 a public key of the form
  $\rVRF.\pk = \sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$,
 for some independent $\genJ_0,\genJ_1,\genJ_2$. % (see \S\ref{subsec:AML_KYC}).
-\footnote{Interestingly, we shall avoid range proofs for $\sk_1$ and $\sk_2$ by this independence.}
+\footnote{Interestingly we avoid range proofs for $\sk_1$ and $\sk_2$ by this independence.}
 
-$$ \Lfast = \Setst{ \sk_0 + 2^{128} \sk_1, \comring }{
+$$ \Lfast^\inner = \Setst{ \sk_0 + 2^{128} \sk_1, \comring }{
  \eprint{ \exists d,\openring \textrm{\ s.t.\ } }{}
  % 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
  \genfrac{}{}{0pt}{}{ \eprint{\rVRF.}{}\OpenRing(\comring,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
 } $$ % \mathperiod 
 
-Applying our rerandomization to $\pifast$ with opaque input yields
-a zkSNARK $\pifast'$ of exactly the form $\piring$.
+Applying our rerandomization \Reprove to $\pifast^\inner$ with opaque input
+yields a zkSNARK $\pifast$ with the extra $\PedVRF.\OpenKey$ arithmetic to
+have exactly the form $\piring$.
 
 We explain later in \S\ref{sec:ring_hiding} how one could
 choose $\chi_1$ independent before doing the trusted setup,
