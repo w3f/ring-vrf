@@ -39,12 +39,12 @@ If concerned, one could address this via a second zk continuation that
 splits \pifast into a Groth16 \pisk and a Groth16 or KZG \pipk for two
 respective languages:
 %
-$$ \Lpk = \Setst{ J_\pk, \comring }{
+$$ \Lpk^\inner = \Setst{ J_\pk, \comring }{
 	\exists \openring \textrm{\ s.t.\ }
 	J_\pk = \eprint{\rVRF.}{}\OpenRing(\comring,\openring)
 } \mathcomma \eprint{\quad\textrm{and}}{} $$ 
 %
-$$ \Lsk = \Setst{ \sk_0 + \sk_1 2^{128}, J_\pk }{ 
+$$ \Lsk^\inner = \Setst{ \sk_0 + \sk_1 2^{128}, J_\pk }{ 
 	\exists d \textrm{\ s.t.\ }
 	% 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
 	J_\pk = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2
@@ -92,11 +92,11 @@ Now our inner SNARKs pass a $\mathtt{blk}$ parameter, which
 our zero-knowledge continuation transforms into a opaque commitment
 $\mathtt{comblk}$, thereby requiring a proof-of-knowledge.
 %
-$$ \baseL_{\mathtt{chain}} = \Setst{ \mathtt{blk}, \mathtt{chain} }{
+$$ \baseL_{\mathtt{chain}}^\inner = \Setst{ \mathtt{blk}, \mathtt{chain} }{
 	\mathtt{blk} \in \mathtt{chain}
 } \mathcomma \quad\textrm{and} $$ 
 %
-$$ \baseL_{\mathtt{block}} = \Setst{ \sk_0 + \sk_1 2^{128}, \mathtt{blk} }{
+$$ \baseL_{\mathtt{block}}^\inner = \Setst{ \sk_0 + \sk_1 2^{128}, \mathtt{blk} }{
 	\eprint{\exists d,\openring \textrm{\ s.t.\ }}{}
 	\genfrac{}{}{0pt}{}{ \OpenRing(\mathtt{blk},\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
 } \mathperiod $$  
