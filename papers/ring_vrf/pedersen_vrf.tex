@@ -71,7 +71,7 @@ A successful $\PedVRF.\Verify$ below proves knowledge of \compk,
 
 \begin{itemize}
 \item $\PedVRF.\Sign : (\sk,\openpk,\msg,\aux) \mapsto \sigma$ \,
-    % takes a secret key \sk and blinding factor \openpk, an input $\msg$, and auxiliary data \aux, and then performs
+    % takes a secret key \sk and blinding factor \openpk, an input $\msg$, and associated data \aux, and then performs
     First computes $\In := H_{\grE'}(\msg)$ and $\PreOut := \sk \, \In$.
     Next samples $r_1,r_2 \leftsample \F_p$,
     computes $R = r_1 \genG + r_2 \genB$, and $R_m = r_1 \In$,
@@ -182,7 +182,7 @@ $ \rVRF $  over the group structure $ (\grE,p,\genG,\genB) $ realizes $ \fgvrf $
 
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$ takes
- a secret key \sk, a ring opening \openring, a message \msg, and \aux, and then % auxiliary data
+ a secret key \sk, a ring opening \openring, a message \msg, and \aux, and then % associated data
  % \begin{enumerate}
  % \item
  generates \openpk, computes a ring membership proof $\piring$

@@ -71,7 +71,7 @@ for the specific signer, but only within the context of \msg.
 % \smallskip
 
 Aside from proving a PRF evaluation, 
-we always need \rSign and \rVerify to sign some auxiliary data \aux,
+we always need \rSign and \rVerify to sign some associated data \aux,
 as otherwise the ring VRF signature become unmoored and permits replay attacks.
 %
 As an example, our identity protocol below in \S\ref{sec:app_identity}
@@ -128,7 +128,7 @@ $$ \exists \openring \textrm{\ s.t.\ } \pk = \OpenRing(\comring,\openring) \math
 % \smallskip
 
 After these corrections,  our algorithms for a
-{\em ring verifiable random function with auxiliary data} (rVRF-AD)
+{\em ring verifiable random function with associated data} (rVRF-AD)
 now really look like
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$, \quad and
