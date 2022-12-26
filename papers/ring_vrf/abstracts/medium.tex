@@ -1,0 +1,44 @@
+
+\def\eprintsmallskip{\smallskip}{}%
+We introduce a new cryptographic primitive, aptly named
+ \emph{ring verifiable random functions (ring VRF)},
+% Anonymized
+%\eprint{Ring VRFs are}{We introduce ring VRFs, which are}
+Ring VRFs are (anonymized) ring signatures that prove correct evaluation
+of an authorized signer's PRF, while hiding the specific signer's
+identity within some set of possible signers, known as the ring.
+
+We discover a family of ring VRF protocols with surprisingly efficient
+instantiations, thanks to our novel {\em zero-knowledge continuation} technique.
+%
+Intuitively our ring VRF signers generate two linked proofs,
+ one for PRF evaluation and one for ring membership. 
+An evaluation proof needs only a cheap Chaum-Pedersen DLEQ proof,
+while ring membership proof depends only upon the ring itself.
+We reuse this ring membership proof across multiple inputs
+by expanding a Groth16 trusted setup to rehide public inputs when
+ rerandomizing the Groth16.
+%
+Incredibly, our fastest amortized ring VRF needs only eight $\mathcal{G}_1$
+ and two $\mathcal{G}_2$ scalar multiplications, 
+making it the only ring signature with performance competitive with group signatures.
+
+\eprintsmallskip
+
+We discuss applications that range across the anonymous credential space:
+
+As in Bryan Ford's proof-of-personhood work,
+a ring VRF output acts like a unique pseudo-nonymous identity
+ within some desired context, given as the ring VRF input,
+but remains unlinkable between different contexts. 
+These unlinkable but unique pseudonyms provide a better balance
+between user privacy and service provider or social interests than
+ attribute based credentials like IRMA credentials.
+
+\eprintsmallskip
+Ring VRFs support anonymously rationing or rate limiting resource
+consumption that winds up vastly more flexible and efficient than
+purchases via money-like protocols.
+
+\eprintsmallskip
+We define the security of ring VRFs in the universally composable (UC) model and show that our protocol is UC secure.
