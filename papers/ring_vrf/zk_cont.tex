@@ -3,7 +3,7 @@
 \label{sec:rvrf_cont}
 
 We now develop our zero-knowledge continuation technique, called 
-{\em special Groth16}, and build ring VRFs with fast amortized prover time.
+{\em special Groth16} or \SpecialG, and build ring VRFs with fast amortized prover time.
 Anonymity demands we finalize the amortized ``continuation'' multiple
 times, with each time being unlinkable to the others, meaning our rVRF
 stays zero-knowledge even with the continuation being reused.
@@ -30,7 +30,7 @@ points in $\grE_1$ and $\grE_2$ that encode the circuit being proven.
 We follow \cite{Groth16} in discussing the SRS $S$ in terms of
 its ``toxic waste''
  $(\alpha,\beta,\delta,\gamma,\tau^1,\tau^2,\ldots) \in \F_q^*$.
-In other words, we could write say $[ f(\tau)/\delta ]_1$ or $[\cdots]_2$
+In other words, we could write say $[ f(\tau)/\delta ]_1$ or $[\delta]_2$
 to denote an element of our SRS $S$ in $\grE_1$ or $\grE_2$ respectively,
 computed by scalar multiplication of the Groth16 generators from
 the toxic waste $\tau$ and $\delta$,
@@ -74,11 +74,12 @@ We build {\em special Groth16} aka \SpecialG by adding one fresh
 basepoint $\genB_\gamma$ independent from all others,
  including the $H_{\grE}(\msg)$ in \PedVRF.%
 \footnote{Apply the underlying $H_\grE$ to an input outside the \msg domain for example.}
-In the trusted setup, we build one additional prover SRS elements
-$$ \genB_\delta := {\gamma\over\delta} \genB_\gamma $$
+In the trusted setup, we build one additional prover SRS element
+$$ \genB_\delta := {\gamma\over\delta} \genB_\gamma \mathperiod $$
 % Although $\genB_\gamma$ is independent,  we create $\genB_\delta$ during the trusted setup,  so the toxic waste $\gamma$ and $\delta$ remain secret.
 After $\genB_\delta$ is created, our toxic waste $\gamma$ and $\delta$
-disappear and subversion resistance could be checked like 
+disappear and subversion resistance could be checked
+ like in \cite{cryptoeprint:2019/1162} plus also checking
 $$ e(\genB_\gamma, [\gamma]_2) = e(\genB_\delta, [\delta]_2) \mathperiod $$
 
 We now have a zero-knowledge continuation $\pi = (X,A,B,C)$ from which
@@ -104,7 +105,7 @@ a few {\em transparent} inputs $Y = \sum_i^l y_i \Upsilon_i$ themselves.
 In particular, our ring VRF verifiers should enforce the commitment
 \comring for $\ring$, even if they outsource computing \comring.
 We thus write $\SpecialG.\Preprove : (\bar{y}, \bar{x}; \bar{\omega}) \mapsto (X,A,B,C)$
-where $(A,B,C) = \primalgo{Groth16}.\Prove(\bar{y}, \bar{x}; \bar{\omega})$,
+where $(A,B,C) \leftarrow \primalgo{Groth16}.\Prove(\bar{y}, \bar{x}; \bar{\omega})$,
 so a full \Prove algorithm works by composing \Preprove and \Reprove.
 
 At this point $\SpecialG.\Verify(\bar{y}; (X',A',B',C') )$
@@ -119,8 +120,8 @@ with this pairing equation unless the verifier separately checks
 
 \begin{lemma}\label{lem:unlinkable}
 Our rerandomization procedure % $(X,A,B,C) \mapsto (X',A',B',C')$
-transforms honestly generated zero-knowledge continuations $(X,A,B,C)$
-into identically distributed zero-knowledge continuations $(X',A',B',C')$,
+transforms honestly generated \SpecialG zero-knowledge continuation $(X,A,B,C)$
+into identically distributed \SpecialG proof $(X',A',B',C')$,
 with identical opaque inputs $x_1,\ldots,x_k$ and
  identical transparent inputs $y_1,\ldots,y_l$.
 \end{lemma}
@@ -145,9 +146,9 @@ which  BLS12 curves make roughly equivalent to
  eight scalar multiplications on $\ecE_1$.
 
 \begin{lemma}\label{lem:knowledge_soundness}
-Assuming AGM plus the $(2n-1,n-1)$-DLOG assumption,
-any zero-knowledge continuation with circuit size less than $n$
-satisfies knowledge soundness.
+Assuming AGM plus the $(2n-1,n-1)$-DLOG assumption, and
+ circuit size less than $n$,
+then our zero-knowledge continuation \SpecialG satisfies knowledge soundness.
 \end{lemma}
 
 \begin{proof}[Proof idea.]
@@ -177,7 +178,7 @@ that sets $x_1 \longeq \sk$ and $x_0 \longeq \comring$ so that taking
  $\genG \longeq \chi_1$, $\genB \longeq \genB_\gamma$, and $\openpk \longeq b$
 in \PedVRF yields an incredibly fast amortized ring VRF prover.
 Also \PedVRF itself proves knowledge of $X' =  \sk\, \chi_1 + b \genB_\gamma $,
- as required by $\SpecialG\Verify$.
+ as required by $\SpecialG.\Verify$.
 % $$ X' + Y = \comring\, \Upsilon_1 + \sk\, \chi_1 + b \genB_\gamma $$
 
 A priori, we do not know $\chi_1$ during the trusted setup for $\pifast$,
@@ -210,14 +211,14 @@ have exactly the form $\piring$.
 We explain later in \S\ref{sec:ring_hiding} how one could
 choose $\chi_1$ independent before doing the trusted setup,
  and then wire $\chi_1$ into $\pifast$ inside $C$.
-In this case, we could prove $\pk = \sk\, \chi_1$ inside $\pifast$, but then
-non-native arithmetic makes $\pifast$ far slower.
+We could then prove $\pk = \sk\, \chi_1$ directly inside $\pifast^\inner$,
+but doing so here requires slow non-native field arithmetic.
 
 At this point, $\PedVRF.\Sign$ requires two scalar multiplications on $\ecE_1$
- and two on $\ecE'$,
+ and two on the somewhat faster $\ecE'$,
 so together with rerandomization costing four scalar multiplications
 on $\ecE_1$ and two on $\ecE_2$, our amortized prover time
- comes under 12 scalar multiplications on typical $\ecE_1$ curves. 
+ runs faster than 12 scalar multiplications on typical $\ecE_1$ curves. 
 We expect the three pairings dominate verifier time, but
  verifiers also need five scalar multiplications on $\ecE_1$.
 
@@ -226,8 +227,9 @@ group order as $\grE$, which speeds up two scalar multiplications
  in both the prover and verifier. 
 
 Importantly, our fast ring VRF' amortized prover time now rivals
-group signature schemes' performance.  We hope this ends the temptation
-to deploy group signature like constructions where the deanonymization vectors matter.
+group signature schemes' performance \cite{group_sig_survey,}.
+We hope this ends the temptation to deploy group signature like
+ constructions where the deanonymization vectors matter.
 
 \begin{theorem}\label{thm:knowledge_soundness}
 \rVRF instantiated with \pifast and \PedVRF satisfies knowledge soundness.
@@ -245,12 +247,13 @@ so our result follows from Lemma \ref{lem:knowledge_soundness}.
 % \end{corollary}
 
 % \begin{theorem}\label{thm:pifast_anonymity}
-% Our ring VRF \rVRF using \pifast and \PedVRF satisfies zero-knowledge.
+% \rVRF instantiated with \pifast and \PedVRF satisfies zero-knowledge.
 % \end{theorem}
 %
 % \begin{proof}[Proof stetch.]
 % Assuming the same \comring, we know the zero-knowledge continuations
-% are identically distributed by Lemma \ref{lem:unlinkable}.
+% are identically distributed by Lemma \ref{lem:unlinkable},
+% even when reusing a zero-knowledge continuation $(X,A,B,C)$.
 % It follows the typical simulator for \PedVRF ... WHAT???
 % \end{proof}
 
