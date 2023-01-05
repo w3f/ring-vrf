@@ -2,6 +2,7 @@
 \def\eprintsmallskip{\smallskip}{}%
 We introduce a new cryptographic primitive, aptly named
  \emph{ring verifiable random functions (ring VRF)},
+ which provides an array of uses, especially in anonymous credentials.
 % Anonymized
 %\eprint{Ring VRFs are}{We introduce ring VRFs, which are}
 Ring VRFs are (anonymized) ring signatures that prove correct evaluation
@@ -27,7 +28,7 @@ making it the only ring signature with performance competitive with group signat
 
 We discuss applications that range across the anonymous credential space:
 
-As in Bryan Ford's proof-of-personhood work,
+As in proof-of-personhood work by Bryan Ford, et al.,
 a ring VRF output acts like a unique pseudo-nonymous identity
  within some desired context, given as the ring VRF input,
 but remains unlinkable between different contexts. 
