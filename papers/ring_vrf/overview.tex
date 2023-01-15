@@ -176,9 +176,10 @@ $$ \Lring = \Setst{ \compk, \comring }{
 } $$
 
 We discovered this becomes incredibly efficient if one specializes
-the Groth16 construction:  An inner true Groth16 for $\Lring^\inner$ handles
-the secret key \sk directly, while our Pedersen commitment \compk is
-built outside this Groth16.  
+the Groth16 construction:  An inner true Groth16 for $\Lring^\inner$
+handles the secret key \sk directly via its public inputs, but
+\sk and even \pk remain secret by transforming the trusted setup to have
+a rerandomizable Pedersen commitment \compk outside this Groth16.
 $$ \Lring^\inner = \Setst{ \sk, \comring}{
     \eprint{
     (\pk,\sk) \leftarrow \KeyGen, \, % \textrm{\,and }

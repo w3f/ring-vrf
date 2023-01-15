@@ -3,10 +3,32 @@
 \label{sec:rvrf_cont}
 
 We now develop our zero-knowledge continuation technique, called 
-{\em special Groth16} or \SpecialG, and build ring VRFs with fast amortized prover time.
+{\em special(ized) Groth16} or \SpecialG, and
+ build ring VRFs with fast amortized prover time.
 Anonymity demands we finalize the amortized ``continuation'' multiple
 times, with each time being unlinkable to the others, meaning our rVRF
 stays zero-knowledge even with the continuation being reused.
+
+Our zero-knowledge continuation $\SpecialG_\rel$ consists of three algorithms:
+\begin{itemize}
+\item $\SpecialG_\rel.\Preprove : (\bar{y}, \bar{x}; \bar{\omega}) \mapsto (X,\pi)$ \,
+ constructs a pre-commitment $X$ and a pre-proof $\pi$ for $\rel$ from 
+ transparent inputs $\bar{y}$, opaque inputs $\bar{x}$, and witnesses \bar{\omega}.
+\item $\SpecialG_\rel.\Reprove : (X,\pi) \mapsto ((X',\pi'); b)$ \,
+ finalizes the commitment $X'$ and proof $\pi'$ and returns an opening $b$ for the commitment. 
+\item $\SpecialG_\rel.\Verify(\bar{y}; (X',\pi') )$ \, 
+ verifies the 
+\end{itemize}
+Our \Verify needs a separate proof-of-knowledge for $X'$, the production
+of which requires knowledge of $\bar{x}$, and occurs in parallel to \Reprove.
+
+We define (white-box) knowledge soundness for zero-knowledge continuations
+exactly like for zero-knowledge proofs, but with the composition 
+$\Prove : (\bar{y}, \bar{x}; \bar{\omega}) \mapsto \Reprove(\Preprove(\bar{y}, \bar{x}; \bar{\omega}))[0]$
+as well as this additional proof-of-knowledge.
+Zero-knowledge however should hold even if \Reprove gets invoked multiple
+times upon the same \Preprove results,
+ again even with the additional proof-of-knowledge.
 
 % $$ \Lring = \Setst{ \compk, \comring }{
 %  \exists \openpk,\openring \textrm{\ s.t.\ } 
@@ -36,14 +58,14 @@ computed by scalar multiplication of the Groth16 generators from
 the toxic waste $\tau$ and $\delta$,
  but for which nobody knows the underlying $\tau$ or $\delta$ anymore.
 
-In the SRS $S$, we distinguish the verifiers' string of elements
+In the SRS $S$, we distinguish the verifiers' string/key of elements
  $\chi_1,\ldots,\chi_k, [\alpha]_1 \in \grE_1$ and
  $[\beta]_2, [\gamma]_2, [\delta]_2 \in \grE_2$.
 % as separate from the provers' much longer string of elements in $\grE_1$ and $\grE_2$.
 A Groth16 \cite{Groth16} proof takes the form 
  $\pi = (A,B,C) \in \grE_1 \times \grE_2 \times \grE_1$.
 A verifier then produces a $X = \sum_i^k x_i \chi_i \in \grE_1$ from
- the public inputs $x_i$ and then checks 
+ the instance's public inputs $x_i \in \F_p$ and then checks 
 $$ e(A,B) = e([\alpha]_1, [\beta]_2) \cdot
  e(X, [\gamma]_2) \cdot e(C, [\delta]_2) \mathperiod $$
 
@@ -135,7 +157,7 @@ Adapt the proof of Theorem 3 in \cite[Appendix C, pp. 31]{RandomizationGroth16}.
 % \end{corollary}
 
 All told, our opaque rerandomization trick converts any conventional
-Groth16 zkSNARK $\pi$ for $\rVRF.\OpenRing$ into a zkSNARK $\pi'$
+Groth16 zkSNARK $\pi$ for $\Lring^\inner$ into a zkSNARK $\pi'$ for $\Lring$
 with inputs split into a transparent part $\bar{y}$ vs opaque unlinkable part $X$.
 % We explore two concrete $\pi$ proposals below.
 
@@ -173,8 +195,9 @@ our dependence upon the usage of the zero knowledge continuation.
 % TODO \PedVRF.\OpenKey(\compk,\openpk)
 
 \def\longeq{=\mathrel{\mkern-10mu}=}% {=\joinrel=} % https://tex.stackexchange.com/questions/35404/is-there-a-wider-equal-sign
-We describe a much faster choice \pifast for \piring
-that sets $x_1 \longeq \sk$ and $x_0 \longeq \comring$ so that taking
+We describe a much faster choice \pifast for \piring with
+opaque inputs $x_1 \longeq \sk$ and transparent inputs $y_1 \longeq \comring$
+ so that taking
  $\genG \longeq \chi_1$, $\genB \longeq \genB_\gamma$, and $\openpk \longeq b$
 in \PedVRF yields an incredibly fast amortized ring VRF prover.
 Also \PedVRF itself proves knowledge of $X' =  \sk\, \chi_1 + b \genB_\gamma $,
@@ -184,25 +207,30 @@ Also \PedVRF itself proves knowledge of $X' =  \sk\, \chi_1 + b \genB_\gamma $,
 A priori, we do not know $\chi_1$ during the trusted setup for $\pifast$,
 which prevents computing $\pk = \sk\, \chi_1$ inside $\pifast$.
 Instead, we propose $\ring$ contain commitments to $\sk$ over
-some Jubjub curve $\ecJ$.  
+some Jubjub curve $\ecJ$, while $\sk \in \F_p$ remains a scale for $\grJ$.
 
 We know the large subgroup $\grJ$ of $\ecJ$ typically has smaller prime
-order $p_\grJ$ than $\grE$, itself due to $\ecJ$ being an Edwards curve. 
-We thus choose $\sk_0,\sk_1 < p_\grJ$ so that
- $\PedVRF.\sk = \sk_0 + \sk_1 \, 2^{128} \mod p_\grE$, and so
-our $\rVRF.\KeyGen$ \eprint{returns}{shall now return}
+order $p_\grJ$ than $\grE$, itself due to $\ecJ$ being an Edwards curve.
+%
+We thus choose $\sk_0,\sk_1 < p_\grJ$ with at least $\lambda$ bits
+so that
+ $\PedVRF.\sk = \sk_0 + \sk_1 \, 2^{\lambda} \mod p_\grE$
+becomes our secret key.
+\footnote{If $\lambda \approx 128$ then $p, p_\grJ > 2^{2\lambda-3}$.}
+Our $\rVRF.\KeyGen$ \eprint{returns}{shall now return}
 a secret key of the form $\rVRF.\sk = (\sk_0,\sk_1,d)$
  with $d \leftsample \F_{p_\grJ}$ and
 a public key of the form
  $\rVRF.\pk = \sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$,
-for some independent $\genJ_0,\genJ_1,\genJ_2$. % (see \S\ref{subsec:AML_KYC}).
+for some independent $\genJ_0,\genJ_1,\genJ_2 \in \grJ$. % (see \S\ref{subsec:AML_KYC}).
 \footnote{Interestingly we avoid range proofs for $\sk_1$ and $\sk_2$ by this independence.}
+We thus have a fairly efficient instantiation for $\Lring^\inner$ give by
 
 $$ \Lfast^\inner = \Setst{ \sk_0 + 2^{128} \sk_1, \comring }{
  \eprint{ \exists d,\openring \textrm{\ s.t.\ } }{}
  % 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
  \genfrac{}{}{0pt}{}{ \eprint{\rVRF.}{}\OpenRing(\comring,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
-} $$ % \mathperiod 
+} \mathperiod $$
 
 Applying our rerandomization \Reprove to $\pifast^\inner$ with opaque input
 yields a zkSNARK $\pifast$ with the extra $\PedVRF.\OpenKey$ arithmetic to
@@ -231,6 +259,8 @@ group signature schemes' performance \cite{group_sig_survey,}.
 We hope this ends the temptation to deploy group signature like
  constructions where the deanonymization vectors matter.
 
+% BEGIN TODO: Oana
+
 \begin{theorem}\label{thm:knowledge_soundness}
 \rVRF instantiated with \pifast and \PedVRF satisfies knowledge soundness.
 \end{theorem}
@@ -239,8 +269,6 @@ We hope this ends the temptation to deploy group signature like
 An extractor for \PedVRF reveals the opening of $X$ for us,
 so our result follows from Lemma \ref{lem:knowledge_soundness}.
 \end{proof}
-
-% BEGIN TODO: Oana
 
 % \begin{corollary}\label{cor:???}
 % Our Pedersen ring VRF instantiated with \pifast satisfies ring unforgability and uniqueness.
