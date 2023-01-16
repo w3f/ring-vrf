@@ -13,7 +13,7 @@ Our zero-knowledge continuation $\SpecialG_\rel$ consists of three algorithms:
 \begin{itemize}
 \item $\SpecialG_\rel.\Preprove : (\bar{y}, \bar{x}; \bar{\omega}) \mapsto (X,\pi)$ \,
  constructs a pre-commitment $X$ and a pre-proof $\pi$ for $\rel$ from 
- transparent inputs $\bar{y}$, opaque inputs $\bar{x}$, and witnesses \bar{\omega}.
+ transparent inputs $\bar{y}$, opaque inputs $\bar{x}$, and witnesses $\bar{\omega}$.
 \item $\SpecialG_\rel.\Reprove : (X,\pi) \mapsto ((X',\pi'); b)$ \,
  finalizes the commitment $X'$ and proof $\pi'$ and returns an opening $b$ for the commitment. 
 \item $\SpecialG_\rel.\Verify(\bar{y}; (X',\pi') )$ \, 
