@@ -30,6 +30,22 @@ impl<C: VrfAffineCurve> VrfInput<C> {
     }
 }
 
+/// Composite witnesses for doing one thin VRF signature,
+/// obvoiusly usable only once ever.
+///
+/// We split `sign_final` from `sign_thin_vrf` so that two-round
+/// multi-signatures work like:
+/// 
+/// Roung 1. Create distinct random `k1` and `k2`.  Also compute
+/// distinct corresponding `r1` and `r2`, for each `VrfInput`
+/// and the base point.  Share `(r1,r2,VrfPreOut)`.
+/// 
+/// Round 2. First, merge each `VrfPreOut` contributions, acording
+/// to the DKG scheme.  Next, check honest multi-signature inclusion,
+/// compute the delinearization factor `d`, actual `k = k1 + d * k2`,
+/// and the `r = r1 + d r2` correspondong to each `VrfInput`.
+/// Next, construct `ThinVrfWitness` and invoke `thin_vrf_merge`,
+/// and `sign_final`.
 pub(crate) struct ThinVrfWitness<C: VrfAffineCurve> {
     pub(crate) r: C,
     pub(crate) k: <C as AffineCurve>::ScalarField,
@@ -53,6 +69,9 @@ impl<C: VrfAffineCurve> VrfInOut<C> {
     /// Verify Schnorr-like signature 
     /// 
     /// Assumes we already hashed public key, `VrfInOut`s, etc.
+    /// 
+    // TODO:  We'll likely merge `verify_final` with `verify_thin_vrf`
+    // but right now lets see if anything else comes up.
     pub(crate) fn verify_final<T: SigningTranscript>(
         &self, t: &mut T, signature: &ThinVrfSignature<C>
     ) -> SignatureResult<()> {

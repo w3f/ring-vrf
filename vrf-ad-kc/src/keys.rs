@@ -17,6 +17,18 @@ use zeroize::Zeroize;
 
 /// Affine curve with VRF base points
 pub trait VrfAffineCurve : AffineCurve {
+    const SMALL_COFACTOR : bool = false;
+    fn affine_clear_small_cofactor(&self) -> <Self as AffineCurve>::Projective {
+        if Self::SMALL_COFACTOR {
+            self.mul_by_cofactor_to_projective()
+        } else { self.into_projective() }
+    }
+    fn projective_clear_small_cofactor(p: <Self as AffineCurve>::Projective) -> <Self as AffineCurve>::Projective {
+        if Self::SMALL_COFACTOR {
+            p.mul(<<Self as AffineCurve>::Projective as ProjectiveCurve>::COFACTOR)
+        } else { p }
+    }
+
     fn publickey_base_affine() -> Self;
     fn publickey_base_projective() -> <Self as AffineCurve>::Projective {
         Self::publickey_base_affine().into_projective()
