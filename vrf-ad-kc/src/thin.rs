@@ -20,45 +20,31 @@ use core::borrow::{Borrow,BorrowMut};
 
 
 impl<C: VrfAffineCurve> VrfInput<C> {
-    pub(crate) fn flexi_witness<T,R>(self, t: &T, secret: &SecretKey<C>, rng: R) -> ThinVrfWitness<C>
+    pub(crate) fn flexi_witness<T,R>(self, t: &T, secret: &SecretKey<C>, rng: R) -> ThinVrfSecretNonce<C>
     where T: SigningTranscript, R: RngCore+CryptoRng
     {
-        let k: [<C as AffineCurve>::ScalarField; 1] = t.witnesses(b"ThinVrfWitnesses", &[&secret.nonce_seed], rng);
+        let k: [<C as AffineCurve>::ScalarField; 1] = t.witnesses(b"ThinVrfSecretNoncees", &[&secret.nonce_seed], rng);
         let k = k[0];
         let r = self.0.mul(k).into_affine();
-        ThinVrfWitness { r, k }
+        ThinVrfSecretNonce { r, k }
     }
 }
 
-/// Composite witnesses for doing one thin VRF signature,
+/// Secret and public nonce/witness for doing one thin VRF signature,
 /// obvoiusly usable only once ever.
-///
-/// We split `sign_final` from `sign_thin_vrf` so that two-round
-/// multi-signatures work like:
-/// 
-/// Roung 1. Create distinct random `k1` and `k2`.  Also compute
-/// distinct corresponding `r1` and `r2`, for each `VrfInput`
-/// and the base point.  Share `(r1,r2,VrfPreOut)`.
-/// 
-/// Round 2. First, merge each `VrfPreOut` contributions, acording
-/// to the DKG scheme.  Next, check honest multi-signature inclusion,
-/// compute the delinearization factor `d`, actual `k = k1 + d * k2`,
-/// and the `r = r1 + d r2` correspondong to each `VrfInput`.
-/// Next, construct `ThinVrfWitness` and invoke `thin_vrf_merge`,
-/// and `sign_final`.
-pub(crate) struct ThinVrfWitness<C: VrfAffineCurve> {
+pub(crate) struct ThinVrfSecretNonce<C: VrfAffineCurve> {
     pub(crate) r: C,
     pub(crate) k: <C as AffineCurve>::ScalarField,
 }
 
-impl<C: VrfAffineCurve> ThinVrfWitness<C> {
+impl<C: VrfAffineCurve> ThinVrfSecretNonce<C> {
     /// Complete Schnorr-like signature.
     /// 
     /// Assumes we already hashed public key, `VrfInOut`s, etc.
     pub(crate) fn sign_final<T: SigningTranscript>(
         self, t: &mut T, secret: &SecretKey<C>
     ) -> ThinVrfSignature<C> { 
-        let ThinVrfWitness { r, k } = self;
+        let ThinVrfSecretNonce { r, k } = self;
         t.append(b"Witness", &r);
         let c: <C as AffineCurve>::ScalarField = t.challenge(b"Challenge");
         ThinVrfSignature { r, s: k + c * secret.key }
@@ -75,7 +61,7 @@ impl<C: VrfAffineCurve> VrfInOut<C> {
     pub(crate) fn verify_final<T: SigningTranscript>(
         &self, t: &mut T, signature: &ThinVrfSignature<C>
     ) -> SignatureResult<()> {
-        t.append(b"ThinVrfWitness", &signature.r);
+        t.append(b"ThinVrfSecretNonce", &signature.r);
         let c: <C as AffineCurve>::ScalarField = t.challenge(b"ThinVrfChallenge");
         let lhs = self.input.0.mul(signature.s);
         let rhs = signature.r.into_projective() + self.preoutput.0.mul(c);

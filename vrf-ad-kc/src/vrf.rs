@@ -163,6 +163,17 @@ pub struct VrfInOut<C: VrfAffineCurve> {
 }
 
 impl<C: VrfAffineCurve> VrfInOut<C> {
+    /// Append to transcript, 
+    pub fn append<T: SigningTranscript>(&self, label: &'static [u8], t: &mut T) {
+        if crate::small_cofactor::<C>() {
+            let mut io = self.clone();
+            io.preoutput.0 = io.preoutput.0.mul_by_cofactor();
+            t.append(label,&io);
+        } else {
+            t.append(label,self);
+        }
+    }
+
     /// Raw bytes output from the VRF.
     ///
     /// If you are not the signer then you must verify the VRF before calling this method.
@@ -173,10 +184,10 @@ impl<C: VrfAffineCurve> VrfInOut<C> {
     /// construction from Theorem 2 on page 32 in appendex C of
     /// ["Ouroboros Praos: An adaptively-secure, semi-synchronous proof-of-stake blockchain"](https://eprint.iacr.org/2017/573.pdf)
     /// by Bernardo David, Peter Gazi, Aggelos Kiayias, and Alexander Russell.
-    pub fn make_bytes<B: Default + AsMut<[u8]>>(&self, context: &[u8]) -> B {
+    pub fn vrf_output_bytes<B: Default + AsMut<[u8]>>(&self, context: &[u8]) -> B {
         let mut t = ::merlin::Transcript::new(b"VrfOutput");
         t.append(b"context",context);
-        t.append(b"VrfInOut",self);
+        self.append(b"VrfInOut",&mut t);
         let mut seed = B::default();
         t.challenge_bytes(b"", seed.as_mut());
         seed
@@ -186,9 +197,9 @@ impl<C: VrfAffineCurve> VrfInOut<C> {
     ///
     /// If you are not the signer then you must verify the VRF before calling this method.
     ///
-    /// We expect most users would prefer the less generic `VrfInOut::make_chacharng` method.
-    pub fn make_rng<R: SeedableRng>(&self, context: &[u8]) -> R {
-        R::from_seed(self.make_bytes::<R::Seed>(context))
+    /// We expect most users would prefer the less generic `VrfInOut::vrf_output_chacharng` method.
+    pub fn vrf_output_rng<R: SeedableRng>(&self, context: &[u8]) -> R {
+        R::from_seed(self.vrf_output_bytes::<R::Seed>(context))
     }
 
     /// VRF output converted into a `ChaChaRng`.
@@ -203,8 +214,8 @@ impl<C: VrfAffineCurve> VrfInOut<C> {
     /// ["Ouroboros Praos: An adaptively-secure, semi-synchronous proof-of-stake blockchain"](https://eprint.iacr.org/2017/573.pdf)
     /// by Bernardo David, Peter Gazi, Aggelos Kiayias, and Alexander Russell.
     #[cfg(feature = "rand_chacha")]
-    pub fn make_chacharng(&self, context: &[u8]) -> ::rand_chacha::ChaChaRng {
-        self.make_rng::<::rand_chacha::ChaChaRng>(context)
+    pub fn vrf_output_chacharng(&self, context: &[u8]) -> ::rand_chacha::ChaChaRng {
+        self.vrf_output_rng::<::rand_chacha::ChaChaRng>(context)
     }
 
     /// VRF output converted into Merlin's Keccek based `Rng`.
@@ -216,7 +227,7 @@ impl<C: VrfAffineCurve> VrfInOut<C> {
     /// the final linked binary size slightly, and improves domain
     /// separation.
     #[inline(always)]
-    pub fn make_merlin_rng(&self, context: &[u8]) -> ::merlin::TranscriptRng {
+    pub fn vrf_output_merlin_rng(&self, context: &[u8]) -> ::merlin::TranscriptRng {
         // Very insecure hack except for our commit_witness_bytes below
         struct ZeroFakeRng;
         impl RngCore for ZeroFakeRng {
@@ -234,7 +245,7 @@ impl<C: VrfAffineCurve> VrfInOut<C> {
 
         let mut t = ::merlin::Transcript::new(b"VRFResult");
         t.append(b"ctx",context);
-        t.append(b"VrfInOut",self);
+        self.append(b"VrfInOut",&mut t);
         t.build_rng().finalize(&mut ZeroFakeRng)
     }
 }
