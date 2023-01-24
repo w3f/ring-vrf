@@ -23,10 +23,12 @@ pub mod error;
 pub use error::{SignatureResult, SignatureError};
 
 pub mod keys; // PublicKeyUnblinding
-pub use keys::{PublicKey, SecretKey, VrfAffineCurve};
+pub use keys::{PublicKey, SecretKey};
 
 mod transcript;
 pub use transcript::{SigningTranscript}; // signing_context
+
+pub mod flavor;
 
 pub mod vrf;
 pub use vrf::{VrfPreOut, VrfInOut}; // signing_context
@@ -38,8 +40,20 @@ pub mod thin;
 /// resulting in only doing on-curve checks, not full subgroup
 /// checks, and instead multiplying by the cofactor in hashing
 /// and equality checks.
-const SMALL_COFACTOR_BOUND: u64 = 8;
+pub const SMALL_COFACTOR_BOUND: u64 = 8;
 
+/// Report if an elliptic curve has a small cofactor
+/// 
+/// We expect this gets used like: 
+/// If false then perform full subgroups checks in deserialization
+/// If true then only perform on-curve checks in deserialization,
+/// but invoke `mul_by_cofactor` in hashing and equality checks. 
+pub const fn small_cofactor_projective<C: ProjectiveCurve>() -> bool {
+    let cofactor: &'static [u64] = <C as ProjectiveCurve>::COFACTOR;
+    if cofactor.len() == 0 { true }
+    else if cofactor.len() == 1 && cofactor[0] <= SMALL_COFACTOR_BOUND { true }
+    else { false }
+}
 
 /// Report if an elliptic curve has a small cofactor
 /// 
@@ -48,10 +62,19 @@ const SMALL_COFACTOR_BOUND: u64 = 8;
 /// If true then only perform on-curve checks in deserialization,
 /// but invoke `mul_by_cofactor` in hashing and equality checks. 
 pub const fn small_cofactor<C: AffineCurve>() -> bool {
-    let cofactor: &'static [u64] = <<C as AffineCurve>::Projective as ProjectiveCurve>::COFACTOR;
-    if cofactor.len() == 0 { true }
-    else if cofactor.len() == 1 && cofactor[0] <= SMALL_COFACTOR_BOUND { true }
-    else { false }
+    small_cofactor_projective::<<C as AffineCurve>::Projective>()
+}
+
+pub fn eq_mod_small_cofactor_projective<C: ProjectiveCurve>(lhs: &C, rhs: &C) -> bool {
+    if crate::small_cofactor_projective::<C>() {
+        lhs.mul(<C as ProjectiveCurve>::COFACTOR) == rhs.mul(<C as ProjectiveCurve>::COFACTOR)
+    } else { lhs == rhs }
+}
+
+pub fn eq_mod_small_cofactor_affine<C: AffineCurve>(lhs: &C, rhs: &C) -> bool {
+    if crate::small_cofactor::<C>() {
+        lhs.mul_by_cofactor() == rhs.mul_by_cofactor()
+    } else { lhs == rhs }
 }
 
 

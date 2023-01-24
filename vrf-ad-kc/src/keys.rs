@@ -13,73 +13,53 @@ use rand_core::{RngCore,CryptoRng};
 
 use zeroize::Zeroize;
 
-
-
-/// Affine curve with VRF base points
-pub trait VrfAffineCurve : AffineCurve {
-    const SMALL_COFACTOR : bool = false;
-    fn affine_clear_small_cofactor(&self) -> <Self as AffineCurve>::Projective {
-        if Self::SMALL_COFACTOR {
-            self.mul_by_cofactor_to_projective()
-        } else { self.into_projective() }
-    }
-    fn projective_clear_small_cofactor(p: <Self as AffineCurve>::Projective) -> <Self as AffineCurve>::Projective {
-        if Self::SMALL_COFACTOR {
-            p.mul(<<Self as AffineCurve>::Projective as ProjectiveCurve>::COFACTOR)
-        } else { p }
-    }
-
-    fn publickey_base_affine() -> Self;
-    fn publickey_base_projective() -> <Self as AffineCurve>::Projective {
-        Self::publickey_base_affine().into_projective()
-    }
-
-    fn blinding_base_affine() -> Self;
-    fn blinding_base_projective() -> <Self as AffineCurve>::Projective {
-        Self::blinding_base_affine().into_projective()
-    }
-}
+use crate::flavor::Flavor;
 
 
 /// Public key
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, CanonicalSerialize,CanonicalDeserialize
-pub struct PublicKey<C: VrfAffineCurve>(pub(crate) C);
-
-impl<C: VrfAffineCurve> PublicKey<C> {
-    fn from_secret_scalar(secret: <C as AffineCurve>::ScalarField) -> Self {
-        PublicKey( C::publickey_base_affine().mul(secret).into_affine() )
-    }
+pub struct PublicKey<C: AffineCurve>(pub(crate) C);
+ 
+fn new_public<F: Flavor>(
+    flavor: &F,
+    secret: <<F as Flavor>::AffineKey as AffineCurve>::ScalarField
+) -> PublicKey<<F as Flavor>::AffineKey>
+{
+    PublicKey( flavor.publickey_base().mul(secret).into_affine() )
 }
+
+// <F as Flavor>::AffineKey as AffineCurve
 
 // impl_ark_serialize!(PublicKey);
 // serde_boilerplate!(PublicKey);
 
-impl<C: VrfAffineCurve> PartialEq for PublicKey<C> {
+impl<C: AffineCurve> PartialEq for PublicKey<C> {
     fn eq(&self, other: &PublicKey<C>) -> bool {
-        self.0.mul_by_cofactor() == other.0.mul_by_cofactor()
+        crate::eq_mod_small_cofactor_affine(&self.0, &other.0)
     }
 }
-impl<C: VrfAffineCurve> Eq for PublicKey<C> {}
+impl<C: AffineCurve> Eq for PublicKey<C> {}
 
 
+/*
 /// Pederson commitment openning for a public key, consisting of a scalar
 /// that reveals the difference ebtween two public keys.
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct PublicKeyUnblinding<C: VrfAffineCurve>(pub(crate) <C as AffineCurve>::ScalarField);
+pub struct PublicKeyUnblinding<C: AffineCurve>(pub(crate) <C as AffineCurve>::ScalarField);
 
 // impl_ark_serialize!(PublicKeyUnblinding);  FIX
 // serde_boilerplate!(PublicKeyUnblinding);
 
-impl<C: VrfAffineCurve> Zeroize for PublicKeyUnblinding<C> {
+impl<C: AffineCurve> Zeroize for PublicKeyUnblinding<C> {
     fn zeroize(&mut self) {
         self.0.zeroize();
     }
 }
-impl<C: VrfAffineCurve> Drop for PublicKeyUnblinding<C> {
+impl<C: AffineCurve> Drop for PublicKeyUnblinding<C> {
     fn drop(&mut self) { self.zeroize() }
 }
 
-impl<C: VrfAffineCurve> PublicKeyUnblinding<C> {
+impl<C: AffineCurve> PublicKeyUnblinding<C> {
     pub fn is_blinded(&self) -> bool {
         use ark_ff::Zero;
         self.0.is_zero() // != <<C as AffineCurve>::ScalarField as Zero>::zero()
@@ -92,6 +72,7 @@ impl<C: VrfAffineCurve> PublicKeyUnblinding<C> {
         b.into_affine().mul_by_cofactor_to_projective() == blinded.0.mul_by_cofactor_to_projective()
     }
 }
+*/
 
 
 /// Length of the nonce seed accompanying the secret key.
@@ -100,9 +81,11 @@ pub const NONCE_SEED_LENGTH: usize = 32;
 
 /// Seceret key consisting of a scalar and a secret nonce seed.
 #[derive(Clone)] // Debug
-pub struct SecretKey<C: VrfAffineCurve> {
+pub struct SecretKey<F: Flavor> {
+    pub(crate) flavor: F,
+
     /// Secret key represented as a scalar.
-    pub(crate) key: <C as AffineCurve>::ScalarField,
+    pub(crate) key: <<F as Flavor>::AffineKey as AffineCurve>::ScalarField,
 
     /// Seed for deriving the nonces used in Schnorr proofs.
     ///
@@ -117,37 +100,37 @@ pub struct SecretKey<C: VrfAffineCurve> {
     ///
     /// TODO: Replace this with serialized byte representation like [u8; 32]
     /// TODO: Compjute lazilty using usafe code and std::sync::Once
-    public: PublicKey<C>,
+    public: PublicKey<<F as Flavor>::AffineKey>,
 }
 
-
+// <F as Flavor>::AffineKey as AffineCurve
 
 // serde_boilerplate!(SecretKey);
 
-impl<C: VrfAffineCurve> Zeroize for SecretKey<C> {
+impl<F: Flavor> Zeroize for SecretKey<F> {
     fn zeroize(&mut self) {
         self.key.zeroize();
         self.nonce_seed.zeroize();
     }
 }
-impl<C: VrfAffineCurve> Drop for SecretKey<C> {
+impl<F: Flavor> Drop for SecretKey<F> {
     fn drop(&mut self) { self.zeroize() }
 }
 
 /*
-impl<C: VrfAffineCurve> Debug for SecretKey {
+impl<F: Flavor> Debug for SecretKey<F> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         write!(f, "SecretKey {{ key: {:?} nonce: {:?} }}", &self.key, &self.nonce)
     }
 }
 
-impl<C: VrfAffineCurve> Eq for SecretKey {}
-impl<C: VrfAffineCurve> PartialEq for SecretKey<C> {
+impl<F: Flavor> Eq for SecretKey<F> {}
+impl<F: Flavor> PartialEq for SecretKey<F> {
     fn eq(&self, other: &Self) -> bool {
         self.ct_eq(other).unwrap_u8() == 1u8
     }
 }
-impl<C: VrfAffineCurve> ConstantTimeEq for SecretKey<C> {
+impl<F: Flavor> ConstantTimeEq for SecretKey<F> {
     fn ct_eq(&self, other: &Self) -> Choice {
         self.key.ct_eq(&other.key)
     }
@@ -155,43 +138,39 @@ impl<C: VrfAffineCurve> ConstantTimeEq for SecretKey<C> {
 */
 
 
-impl<C: VrfAffineCurve> SecretKey<C> {
+impl<F: Flavor> SecretKey<F> {
     /// Generate an "unbiased" `SecretKey` directly from a user
     /// suplied `csprng` uniformly, bypassing the `MiniSecretKey`
     /// layer.
-    pub fn from_rng<R>(rng: &mut R) -> Self
+    pub fn from_rng<R>(flavor: F, rng: &mut R) -> Self
     where R: CryptoRng + RngCore,
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
         rng.fill_bytes(&mut nonce_seed);
-        let key = <<C as AffineCurve>::ScalarField as UniformRand>::rand(rng);
-        let public = PublicKey::from_secret_scalar(key);
-        SecretKey { key, nonce_seed, public, }
+        let key = <<<F as Flavor>::AffineKey as AffineCurve>::ScalarField as UniformRand>::rand(rng);
+        let public = new_public(&flavor,key);
+        SecretKey { flavor, key, nonce_seed, public, }
     }
 
-    /// Generate a JubJub `SecretKey` from a 32 byte seed.
-    pub fn from_seed(seed: [u8; 32]) -> Self {
+    /// Generate a `SecretKey` from a 32 byte seed.
+    pub fn from_seed(flavor: F, seed: [u8; 32]) -> Self {
         use rand_core::SeedableRng;
         let mut rng = ::rand_chacha::ChaChaRng::from_seed(seed);
-        SecretKey::from_rng(&mut rng)
+        SecretKey::from_rng(flavor, &mut rng)
     }
 
-    /// Generate a JubJub `SecretKey` with the default randomness source.
+    /// Generate a `SecretKey` with the default randomness source.
     #[cfg(feature = "std")]
-    pub fn new() -> Self {
-        SecretKey::from_rng(::rand::thread_rng())
+    pub fn new(flavor: F) -> Self {
+        SecretKey::from_rng(flavor, ::rand::thread_rng())
     }
 
     /// Reference the `PublicKey` corresponding to this `SecretKey`.
-    pub fn as_publickey(&self) -> &PublicKey<C> { &self.public }
+    pub fn as_publickey(&self) -> &PublicKey<<F as Flavor>::AffineKey> { &self.public }
 
     /// Clone the `PublicKey` corresponding to this `SecretKey`.
-    pub fn to_public(&self) -> PublicKey<C> { self.public.clone() }
-}
-// TODO:  Convert to/from zcash_primitives::redjubjub::PrivateKey
+    pub fn to_public(&self) -> PublicKey<<F as Flavor>::AffineKey> { self.public.clone() }
 
-
-impl<C: VrfAffineCurve+CanonicalSerialize> CanonicalSerialize for SecretKey<C> {
     #[inline]
     fn serialize<W: Write>(&self, mut writer: W) -> Result<(), SerializationError> {
         writer.write_all(&self.nonce_seed) ?;
@@ -204,49 +183,13 @@ impl<C: VrfAffineCurve+CanonicalSerialize> CanonicalSerialize for SecretKey<C> {
     }
 
     #[inline]
-    fn serialize_uncompressed<W: Write>(&self, mut writer: W) -> Result<(), SerializationError> {
-        writer.write_all(&self.nonce_seed) ?;
-        self.key.serialize_uncompressed(writer)
-    }
-
-    #[inline]
-    fn serialize_unchecked<W: Write>(&self, mut writer: W) -> Result<(), SerializationError> {
-        writer.write_all(&self.nonce_seed) ?;
-        self.key.serialize_unchecked(writer)
-    }
-
-    #[inline]
-    fn uncompressed_size(&self) -> usize {
-        self.key.uncompressed_size() + NONCE_SEED_LENGTH
+    fn deserialize<R: Read>(flavor: F, mut reader: R) -> Result<Self, SerializationError> {
+        let key = <<F as Flavor>::AffineKey as AffineCurve>::ScalarField::deserialize(&mut reader) ?;
+        let mut nonce_seed = [0u8; 32];
+        reader.read_exact(&mut nonce_seed) ?;
+        let public = new_public(&flavor,key);
+        Ok(SecretKey { flavor, key, nonce_seed, public, })
     }
 }
-
-impl<C: VrfAffineCurve+CanonicalSerialize> CanonicalDeserialize for SecretKey<C> {
-    #[inline]
-    fn deserialize<R: Read>(mut reader: R) -> Result<Self, SerializationError> {
-        let key = <C as AffineCurve>::ScalarField::deserialize(&mut reader) ?;
-        let mut nonce_seed = [0u8; 32];
-        reader.read_exact(&mut nonce_seed) ?;
-        let public = PublicKey::from_secret_scalar(key);
-        Ok(SecretKey { key, nonce_seed, public, })
-    }
-
-    #[inline]
-    fn deserialize_uncompressed<R: Read>(mut reader: R) -> Result<Self, SerializationError> {
-        let key = <C as AffineCurve>::ScalarField::deserialize_uncompressed(&mut reader) ?;
-        let mut nonce_seed = [0u8; 32];
-        reader.read_exact(&mut nonce_seed) ?;
-        let public = PublicKey::from_secret_scalar(key);
-        Ok(SecretKey { key, nonce_seed, public, })
-    }
-
-    #[inline]
-    fn deserialize_unchecked<R: Read>(mut reader: R) -> Result<Self, SerializationError> {
-        let key = <C as AffineCurve>::ScalarField::deserialize_unchecked(&mut reader) ?;
-        let mut nonce_seed = [0u8; 32];
-        reader.read_exact(&mut nonce_seed) ?;
-        let public = PublicKey::from_secret_scalar(key);
-        Ok(SecretKey { key, nonce_seed, public, })
-    }
-}
+// TODO:  Convert to/from zcash_primitives::redjubjub::PrivateKey
 

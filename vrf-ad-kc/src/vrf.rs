@@ -21,7 +21,7 @@ use rand_core::{RngCore,CryptoRng,SeedableRng}; // OsRng
 
 use merlin::Transcript;
 
-use crate::{VrfAffineCurve, SigningTranscript};  // use super::*;
+use crate::{SigningTranscript, SecretKey, flavor::Flavor};  // use super::*;
 
 use std::borrow::{Borrow}; // BorrowMut
 
@@ -55,7 +55,7 @@ impl VrfMalleability for Malleable {
 }
 
 /// Non-malleable VRF transcript.  Unsuitable for ring VRFs.
-impl<C: VrfAffineCurve> VrfMalleability for crate::PublicKey<C> {
+impl<C: AffineCurve> VrfMalleability for crate::PublicKey<C> {
     const ANONYMOUS : bool = false;
 
     /// Non-malleable VRF transcript.
@@ -105,9 +105,9 @@ impl VrfMalleability for crate::merkle::RingRoot {
 ///
 /// Not necessarily in the prime order subgroup.
 #[derive(Debug,Clone,CanonicalSerialize)] // CanonicalDeserialize, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct VrfInput<C: VrfAffineCurve>(pub(crate) C);
+pub struct VrfInput<C: AffineCurve>(pub(crate) C);
 
-impl<C: VrfAffineCurve> VrfInput<C> {
+impl<C: AffineCurve> VrfInput<C> {
     /// Create a new VRF input from a `Transcript`.
     /// 
     /// TODO: Ask Syed to use the correct hash-to-curve
@@ -119,26 +119,33 @@ impl<C: VrfAffineCurve> VrfInput<C> {
         let p: <C as AffineCurve>::Projective = t.challenge(b"vrf-input");
         VrfInput( p.into_affine() )
     }
+}
 
-    /// Into VRF pre-output.
-    pub fn to_preout(&self, secret: &crate::SecretKey<C>) -> VrfPreOut<C> {
-        let p: <C as AffineCurve>::Projective = self.0.mul(secret.key);
+impl<F: Flavor> SecretKey<F> {
+    /// Compute VRF pre-output from secret key and input.
+    pub fn vrf_preout(
+        &self, input: &VrfInput<<F as Flavor>::AffineKey>
+    ) -> VrfPreOut<<F as Flavor>::AffineKey> {
+        let p: <<F as Flavor>::AffineKey as AffineCurve>::Projective = input.0.mul(self.key);
         VrfPreOut( p.into_affine() )
     }
 
-    /// Into VRF pre-output paired with input.
-    pub fn to_inout(&self, secret: &crate::SecretKey<C>) -> VrfInOut<C> {
-        let preoutput = self.to_preout(secret);
-        VrfInOut { input: self.clone(), preoutput }
+    /// Compute VRF pre-output paired with input from secret key and input.
+    pub fn vrf_inout(
+        &self, input: &VrfInput<<F as Flavor>::AffineKey>
+    ) -> VrfInOut<<F as Flavor>::AffineKey>
+    {
+        let preoutput = self.vrf_preout(input);
+        VrfInOut { input: input.clone(), preoutput }
     }
 }
 
 
 /// VRF pre-output, possibly unverified.
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct VrfPreOut<C: VrfAffineCurve>(pub(crate) C);
+pub struct VrfPreOut<C: AffineCurve>(pub(crate) C);
 
-impl<C: VrfAffineCurve> VrfPreOut<C> {
+impl<C: AffineCurve> VrfPreOut<C> {
     /// Create `VrfInOut` by attaching to our pre-output the VRF input
     /// with given malleablity from the given transcript. 
     pub fn attach_input<T,M>(&self, malleability: &M, t: T) -> VrfInOut<C>
@@ -155,14 +162,14 @@ impl<C: VrfAffineCurve> VrfPreOut<C> {
 /// Internally, we keep both `RistrettoPoint` and `CompressedRistretto`
 /// forms using `RistrettoBoth`.
 #[derive(Debug,Clone,CanonicalSerialize)] // CanonicalDeserialize, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct VrfInOut<C: VrfAffineCurve> {
+pub struct VrfInOut<C: AffineCurve> {
     /// VRF input point
     pub input: VrfInput<C>,
     /// VRF pre-output point
     pub preoutput: VrfPreOut<C>,
 }
 
-impl<C: VrfAffineCurve> VrfInOut<C> {
+impl<C: AffineCurve> VrfInOut<C> {
     /// Append to transcript, 
     pub fn append<T: SigningTranscript>(&self, label: &'static [u8], t: &mut T) {
         if crate::small_cofactor::<C>() {
@@ -286,9 +293,9 @@ impl<C: VrfAffineCurve> VrfInOut<C> {
 /// hashed to the curve.  TODO: Cite Wagner.
 /// We also note no such requirement when the values being hashed are
 /// BLS public keys as in https://crypto.stanford.edu/~dabo/pubs/papers/BLSmultisig.html
-pub fn vrfs_merge<T,C,B,I,F>(ps: &[B]) -> VrfInOut<C>
+pub fn vrfs_merge<C,B>(ps: &[B]) -> VrfInOut<C>
 where
-    C: VrfAffineCurve,
+    C: AffineCurve,
     B: Borrow<VrfInOut<C>>,
 {
     let mut t = Transcript::new(b"VRFMerge");
@@ -304,7 +311,7 @@ where
 pub(crate) fn vrfs_delinearize<'a,T,C,I>(t: &T, ps: I) -> VrfInOut<C>
 where
     T: SigningTranscript+Clone,
-    C: VrfAffineCurve,
+    C: AffineCurve,
     I: Iterator<Item=&'a VrfInOut<C>>
 {
     use ark_std::Zero;
@@ -358,7 +365,7 @@ impl VRFExtraMessage for Transcript {
     fn extra(self) -> Option<Transcript> { Some(self) }
 }
 
-pub fn no_check_no_extra<C: VrfAffineCurve>(_: &VrfInOut<C>) -> bool { true }
+pub fn no_check_no_extra<C: AffineCurve>(_: &VrfInOut<C>) -> bool { true }
 
 
 

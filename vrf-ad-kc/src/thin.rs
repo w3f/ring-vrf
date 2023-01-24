@@ -11,7 +11,8 @@ use rand_core::{RngCore,CryptoRng};
 
 use crate::{
     SigningTranscript,
-    keys::{PublicKey, SecretKey, VrfAffineCurve},
+    flavor::{Flavor, Witness, Signature},
+    keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfPreOut, VrfInOut},
 };
@@ -19,80 +20,34 @@ use crate::{
 use core::borrow::{Borrow,BorrowMut};
 
 
-impl<C: VrfAffineCurve> VrfInput<C> {
-    pub(crate) fn flexi_witness<T,R>(self, t: &T, secret: &SecretKey<C>, rng: R) -> ThinVrfSecretNonce<C>
-    where T: SigningTranscript, R: RngCore+CryptoRng
-    {
-        let k: [<C as AffineCurve>::ScalarField; 1] = t.witnesses(b"ThinVrfSecretNoncees", &[&secret.nonce_seed], rng);
-        let k = k[0];
-        let r = self.0.mul(k).into_affine();
-        ThinVrfSecretNonce { r, k }
-    }
+/// Thin VRF flavor
+#[derive(Clone)]
+pub struct ThinVrf<C: AffineCurve> {
+    pub publickey_base: C,
 }
 
-/// Secret and public nonce/witness for doing one thin VRF signature,
-/// obvoiusly usable only once ever.
-pub(crate) struct ThinVrfSecretNonce<C: VrfAffineCurve> {
-    pub(crate) r: C,
-    pub(crate) k: <C as AffineCurve>::ScalarField,
+impl<C: AffineCurve> Flavor for ThinVrf<C> {
+    type AffineKey = C;
+    fn publickey_base(&self) -> &C { &self.publickey_base }
+
+    type Scalars = <C as AffineCurve>::ScalarField;
+    type Affines = C;
 }
 
-impl<C: VrfAffineCurve> ThinVrfSecretNonce<C> {
-    /// Complete Schnorr-like signature.
-    /// 
-    /// Assumes we already hashed public key, `VrfInOut`s, etc.
-    pub(crate) fn sign_final<T: SigningTranscript>(
-        self, t: &mut T, secret: &SecretKey<C>
-    ) -> ThinVrfSignature<C> { 
-        let ThinVrfSecretNonce { r, k } = self;
-        t.append(b"Witness", &r);
-        let c: <C as AffineCurve>::ScalarField = t.challenge(b"Challenge");
-        ThinVrfSignature { r, s: k + c * secret.key }
-    }
-}
-
-impl<C: VrfAffineCurve> VrfInOut<C> {
-    /// Verify Schnorr-like signature 
-    /// 
-    /// Assumes we already hashed public key, `VrfInOut`s, etc.
-    /// 
-    // TODO:  We'll likely merge `verify_final` with `verify_thin_vrf`
-    // but right now lets see if anything else comes up.
-    pub(crate) fn verify_final<T: SigningTranscript>(
-        &self, t: &mut T, signature: &ThinVrfSignature<C>
-    ) -> SignatureResult<()> {
-        t.append(b"ThinVrfSecretNonce", &signature.r);
-        let c: <C as AffineCurve>::ScalarField = t.challenge(b"ThinVrfChallenge");
-        let lhs = self.input.0.mul(signature.s);
-        let rhs = signature.r.into_projective() + self.preoutput.0.mul(c);
-        if lhs == rhs { // TODO: Apply .mul(<<C as AffineCurve>::Projective as ProjectiveCurve>::COFACTOR)
-            Ok(())
-        } else {
-            Err(SignatureError::Invalid)
-        }
-    }
-}
-
-/// Thin VRF signature
-pub struct ThinVrfSignature<C: VrfAffineCurve> {
-    pub(crate) r: C,
-    pub(crate) s: <C as AffineCurve>::ScalarField,
-}
-
-impl<C: VrfAffineCurve> PublicKey<C> {
+impl<C: AffineCurve> ThinVrf<C> {
     /// Attach a public key to its base point.
-    fn schnorr_io(&self) -> VrfInOut<C> {
+    fn schnorr_io(&self, public: &PublicKey<C>) -> VrfInOut<C> {
         VrfInOut {
-            input: VrfInput( C::publickey_base_affine() ),
-            preoutput: VrfPreOut( self.0.clone() ),
+            input: VrfInput( self.publickey_base.clone() ),
+            preoutput: VrfPreOut( public.0.clone() ),
         }
     }
 
     /// Merge VRF operation which incorporates the public key.
-    fn thin_vrf_merge<T,B>(&self, t: &mut T, ios: &[B]) -> VrfInOut<C> 
+    fn thin_vrf_merge<T,B>(&self, t: &mut T, public: &PublicKey<C>, ios: &[B]) -> VrfInOut<C> 
     where T: SigningTranscript+Clone, B: Borrow<VrfInOut<C>>,
     {
-        let io = self.schnorr_io();
+        let io = self.schnorr_io(public);
         // Append base too since we're being so polymorphic.
         t.append(b"PublicKey",&io);
         if ios.len() == 0 { return io }
@@ -102,32 +57,87 @@ impl<C: VrfAffineCurve> PublicKey<C> {
     }
 }
 
-impl<C: VrfAffineCurve> SecretKey<C> {
+
+// --- Sign --- //
+
+impl<C: AffineCurve> SecretKey<ThinVrf<C>> {
+    pub(crate) fn new_thin_witness<T,R>(
+        &self, t: &T, input: &VrfInput<C>, rng: R
+    ) -> Witness<ThinVrf<C>>
+    where T: SigningTranscript, R: RngCore+CryptoRng
+    {
+        let k: [<C as AffineCurve>::ScalarField; 1]
+         = t.witnesses(b"MakeWitness", &[&self.nonce_seed], rng);
+        let k = k[0];
+        let r = input.0.mul(k).into_affine();
+        Witness { r, k }
+    }
+
     /// Sign thin VRF signature
     /// 
     /// If `ios = &[]` this reduces to a Schnorr signature.
-    pub fn sign_thin_vrf<T,B,R>(&self, mut t: B, ios: &[VrfInOut<C>], rng: R) -> ThinVrfSignature<C>
+    pub fn sign_thin_vrf<T,B,R>(
+        &self, mut t: B, ios: &[VrfInOut<C>], rng: R
+    ) -> Signature<ThinVrf<C>>
     where T: SigningTranscript+Clone, B: BorrowMut<T>, R: RngCore+CryptoRng
     {
         let t = t.borrow_mut();
-        let io = self.as_publickey().thin_vrf_merge(t, ios);
+        let io = self.flavor.thin_vrf_merge(t, self.as_publickey(), ios);
         // Allow derandomization by constructing witness late.
-        let w = io.input.flexi_witness(t,&self,rng);
-        w.sign_final(t,self)
+        self.new_thin_witness(t,&io.input,rng).sign_final(t,self)
     }
 }
 
-impl<C: VrfAffineCurve> ThinVrfSignature<C> {
+impl<C: AffineCurve> Witness<ThinVrf<C>> {
+    /// Complete Schnorr-like signature.
+    /// 
+    /// Assumes we already hashed public key, `VrfInOut`s, etc.
+    pub(crate) fn sign_final<T: SigningTranscript>(
+        self, t: &mut T, secret: &SecretKey<ThinVrf<C>>
+    ) -> Signature<ThinVrf<C>> {
+        let Witness { r, k } = self;
+        t.append(b"Witness", &r);
+        let c: <C as AffineCurve>::ScalarField = t.challenge(b"ThinVrfChallenge");
+        Signature { r, s: k + c * secret.key }
+    }
+}
+
+
+// --- Verify --- //
+
+impl<C: AffineCurve> ThinVrf<C> {
     /// Verify thin VRF signature 
     /// 
     /// If `ios = &[]` this reduces to a Schnorr signature.
-    pub fn verify_thin_vrf<'a,T,B>(&self, mut t: B, ios: &'a [VrfInOut<C>], public: &PublicKey<C>) -> SignatureResult<&'a [VrfInOut<C>]>
+    pub fn verify_thin_vrf<'a,T,B>(
+        &self, mut t: B, public: &PublicKey<C>, ios: &'a [VrfInOut<C>], signature: &Signature<ThinVrf<C>>,
+    ) -> SignatureResult<&'a [VrfInOut<C>]>
     where T: SigningTranscript+Clone, B: BorrowMut<T>
     {
         let t = t.borrow_mut();
-        public.thin_vrf_merge(t, ios).verify_final(t,self).map(|()| ios)
+        self.thin_vrf_merge(t, public, ios).verify_final(t,signature).map(|()| ios)
     }
-
 }
 
+impl<C: AffineCurve> VrfInOut<C> {
+    /// Verify Schnorr-like signature 
+    /// 
+    /// Assumes we already hashed public key, `VrfInOut`s, etc.
+    /// 
+    // TODO:  We'll maybe merge `verify_final` with `verify_thin_vrf`
+    // but right now lets see if anything else comes up.
+    pub(crate) fn verify_final<T: SigningTranscript>(
+        &self, t: &mut T, signature: &Signature<ThinVrf<C>>
+    ) -> SignatureResult<()> {
+        t.append(b"Witness", &signature.r);
+        let c: <C as AffineCurve>::ScalarField = t.challenge(b"ThinVrfChallenge");
+        let lhs = self.input.0.mul(signature.s);
+        let rhs = signature.r.into_projective() + self.preoutput.0.mul(c);
+        if crate::eq_mod_small_cofactor_projective(&lhs, &rhs) {
+            Ok(())
+        } else {
+            Err(SignatureError::Invalid)
+        }
+    }
+}
 
