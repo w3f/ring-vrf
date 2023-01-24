@@ -35,7 +35,7 @@ Ring VRFs differ from ring signatures in that they prove a VRF output \Out.
 % As an instructive but insecure over simplification, 
 At their simplest,
 ring VRFs' other algorithms operate directly upon
- the alleged signer set \ring, like:
+ the plausible signer set \ring, like:
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\ring,\msg) \mapsto \sigma$ \,
     returns a ring VRF signature $\sigma$ for an input \msg.
@@ -127,7 +127,7 @@ $$ \exists \openring \textrm{\ s.t.\ } \pk = \rVRF.\OpenRing(\comring,\openring)
 
 % \smallskip
 
-Having these concerns in mind, the full name our new notion is \emph{ring verifiable function with additional data}; 
+Because of these concerns, the full name for our new notion is \emph{ring verifiable function with additional data}; 
 it has the same api as the \rVRF notion described above with the mention that signing and verifying are now defined as per below. Note that for simplicity and readability,
 we use only the prefix \rVRF:
 \begin{itemize}
@@ -180,7 +180,7 @@ We discovered the SNARK for the language \Lring becomes incredibly efficient for
 the original Groth16 SNARK construction:  An inner original Groth16 SNARK for $\Lring^\inner$
 handles the secret key \sk directly via its public inputs, but
 \sk and even \pk remain secret by transforming the trusted setup to have
-a rerandomizable Pedersen commitment \compk outside this SNARK.
+a rerandomizable Pedersen commitment \compk outside this Groth16 SNARK.
 $$ \Lring^\inner = \Setst{ \sk, \comring}{
     \eprint{
     (\pk,\sk) \leftarrow \rVRF.\KeyGen, \, % \textrm{\,and }
