@@ -23,12 +23,12 @@ use core::borrow::{Borrow,BorrowMut};
 /// Thin VRF flavor
 #[derive(Clone)]
 pub struct ThinVrf<C: AffineCurve> {
-    pub publickey_base: C,
+    pub keying_base: C,
 }
 
 impl<C: AffineCurve> Flavor for ThinVrf<C> {
     type AffineKey = C;
-    fn publickey_base(&self) -> &C { &self.publickey_base }
+    fn keying_base(&self) -> &C { &self.keying_base }
 
     type Scalars = <C as AffineCurve>::ScalarField;
     type Affines = C;
@@ -38,7 +38,7 @@ impl<C: AffineCurve> ThinVrf<C> {
     /// Attach a public key to its base point.
     fn schnorr_io(&self, public: &PublicKey<C>) -> VrfInOut<C> {
         VrfInOut {
-            input: VrfInput( self.publickey_base.clone() ),
+            input: VrfInput( self.keying_base.clone() ),
             preoutput: VrfPreOut( public.0.clone() ),
         }
     }

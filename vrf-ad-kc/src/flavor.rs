@@ -57,7 +57,7 @@ use zeroize::Zeroize;
 /// TODO: Use hash-to-field instead of UniformRand for Scalars.
 pub trait Flavor {
     type AffineKey : AffineCurve;
-    fn publickey_base(&self) -> &Self::AffineKey;
+    fn keying_base(&self) -> &Self::AffineKey;
 
     /// Scalars decomposing the points
     type Scalars: Sync + Clone + CanonicalSerialize + CanonicalDeserialize + UniformRand + Zeroize;

@@ -25,7 +25,7 @@ fn new_public<F: Flavor>(
     secret: <<F as Flavor>::AffineKey as AffineCurve>::ScalarField
 ) -> PublicKey<<F as Flavor>::AffineKey>
 {
-    PublicKey( flavor.publickey_base().mul(secret).into_affine() )
+    PublicKey( flavor.keying_base().mul(secret).into_affine() )
 }
 
 // <F as Flavor>::AffineKey as AffineCurve
