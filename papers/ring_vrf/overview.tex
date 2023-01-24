@@ -6,7 +6,7 @@ unamortized non-interactive zero-knowledge (NIZK) protocol that
 realizes the ring VRF properties discussed later,
 and give some intuition for our later amortization trick.
 
-As VRFs do \cite{vrf_micali}, all ring VRFs need: 
+As VRFs do \cite{vrf_micali}, ring VRFs need: 
 \begin{itemize}
 \item $\rVRF.\KeyGen : (1^{\lambda}) \mapsto (\sk, \pk)$ algorithm,
  which creates a random secret key \sk and associated public key \pk;
@@ -92,7 +92,7 @@ its challenge hashes.  Aside from saving redundant signatures, exposing
 Ring VRFs cannot so easily be combined with another signatures, which
 makes \aux essential,%
 \footnote{If ring VRFs authorized creating blocks in an anonymous Praos blockchain then \aux must include the block being created, or else others could steal their block production turn.}
-but thankfully our ring VRFs expose \aux exactly like EC VRFs do in \S\ref{sec:pederson_vrf}.%
+but thankfully our ring VRFs in in \S\ref{sec:pederson_vrf} expose \aux exactly like EC VRFs should do .%
 \footnote{We suppress multiple input-output pairs until \S\ref{subsec:multi_io} below, but they work like in \cite{PrivacyPass} too.}
 
 % \smallskip
@@ -127,9 +127,9 @@ $$ \exists \openring \textrm{\ s.t.\ } \pk = \rVRF.\OpenRing(\comring,\openring)
 
 % \smallskip
 
-Having these concerns in mind, we name our new notion \emph{ring verifiable function with additional data} (rVRF-AD); 
-it has the same api as the \rVRF notion described above with the mention that signing and verifying are now defined as per below. Note that for simplicity and consistency,
-we continue to use the prefix \rVRF:
+Having these concerns in mind, the full name our new notion is \emph{ring verifiable function with additional data}; 
+it has the same api as the \rVRF notion described above with the mention that signing and verifying are now defined as per below. Note that for simplicity and readability,
+we use only the prefix \rVRF:
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$, \quad and
 \item $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto \Out \,\, \lor \perp$.
@@ -176,8 +176,8 @@ $$ \Lring = \Setst{ \compk, \comring }{
 	}
 } $$
 
-We discovered this becomes incredibly efficient if one specializes
-the original Groth16 SNARK construction:  An inner true Groth16 SNARK for $\Lring^\inner$
+We discovered the SNARK for the language \Lring becomes incredibly efficient for the prover if one specializes
+the original Groth16 SNARK construction:  An inner original Groth16 SNARK for $\Lring^\inner$
 handles the secret key \sk directly via its public inputs, but
 \sk and even \pk remain secret by transforming the trusted setup to have
 a rerandomizable Pedersen commitment \compk outside this SNARK.
@@ -197,7 +197,7 @@ $$ \Lring^\inner = \Setst{ \sk, \comring}{
 Our zero-knowledge continuation in \S\ref{sec:rvrf_cont} rerandomizes
 $\compk = \pk + b \, K$ without reproving the Groth16 SNARK for $\Lring^\inner$.
 For this, the secret key \sk must be a public input of $\Lring^\inner$, and
-the Groth16 trusted setup must be expanded by a multiple of
+the Groth16 trusted setup must be expanded by a secret multiple of
  the otherwise independent point $K$.
 %
 In \S\ref{sec:pederson_vrf}, we introduce an extremely efficient NIZK
