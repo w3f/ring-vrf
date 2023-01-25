@@ -113,7 +113,10 @@ pub struct Affines<P: PedersenVrfPair> {
 }
 
 impl<P: PedersenVrfPair> Flavor for PedersenVrf<P> {
-    type AffineKey = <P as PedersenVrfPair>::KeyCurve;
+    type ScalarField = <P as PedersenVrfPair>::ScalarField;
+    type KeyAffine = <P as PedersenVrfPair>::KeyCurve;
+    type PreOutAffine = <P as PedersenVrfPair>::PreOutCurve;
+
     fn keying_base(&self) -> &<P as PedersenVrfPair>::KeyCurve { &self.keying_base }
 
     type Scalars = Scalars<P>;   // [<C as AffineCurve>::ScalarField; 2];

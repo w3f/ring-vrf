@@ -46,6 +46,7 @@
 
 
 use ark_std::{ io::{Read, Write}, };
+use ark_ff::{PrimeField, SquareRootField};
 use ark_ec::{AffineCurve};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 
@@ -56,8 +57,11 @@ use zeroize::Zeroize;
 /// 
 /// TODO: Use hash-to-field instead of UniformRand for Scalars.
 pub trait Flavor {
-    type AffineKey : AffineCurve;
-    fn keying_base(&self) -> &Self::AffineKey;
+    type ScalarField:  PrimeField + SquareRootField;
+    type KeyAffine:    AffineCurve<ScalarField = Self::ScalarField>;
+    type PreOutAffine: AffineCurve<ScalarField = Self::ScalarField>;
+
+    fn keying_base(&self) -> &Self::KeyAffine;
 
     /// Scalars decomposing the points
     type Scalars: Sync + Clone + CanonicalSerialize + CanonicalDeserialize + Zeroize; // UniformRand

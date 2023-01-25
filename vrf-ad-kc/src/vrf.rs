@@ -112,7 +112,7 @@ impl<C: AffineCurve> VrfInput<C> {
     /// 
     /// TODO: Ask Syed to use the correct hash-to-curve
     #[inline(always)]
-    fn from_transcript<T,M>(mut t: T, m: &M) -> Self
+    pub fn from_transcript<T,M>(mut t: T, m: &M) -> Self
     where T: SigningTranscript, M: VrfMalleability+?Sized
     {
         m.add_malleability(&mut t);
@@ -124,19 +124,26 @@ impl<C: AffineCurve> VrfInput<C> {
 impl<F: Flavor> SecretKey<F> {
     /// Compute VRF pre-output from secret key and input.
     pub fn vrf_preout(
-        &self, input: &VrfInput<<F as Flavor>::AffineKey>
-    ) -> VrfPreOut<<F as Flavor>::AffineKey> {
-        let p: <<F as Flavor>::AffineKey as AffineCurve>::Projective = input.0.mul(self.key);
+        &self, input: &VrfInput<<F as Flavor>::PreOutAffine>
+    ) -> VrfPreOut<<F as Flavor>::PreOutAffine> {
+        let p: <<F as Flavor>::PreOutAffine as AffineCurve>::Projective = input.0.mul(self.key);
         VrfPreOut( p.into_affine() )
     }
 
     /// Compute VRF pre-output paired with input from secret key and input.
     pub fn vrf_inout(
-        &self, input: &VrfInput<<F as Flavor>::AffineKey>
-    ) -> VrfInOut<<F as Flavor>::AffineKey>
+        &self, input: VrfInput<<F as Flavor>::PreOutAffine>
+    ) -> VrfInOut<<F as Flavor>::PreOutAffine>
     {
-        let preoutput = self.vrf_preout(input);
-        VrfInOut { input: input.clone(), preoutput }
+        let preoutput = self.vrf_preout(&input);
+        VrfInOut { input, preoutput }
+    }
+
+    pub fn vrf_inout_from_transcript<T,M>(&self, t: T, m: &M) -> VrfInOut<<F as Flavor>::PreOutAffine>
+    where T: SigningTranscript, M: VrfMalleability+?Sized
+    {
+        let input = VrfInput::from_transcript(t,m);
+        self.vrf_inout(input)
     }
 }
 

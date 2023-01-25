@@ -22,13 +22,13 @@ pub struct PublicKey<C: AffineCurve>(pub(crate) C);
  
 fn new_public<F: Flavor>(
     flavor: &F,
-    secret: <<F as Flavor>::AffineKey as AffineCurve>::ScalarField
-) -> PublicKey<<F as Flavor>::AffineKey>
+    secret: <<F as Flavor>::KeyAffine as AffineCurve>::ScalarField
+) -> PublicKey<<F as Flavor>::KeyAffine>
 {
     PublicKey( flavor.keying_base().mul(secret).into_affine() )
 }
 
-// <F as Flavor>::AffineKey as AffineCurve
+// <F as Flavor>::KeyAffine as AffineCurve
 
 // impl_ark_serialize!(PublicKey);
 // serde_boilerplate!(PublicKey);
@@ -52,7 +52,7 @@ pub struct SecretKey<F: Flavor> {
     pub(crate) flavor: F,
 
     /// Secret key represented as a scalar.
-    pub(crate) key: <<F as Flavor>::AffineKey as AffineCurve>::ScalarField,
+    pub(crate) key: <<F as Flavor>::KeyAffine as AffineCurve>::ScalarField,
 
     /// Seed for deriving the nonces used in Schnorr proofs.
     ///
@@ -67,10 +67,10 @@ pub struct SecretKey<F: Flavor> {
     ///
     /// TODO: Replace this with serialized byte representation like [u8; 32]
     /// TODO: Compjute lazilty using usafe code and std::sync::Once
-    public: PublicKey<<F as Flavor>::AffineKey>,
+    public: PublicKey<<F as Flavor>::KeyAffine>,
 }
 
-// <F as Flavor>::AffineKey as AffineCurve
+// <F as Flavor>::KeyAffine as AffineCurve
 
 // serde_boilerplate!(SecretKey);
 
@@ -114,7 +114,7 @@ impl<F: Flavor> SecretKey<F> {
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
         rng.fill_bytes(&mut nonce_seed);
-        let key = <<<F as Flavor>::AffineKey as AffineCurve>::ScalarField as UniformRand>::rand(rng);
+        let key = <<<F as Flavor>::KeyAffine as AffineCurve>::ScalarField as UniformRand>::rand(rng);
         let public = new_public(&flavor,key);
         SecretKey { flavor, key, nonce_seed, public, }
     }
@@ -133,10 +133,10 @@ impl<F: Flavor> SecretKey<F> {
     }
 
     /// Reference the `PublicKey` corresponding to this `SecretKey`.
-    pub fn as_publickey(&self) -> &PublicKey<<F as Flavor>::AffineKey> { &self.public }
+    pub fn as_publickey(&self) -> &PublicKey<<F as Flavor>::KeyAffine> { &self.public }
 
     /// Clone the `PublicKey` corresponding to this `SecretKey`.
-    pub fn to_public(&self) -> PublicKey<<F as Flavor>::AffineKey> { self.public.clone() }
+    pub fn to_public(&self) -> PublicKey<<F as Flavor>::KeyAffine> { self.public.clone() }
 
     #[inline]
     pub fn serialize<W: Write>(&self, mut writer: W) -> Result<(), SerializationError> {
@@ -151,7 +151,7 @@ impl<F: Flavor> SecretKey<F> {
 
     #[inline]
     pub fn deserialize<R: Read>(flavor: F, mut reader: R) -> Result<Self, SerializationError> {
-        let key = <<F as Flavor>::AffineKey as AffineCurve>::ScalarField::deserialize(&mut reader) ?;
+        let key = <<F as Flavor>::KeyAffine as AffineCurve>::ScalarField::deserialize(&mut reader) ?;
         let mut nonce_seed = [0u8; 32];
         reader.read_exact(&mut nonce_seed) ?;
         let public = new_public(&flavor,key);

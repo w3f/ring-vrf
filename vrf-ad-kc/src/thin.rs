@@ -27,7 +27,10 @@ pub struct ThinVrf<C: AffineCurve> {
 }
 
 impl<C: AffineCurve> Flavor for ThinVrf<C> {
-    type AffineKey = C;
+    type ScalarField = <C as AffineCurve>::ScalarField;
+    type KeyAffine = C;
+    type PreOutAffine = C;
+
     fn keying_base(&self) -> &C { &self.keying_base }
 
     type Scalars = <C as AffineCurve>::ScalarField;
@@ -110,7 +113,11 @@ impl<C: AffineCurve> ThinVrf<C> {
     /// 
     /// If `ios = &[]` this reduces to a Schnorr signature.
     pub fn verify_thin_vrf<'a,T,B>(
-        &self, mut t: B, public: &PublicKey<C>, ios: &'a [VrfInOut<C>], signature: &Signature<ThinVrf<C>>,
+        &self,
+        mut t: B,
+        public: &PublicKey<C>,
+        ios: &'a [VrfInOut<C>],
+        signature: &Signature<ThinVrf<C>>,
     ) -> SignatureResult<&'a [VrfInOut<C>]>
     where T: SigningTranscript+Clone, B: BorrowMut<T>
     {
