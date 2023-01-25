@@ -45,7 +45,7 @@
 //! and `sign_final`.  We split `sign_final` components from `sign_thin_vrf` so this works cleanly.
 
 
-use ark_std::{ io::{Read, Write}, UniformRand };
+use ark_std::{ io::{Read, Write}, };
 use ark_ec::{AffineCurve};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 
@@ -60,7 +60,7 @@ pub trait Flavor {
     fn keying_base(&self) -> &Self::AffineKey;
 
     /// Scalars decomposing the points
-    type Scalars: Sync + Clone + CanonicalSerialize + CanonicalDeserialize + UniformRand + Zeroize;
+    type Scalars: Sync + Clone + CanonicalSerialize + CanonicalDeserialize + Zeroize; // UniformRand
     /// Points the DLEQ proof relates
     type Affines: Sync + Clone + CanonicalSerialize + CanonicalDeserialize;
 }
@@ -72,6 +72,7 @@ pub(crate) struct Witness<F: Flavor> {
     pub(crate) r: <F as Flavor>::Affines,
 }
 
+/*
 impl<F: Flavor> Zeroize for Witness<F> {
     fn zeroize(&mut self) {
         self.k.zeroize();
@@ -80,6 +81,7 @@ impl<F: Flavor> Zeroize for Witness<F> {
 impl<F: Flavor> Drop for Witness<F> {
     fn drop(&mut self) { self.zeroize() }
 }
+*/
 
 /// Signature
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]

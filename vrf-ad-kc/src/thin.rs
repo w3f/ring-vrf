@@ -14,7 +14,7 @@ use crate::{
     flavor::{Flavor, Witness, Signature},
     keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
-    vrf::{self, VrfInput, VrfPreOut, VrfInOut},
+    vrf::{self, VrfInput, VrfInOut},
 };
 
 use core::borrow::{Borrow,BorrowMut};
@@ -39,7 +39,7 @@ impl<C: AffineCurve> ThinVrf<C> {
     fn schnorr_io(&self, public: &PublicKey<C>) -> VrfInOut<C> {
         VrfInOut {
             input: VrfInput( self.keying_base.clone() ),
-            preoutput: VrfPreOut( public.0.clone() ),
+            preoutput: vrf::VrfPreOut( public.0.clone() ),
         }
     }
 
@@ -62,7 +62,7 @@ impl<C: AffineCurve> ThinVrf<C> {
 
 impl<C: AffineCurve> SecretKey<ThinVrf<C>> {
     pub(crate) fn new_thin_witness<T,R>(
-        &self, t: &T, input: &VrfInput<C>, rng: R
+        &self, t: &T, input: &VrfInput<C>, rng: &mut R
     ) -> Witness<ThinVrf<C>>
     where T: SigningTranscript, R: RngCore+CryptoRng
     {
@@ -77,7 +77,7 @@ impl<C: AffineCurve> SecretKey<ThinVrf<C>> {
     /// 
     /// If `ios = &[]` this reduces to a Schnorr signature.
     pub fn sign_thin_vrf<T,B,R>(
-        &self, mut t: B, ios: &[VrfInOut<C>], rng: R
+        &self, mut t: B, ios: &[VrfInOut<C>], rng: &mut R
     ) -> Signature<ThinVrf<C>>
     where T: SigningTranscript+Clone, B: BorrowMut<T>, R: RngCore+CryptoRng
     {

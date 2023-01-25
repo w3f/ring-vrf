@@ -35,8 +35,10 @@ pub use vrf::{VrfPreOut, VrfInOut}; // signing_context
 
 pub mod thin;
 pub use thin::ThinVrf;
-pub type ThinVrfSignature<A: AffineCurve> = crate::flavor::Signature<ThinVrf<A>>;
+pub type ThinVrfSignature<A> = flavor::Signature<ThinVrf<A>>;
 
+pub mod pedersen;
+pub use pedersen::{PedersenVrfPair, PedersenVrf};
 
 /// Any cofactor of this size or smaller gets treated as small,
 /// resulting in only doing on-curve checks, not full subgroup

@@ -139,18 +139,18 @@ impl<F: Flavor> SecretKey<F> {
     pub fn to_public(&self) -> PublicKey<<F as Flavor>::AffineKey> { self.public.clone() }
 
     #[inline]
-    fn serialize<W: Write>(&self, mut writer: W) -> Result<(), SerializationError> {
+    pub fn serialize<W: Write>(&self, mut writer: W) -> Result<(), SerializationError> {
         writer.write_all(&self.nonce_seed) ?;
         self.key.serialize(writer)
     }
 
     #[inline]
-    fn serialized_size(&self) -> usize {
+    pub fn serialized_size(&self) -> usize {
         self.key.serialized_size() + NONCE_SEED_LENGTH
     }
 
     #[inline]
-    fn deserialize<R: Read>(flavor: F, mut reader: R) -> Result<Self, SerializationError> {
+    pub fn deserialize<R: Read>(flavor: F, mut reader: R) -> Result<Self, SerializationError> {
         let key = <<F as Flavor>::AffineKey as AffineCurve>::ScalarField::deserialize(&mut reader) ?;
         let mut nonce_seed = [0u8; 32];
         reader.read_exact(&mut nonce_seed) ?;
