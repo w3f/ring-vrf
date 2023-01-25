@@ -6,16 +6,16 @@ unamortized non-interactive zero-knowledge (NIZK) protocol that
 realizes the ring VRF properties discussed later,
 and give some intuition for our later amortization trick.
 
-As VRFs do \cite{vrf_micali},
-all ring VRFs need $\rVRF.\KeyGen$ algorithm,
- which creates a random secret key \sk and associated public key \pk,
-as well as a deterministic evaluation algorithm
+As VRFs do \cite{vrf_micali}, ring VRFs need: 
 \begin{itemize}
-\item $\rVRF.\Eval : (\sk,\msg) \mapsto \Out$ which computes the VRF output \Out from a secret key \sk and a message \msg.
+\item $\rVRF.\KeyGen : (1^{\lambda}) \mapsto (\sk, \pk)$ algorithm,
+ which creates a random secret key \sk and associated public key \pk;
+
+\item $\rVRF.\Eval : (\sk,\msg) \mapsto \Out$ which deterministically computes the VRF output \Out from a secret key \sk and a message \msg.
 \end{itemize}
 %
 % Although many constructions exist,
-Our \KeyGen and \Eval initially resemble EC VRFs like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}.
+Our \rVRF.\KeyGen and \rVRF.\Eval initially resemble EC VRFs like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}.
 % In other words,
 % internally we prove a VUF output $\PreOut = \sk H_{\grE}(\msg)$,
 % with a hash-to-curve $H_{\grE}$, so then applying a PRF $H'$ yields a
@@ -34,7 +34,7 @@ Ring VRFs differ from ring signatures in that they prove a VRF output \Out.
 
 % As an instructive but insecure over simplification, 
 At their simplest,
-ring VRFs' other algorithms might operate directly upon
+ring VRFs' other algorithms operate directly upon
  the plausible signer set \ring, like:
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\ring,\msg) \mapsto \sigma$ \,
@@ -44,34 +44,34 @@ ring VRFs' other algorithms might operate directly upon
 \end{itemize}
 
 After success, our verifier should be convinced that $\pk \in \ring$, that
-$\Out = \rVRF.\Eval(\sk,\msg)$ for some $(\pk,\sk) \leftarrow \KeyGen$,
+$\Out = \rVRF.\Eval(\sk,\msg)$ for some $(\pk,\sk) \leftarrow \rVRF.\KeyGen$,
  and that $\Out$ is pseudo-random.
 In other words, this simplified ring VRF could be instantiated by making
-\Eval a pseudo-random (hash) function, and using a NIZK for a language like
-$$ \Setst{ \Out, \msg, \ring}{
+\rVRF.\Eval a pseudo-random (hash) function, and using a NIZK for a language like
+$$ \Lrvrf = \Setst{ \Out, \msg, \ring}{
     \eprint{
-        \exists (\pk,\sk) \leftarrow \KeyGen, \quad %   \textrm{ and }
+        \exists (\pk,\sk) \leftarrow \rVRF.\KeyGen, \quad %   \textrm{ and }
         \pk \in \ring, \quad
-        \Out = \Eval(\sk,\msg)
+        \Out = \rVRF.\Eval(\sk,\msg)
     }{
         \begin{aligned}
-        & \exists (\pk,\sk) \leftarrow \KeyGen \\
+        & \exists (\pk,\sk) \leftarrow \rVRF.\KeyGen \\
         & \pk \in \ring \\
-        & \Out = \Eval(\sk,\msg)
+        & \Out = \rVRF.\Eval(\sk,\msg)
         \end{aligned}
     }
 } $$
 % TODO:  \PRF vs \rVRF.\Eval here??
 % Although convenient for security arguments, % formalization
-Zero-knowledge here says our verifier learns nothing about the specific
-signer, except that their key is in the ring and maps $\msg \mapsto \Out$.
+The zero-knowledge property of the NIZK ensures that our verifier learns nothing about the specific
+signer, except that their key is in the ring and maps $\msg$ to $\Out$.
 Importantly, pseudo-randomness also says that \Out is an identity
 for the specific signer, but only within the context of \msg.
 
 % \smallskip
 
-Aside from proving a PRF evaluation, 
-we always need \rSign and \rVerify to sign some associated data \aux,
+Aside from proving an evaluation using \rVRF.\Eval, 
+we always need \rVRF.\Sign and \rVRF.\Verify to sign some associated data \aux,
 as otherwise the ring VRF signature become unmoored and permits replay attacks.
 %
 As an example, our identity protocol below in \S\ref{sec:app_identity}
@@ -92,28 +92,28 @@ its challenge hashes.  Aside from saving redundant signatures, exposing
 Ring VRFs cannot so easily be combined with another signatures, which
 makes \aux essential,%
 \footnote{If ring VRFs authorized creating blocks in an anonymous Praos blockchain then \aux must include the block being created, or else others could steal their block production turn.}
-but thankfully our ring VRFs expose \aux exactly like EC VRFs do in \S\ref{sec:pederson_vrf}.%
+but thankfully our ring VRFs in in \S\ref{sec:pederson_vrf} expose \aux exactly like EC VRFs should do .%
 \footnote{We suppress multiple input-output pairs until \S\ref{subsec:multi_io} below, but they work like in \cite{PrivacyPass} too.}
 
 % \smallskip
 
-We would need time $O(|\ring|)$ in \rSign and \rVerify merely to read
+Taking into account only the $\rVRF$ interface described above, we would need time $O(|\ring|)$ in \rVRF.\rSign and \rVRF.\rVerify merely to read
 this \ring argument though, which severely limits applications.  Instead,
 ring signatures run asymptotically faster by replacing the \ring argument
-with some set commitment to \ring, roughly like what ZCash does \cite{zcash_protocol}.
+with a set commitment to \ring, roughly like what ZCash does \cite{zcash_protocol}.
 \begin{itemize}
 % \item $\rVRF.\CheckRing : \ring \mapsto \comring$ takes a set \ring of public keys and returns a public key set commitment \comring.
 \item $\rVRF.\CommitRing : (\ring,\pk) \mapsto (\comring,\openring)$ \,
     returns a commitment for a set \ring of public keys, and
-    optionally the operning \openring for some $\pk \in \ring$ as well.
+    optionally the opening \openring for some $\pk \in \ring$ as well.
 \item $\rVRF.\OpenRing : (\comring,\openring) \mapsto \pk \, \lor \perp$ \,
     returns a public key \pk, provided \openring correctly opens
     the ring commitment \comring, or failure $\perp$ otherwise.
 \end{itemize}
 
 We thus replace the membership condition $\pk \in \ring$ in the above
-language and NIZK by the by the opening condition
-$$ \exists \openring \textrm{\ s.t.\ } \pk = \OpenRing(\comring,\openring) \mathperiod $$
+language and NIZK by the opening condition
+$$ \exists \openring \textrm{\ s.t.\ } \pk = \rVRF.\OpenRing(\comring,\openring) \mathperiod $$
 % $\pk = \OpenRing(\comring,\openring)$.
 %
 % $$ \pi_0 = \NIZK \Setst{ \Out, \msg, \comring }{
@@ -127,30 +127,31 @@ $$ \exists \openring \textrm{\ s.t.\ } \pk = \OpenRing(\comring,\openring) \math
 
 % \smallskip
 
-After these corrections,  our algorithms for a
-{\em ring verifiable random function with associated data} (rVRF-AD)
-now really look like
+Because of these concerns, the full name for our new notion is \emph{ring verifiable function with additional data}; 
+it has the same api as the \rVRF notion described above with the mention that signing and verifying are now defined as per below. Note that for simplicity and readability,
+we use only the prefix \rVRF:
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$, \quad and
 \item $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto \Out \,\, \lor \perp$.
 \end{itemize}
 
-Although an asymptotic improvement, our opening \OpenRing invariably
-still winds up being extremely heavy inside a zkSNARK.
+Although an asymptotic improvement, our opening \rVRF.\OpenRing based condition invariably
+still winds up being computationally expensive to prove inside a zkSNARK.
 We solve this obstacle in \S\ref{sec:rvrf_cont} below by introducing
 {\em zero-knowledge continuations}, a new zkSNARK technique built from
-rerandomizable Groth16s \cite{Groth16} and designed for composition and reuse.
+rerandomizable Groth16s \cite{Groth16} and designed for SNARK composition and reuse.
 
-In this, we should split the language describing our ring VRF into
-a VRF evaluation language \Leval and a reusable or continuable language
-\Lring, which enforces our heavy $\pk = \OpenRing(\comring,\openring)$
-condition.  Anonymity requires we rerandomize a Groth16 SNARK for \Lring
+In order to achieve this, we split the language \Lrvrf into
+a language \Leval for \rVRF evaluation and a language
+\Lring for what we call a reusable or continuable SNARK; in turn, \Lring enforces our computationally 
+expensive $\pk = \rVRF.\OpenRing(\comring,\openring)$ condition.  Anonymity requires we rerandomize a Groth16 SNARK for \Lring
 ala \cite[Theorem 3, Appendix C, pp. 31]{RandomizationGroth16}.
 %
-Yet, we must join aka pass \pk from \Lring to \Leval somehow, which
-demands some hiding commitment \compk of course.
+Yet, we must connect together the NIZKs for the two languages  \Leval and \Lring. We do this by passing \pk from \Lring to \Leval, which
+demands some hiding commitment \compk to \pk.
+
 %
-\def\tmpAA{\Out = \PRF(\sk,\msg)}%
+\def\tmpAA{\Out = \rVRF.\Eval(\sk,\msg)}%
 \def\tmpBB{\textrm{\compk commits to\ \sk}}%
 $$ \Leval = \Setst{ \Out, \msg, \aux, \compk }{
 	\eprint{
@@ -163,7 +164,7 @@ $$ \Leval = \Setst{ \Out, \msg, \aux, \compk }{
     }
 } $$
 \def\tmpAA{\textrm{\compk commits to\ }}%
-\def\tmpBB{\OpenRing(\comring,\openring)}%
+\def\tmpBB{\rVRF.\OpenRing(\comring,\openring)}%
 $$ \Lring = \Setst{ \compk, \comring }{
 	\eprint{
 	\tmpAA \pk = \tmpBB
@@ -175,28 +176,28 @@ $$ \Lring = \Setst{ \compk, \comring }{
 	}
 } $$
 
-We discovered this becomes incredibly efficient if one specializes
-the Groth16 construction:  An inner true Groth16 for $\Lring^\inner$
+We discovered the SNARK for the language \Lring becomes incredibly efficient for the prover if one specializes
+the original Groth16 SNARK construction:  An inner original Groth16 SNARK for $\Lring^\inner$
 handles the secret key \sk directly via its public inputs, but
 \sk and even \pk remain secret by transforming the trusted setup to have
-a rerandomizable Pedersen commitment \compk outside this Groth16.
+a rerandomizable Pedersen commitment \compk outside this Groth16 SNARK.
 $$ \Lring^\inner = \Setst{ \sk, \comring}{
     \eprint{
-    (\pk,\sk) \leftarrow \KeyGen, \, % \textrm{\,and }
-    \pk = \OpenRing(\comring,\openring) 
+    (\pk,\sk) \leftarrow \rVRF.\KeyGen, \, % \textrm{\,and }
+    \pk = \rVRF.\OpenRing(\comring,\openring) 
     }{
     \begin{aligned}
-        &(\pk,\sk) \leftarrow \KeyGen, \\
+        &(\pk,\sk) \leftarrow \rVRF.\KeyGen, \\
         % \exists \openring \textrm{\ s.t.\ }
-        &\pk = \OpenRing(\comring,\openring)  \\      
+        &\pk = \rVRF.\OpenRing(\comring,\openring)  \\      
     \end{aligned}
     }
 } $$
 
 Our zero-knowledge continuation in \S\ref{sec:rvrf_cont} rerandomizes
-$\compk = \pk + b \, K$ without reproving the Groth16 $\Lring^\inner$.
+$\compk = \pk + b \, K$ without reproving the Groth16 SNARK for $\Lring^\inner$.
 For this, the secret key \sk must be a public input of $\Lring^\inner$, and
-the Groth16 trusted setup must be expanded by a multiple of
+the Groth16 trusted setup must be expanded by a secret multiple of
  the otherwise independent point $K$.
 %
 In \S\ref{sec:pederson_vrf}, we introduce an extremely efficient NIZK
@@ -204,9 +205,6 @@ for \Leval, which also provides an essential proof-of-knowledge for \compk.
 
 
 \endinput
-
-
-
 
 
 % We define ring VRFs in \S\ref{sec:rvrf_games} and \S\ref{sec:rvrf_uc_fun} below, but
