@@ -34,6 +34,8 @@ pub mod vrf;
 pub use vrf::{VrfPreOut, VrfInOut}; // signing_context
 
 pub mod thin;
+pub use thin::ThinVrf;
+pub type ThinVrfSignature<A: AffineCurve> = crate::flavor::Signature<ThinVrf<A>>;
 
 
 /// Any cofactor of this size or smaller gets treated as small,

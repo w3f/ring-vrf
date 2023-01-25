@@ -41,39 +41,6 @@ impl<C: AffineCurve> PartialEq for PublicKey<C> {
 impl<C: AffineCurve> Eq for PublicKey<C> {}
 
 
-/*
-/// Pederson commitment openning for a public key, consisting of a scalar
-/// that reveals the difference ebtween two public keys.
-#[derive(Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct PublicKeyUnblinding<C: AffineCurve>(pub(crate) <C as AffineCurve>::ScalarField);
-
-// impl_ark_serialize!(PublicKeyUnblinding);  FIX
-// serde_boilerplate!(PublicKeyUnblinding);
-
-impl<C: AffineCurve> Zeroize for PublicKeyUnblinding<C> {
-    fn zeroize(&mut self) {
-        self.0.zeroize();
-    }
-}
-impl<C: AffineCurve> Drop for PublicKeyUnblinding<C> {
-    fn drop(&mut self) { self.zeroize() }
-}
-
-impl<C: AffineCurve> PublicKeyUnblinding<C> {
-    pub fn is_blinded(&self) -> bool {
-        use ark_ff::Zero;
-        self.0.is_zero() // != <<C as AffineCurve>::ScalarField as Zero>::zero()
-    }
-
-    pub fn verify(&self, blinded: PublicKey<C>, unblinded: PublicKey<C>) -> bool {
-        let mut b = C::blinding_base_affine().mul(self.0);
-        b.add_assign_mixed(& unblinded.0);
-        // b.mul(<<C as AffineCurve>::Projective as ProjectiveCurve>::COFACTOR) // into_affine seems silly here
-        b.into_affine().mul_by_cofactor_to_projective() == blinded.0.mul_by_cofactor_to_projective()
-    }
-}
-*/
-
 
 /// Length of the nonce seed accompanying the secret key.
 pub const NONCE_SEED_LENGTH: usize = 32;

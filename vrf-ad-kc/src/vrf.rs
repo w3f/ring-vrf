@@ -293,14 +293,14 @@ impl<C: AffineCurve> VrfInOut<C> {
 /// hashed to the curve.  TODO: Cite Wagner.
 /// We also note no such requirement when the values being hashed are
 /// BLS public keys as in https://crypto.stanford.edu/~dabo/pubs/papers/BLSmultisig.html
-pub fn vrfs_merge<C,B>(ps: &[B]) -> VrfInOut<C>
+pub fn vrfs_merge<T,C,B>(t: &mut T, ps: &[B]) -> VrfInOut<C>
 where
+    T: SigningTranscript+Clone,
     C: AffineCurve,
     B: Borrow<VrfInOut<C>>,
 {
-    let mut t = Transcript::new(b"VRFMerge");
     t.append_slice(b"VrfInOut", ps);
-    vrfs_delinearize( &t, ps.iter().map(|io| io.borrow()) )
+    vrfs_delinearize( t, ps.iter().map(|io| io.borrow()) )
 }
 
 /// Raw delinerazation step for merger of VRF input and pre-output
