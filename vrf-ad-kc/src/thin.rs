@@ -12,7 +12,8 @@ use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 use rand_core::{RngCore,CryptoRng};
 
 use crate::{
-    SigningTranscript, Flavor,
+    SigningTranscript, 
+    flavor::{Flavor, sealed::InnerFlavor},
     keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut},
@@ -42,6 +43,9 @@ impl<C: AffineCurve> Flavor for ThinVrf<C> {
 
     fn keying_base(&self) -> &C { &self.keying_base }
 }
+
+impl<C: AffineCurve> InnerFlavor for ThinVrf<C> {}
+
 
 impl<C: AffineCurve> ThinVrf<C> {
     /// Attach a public key to its base point.

@@ -13,7 +13,7 @@ use rand_core::{RngCore,CryptoRng};
 
 use zeroize::Zeroize;
 
-use crate::Flavor;
+use crate::flavor::{Flavor, sealed::InnerFlavor};
 
 
 /// Public key

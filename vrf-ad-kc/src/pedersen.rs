@@ -15,7 +15,8 @@ use rand_core::{RngCore,CryptoRng};
 use zeroize::Zeroize;
 
 use crate::{
-    SigningTranscript, Flavor,
+    SigningTranscript,
+    flavor::{Flavor, sealed::InnerFlavor},
     keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut},
@@ -44,6 +45,10 @@ where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>
     fn keying_base(&self) -> &K { &self.keying_base }
 }
 
+impl<K,H> InnerFlavor for PedersenVrf<K,H>
+where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>
+{
+}
 
 /// Pederson commitment openning for a public key, consisting of a scalar
 /// that reveals the difference ebtween two public keys.

@@ -21,7 +21,11 @@ use rand_core::{RngCore,CryptoRng,SeedableRng}; // OsRng
 
 use merlin::Transcript;
 
-use crate::{SigningTranscript, Flavor, SecretKey,};  // use super::*;
+use crate::{
+    SigningTranscript, SecretKey,
+    flavor::{Flavor, sealed::InnerFlavor},
+};  // use super::*;
+
 
 use std::borrow::{Borrow}; // BorrowMut
 
