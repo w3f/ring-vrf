@@ -122,26 +122,16 @@ impl<C: AffineCurve> ThinVrf<C> {
     where T: SigningTranscript+Clone, B: BorrowMut<T>
     {
         let t = t.borrow_mut();
-        self.thin_vrf_merge(t, public, ios).verify_final(t,signature).map(|()| ios)
-    }
-}
+        let io = self.thin_vrf_merge(t, public, ios);
 
-impl<C: AffineCurve> VrfInOut<C> {
-    /// Verify Schnorr-like signature 
-    /// 
-    /// Assumes we already hashed public key, `VrfInOut`s, etc.
-    /// 
-    // TODO:  We'll maybe merge `verify_final` with `verify_thin_vrf`
-    // but right now lets see if anything else comes up.
-    pub(crate) fn verify_final<T: SigningTranscript>(
-        &self, t: &mut T, signature: &Signature<ThinVrf<C>>
-    ) -> SignatureResult<()> {
+        // verify_final
         t.append(b"Witness", &signature.r);
         let c: <C as AffineCurve>::ScalarField = t.challenge(b"ThinVrfChallenge");
-        let lhs = self.input.0.mul(signature.s);
-        let rhs = signature.r.into_projective() + self.preoutput.0.mul(c);
+
+        let lhs = io.input.0.mul(signature.s);
+        let rhs = signature.r.into_projective() + io.preoutput.0.mul(c);
         if crate::eq_mod_small_cofactor_projective(&lhs, &rhs) {
-            Ok(())
+            Ok(ios)
         } else {
             Err(SignatureError::Invalid)
         }
