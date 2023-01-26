@@ -36,7 +36,7 @@ pub mod thin;
 pub use thin::{ThinVrfSignature, ThinVrf};
 
 pub mod pedersen;
-pub use pedersen::{PedersenVrfPair, PedersenVrf};
+pub use pedersen::{PedersenVrf};
 
 
 /// VRF flavors based upon DLEQ proofs: Thin/Schnorr vs Pedersen vs something else.

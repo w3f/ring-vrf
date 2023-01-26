@@ -24,55 +24,68 @@ use crate::{
 use core::borrow::{BorrowMut};
 
 
-pub trait PedersenVrfPair : Clone {
-    type ScalarField: PrimeField + SquareRootField;
-    type KeyCurve: AffineCurve<ScalarField = Self::ScalarField>;
-    type PreOutCurve: AffineCurve<ScalarField = Self::ScalarField>;
+/// Pedersen VRF flavor
+#[derive(Clone)]
+pub struct PedersenVrf<K,H=K> 
+where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
+{
+    pub keying_base: K,
+    pub blinding_base: K,
+    pub _pd: core::marker::PhantomData<H>,
 }
+
+impl<K,H> Flavor for PedersenVrf<K,H>
+where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>
+{
+    type ScalarField = K::ScalarField;
+    type KeyAffine = K;
+    type PreOutAffine = H;
+
+    fn keying_base(&self) -> &K { &self.keying_base }
+}
+
 
 /// Pederson commitment openning for a public key, consisting of a scalar
 /// that reveals the difference ebtween two public keys.
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct SecretBlinding<P: PedersenVrfPair>(pub(crate) <P as PedersenVrfPair>::ScalarField);
+pub struct SecretBlinding<C: AffineCurve>(pub(crate) <C as AffineCurve>::ScalarField);
 
-impl<P: PedersenVrfPair> Zeroize for SecretBlinding<P> {
+impl<C: AffineCurve> Zeroize for SecretBlinding<C> {
     fn zeroize(&mut self) {
         self.0.zeroize();
     }
 }
-impl<P: PedersenVrfPair> Drop for SecretBlinding<P> {
+impl<C: AffineCurve> Drop for SecretBlinding<C> {
     fn drop(&mut self) { self.zeroize() }
 }
 
 /*
-impl<P: PedersenVrfPair> SecretBlinding<P> {
+impl<C: AffineCurve> SecretBlinding<C> {
     pub fn is_blinded(&self) -> bool {
         use ark_ff::Zero;
         self.0.is_zero() // != <<C as AffineCurve>::ScalarField as Zero>::zero()
     }
+}
 
-    pub fn verify(&self, blinded: PublicKey<<P as PedersenVrfPair>::KeyCurve>, unblinded: PublicKey<<P as PedersenVrfPair>::KeyCurve>) -> bool {
-        let mut b = C::blinding_base_affine().mul(self.0);
+impl<K,H> PedersenVrf<K,H>
+where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
+{
+    pub fn verify(&self, blinded: PublicKey<K>, unblinded: PublicKey<K>) -> bool {
+        let mut b = self.blinding_base.mul(self.0);
         b.add_assign_mixed(& unblinded.0);
         crate::eq_mod_small_cofactor_projective(b, blinded.into_projective())
     }
 }
 */
 
-
-/// Pedersen VRF flavor
-#[derive(Clone)]
-pub struct PedersenVrf<P: PedersenVrfPair> {
-    pub keying_base: <P as PedersenVrfPair>::KeyCurve,
-    pub blinding_base:  <P as PedersenVrfPair>::KeyCurve,
-}
-
-impl<P: PedersenVrfPair> PedersenVrf<P> {
+impl<K,H> PedersenVrf<K,H>
+where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
+{
     pub fn compute_blinded_publickey(
         &self,
-        public: &PublicKey<<P as PedersenVrfPair>::KeyCurve>, 
-        secret_blinding: &SecretBlinding<P>
-    ) -> KeyCommitment<P> {
+        public: &PublicKey<K>, 
+        secret_blinding: &SecretBlinding<K>
+    ) -> KeyCommitment<K> {
         let mut b = self.blinding_base.mul(secret_blinding.0);
         b.add_assign_mixed(& public.0);
         KeyCommitment(b.into_affine())
@@ -80,25 +93,25 @@ impl<P: PedersenVrfPair> PedersenVrf<P> {
 }
 
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
-pub struct KeyCommitment<P: PedersenVrfPair>(pub(crate) <P as PedersenVrfPair>::KeyCurve);
+pub struct KeyCommitment<C: AffineCurve>(pub(crate) C);
 
-impl<P: PedersenVrfPair> Zeroize for KeyCommitment<P> {
+impl<C: AffineCurve> Zeroize for KeyCommitment<C> {
     fn zeroize(&mut self) {
         self.0.zeroize();
     }
 }
-impl<P: PedersenVrfPair> Drop for KeyCommitment<P> {
-    fn drop(&mut self) { self.zeroize() }
-}
+// impl<C: AffineCurve> Drop for KeyCommitment<C> {
+//     fn drop(&mut self) { self.zeroize() }
+// }
 
 
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
-pub struct Scalars<P: PedersenVrfPair> {
-    pub(crate) keying:   <P as PedersenVrfPair>::ScalarField,
-    pub(crate) blinding: <P as PedersenVrfPair>::ScalarField,
+struct Scalars<F: Flavor> {
+    pub(crate) keying:   <F as Flavor>::ScalarField,
+    pub(crate) blinding: <F as Flavor>::ScalarField,
 }
 
-impl<P: PedersenVrfPair> Zeroize for Scalars<P> {
+impl<F: Flavor> Zeroize for Scalars<F> {
     fn zeroize(&mut self) {
         self.keying.zeroize();
         self.blinding.zeroize();
@@ -106,32 +119,26 @@ impl<P: PedersenVrfPair> Zeroize for Scalars<P> {
 }
 
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
-pub struct Affines<P: PedersenVrfPair> {
-    pub(crate) keyish:  <P as PedersenVrfPair>::KeyCurve,
-    pub(crate) preoutish: <P as PedersenVrfPair>::PreOutCurve,
-}
-
-impl<P: PedersenVrfPair> Flavor for PedersenVrf<P> {
-    type ScalarField = <P as PedersenVrfPair>::ScalarField;
-    type KeyAffine = <P as PedersenVrfPair>::KeyCurve;
-    type PreOutAffine = <P as PedersenVrfPair>::PreOutCurve;
-
-    fn keying_base(&self) -> &<P as PedersenVrfPair>::KeyCurve { &self.keying_base }
+struct Affines<P: Flavor> {
+    pub(crate) keyish:  <P as Flavor>::KeyAffine,
+    pub(crate) preoutish: <P as Flavor>::PreOutAffine,
 }
 
 
 // --- Sign --- //
 
-impl<P: PedersenVrfPair> SecretKey<PedersenVrf<P>> {
+impl<K,H> SecretKey<PedersenVrf<K,H>>
+where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
+{
     pub(crate) fn new_pedersen_witness<T,R>(
         &self,
         t: &T,
-        input: &VrfInput<<P as PedersenVrfPair>::PreOutCurve>,
+        input: &VrfInput<H>,
         rng: R
-    ) -> Witness<P>
+    ) -> Witness<PedersenVrf<K,H>>
     where T: SigningTranscript, R: RngCore+CryptoRng
     {
-        let k: [<P as PedersenVrfPair>::ScalarField; 2]
+        let k: [<PedersenVrf<K,H> as Flavor>::ScalarField; 2]
          = t.witnesses(b"MakeWitness", &[&self.nonce_seed], rng);
         let k = Scalars { keying: k[0], blinding: k[1], }; 
         let r = Affines {
@@ -144,10 +151,10 @@ impl<P: PedersenVrfPair> SecretKey<PedersenVrf<P>> {
         Witness { r, k }
     }
 
-    pub fn new_secret_blinding<T,R>(&self, t: &T, rng: &mut R) -> SecretBlinding<P>
+    pub fn new_secret_blinding<T,R>(&self, t: &T, rng: &mut R) -> SecretBlinding<K>
     where T: SigningTranscript+Clone, R: RngCore+CryptoRng
     {
-        let [secret_blinding]: [<P as PedersenVrfPair>::ScalarField; 1]
+        let [secret_blinding]: [<K as AffineCurve>::ScalarField; 1]
          = t.witnesses(b"MakeSecretBlinding", &[&self.nonce_seed], rng);
         SecretBlinding(secret_blinding)
     }
@@ -156,9 +163,9 @@ impl<P: PedersenVrfPair> SecretKey<PedersenVrf<P>> {
     pub fn sign_pedersen_vrf<T,B,R>(
         &self,
         mut t: B,
-        ios: &[VrfInOut<<P as PedersenVrfPair>::PreOutCurve>],
+        ios: &[VrfInOut<H>],
         rng: &mut R
-    ) -> (PedersenVrfSignature<P>, SecretBlinding<P>)
+    ) -> (PedersenVrfSignature<PedersenVrf<K,H>>, SecretBlinding<K>)
     where T: SigningTranscript+Clone, B: BorrowMut<T>, R: RngCore+CryptoRng
     {
         let t = t.borrow_mut();
@@ -172,16 +179,39 @@ impl<P: PedersenVrfPair> SecretKey<PedersenVrf<P>> {
         let w = self.new_pedersen_witness(t,&io.input,rng);
         ( w.sign_final(t,&secret_blinding,self,compk), secret_blinding )
     }
+
+    /// Sign Pedersen VRF signature, wtih a user supplied secret blinding.
+    pub fn sign_pedersen_vrf_with_secret_blinding<T,B,R>(
+        &self,
+        mut t: B,
+        ios: &[VrfInOut<H>],
+        secret_blinding: SecretBlinding<K>,
+        rng: &mut R
+    ) -> PedersenVrfSignature<PedersenVrf<K,H>>
+    where T: SigningTranscript+Clone, B: BorrowMut<T>, R: RngCore+CryptoRng
+    {
+        let t = t.borrow_mut();
+        let io = vrf::vrfs_merge(t, ios);
+
+        // Allow derandomization by constructing secret_blinding and witness as late as possible.
+        let compk = self.flavor.compute_blinded_publickey(self.as_publickey(), &secret_blinding);
+        t.append(b"KeyCommitment",&compk);
+
+        self.new_pedersen_witness(t,&io.input,rng)
+        .sign_final(t,&secret_blinding,self,compk)
+    }
 }
 
 /// Secret and public nonce/witness for doing one thin VRF signature,
 /// obvoiusly usable only once ever.
-pub(crate) struct Witness<P: PedersenVrfPair> {
-    k: Scalars<P>,
-    r: Affines<P>,
+pub(crate) struct Witness<F: Flavor> {
+    k: Scalars<F>,
+    r: Affines<F>,
 }
 
-impl<P: PedersenVrfPair> Witness<P> {
+impl<K,H> Witness<PedersenVrf<K,H>>
+where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
+{
     /// Complete Pedersen VRF signature.
     /// 
     /// Assumes we already hashed public key, `VrfInOut`s, etc.
@@ -189,13 +219,13 @@ impl<P: PedersenVrfPair> Witness<P> {
     pub(crate) fn sign_final<T: SigningTranscript>(
         self,
         t: &mut T,
-        secret_blinding: &SecretBlinding<P>,
-        secret: &SecretKey<PedersenVrf<P>>,
-        compk: KeyCommitment<P>,
-    ) -> PedersenVrfSignature<P> {
+        secret_blinding: &SecretBlinding<K>,
+        secret: &SecretKey<PedersenVrf<K,H>>,
+        compk: KeyCommitment<K>,
+    ) -> PedersenVrfSignature<PedersenVrf<K,H>> {
         let Witness { r, k } = self;
         t.append(b"Witness", &r);
-        let c: <P as PedersenVrfPair>::ScalarField = t.challenge(b"PedersenVrfChallenge");
+        let c: <K as AffineCurve>::ScalarField = t.challenge(b"PedersenVrfChallenge");
         let s = Scalars {
             keying: k.keying + c * secret.key,
             blinding: k.blinding + c * secret_blinding.0,
@@ -207,18 +237,19 @@ impl<P: PedersenVrfPair> Witness<P> {
 
 /// Pedersen VRF signature
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
-pub struct PedersenVrfSignature<P: PedersenVrfPair> {
-    compk: KeyCommitment<P>,
-    r: Affines<P>,
-    s: Scalars<P>,
+pub struct PedersenVrfSignature<F: Flavor>
+{
+    compk: KeyCommitment<<F as Flavor>::KeyAffine>,
+    r: Affines<F>,
+    s: Scalars<F>,
 }
 
-impl<P: PedersenVrfPair> PedersenVrfSignature<P> {
-    pub fn as_key_commitment(&self) -> &KeyCommitment<P> { &self.compk }
+impl<F: Flavor> PedersenVrfSignature<F> {
+    pub fn as_key_commitment(&self) -> &KeyCommitment<<F as Flavor>::KeyAffine> { &self.compk }
 }
 
 /*
-impl<P: PedersenVrfPair> Valid for PedersenVrfSignature<P> {
+impl<P: Flavor> Valid for PedersenVrfSignature<F> {
     fn check(&self) -> Result<(), SerializationError> {
         if self.is_on_curve() && self.is_in_correct_subgroup_assuming_on_curve() {
             Ok(())
@@ -232,14 +263,17 @@ impl<P: PedersenVrfPair> Valid for PedersenVrfSignature<P> {
 
 // --- Verify --- //
 
-impl<P: PedersenVrfPair> PedersenVrf<P> {
+
+impl<K,H> PedersenVrf<K,H>
+where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
+{
     /// Verify Pedersen VRF signature 
     pub fn verify_pedersen_vrf<'a,T,B>(
         &self,
         mut t: B,
-        ios: &'a [VrfInOut<<P as PedersenVrfPair>::PreOutCurve>],
-        signature: &PedersenVrfSignature<P>,
-    ) -> SignatureResult<&'a [VrfInOut<<P as PedersenVrfPair>::PreOutCurve>]>
+        ios: &'a [VrfInOut<H>],
+        signature: &PedersenVrfSignature<PedersenVrf<K,H>>,
+    ) -> SignatureResult<&'a [VrfInOut<H>]>
     where T: SigningTranscript+Clone, B: BorrowMut<T>
     {
         let t = t.borrow_mut();
@@ -248,7 +282,7 @@ impl<P: PedersenVrfPair> PedersenVrf<P> {
 
         // verify_final
         t.append(b"Witness", &signature.r);
-        let c: <P as PedersenVrfPair>::ScalarField = t.challenge(b"PedersenVrfChallenge");
+        let c: <K as AffineCurve>::ScalarField = t.challenge(b"PedersenVrfChallenge");
 
         let lhs = io.input.0.mul(signature.s.keying);
         let rhs = signature.r.preoutish.into_projective() + io.preoutput.0.mul(c);

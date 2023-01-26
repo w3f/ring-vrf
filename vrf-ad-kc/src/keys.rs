@@ -28,11 +28,6 @@ fn new_public<F: Flavor>(
     PublicKey( flavor.keying_base().mul(secret).into_affine() )
 }
 
-// <F as Flavor>::KeyAffine as AffineCurve
-
-// impl_ark_serialize!(PublicKey);
-// serde_boilerplate!(PublicKey);
-
 impl<C: AffineCurve> PartialEq for PublicKey<C> {
     fn eq(&self, other: &PublicKey<C>) -> bool {
         crate::eq_mod_small_cofactor_affine(&self.0, &other.0)
