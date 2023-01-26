@@ -46,7 +46,7 @@
 
 use ark_std::{ io::{Read, Write}, };
 use ark_ff::{PrimeField, SquareRootField};
-use ark_ec::{AffineCurve, ProjectiveCurve};
+use ark_ec::{AffineCurve};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 
 /// VRF flavors based upon DLEQ proofs: Thin/Schnorr vs Pedersen vs something else.

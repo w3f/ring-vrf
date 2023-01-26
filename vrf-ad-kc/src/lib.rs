@@ -11,7 +11,6 @@
 // #![feature(associated_type_defaults)]
 // #![feature(array_methods)]
 
-use ark_ff::{PrimeField, SquareRootField};
 use ark_ec::{AffineCurve, ProjectiveCurve};
 
 extern crate arrayref;
@@ -34,10 +33,10 @@ pub use vrf::{VrfPreOut, VrfInOut}; // signing_context
 
 pub mod flavor;
 
-pub mod thin;
+mod thin;
 pub use thin::{ThinVrf};
 
-pub mod pedersen;
+mod pedersen;
 pub use pedersen::{PedersenVrf};
 
 

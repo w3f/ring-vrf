@@ -23,7 +23,7 @@ use merlin::Transcript;
 
 use crate::{
     SigningTranscript, SecretKey,
-    flavor::{Flavor, sealed::InnerFlavor},
+    flavor::{Flavor},
 };  // use super::*;
 
 

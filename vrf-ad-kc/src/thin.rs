@@ -5,9 +5,7 @@
 
 //! ### Thin VRF routines
 
-use ark_std::{ io::{Read, Write}, };
 use ark_ec::{AffineCurve, ProjectiveCurve};
-use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 
 use rand_core::{RngCore,CryptoRng};
 
@@ -115,7 +113,7 @@ impl<C: AffineCurve> Witness<ThinVrf<C>> {
 }
 
 /*
-impl<C: AffineCurve> Valid for ThinVrfSignature<C> {
+impl<C: AffineCurve> Valid for Signature<ThinVrf<C>> {
     fn check(&self) -> Result<(), SerializationError> {
         if self.is_on_curve() && self.is_in_correct_subgroup_assuming_on_curve() {
             Ok(())
