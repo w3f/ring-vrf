@@ -68,20 +68,3 @@ pub trait Flavor {
     type Affines: Sync + Clone + CanonicalSerialize + CanonicalDeserialize;
 }
 
-/// Secret and public nonce/witness for doing one signature,
-/// obvoiusly usable only once ever.
-pub(crate) struct Witness<F: Flavor> {
-    pub(crate) k: <F as Flavor>::Scalars,
-    pub(crate) r: <F as Flavor>::Affines,
-}
-
-/*
-impl<F: Flavor> Zeroize for Witness<F> {
-    fn zeroize(&mut self) {
-        self.k.zeroize();
-    }
-}
-impl<F: Flavor> Drop for Witness<F> {
-    fn drop(&mut self) { self.zeroize() }
-}
-*/

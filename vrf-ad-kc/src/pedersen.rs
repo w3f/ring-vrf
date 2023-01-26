@@ -16,7 +16,7 @@ use zeroize::Zeroize;
 
 use crate::{
     SigningTranscript,
-    flavor::{Flavor, Witness},
+    flavor::{Flavor},
     keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut},
@@ -132,7 +132,7 @@ impl<P: PedersenVrfPair> SecretKey<PedersenVrf<P>> {
         t: &T,
         input: &VrfInput<<P as PedersenVrfPair>::PreOutCurve>,
         rng: R
-    ) -> Witness<PedersenVrf<P>>
+    ) -> Witness<P>
     where T: SigningTranscript, R: RngCore+CryptoRng
     {
         let k: [<P as PedersenVrfPair>::ScalarField; 2]
@@ -178,7 +178,14 @@ impl<P: PedersenVrfPair> SecretKey<PedersenVrf<P>> {
     }
 }
 
-impl<P: PedersenVrfPair> Witness<PedersenVrf<P>> {
+/// Secret and public nonce/witness for doing one thin VRF signature,
+/// obvoiusly usable only once ever.
+pub(crate) struct Witness<P: PedersenVrfPair> {
+    k: Scalars<P>,
+    r: Affines<P>,
+}
+
+impl<P: PedersenVrfPair> Witness<P> {
     /// Complete Pedersen VRF signature.
     /// 
     /// Assumes we already hashed public key, `VrfInOut`s, etc.
@@ -197,6 +204,7 @@ impl<P: PedersenVrfPair> Witness<PedersenVrf<P>> {
             keying: k.keying + c * secret.key,
             blinding: k.blinding + c * secret_blinding.0,
         };
+        // k.zeroize();
         PedersenVrfSignature { compk, r, s }
     }
 }
@@ -205,8 +213,8 @@ impl<P: PedersenVrfPair> Witness<PedersenVrf<P>> {
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct PedersenVrfSignature<P: PedersenVrfPair> {
     compk: KeyCommitment<P>,
-    r: <PedersenVrf<P> as Flavor>::Affines,
-    s: <PedersenVrf<P> as Flavor>::Scalars,
+    r: Affines<P>,
+    s: Scalars<P>,
 }
 
 impl<P: PedersenVrfPair> PedersenVrfSignature<P> {
