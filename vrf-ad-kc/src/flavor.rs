@@ -44,27 +44,3 @@
 //! Next, construct `ThinVrfWitness` and invoke `thin_vrf_merge`,
 //! and `sign_final`.  We split `sign_final` components from `sign_thin_vrf` so this works cleanly.
 
-
-use ark_ff::{PrimeField, SquareRootField};
-use ark_ec::{AffineCurve};
-use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
-
-use zeroize::Zeroize;
-
-
-/// VRF flavors based upon DLEQ proofs: Thin/Schnorr vs Pedersen vs something else.
-/// 
-/// TODO: Use hash-to-field instead of UniformRand for Scalars.
-pub trait Flavor {
-    type ScalarField:  PrimeField + SquareRootField;
-    type KeyAffine:    AffineCurve<ScalarField = Self::ScalarField>;
-    type PreOutAffine: AffineCurve<ScalarField = Self::ScalarField>;
-
-    fn keying_base(&self) -> &Self::KeyAffine;
-
-    /// Scalars decomposing the points
-    type Scalars: Sync + Clone + CanonicalSerialize + CanonicalDeserialize + Zeroize; // UniformRand
-    /// Points the DLEQ proof relates
-    type Affines: Sync + Clone + CanonicalSerialize + CanonicalDeserialize;
-}
-

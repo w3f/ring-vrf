@@ -15,8 +15,7 @@ use rand_core::{RngCore,CryptoRng};
 use zeroize::Zeroize;
 
 use crate::{
-    SigningTranscript,
-    flavor::{Flavor},
+    SigningTranscript, Flavor,
     keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut},
@@ -118,9 +117,6 @@ impl<P: PedersenVrfPair> Flavor for PedersenVrf<P> {
     type PreOutAffine = <P as PedersenVrfPair>::PreOutCurve;
 
     fn keying_base(&self) -> &<P as PedersenVrfPair>::KeyCurve { &self.keying_base }
-
-    type Scalars = Scalars<P>;   // [<C as AffineCurve>::ScalarField; 2];
-    type Affines = Affines<P>;
 }
 
 
@@ -222,7 +218,7 @@ impl<P: PedersenVrfPair> PedersenVrfSignature<P> {
 }
 
 /*
-impl<F: Flavor> Valid for PedersenVrfSignature<F> {
+impl<P: PedersenVrfPair> Valid for PedersenVrfSignature<P> {
     fn check(&self) -> Result<(), SerializationError> {
         if self.is_on_curve() && self.is_in_correct_subgroup_assuming_on_curve() {
             Ok(())

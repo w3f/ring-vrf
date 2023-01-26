@@ -11,6 +11,7 @@
 // #![feature(associated_type_defaults)]
 // #![feature(array_methods)]
 
+use ark_ff::{PrimeField, SquareRootField};
 use ark_ec::{AffineCurve, ProjectiveCurve};
 
 extern crate arrayref;
@@ -28,8 +29,6 @@ pub use keys::{PublicKey, SecretKey};
 mod transcript;
 pub use transcript::{SigningTranscript}; // signing_context
 
-pub mod flavor;
-
 pub mod vrf;
 pub use vrf::{VrfPreOut, VrfInOut}; // signing_context
 
@@ -38,6 +37,19 @@ pub use thin::{ThinVrfSignature, ThinVrf};
 
 pub mod pedersen;
 pub use pedersen::{PedersenVrfPair, PedersenVrf};
+
+
+/// VRF flavors based upon DLEQ proofs: Thin/Schnorr vs Pedersen vs something else.
+/// 
+/// TODO: Use hash-to-field instead of UniformRand for Scalars.
+pub trait Flavor {
+    type ScalarField:  PrimeField + SquareRootField;
+    type KeyAffine:    AffineCurve<ScalarField = Self::ScalarField>;
+    type PreOutAffine: AffineCurve<ScalarField = Self::ScalarField>;
+
+    fn keying_base(&self) -> &Self::KeyAffine;
+}
+
 
 /// Any cofactor of this size or smaller gets treated as small,
 /// resulting in only doing on-curve checks, not full subgroup

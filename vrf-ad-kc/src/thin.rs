@@ -12,8 +12,7 @@ use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 use rand_core::{RngCore,CryptoRng};
 
 use crate::{
-    SigningTranscript,
-    flavor::{Flavor},
+    SigningTranscript, Flavor,
     keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut},
@@ -42,9 +41,6 @@ impl<C: AffineCurve> Flavor for ThinVrf<C> {
     type PreOutAffine = C;
 
     fn keying_base(&self) -> &C { &self.keying_base }
-
-    type Scalars = <C as AffineCurve>::ScalarField;
-    type Affines = C;
 }
 
 impl<C: AffineCurve> ThinVrf<C> {
@@ -132,7 +128,7 @@ pub struct ThinVrfSignature<C: AffineCurve> {
 }
 
 /*
-impl<F: Flavor> Valid for ThinVrfSignature<F> {
+impl<C: AffineCurve> Valid for ThinVrfSignature<C> {
     fn check(&self) -> Result<(), SerializationError> {
         if self.is_on_curve() && self.is_in_correct_subgroup_assuming_on_curve() {
             Ok(())
