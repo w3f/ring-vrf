@@ -5,13 +5,15 @@
 
 //! ### Thin VRF routines
 
+use ark_std::{ io::{Read, Write}, };
 use ark_ec::{AffineCurve, ProjectiveCurve};
+use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 
 use rand_core::{RngCore,CryptoRng};
 
 use crate::{
     SigningTranscript,
-    flavor::{Flavor, Witness, Signature},
+    flavor::{Flavor, Witness},
     keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut},
@@ -81,7 +83,7 @@ impl<C: AffineCurve> SecretKey<ThinVrf<C>> {
     /// If `ios = &[]` this reduces to a Schnorr signature.
     pub fn sign_thin_vrf<T,B,R>(
         &self, mut t: B, ios: &[VrfInOut<C>], rng: &mut R
-    ) -> Signature<ThinVrf<C>>
+    ) -> ThinVrfSignature<ThinVrf<C>>
     where T: SigningTranscript+Clone, B: BorrowMut<T>, R: RngCore+CryptoRng
     {
         let t = t.borrow_mut();
@@ -97,13 +99,32 @@ impl<C: AffineCurve> Witness<ThinVrf<C>> {
     /// Assumes we already hashed public key, `VrfInOut`s, etc.
     pub(crate) fn sign_final<T: SigningTranscript>(
         self, t: &mut T, secret: &SecretKey<ThinVrf<C>>
-    ) -> Signature<ThinVrf<C>> {
+    ) -> ThinVrfSignature<ThinVrf<C>> {
         let Witness { r, k } = self;
         t.append(b"Witness", &r);
         let c: <C as AffineCurve>::ScalarField = t.challenge(b"ThinVrfChallenge");
-        Signature { r, s: k + c * secret.key }
+        ThinVrfSignature { r, s: k + c * secret.key }
     }
 }
+
+/// Thin/Schnorr VRF signature
+#[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
+pub struct ThinVrfSignature<F: Flavor> {
+    r: <F as Flavor>::Affines,
+    s: <F as Flavor>::Scalars,
+}
+
+/*
+impl<F: Flavor> Valid for ThinVrfSignature<F> {
+    fn check(&self) -> Result<(), SerializationError> {
+        if self.is_on_curve() && self.is_in_correct_subgroup_assuming_on_curve() {
+            Ok(())
+        } else {
+            Err(SerializationError::InvalidData)
+        }
+    }
+}
+*/
 
 
 // --- Verify --- //
@@ -117,7 +138,7 @@ impl<C: AffineCurve> ThinVrf<C> {
         mut t: B,
         public: &PublicKey<C>,
         ios: &'a [VrfInOut<C>],
-        signature: &Signature<ThinVrf<C>>,
+        signature: &ThinVrfSignature<ThinVrf<C>>,
     ) -> SignatureResult<&'a [VrfInOut<C>]>
     where T: SigningTranscript+Clone, B: BorrowMut<T>
     {

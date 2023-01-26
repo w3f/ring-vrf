@@ -45,10 +45,9 @@
 //! and `sign_final`.  We split `sign_final` components from `sign_thin_vrf` so this works cleanly.
 
 
-use ark_std::{ io::{Read, Write}, };
 use ark_ff::{PrimeField, SquareRootField};
 use ark_ec::{AffineCurve};
-use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
+use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
 
 use zeroize::Zeroize;
 
@@ -86,28 +85,3 @@ impl<F: Flavor> Drop for Witness<F> {
     fn drop(&mut self) { self.zeroize() }
 }
 */
-
-/// Signature
-#[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
-pub struct Signature<F: Flavor> {
-    pub(crate) r: <F as Flavor>::Affines,
-    pub(crate) s: <F as Flavor>::Scalars,
-}
-
-
-/*
-impl<F: Flavor> Valid for Signature<F> {
-    fn check(&self) -> Result<(), SerializationError> {
-        if self.is_on_curve() && self.is_in_correct_subgroup_assuming_on_curve() {
-            Ok(())
-        } else {
-            Err(SerializationError::InvalidData)
-        }
-    }
-}
-*/
-
-
-
-impl<F: Flavor> Signature<F> {
-}

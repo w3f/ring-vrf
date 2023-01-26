@@ -34,8 +34,7 @@ pub mod vrf;
 pub use vrf::{VrfPreOut, VrfInOut}; // signing_context
 
 pub mod thin;
-pub use thin::ThinVrf;
-pub type ThinVrfSignature<A> = flavor::Signature<ThinVrf<A>>;
+pub use thin::{ThinVrfSignature, ThinVrf};
 
 pub mod pedersen;
 pub use pedersen::{PedersenVrfPair, PedersenVrf};

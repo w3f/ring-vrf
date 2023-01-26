@@ -16,7 +16,7 @@ use zeroize::Zeroize;
 
 use crate::{
     SigningTranscript,
-    flavor::{Flavor, Witness, Signature},
+    flavor::{Flavor, Witness},
     keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut},
@@ -197,19 +197,33 @@ impl<P: PedersenVrfPair> Witness<PedersenVrf<P>> {
             keying: k.keying + c * secret.key,
             blinding: k.blinding + c * secret_blinding.0,
         };
-        PedersenVrfSignature { compk, inner: Signature { r, s } }
+        PedersenVrfSignature { compk, r, s }
     }
 }
 
+/// Pedersen VRF signature
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct PedersenVrfSignature<P: PedersenVrfPair> {
     compk: KeyCommitment<P>,
-    inner: Signature<PedersenVrf<P>>,
+    r: <PedersenVrf<P> as Flavor>::Affines,
+    s: <PedersenVrf<P> as Flavor>::Scalars,
 }
 
 impl<P: PedersenVrfPair> PedersenVrfSignature<P> {
     pub fn as_key_commitment(&self) -> &KeyCommitment<P> { &self.compk }
 }
+
+/*
+impl<F: Flavor> Valid for PedersenVrfSignature<F> {
+    fn check(&self) -> Result<(), SerializationError> {
+        if self.is_on_curve() && self.is_in_correct_subgroup_assuming_on_curve() {
+            Ok(())
+        } else {
+            Err(SerializationError::InvalidData)
+        }
+    }
+}
+*/
 
 
 // --- Verify --- //
@@ -229,17 +243,17 @@ impl<P: PedersenVrfPair> PedersenVrf<P> {
         t.append(b"KeyCommitment",&signature.compk);
 
         // verify_final
-        t.append(b"Witness", &signature.inner.r);
+        t.append(b"Witness", &signature.r);
         let c: <P as PedersenVrfPair>::ScalarField = t.challenge(b"PedersenVrfChallenge");
 
-        let lhs = io.input.0.mul(signature.inner.s.keying);
-        let rhs = signature.inner.r.preoutish.into_projective() + io.preoutput.0.mul(c);
+        let lhs = io.input.0.mul(signature.s.keying);
+        let rhs = signature.r.preoutish.into_projective() + io.preoutput.0.mul(c);
         if ! crate::eq_mod_small_cofactor_projective(&lhs, &rhs) {
             return Err(SignatureError::Invalid);
         }
-        let lhs = self.keying_base.mul(signature.inner.s.keying)
-                  + self.blinding_base.mul(signature.inner.s.blinding);
-        let rhs = signature.inner.r.keyish.into_projective() + signature.compk.0.mul(c);
+        let lhs = self.keying_base.mul(signature.s.keying)
+                  + self.blinding_base.mul(signature.s.blinding);
+        let rhs = signature.r.keyish.into_projective() + signature.compk.0.mul(c);
         if ! crate::eq_mod_small_cofactor_projective(&lhs, &rhs) {
             return Err(SignatureError::Invalid);
         }
