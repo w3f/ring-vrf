@@ -19,8 +19,6 @@ use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 
 use rand_core::{RngCore,CryptoRng,SeedableRng}; // OsRng
 
-use merlin::Transcript;
-
 use crate::{
     SigningTranscript, SecretKey,
     flavor::{Flavor},
@@ -344,40 +342,6 @@ where
         preoutput: VrfPreOut(preoutput.into_affine())
     }
 }
-
-
-
-/// Almost all VRF methods support signing an extra message
-/// alongside the VRF, so `no_extra` provides a convenient
-/// default transcript when no extra message is desired.
-pub fn no_extra() -> Transcript {
-    Transcript::new(b"VRF")
-}
-
-/// We take closures like `F: FnMut(&VrfInOut<E>) -> impl VRFExtraMessage`
-/// in `vrf_sign_after_check` to avoid needing both 
-/// `-> bool` and `-> Option<Transcript>` versions.
-pub trait VRFExtraMessage {
-    type T: SigningTranscript;
-    fn extra(self) -> Option<Self::T>;
-}
-impl<T: SigningTranscript> VRFExtraMessage for Option<T> {
-    type T = T;
-    fn extra(self) -> Option<T> { self }
-}
-impl VRFExtraMessage for bool {
-    type T = Transcript;
-    fn extra(self) -> Option<Transcript> {
-        if self { Some(no_extra()) } else { None }
-    }
-}
-impl VRFExtraMessage for Transcript {
-    type T = Transcript;
-    fn extra(self) -> Option<Transcript> { Some(self) }
-}
-
-pub fn no_check_no_extra<C: AffineCurve>(_: &VrfInOut<C>) -> bool { true }
-
 
 
 #[cfg(test)]
