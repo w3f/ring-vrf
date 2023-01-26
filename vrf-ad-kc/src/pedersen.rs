@@ -29,9 +29,9 @@ use core::borrow::{BorrowMut};
 pub struct PedersenVrf<K,H=K> 
 where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
 {
-    pub keying_base: K,
-    pub blinding_base: K,
-    pub _pd: core::marker::PhantomData<H>,
+    keying_base: K,
+    blinding_base: K,
+    _pd: core::marker::PhantomData<H>,
 }
 
 impl<K,H> Flavor for PedersenVrf<K,H>
@@ -88,6 +88,10 @@ where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
 impl<K,H> PedersenVrf<K,H>
 where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
 {
+    pub fn new(keying_base: K, blinding_base: K) -> PedersenVrf<K,H> {
+        PedersenVrf { keying_base, blinding_base, _pd: core::marker::PhantomData, }
+    }
+
     pub fn compute_blinded_publickey(
         &self,
         public: &PublicKey<K>, 
