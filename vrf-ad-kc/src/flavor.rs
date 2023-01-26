@@ -44,8 +44,10 @@
 //! Next, construct `ThinVrfWitness` and invoke `thin_vrf_merge`,
 //! and `sign_final`.  We split `sign_final` components from `sign_thin_vrf` so this works cleanly.
 
+use ark_std::{ io::{Read, Write}, };
 use ark_ff::{PrimeField, SquareRootField};
 use ark_ec::{AffineCurve, ProjectiveCurve};
+use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 
 /// VRF flavors based upon DLEQ proofs: Thin/Schnorr vs Pedersen vs something else.
 /// 
@@ -59,8 +61,43 @@ pub trait Flavor : sealed::InnerFlavor {
 }
 
 pub(crate) mod sealed {
+    use super::*;
+
     pub trait InnerFlavor {
-    //    type Scalars: ;
-    //    type Affines: ;
+        type KeyCommitment: Clone + CanonicalSerialize + CanonicalDeserialize;
+        type Scalars: Clone + CanonicalSerialize + CanonicalDeserialize + zeroize::Zeroize;
+        type Affines: Clone + CanonicalSerialize + CanonicalDeserialize;
     }
 }
+
+/// Secret and public nonce/witness for doing one signature,
+/// obvoiusly usable only once ever.
+pub(crate) struct Witness<F: Flavor> {
+    pub(crate) k: <F as sealed::InnerFlavor>::Scalars,
+    pub(crate) r: <F as sealed::InnerFlavor>::Affines,
+}
+
+/// Signature
+#[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
+pub struct Signature<F: Flavor> {
+    pub(crate) compk: <F as sealed::InnerFlavor>::KeyCommitment,
+    pub(crate) s: <F as sealed::InnerFlavor>::Scalars,
+    pub(crate) r: <F as sealed::InnerFlavor>::Affines,
+}
+
+impl<F: Flavor> Signature<F> {
+    pub fn as_key_commitment(&self) -> &<F as sealed::InnerFlavor>::KeyCommitment { &self.compk }
+}
+
+/*
+impl<P: Flavor> Valid for Signature<F> {
+    fn check(&self) -> Result<(), SerializationError> {
+        if self.is_on_curve() && self.is_in_correct_subgroup_assuming_on_curve() {
+            Ok(())
+        } else {
+            Err(SerializationError::InvalidData)
+        }
+    }
+}
+*/
+
