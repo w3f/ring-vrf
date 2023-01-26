@@ -28,6 +28,9 @@ pub use keys::{PublicKey, SecretKey};
 mod transcript;
 pub use transcript::{SigningTranscript}; // signing_context
 
+// #[cfg(feature = "merlin")]
+// use merlin::Transcript;
+
 pub mod vrf;
 pub use vrf::{VrfPreOut, VrfInOut}; // signing_context
 
