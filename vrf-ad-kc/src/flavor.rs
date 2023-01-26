@@ -52,7 +52,7 @@ use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 /// VRF flavors based upon DLEQ proofs: Thin/Schnorr vs Pedersen vs something else.
 /// 
 /// TODO: Use hash-to-field instead of UniformRand for Scalars.
-pub trait Flavor : sealed::InnerFlavor {
+pub trait Flavor : InnerFlavor {
     type ScalarField:  PrimeField + SquareRootField;
     type KeyAffine:    AffineCurve<ScalarField = Self::ScalarField>;
     type PreOutAffine: AffineCurve<ScalarField = Self::ScalarField>;
@@ -60,33 +60,29 @@ pub trait Flavor : sealed::InnerFlavor {
     fn keying_base(&self) -> &Self::KeyAffine;
 }
 
-pub(crate) mod sealed {
-    use super::*;
-
-    pub trait InnerFlavor {
-        type KeyCommitment: Clone + CanonicalSerialize + CanonicalDeserialize;
-        type Scalars: Clone + CanonicalSerialize + CanonicalDeserialize + zeroize::Zeroize;
-        type Affines: Clone + CanonicalSerialize + CanonicalDeserialize;
-    }
+pub trait InnerFlavor {
+    type KeyCommitment: Clone + CanonicalSerialize + CanonicalDeserialize;
+    type Scalars: Clone + CanonicalSerialize + CanonicalDeserialize + zeroize::Zeroize;
+    type Affines: Clone + CanonicalSerialize + CanonicalDeserialize;
 }
 
 /// Secret and public nonce/witness for doing one signature,
 /// obvoiusly usable only once ever.
 pub(crate) struct Witness<F: Flavor> {
-    pub(crate) k: <F as sealed::InnerFlavor>::Scalars,
-    pub(crate) r: <F as sealed::InnerFlavor>::Affines,
+    pub(crate) k: <F as InnerFlavor>::Scalars,
+    pub(crate) r: <F as InnerFlavor>::Affines,
 }
 
 /// Signature
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct Signature<F: Flavor> {
-    pub(crate) compk: <F as sealed::InnerFlavor>::KeyCommitment,
-    pub(crate) s: <F as sealed::InnerFlavor>::Scalars,
-    pub(crate) r: <F as sealed::InnerFlavor>::Affines,
+    pub(crate) compk: <F as InnerFlavor>::KeyCommitment,
+    pub(crate) s: <F as InnerFlavor>::Scalars,
+    pub(crate) r: <F as InnerFlavor>::Affines,
 }
 
 impl<F: Flavor> Signature<F> {
-    pub fn as_key_commitment(&self) -> &<F as sealed::InnerFlavor>::KeyCommitment { &self.compk }
+    pub fn as_key_commitment(&self) -> &<F as InnerFlavor>::KeyCommitment { &self.compk }
 }
 
 /*

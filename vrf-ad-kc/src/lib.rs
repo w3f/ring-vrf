@@ -31,7 +31,8 @@ pub use transcript::{SigningTranscript}; // signing_context
 pub mod vrf;
 pub use vrf::{VrfPreOut, VrfInOut}; // signing_context
 
-pub mod flavor;
+mod flavor;
+pub use flavor::Flavor;
 
 mod thin;
 pub use thin::{ThinVrf};

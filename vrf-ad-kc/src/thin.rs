@@ -11,7 +11,7 @@ use rand_core::{RngCore,CryptoRng};
 
 use crate::{
     SigningTranscript, 
-    flavor::{Flavor, sealed::InnerFlavor, Witness, Signature},
+    flavor::{Flavor, InnerFlavor, Witness, Signature},
     keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut},
