@@ -174,8 +174,7 @@ impl<P: PedersenVrfPair> SecretKey<PedersenVrf<P>> {
         t.append(b"KeyCommitment",&compk);
 
         let w = self.new_pedersen_witness(t,&io.input,rng);
-        let inner = w.sign_final(t,&secret_blinding,self);
-        ( PedersenVrfSignature { compk, inner }, secret_blinding )
+        ( w.sign_final(t,&secret_blinding,self,compk), secret_blinding )
     }
 }
 
@@ -183,12 +182,14 @@ impl<P: PedersenVrfPair> Witness<PedersenVrf<P>> {
     /// Complete Pedersen VRF signature.
     /// 
     /// Assumes we already hashed public key, `VrfInOut`s, etc.
+    /// and passes the key commitment unchanged.
     pub(crate) fn sign_final<T: SigningTranscript>(
         self,
         t: &mut T,
         secret_blinding: &SecretBlinding<P>,
-        secret: &SecretKey<PedersenVrf<P>>
-    ) -> Signature<PedersenVrf<P>> {
+        secret: &SecretKey<PedersenVrf<P>>,
+        compk: KeyCommitment<P>,
+    ) -> PedersenVrfSignature<P> {
         let Witness { r, k } = self;
         t.append(b"Witness", &r);
         let c: <P as PedersenVrfPair>::ScalarField = t.challenge(b"PedersenVrfChallenge");
@@ -196,7 +197,7 @@ impl<P: PedersenVrfPair> Witness<PedersenVrf<P>> {
             keying: k.keying + c * secret.key,
             blinding: k.blinding + c * secret_blinding.0,
         };
-        Signature { r, s }
+        PedersenVrfSignature { compk, inner: Signature { r, s } }
     }
 }
 
