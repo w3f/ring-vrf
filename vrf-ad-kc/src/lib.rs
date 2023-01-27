@@ -11,7 +11,7 @@
 // #![feature(associated_type_defaults)]
 // #![feature(array_methods)]
 
-use ark_ec::{AffineCurve, ProjectiveCurve};
+use ark_ec::{AffineRepr, CurveGroup, models::CurveConfig};
 
 extern crate arrayref;
 
@@ -21,6 +21,9 @@ extern crate arrayref;
 
 pub mod error;
 pub use error::{SignatureResult, SignatureError};
+
+mod flavor;
+pub use flavor::Flavor;
 
 pub mod keys; // PublicKeyUnblinding
 pub use keys::{PublicKey, SecretKey};
@@ -34,15 +37,11 @@ pub use transcript::{SigningTranscript}; // signing_context
 pub mod vrf;
 pub use vrf::{VrfPreOut, VrfInOut}; // signing_context
 
-mod flavor;
-pub use flavor::Flavor;
-
 mod thin;
 pub use thin::{ThinVrf};
 
 mod pedersen;
 pub use pedersen::{PedersenVrf};
-
 
 /// Any cofactor of this size or smaller gets treated as small,
 /// resulting in only doing on-curve checks, not full subgroup
@@ -56,8 +55,8 @@ pub const SMALL_COFACTOR_BOUND: u64 = 8;
 /// If false then perform full subgroups checks in deserialization
 /// If true then only perform on-curve checks in deserialization,
 /// but invoke `mul_by_cofactor` in hashing and equality checks. 
-pub const fn small_cofactor_projective<C: ProjectiveCurve>() -> bool {
-    let cofactor: &'static [u64] = <C as ProjectiveCurve>::COFACTOR;
+pub const fn small_cofactor_projective<C: CurveGroup>() -> bool {
+    let cofactor: &'static [u64] = <<C as CurveGroup>::Config as CurveConfig>::COFACTOR;
     if cofactor.len() == 0 { true }
     else if cofactor.len() == 1 && cofactor[0] <= SMALL_COFACTOR_BOUND { true }
     else { false }
@@ -69,19 +68,20 @@ pub const fn small_cofactor_projective<C: ProjectiveCurve>() -> bool {
 /// If false then perform full subgroups checks in deserialization
 /// If true then only perform on-curve checks in deserialization,
 /// but invoke `mul_by_cofactor` in hashing and equality checks. 
-pub const fn small_cofactor<C: AffineCurve>() -> bool {
-    small_cofactor_projective::<<C as AffineCurve>::Projective>()
+pub const fn small_cofactor<C: AffineRepr>() -> bool {
+    small_cofactor_projective::<<C as AffineRepr>::Group>()
 }
 
-pub fn eq_mod_small_cofactor_projective<C: ProjectiveCurve>(lhs: &C, rhs: &C) -> bool {
+pub fn eq_mod_small_cofactor_projective<C: CurveGroup>(lhs: &C, rhs: &C) -> bool {
     if crate::small_cofactor_projective::<C>() {
-        lhs.mul(<C as ProjectiveCurve>::COFACTOR) == rhs.mul(<C as ProjectiveCurve>::COFACTOR)
+        lhs.mul_bigint(<<C as CurveGroup>::Config as CurveConfig>::COFACTOR)
+         == rhs.mul_bigint(<<C as CurveGroup>::Config as CurveConfig>::COFACTOR)
     } else { lhs == rhs }
 }
 
-pub fn eq_mod_small_cofactor_affine<C: AffineCurve>(lhs: &C, rhs: &C) -> bool {
+pub fn eq_mod_small_cofactor_affine<C: AffineRepr>(lhs: &C, rhs: &C) -> bool {
     if crate::small_cofactor::<C>() {
-        lhs.mul_by_cofactor() == rhs.mul_by_cofactor()
+        lhs.clear_cofactor() == rhs.clear_cofactor() // mul_by_cofactor is fine here though
     } else { lhs == rhs }
 }
 

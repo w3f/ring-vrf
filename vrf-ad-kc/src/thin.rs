@@ -5,7 +5,7 @@
 
 //! ### Thin VRF routines
 
-use ark_ec::{AffineCurve, ProjectiveCurve};
+use ark_ec::{AffineRepr, CurveGroup};
 
 use rand_core::{RngCore,CryptoRng};
 
@@ -22,27 +22,27 @@ use core::borrow::{Borrow,BorrowMut};
 
 /// Thin VRF flavor
 #[derive(Clone)]
-pub struct ThinVrf<C: AffineCurve> {
+pub struct ThinVrf<C: AffineRepr> {
     pub keying_base: C,
 }
 
 
-impl<C: AffineCurve> Flavor for ThinVrf<C> {
-    type ScalarField = <C as AffineCurve>::ScalarField;
+impl<C: AffineRepr> Flavor for ThinVrf<C> {
+    type ScalarField = <C as AffineRepr>::ScalarField;
     type KeyAffine = C;
     type PreOutAffine = C;
 
     fn keying_base(&self) -> &C { &self.keying_base }
 }
 
-impl<C: AffineCurve> InnerFlavor for ThinVrf<C> {
+impl<C: AffineRepr> InnerFlavor for ThinVrf<C> {
     type KeyCommitment = ();
-    type Scalars = <C as AffineCurve>::ScalarField;
+    type Scalars = <C as AffineRepr>::ScalarField;
     type Affines = C;
 }
 
 
-impl<C: AffineCurve> ThinVrf<C> {
+impl<C: AffineRepr> ThinVrf<C> {
     /// Attach a public key to its base point.
     fn schnorr_io(&self, public: &PublicKey<C>) -> VrfInOut<C> {
         VrfInOut {
@@ -68,13 +68,13 @@ impl<C: AffineCurve> ThinVrf<C> {
 
 // --- Sign --- //
 
-impl<C: AffineCurve> SecretKey<ThinVrf<C>> {
+impl<C: AffineRepr> SecretKey<ThinVrf<C>> {
     pub(crate) fn new_thin_witness<T,R>(
         &self, t: &T, input: &VrfInput<C>, rng: &mut R
     ) -> Witness<ThinVrf<C>>
     where T: SigningTranscript, R: RngCore+CryptoRng
     {
-        let k: [<C as AffineCurve>::ScalarField; 1]
+        let k: [<C as AffineRepr>::ScalarField; 1]
          = t.witnesses(b"MakeWitness", &[&self.nonce_seed], rng);
         let k = k[0];
         let r = input.0.mul(k).into_affine();
@@ -96,7 +96,7 @@ impl<C: AffineCurve> SecretKey<ThinVrf<C>> {
     }
 }
 
-impl<C: AffineCurve> Witness<ThinVrf<C>> {
+impl<C: AffineRepr> Witness<ThinVrf<C>> {
     /// Complete Schnorr-like signature.
     /// 
     /// Assumes we already hashed public key, `VrfInOut`s, etc.
@@ -105,7 +105,7 @@ impl<C: AffineCurve> Witness<ThinVrf<C>> {
     ) -> Signature<ThinVrf<C>> {
         let Witness { r, k } = self;
         t.append(b"Witness", &r);
-        let c: <C as AffineCurve>::ScalarField = t.challenge(b"ThinVrfChallenge");
+        let c: <C as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge");
         let s = k + c * secret.key;
         // k.zeroize();
         Signature { compk: (), r, s }
@@ -113,7 +113,7 @@ impl<C: AffineCurve> Witness<ThinVrf<C>> {
 }
 
 /*
-impl<C: AffineCurve> Valid for Signature<ThinVrf<C>> {
+impl<C: AffineRepr> Valid for Signature<ThinVrf<C>> {
     fn check(&self) -> Result<(), SerializationError> {
         if self.is_on_curve() && self.is_in_correct_subgroup_assuming_on_curve() {
             Ok(())
@@ -127,7 +127,7 @@ impl<C: AffineCurve> Valid for Signature<ThinVrf<C>> {
 
 // --- Verify --- //
 
-impl<C: AffineCurve> ThinVrf<C> {
+impl<C: AffineRepr> ThinVrf<C> {
     /// Verify thin VRF signature 
     /// 
     /// If `ios = &[]` this reduces to a Schnorr signature.
@@ -145,10 +145,10 @@ impl<C: AffineCurve> ThinVrf<C> {
 
         // verify_final
         t.append(b"Witness", &signature.r);
-        let c: <C as AffineCurve>::ScalarField = t.challenge(b"ThinVrfChallenge");
+        let c: <C as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge");
 
         let lhs = io.input.0.mul(signature.s);
-        let rhs = signature.r.into_projective() + io.preoutput.0.mul(c);
+        let rhs = signature.r.into_group() + io.preoutput.0.mul(c);
         if crate::eq_mod_small_cofactor_projective(&lhs, &rhs) {
             Ok(ios)
         } else {

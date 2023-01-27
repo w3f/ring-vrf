@@ -13,9 +13,8 @@
 //! We suggest using either non-malleable VRFs or using implicit
 //! certificates instead of HDKD when using VRFs.
 
-use ark_std::{io::{Read, Write}}; // UniformRand
-use ark_ec::{AffineCurve,ProjectiveCurve};
-use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
+use ark_ec::{AffineRepr,CurveGroup};
+use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
 
 use rand_core::{RngCore,CryptoRng,SeedableRng}; // OsRng
 
@@ -57,7 +56,7 @@ impl VrfMalleability for Malleable {
 }
 
 /// Non-malleable VRF transcript.  Unsuitable for ring VRFs.
-impl<C: AffineCurve> VrfMalleability for crate::PublicKey<C> {
+impl<C: AffineRepr> VrfMalleability for crate::PublicKey<C> {
     const ANONYMOUS : bool = false;
 
     /// Non-malleable VRF transcript.
@@ -107,9 +106,9 @@ impl VrfMalleability for crate::merkle::RingRoot {
 ///
 /// Not necessarily in the prime order subgroup.
 #[derive(Debug,Clone,CanonicalSerialize)] // CanonicalDeserialize, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct VrfInput<C: AffineCurve>(pub(crate) C);
+pub struct VrfInput<C: AffineRepr>(pub(crate) C);
 
-impl<C: AffineCurve> VrfInput<C> {
+impl<C: AffineRepr> VrfInput<C> {
     /// Create a new VRF input from a `Transcript`.
     /// 
     /// TODO: Ask Syed to use the correct hash-to-curve
@@ -118,7 +117,7 @@ impl<C: AffineCurve> VrfInput<C> {
     where T: SigningTranscript, M: VrfMalleability+?Sized
     {
         m.add_malleability(&mut t);
-        let p: <C as AffineCurve>::Projective = t.challenge(b"vrf-input");
+        let p: <C as AffineRepr>::Group = t.challenge(b"vrf-input");
         VrfInput( p.into_affine() )
     }
 }
@@ -128,7 +127,7 @@ impl<F: Flavor> SecretKey<F> {
     pub fn vrf_preout(
         &self, input: &VrfInput<<F as Flavor>::PreOutAffine>
     ) -> VrfPreOut<<F as Flavor>::PreOutAffine> {
-        let p: <<F as Flavor>::PreOutAffine as AffineCurve>::Projective = input.0.mul(self.key);
+        let p: <<F as Flavor>::PreOutAffine as AffineRepr>::Group = input.0 * self.key;
         VrfPreOut( p.into_affine() )
     }
 
@@ -152,9 +151,9 @@ impl<F: Flavor> SecretKey<F> {
 
 /// VRF pre-output, possibly unverified.
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct VrfPreOut<C: AffineCurve>(pub(crate) C);
+pub struct VrfPreOut<C: AffineRepr>(pub(crate) C);
 
-impl<C: AffineCurve> VrfPreOut<C> {
+impl<C: AffineRepr> VrfPreOut<C> {
     /// Create `VrfInOut` by attaching to our pre-output the VRF input
     /// with given malleablity from the given transcript. 
     pub fn attach_input<T,M>(&self, malleability: &M, t: T) -> VrfInOut<C>
@@ -171,14 +170,14 @@ impl<C: AffineCurve> VrfPreOut<C> {
 /// Internally, we keep both `RistrettoPoint` and `CompressedRistretto`
 /// forms using `RistrettoBoth`.
 #[derive(Debug,Clone,CanonicalSerialize)] // CanonicalDeserialize, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct VrfInOut<C: AffineCurve> {
+pub struct VrfInOut<C: AffineRepr> {
     /// VRF input point
     pub input: VrfInput<C>,
     /// VRF pre-output point
     pub preoutput: VrfPreOut<C>,
 }
 
-impl<C: AffineCurve> VrfInOut<C> {
+impl<C: AffineRepr> VrfInOut<C> {
     /// Append to transcript, 
     pub fn append<T: SigningTranscript>(&self, label: &'static [u8], t: &mut T) {
         if crate::small_cofactor::<C>() {
@@ -305,7 +304,7 @@ impl<C: AffineCurve> VrfInOut<C> {
 pub fn vrfs_merge<T,C,B>(t: &mut T, ps: &[B]) -> VrfInOut<C>
 where
     T: SigningTranscript+Clone,
-    C: AffineCurve,
+    C: AffineRepr,
     B: Borrow<VrfInOut<C>>,
 {
     t.append_slice(b"VrfInOut", ps);
@@ -320,21 +319,21 @@ where
 pub(crate) fn vrfs_delinearize<'a,T,C,I>(t: &T, ps: I) -> VrfInOut<C>
 where
     T: SigningTranscript+Clone,
-    C: AffineCurve,
+    C: AffineRepr,
     I: Iterator<Item=&'a VrfInOut<C>>
 {
     use ark_std::Zero;
 
     let mut i = 0;
-    let mut input = <C as AffineCurve>::Projective::zero();
-    let mut preoutput = <C as AffineCurve>::Projective::zero();
+    let mut input = <C as AffineRepr>::Group::zero();
+    let mut preoutput = <C as AffineRepr>::Group::zero();
     for p in ps {
         let mut t0 = t.clone();               // Keep t clean, but
         t0.append_u64(b"delinearize:i",i);    // distinguish the different outputs.
         let z: [u64; 2] = t0.challenge(b"");  // Sample a 128bit scalar.
 
-        input += p.input.0.into_projective().mul(z);
-        preoutput += p.preoutput.0.into_projective().mul(z);
+        input += p.input.0.mul_bigint(z);
+        preoutput += p.preoutput.0.mul_bigint(z);
         i += 1;
     }
     VrfInOut {

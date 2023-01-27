@@ -17,11 +17,11 @@ rand_chacha = { version = "0.3", default-features = false }
 blake3 = { version = "1.3", default-features = false, optional = true }
 merlin = { version = "3.0", default-features = false, optional = true }
 
-ark-std = { version = "0.3", default-features = false }
-ark-ff = { version = "0.3", default-features = false }
-ark-ec = { version = "0.3", default-features = false }
-ark-serialize = { version = "0.3", default-features = false, features = [ "derive" ] }
-ark-serialize-derive = { version = "0.3", default-features = false }
+ark-std = { version = "0.4", default-features = false }
+ark-ff = { version = "0.4", default-features = false }
+ark-ec = { version = "0.4", default-features = false }
+ark-serialize = { version = "0.4", default-features = false, features = [ "derive" ] }
+ark-serialize-derive = { version = "0.4", default-features = false }
 
 zeroize = { version = "1.0", default-features = false, features = [ "zeroize_derive" ] }
 # serde = { version = "1.0", default-features = false, optional = true }

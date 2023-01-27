@@ -44,18 +44,17 @@
 //! Next, construct `ThinVrfWitness` and invoke `thin_vrf_merge`,
 //! and `sign_final`.  We split `sign_final` components from `sign_thin_vrf` so this works cleanly.
 
-use ark_std::{ io::{Read, Write}, };
-use ark_ff::{PrimeField, SquareRootField};
-use ark_ec::{AffineCurve};
-use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
+use ark_ff::{PrimeField};
+use ark_ec::{AffineRepr};
+use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
 
 /// VRF flavors based upon DLEQ proofs: Thin/Schnorr vs Pedersen vs something else.
 /// 
 /// TODO: Use hash-to-field instead of UniformRand for Scalars.
 pub trait Flavor : InnerFlavor {
-    type ScalarField:  PrimeField + SquareRootField;
-    type KeyAffine:    AffineCurve<ScalarField = Self::ScalarField>;
-    type PreOutAffine: AffineCurve<ScalarField = Self::ScalarField>;
+    type ScalarField:  PrimeField + Into<<Self::ScalarField as PrimeField>::BigInt>;
+    type KeyAffine:    AffineRepr<ScalarField = Self::ScalarField>;
+    type PreOutAffine: AffineRepr<ScalarField = Self::ScalarField>;
 
     fn keying_base(&self) -> &Self::KeyAffine;
 }

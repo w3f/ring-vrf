@@ -84,7 +84,7 @@ impl super::SigningTranscript for Hasher {
 
     fn append<T: CanonicalSerialize+?Sized>(&mut self, label: &'static [u8], itm: &T) {
         let mut t = TranscriptIO { label, t: self };
-        itm.serialize(&mut t)
+        itm.serialize_uncompressed(&mut t)
             .expect("merlin::Transcript infaillibly flushes");
     }
 
