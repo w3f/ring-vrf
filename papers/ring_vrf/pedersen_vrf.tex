@@ -1,16 +1,18 @@
 \section{Ring VRF construction}% {Ring VRFs from the Pedersen VRF}
 \label{sec:pederson_vrf}
 
-We construct ring VRFs with an efficient evaluation proof, which
-we call the Pedersen VRF and denote \PedVRF.
-\PedVRF instantiates the NIZK for the language $\Leval$ defined in \S\ref{sec:overview}.
+In this section, we introduce our ring VRF construction which has efficient instantiations. 
+We instantiate parameter generation by constructing a group $\grE$ of order $ p $ and two generators $ \genG, \genB \in  \grE$.  We consider three hash functions: $ H, H_p: \{0,1\}^* \rightarrow \F_p $ and a hash-to-group function $H_{\grE} : \{0,1\}^* \rightarrow \grE$.
+The first key ingredient of our protocol is a VRF that we  call the Pedersen VRF and denote \PedVRF. Therefore, we first introduce it:
 
-An EC VRF like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10} 
-consists of first a verifiable unique function (VUF) given by a
-Chaum-Pedersen DLEQ proof between the signer's public key $\pk = \sk \, \genG$ and
- the VUF output $\PreOut = \sk H_{\grE}(\msg)$,
-after which a PRF \eprint{evaluation}{} yields a VRF output
- $\Out = H'(\msg, h \, \PreOut)$ ala \cite[Proposition 1]{vrf_micali}.
+\paragraph{Pedersen VRF:} We construct $ \PedVRF $ by inspiring from EC VRF  \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}.
+%If we really want to have the following explanation below, I think it should come after we explain how PedVRF works. Otherwise, it is not easy to understand it unless you know closely how EC VRF works. 
+%An EC VRF  
+%consists of first a verifiable unique function (VUF) given by a
+%Chaum-Pedersen DLEQ proof between the signer's public key $\pk = \sk \, \genG$ and
+% the VUF output $\PreOut = \sk H_{\grE}(\msg)$,
+%after which a PRF \eprint{evaluation}{} yields a VRF output
+% $\Out = H'(\msg, h \, \PreOut)$ ala \cite[Proposition 1]{vrf_micali}.
 %
 Our \PedVRF alters the EC VRF by replacing the public key by
 a Pedersen commitment $\pk + \openpk \, \genB$ to the secret key \sk.%
@@ -23,22 +25,23 @@ We refer readers to \S\ref{sec:ec_background} for notation,
  but highlight several points: 
 % We shall need $\ecE$ to be pairing friendly in later sections, but ignore this here.
 %
-Although non-essential, we prefer if \PreOut cannot be verified
-by pairings, as a miss-use resistance measure.
-We therefore suggest a ``sister'' Edwards curve $\ecE'$ with
- a subgroup $\grE'$ of the same order $p$ as $\grE_1$,
- and cofactor $h'$ divisible by 4.
-You may take $\ecE' = \ecE_1$ and $h' = 1$ if reading only for
-security proofs, but this incurs risks in deployments.
-%
-As Groth16 dominates our ring VRF verification costs, we describe only
-the non-batchable \PedVRF analogous to \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10},
-and ignore the cofactor $h_1$ of $\grE_1$ of $\ecE_1$, 
-but caution \cite{HdVBatchEd25519} impacts batch verifiable flavors.
-%
-We select a generator $\genG$ of $\grE$ as our public key base point
- by any desired method, but then
-fix a second generator $\genB$ of $\grE$ independent from $\genG$.
+%COMMENT: I put these in the end. 
+%Although non-essential, we prefer if \PreOut cannot be verified
+%by pairings, as a miss-use resistance measure.
+%We therefore suggest a ``sister'' Edwards curve $\ecE'$ with
+% a subgroup $\grE'$ of the same order $p$ as $\grE_1$,
+% and cofactor $h'$ divisible by 4.
+%You may take $\ecE' = \ecE_1$ and $h' = 1$ if reading only for
+%security proofs, but this incurs risks in deployments.
+%%
+%As Groth16 dominates our ring VRF verification costs, we describe only
+%the non-batchable \PedVRF analogous to \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10},
+%and ignore the cofactor $h_1$ of $\grE_1$ of $\ecE_1$, 
+%but caution \cite{HdVBatchEd25519} impacts batch verifiable flavors.
+%%
+%We select a generator $\genG$ of $\grE$ as our public key base point
+% by any desired method, but then
+%fix a second generator $\genB$ of $\grE$ independent from $\genG$.
 
 We now describe the Pedersen VRF \PedVRF evaluation proof used by our ring VRF:
 %
@@ -46,7 +49,8 @@ We now describe the Pedersen VRF \PedVRF evaluation proof used by our ring VRF:
  \Eval differs by not injecting \pk into \msg:
 \begin{itemize}
 \item $\PedVRF.\KeyGen$ \, returns $\sk \leftsample \F_p$ and $\pk = \sk \, \genG$.
-\item $\PedVRF.\Eval : (\sk,\msg) \mapsto H'(\msg, h' \, \sk \, H_{\grE'}(\msg))$
+We note that $ \pk $ has no role in this construction because we do not want to reveal it for the anonymity property of our ring VRF construction. % % COMMENT Handan:  I guess it is true because PedVRF.Sign just shows that the eveluation value is generated with the secret key which is committed in compk
+\item $\PedVRF.\Eval : (\sk,\msg) \mapsto H(\msg, \PreOut)$ where $ \PreOut =  \sk \, H_{\grE}(\msg)$
 \end{itemize}
 % \item $\PedVRF.\KeyGen$ selects a secret key \sk uniformly at random from $\F_p$ and computes the public key $\pk = \sk \, \genG$. 
 % \item $\PedVRF.\Eval(\sk,\msg)$ takes a secret key \sk and an input $\msg$, and
@@ -56,28 +60,37 @@ We now describe the Pedersen VRF \PedVRF evaluation proof used by our ring VRF:
 These handle a Pedersen commitment to the secret key \sk,
  together with its opening \openpk.
 \begin{itemize}
-\item $\PedVRF.\CommitKey(\pk)$ \,
+\item $\PedVRF.\CommitKey(\sk)$ \, %I changed it because we commit to sk
 returns a blinding factor $\openpk \leftsample \F_p$
-and a commitment $\compk = \pk + \openpk \, \genB$.
+and a commitment $\compk = \sk \genG + \openpk \, \genB$.
 \item $\PedVRF.\OpenKey(\compk,\openpk)$ \,
 returns $\pk = \compk - \openpk \, \genB$.
 \end{itemize}
 % \item $\PedVRF.\CommitKey$ selects a blinding factor $\openpk$ uniformly
 %  at random from $\F_p$ and computes the commitment $\compk = \pk + \openpk \, \genB$.
 % \item $\PedVRF.\OpenKey$ just returns $\pk = \compk - \openpk \, \genB$.
-These hide their public key argument \pk too, but alone do not bind \pk.
-A successful $\PedVRF.\Verify$ below proves knowledge of \compk,
- which makes the commitment binding.
+
+%These hide their public key argument \pk too, but alone do not bind \pk.
+%A successful $\PedVRF.\Verify$ below proves knowledge of \compk,
+ %which makes the commitment binding. % COMMENT Handan: I don't think this statement is true because Sign does not bind to pk. because there is nothing here that shows that the committed secret key multiplied by G is pk.
+Now, we introduce how to generate a proof for the correct evaluation of an input which is generated by the committed secret key. 
+
 
 \begin{itemize}
 \item $\PedVRF.\Sign : (\sk,\openpk,\msg,\aux) \mapsto \sigma$ \,
     % takes a secret key \sk and blinding factor \openpk, an input $\msg$, and associated data \aux, and then performs
-    First computes $\In := H_{\grE'}(\msg)$ and $\PreOut := \sk \, \In$.
+    It generates a Chaum-Pedersen DLEQ proof  showing the following relation by running the algorithm $ \NIZK_{\mathcal{R}_{eval}}.\Prove(((\genG, \genB,\grE,\compk,\PreOut,\In); (x, \openpk))) $ which outputs $ \pi_{eval}$ and returns a signature $ \sigma = (\PreOut,\compk,\pi_{eval}) $
+    \begin{align}
+    	\mathcal{R}_{eval}= \{((\sk, \openpk); (\genG, \genB,\grE,\compk,\PreOut,\In)): \nonumber\\
+    	\compk = \sk\genG + \openpk\, \genB, \PreOut = \sk \,\In \}  \label{rel:commit} 
+    \end{align}
+    $ \NIZK_{\mathcal{R}_{eval}}.\Prove $ first computes $\In := H_{\grE}(\msg)$ and $\PreOut := \sk \, \In$.
     Next samples $r_1,r_2 \leftsample \F_p$,
     computes $R = r_1 \genG + r_2 \genB$, and $R_m = r_1 \In$,
      $c = H_p(\aux,\msg,\compk,\PreOut,R,R_m)$,
      along with $s_1 = r_1 + c \, \sk$ and $s_2 = r_2 + c \, \openpk$.
-    and finally returns the signature $\sigma = (\PreOut,c,s_1,s_2)$.
+    and finally returns the signature $\pi_{eval} = (c,s_1,s_2)$.
+    %TODO We might say something about ass here
 % \begin{enumerate}
 %    \item compute the VRF input point $\In := H_{\grE}(\msg)$ and pre-output $\PreOut := \sk \, \In$,
 %    \item Sample random $r_1,r_2 \leftarrow \F_p$ and compute $R = r_1 \genG + r_2 \genB$ and $R_m = r_1 \In$.
@@ -85,12 +98,12 @@ A successful $\PedVRF.\Verify$ below proves knowledge of \compk,
 %     along with $s_1 = r_1 + c \sk$ and $s_2 = r_2 + c \, \openpk$.
 %    \item Return the signature $\sigma = (\PreOut,c,s_1,s_2)$.
 % \end{enumerate}
-\item $\PedVRF.\Verify : (\compk,\msg,\aux,\sigma) \mapsto \Out \,\, \lor \perp$ \,
-    parses $\sigma = (\PreOut,c,s_1,s_2)$, 
+\item $\PedVRF.\Verify : (\compk,\msg,\aux,\sigma) \mapsto \Out \,\, \lor \perp$ It 
+    parses $\sigma = (\PreOut, \pi_{eval} =(c,s_1,s_2))$ and runs $ \NIZK_{\mathcal{R}_{eval}}.\Verify(\genG, \genB,\grE,\compk,\PreOut,\In, \pi_{eval} ) $ i.e.,\, 
     recomputes $\In := H_{\grE}(\msg)$, as well as
     $R = s_1 \genG + s_2 \genB - c \, \compk$, and
     $R_m = s_1 \In - c \, \PreOut$, and finally
-    if $c = H_p(\aux,\msg,\compk,\PreOut,R,R_m)$ then it returns $H'(\msg, h' \, \PreOut)$, which equals $\PedVRF.\Eval(\sk,\msg)$,
+    if $c = H_p(\aux,\msg,\compk,\PreOut,R,R_m)$ then it returns $H(\msg, h \, \PreOut)$, which equals $\PedVRF.\Eval(\sk,\msg)$,
          or else returns failure $\perp$ otherwise.
 % \begin{enumerate}
 %    \item recompute the VRF input point $\In := H_{\grE}(\msg)$,
@@ -99,51 +112,74 @@ A successful $\PedVRF.\Verify$ below proves knowledge of \compk,
 % \end{enumerate}
 \end{itemize}
 
-\noindent We remark that\PedVRF becomes EC VRF if we demand $\openpk = 0 = r_2$ in \Sign.
-A signature $\sigma = (c,s_1, s_2)$ is a Fiat-Shamir transform of a
-sigma protocol that shows equality of the discrete logarithm of $\PreOut$
-in base $\In$ and the committed secret key in $\compk$.
-We nevertheless define security only for our ring VRF constructions,
- as \PedVRF itself exhibits surprising properties.
+\noindent We remark that \PedVRF becomes EC VRF if we demand $\openpk = 0 = r_2$ in \Sign.
+
+%A signature $\sigma = (c,s_1, s_2)$ is a Fiat-Shamir transform of a
+%sigma protocol that shows equality of the discrete logarithm of $\PreOut$
+%in base $\In$ and the committed secret key in $\compk$.
+%COMMENT Handan: We should either explain the following statement more or remove it
+%We nevertheless define security only for our ring VRF constructions,
+% as \PedVRF itself exhibits surprising properties.
 % \footnote{We do not define security for \PedVRF because pseudo-randomness becomes too interesting}
 
 \smallskip
 % \subsection{Pedersen rVRF-AD}
 
-As described in \S\ref{sec:overview},
-we instantiate a rVRF-AD from \PedVRF plus a ring commitment scheme
- $\rVRF.\{ \CommitRing, \OpenRing \}$.
-In our construction, $\rVRF.\Eval = \PedVRF.\Eval$.
-and $\rVRF.\KeyGen = \PedVRF.\KeyGen$.
-We alter $\rVRF.\KeyGen$ somewhat in \S\ref{subsec:rvrf_faster}
-by adopting a SNARK friendly public key,
- although the \pk here still exists under the hood.
-We discuss further nuances of this in \S\ref{subsec:AML_KYC}.
+Now, we are ready to introduce our ring VRF construction  $ \rVRF $.
 
-As mentioned in \S\ref{sec:overview}, the signing algorithm of our ring VRF construction shows that the public key of the committed secret key is in the ring. Therefore, we need a zero-knowledge ring membership proof for the relation \Lring
-which handles both $\PedVRF.\OpenKey$ and $\rVRF.\OpenKey$ efficiently.
-% \vspace{-0.1in}
-$$ \Lring = \Setst{ \compk, \comring }{
-    \eprint{ \exists \openpk,\openring \textrm{\ s.t.\ } }{}
-    \genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenRing(\comring,\openring)}
-} \mathperiod $$
-
-
-\def\tmpaux{\aux \doubleplus \compk \doubleplus \piring \doubleplus \comring}
-\def\tmpeprintaux{\eprint{\aux'}{\tmpaux}}
-\def\tmpindent{\hspace*{5pt}}
 \begin{itemize}
-\item $\rVRF.\rSign\eprint{ : }{}(\sk,\openring,\msg,\aux)\eprint{ \mapsto \rho}{}$
-	returns $\rho = (\compk,\piring,\sigma)$ \eprint{where \\}{\\ where} 
-	\tmpindent $(\openpk,\compk) \leftarrow \PedVRF.\CommitKey$,  \\
-	\tmpindent $\piring \leftarrow \NIZK_{\Lring}.\Prove((\compk,\comring); (\openpk,\openring))$, \\
-	\tmpindent $\aux' \leftarrow \tmpaux$,  \\
-	\tmpindent $\sigma \leftarrow \PedVRF.\Sign(\sk,\openpk,\msg, \aux')$.
-\item $\rVRF.\rVerify : (\comring,\msg,\aux,\rho) \mapsto \Out \,\, \lor \perp$ \,
-	parses $\rho$ as $(\compk,\piring,\sigma)$, \eprint{next }{}sets $\aux' \leftarrow \tmpaux$,
-	aborts if $\NIZK_{\Lring}.\Verify((\compk,\comring); \piring)$ fails,
-	and returns $\PedVRF.\Verify(\compk,\msg, \aux', \sigma)$.
+	\item $\rVRF.\KeyGen $ is the same as $ \PedVRF.\KeyGen$.
+	\item $\rVRF.\Eval $ is the same as $ \PedVRF.\Eval$.
+	\item $ \rVRF.\CommitRing: \pkring \rightarrow \comring$ given a set of public keys $ \pkring $, it returns a Merkle tree root where the leaves are elements of  $ \pkring$. 
+	
+	We note that our construction works fine by replacing  $ \comring $ by $ \pkring $. However, the asymptotic complexity of our protocol with $ \comring $ is much more better
+	%COMMENT Handan: We can improve the previous sentence.
+	
+	%COMMENT Handan: We don't need to define opring here because our construction does not need it.
 \end{itemize}
+
+%COMMENT Handan: It is better to talk about these stuffs after describing the protocol.
+%As described in \S\ref{sec:overview},
+%we instantiate a rVRF-AD from \PedVRF plus a ring commitment scheme
+% $\rVRF.\{ \CommitRing, \OpenRing \}$.
+%In our construction, $\rVRF.\Eval = \PedVRF.\Eval$.
+%and $\rVRF.\KeyGen = \PedVRF.\KeyGen$.
+%We alter $\rVRF.\KeyGen$ somewhat in \S\ref{subsec:rvrf_faster}
+%by adopting a SNARK friendly public key,
+% although the \pk here still exists under the hood.
+%We discuss further nuances of this in \S\ref{subsec:AML_KYC}.
+
+	As mentioned in \S\ref{sec:overview}, the signing algorithm of our ring VRF construction shows that the public key of the committed secret key is in the ring. Therefore, we need a zero-knowledge ring membership proof which is provided by $ \rVRF.\Sign $ that we define below.
+%	 for the relation \Lring
+%	which handles both $\PedVRF.\OpenKey$ and $\rVRF.\OpenKey$ efficiently.
+%	% \vspace{-0.1in}
+%	$$ \Lring = \Setst{ \compk, \comring }{
+%		\eprint{ \exists \openpk,\openring \textrm{\ s.t.\ } }{}
+%		\genfrac{}{}{0pt}{}{\PedVRF.\OpenKey(\compk,\openpk) \quad}{\,\, = \rVRF.\OpenRing(\comring,\openring)}
+%	} \mathperiod $$
+%	
+	
+	\def\tmpaux{\aux \doubleplus \compk \doubleplus \piring \doubleplus \comring}
+	\def\tmpeprintaux{\eprint{\aux'}{\tmpaux}}
+	\def\tmpindent{\hspace*{5pt}}
+	\begin{itemize}
+		\item $\rVRF.\rSign\eprint{ : }{}(\sk,\msg,\aux)\eprint{ \mapsto \rho}{}$ returns $\rho = (\compk,\piring,\sigma)$ \eprint{where \\}{\\ where} 
+		\tmpindent $(\openpk,\compk) \leftarrow \PedVRF.\CommitKey(\sk)$,  \\
+		\tmpindent $\piring \leftarrow \NIZK_{\mathcal{R}_{ring}}.\Prove((\compk,\comring); \openpk)$, \\
+		where 
+		\begin{align}
+				\mathcal{R}_{ring} = \{(\openpk;(\genG,\genB,\grE,\ring, \compk)): \\(\compk-\openpk \, \genB)  \in \ring\} \label{rel:snark} \nonumber
+			\end{align}
+		\tmpindent $\aux' \leftarrow \tmpaux$,  \\
+		\tmpindent $\sigma \leftarrow \PedVRF.\Sign(\sk,\openpk,\msg, \aux')$.
+		\item $\rVRF.\rVerify : (\comring,\msg,\aux,\rho) \mapsto \Out \,\, \lor \perp$ \,
+		parses $\rho$ as $(\compk,\piring,\sigma)$, \eprint{next }{}sets $\aux' \leftarrow \tmpaux$,
+		aborts if $\NIZK_{\Lring}.\Verify((\compk,\comring); \piring)$ fails,
+		and returns $\PedVRF.\Verify(\compk,\msg, \aux', \sigma)$.
+	\end{itemize}
+	
+
+
 
 % BEGIN TODO: Oana
 
@@ -169,6 +205,22 @@ $ \rVRF $  over the group structure $ (\grE,p,\genG,\genB) $ realizes $ \fgvrf $
 % The security proof of Theorem \ref{thm:rvrfmain} is in Appendix \ref{ap:ucproof}.
 
 
+Although non-essential, we prefer if \PreOut cannot be verified
+by pairings, as a miss-use resistance measure.
+We therefore suggest a ``sister'' Edwards curve $\ecE'$ with
+a subgroup $\grE'$ of the same order $p$ as $\grE_1$,
+and cofactor $h'$ divisible by 4.
+You may take $\ecE' = \ecE_1$ and $h' = 1$ if reading only for
+security proofs, but this incurs risks in deployments.
+%
+As Groth16 dominates our ring VRF verification costs, we describe only
+the non-batchable \PedVRF analogous to \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10},
+and ignore the cofactor $h_1$ of $\grE_1$ of $\ecE_1$, 
+but caution \cite{HdVBatchEd25519} impacts batch verifiable flavors.
+%
+We select a generator $\genG$ of $\grE$ as our public key base point
+by any desired method, but then
+fix a second generator $\genB$ of $\grE$ independent from $\genG$.
 
 
 
