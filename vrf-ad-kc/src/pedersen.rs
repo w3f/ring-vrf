@@ -5,9 +5,8 @@
 
 //! ### Pedersen VRF routines
 
-use ark_std::{ io::{Read, Write} };
-use ark_ec::{AffineCurve, ProjectiveCurve};
-use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
+use ark_ec::{AffineRepr, CurveGroup};
+use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
 
 use rand_core::{RngCore,CryptoRng};
 
@@ -27,7 +26,7 @@ use core::borrow::{BorrowMut};
 /// Pedersen VRF flavor
 #[derive(Clone)]
 pub struct PedersenVrf<K,H=K> 
-where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
+where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     keying_base: K,
     blinding_base: K,
@@ -35,7 +34,7 @@ where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
 }
 
 impl<K,H> Flavor for PedersenVrf<K,H>
-where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>
+where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>
 {
     type ScalarField = K::ScalarField;
     type KeyAffine = K;
@@ -45,7 +44,7 @@ where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>
 }
 
 impl<K,H> InnerFlavor for PedersenVrf<K,H>
-where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>
+where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>
 {
     type KeyCommitment = KeyCommitment<K>;
     type Scalars = Scalars<PedersenVrf<K,H>>;
@@ -55,38 +54,38 @@ where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>
 /// Pederson commitment openning for a public key, consisting of a scalar
 /// that reveals the difference ebtween two public keys.
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct SecretBlinding<C: AffineCurve>(pub(crate) <C as AffineCurve>::ScalarField);
+pub struct SecretBlinding<C: AffineRepr>(pub(crate) <C as AffineRepr>::ScalarField);
 
-impl<C: AffineCurve> Zeroize for SecretBlinding<C> {
+impl<C: AffineRepr> Zeroize for SecretBlinding<C> {
     fn zeroize(&mut self) {
         self.0.zeroize();
     }
 }
-impl<C: AffineCurve> Drop for SecretBlinding<C> {
+impl<C: AffineRepr> Drop for SecretBlinding<C> {
     fn drop(&mut self) { self.zeroize() }
 }
 
 /*
-impl<C: AffineCurve> SecretBlinding<C> {
+impl<C: AffineRepr> SecretBlinding<C> {
     pub fn is_blinded(&self) -> bool {
         use ark_ff::Zero;
-        self.0.is_zero() // != <<C as AffineCurve>::ScalarField as Zero>::zero()
+        self.0.is_zero() // != <<C as AffineRepr>::ScalarField as Zero>::zero()
     }
 }
 
 impl<K,H> PedersenVrf<K,H>
-where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
+where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     pub fn verify(&self, blinded: PublicKey<K>, unblinded: PublicKey<K>) -> bool {
-        let mut b = self.blinding_base.mul(self.0);
+        let mut b = self.blinding_base.mul(self.0);  // FIX !!
         b.add_assign_mixed(& unblinded.0);
-        crate::eq_mod_small_cofactor_projective(b, blinded.into_projective())
+        crate::eq_mod_small_cofactor_projective(b, blinded.into_group())
     }
 }
 */
 
 impl<K,H> PedersenVrf<K,H>
-where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
+where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     pub fn new(keying_base: K, blinding_base: K) -> PedersenVrf<K,H> {
         PedersenVrf { keying_base, blinding_base, _pd: core::marker::PhantomData, }
@@ -97,21 +96,21 @@ where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
         public: &PublicKey<K>, 
         secret_blinding: &SecretBlinding<K>
     ) -> KeyCommitment<K> {
-        let mut b = self.blinding_base.mul(secret_blinding.0);
-        b.add_assign_mixed(& public.0);
+        let mut b = self.blinding_base * secret_blinding.0;
+        b += public.0;
         KeyCommitment(b.into_affine())
     }
 }
 
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
-pub struct KeyCommitment<C: AffineCurve>(pub(crate) C);
+pub struct KeyCommitment<C: AffineRepr>(pub(crate) C);
 
-impl<C: AffineCurve> Zeroize for KeyCommitment<C> {
+impl<C: AffineRepr> Zeroize for KeyCommitment<C> {
     fn zeroize(&mut self) {
         self.0.zeroize();
     }
 }
-// impl<C: AffineCurve> Drop for KeyCommitment<C> {
+// impl<C: AffineRepr> Drop for KeyCommitment<C> {
 //     fn drop(&mut self) { self.zeroize() }
 // }
 
@@ -139,7 +138,7 @@ pub struct Affines<P: Flavor> {
 // --- Sign --- //
 
 impl<K,H> SecretKey<PedersenVrf<K,H>>
-where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
+where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     pub(crate) fn new_pedersen_witness<T,R>(
         &self,
@@ -151,13 +150,14 @@ where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
     {
         let k: [<PedersenVrf<K,H> as Flavor>::ScalarField; 2]
          = t.witnesses(b"MakeWitness", &[&self.nonce_seed], rng);
-        let k = Scalars { keying: k[0], blinding: k[1], }; 
+        let k = Scalars { keying: k[0], blinding: k[1], };
+        let keyish: <K as AffineRepr>::Group = 
+            self.flavor.keying_base * k.keying
+            + self.flavor.blinding_base * k.blinding;
+        let preoutish: <H as AffineRepr>::Group = input.0 * k.keying;
         let r = Affines {
-            keyish: (
-                    self.flavor.keying_base.mul(k.keying)
-                    + self.flavor.blinding_base.mul(k.blinding)
-                ).into_affine(),
-            preoutish: input.0.mul(k.keying).into_affine(),
+            keyish: keyish.into_affine(),
+            preoutish: preoutish.into_affine(),
         };
         Witness { r, k }
     }
@@ -165,7 +165,7 @@ where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
     pub fn new_secret_blinding<T,R>(&self, t: &T, rng: &mut R) -> SecretBlinding<K>
     where T: SigningTranscript+Clone, R: RngCore+CryptoRng
     {
-        let [secret_blinding]: [<K as AffineCurve>::ScalarField; 1]
+        let [secret_blinding]: [<K as AffineRepr>::ScalarField; 1]
          = t.witnesses(b"MakeSecretBlinding", &[&self.nonce_seed], rng);
         SecretBlinding(secret_blinding)
     }
@@ -214,7 +214,7 @@ where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
 }
 
 impl<K,H> Witness<PedersenVrf<K,H>>
-where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
+where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     /// Complete Pedersen VRF signature.
     /// 
@@ -229,7 +229,7 @@ where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
     ) -> Signature<PedersenVrf<K,H>> {
         let Witness { r, k } = self;
         t.append(b"Witness", &r);
-        let c: <K as AffineCurve>::ScalarField = t.challenge(b"PedersenVrfChallenge");
+        let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge");
         let s = Scalars {
             keying: k.keying + c * secret.key,
             blinding: k.blinding + c * secret_blinding.0,
@@ -243,7 +243,7 @@ where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
 // --- Verify --- //
 
 impl<K,H> PedersenVrf<K,H>
-where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
+where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     /// Verify Pedersen VRF signature 
     pub fn verify_pedersen_vrf<'a,T,B>(
@@ -260,16 +260,16 @@ where K: AffineCurve, H: AffineCurve<ScalarField = K::ScalarField>,
 
         // verify_final
         t.append(b"Witness", &signature.r);
-        let c: <K as AffineCurve>::ScalarField = t.challenge(b"PedersenVrfChallenge");
+        let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge");
 
-        let lhs = io.input.0.mul(signature.s.keying);
-        let rhs = signature.r.preoutish.into_projective() + io.preoutput.0.mul(c);
+        let lhs = io.input.0 * signature.s.keying;
+        let rhs = signature.r.preoutish.into_group() + io.preoutput.0 * c;
         if ! crate::eq_mod_small_cofactor_projective(&lhs, &rhs) {
             return Err(SignatureError::Invalid);
         }
         let lhs = self.keying_base.mul(signature.s.keying)
                   + self.blinding_base.mul(signature.s.blinding);
-        let rhs = signature.r.keyish.into_projective() + signature.compk.0.mul(c);
+        let rhs = signature.r.keyish.into_group() + signature.compk.0 * c;
         if ! crate::eq_mod_small_cofactor_projective(&lhs, &rhs) {
             return Err(SignatureError::Invalid);
         }
