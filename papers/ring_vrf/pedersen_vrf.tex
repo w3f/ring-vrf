@@ -83,7 +83,7 @@ Next, we describe how to generate a proof for the correct evaluation of an input
 \begin{itemize}
 \item $\PedVRF.\Sign : (\sk,\openpk,\msg,\aux) \mapsto \sigma$ \,
     % takes a secret key \sk and blinding factor \openpk, an input $\msg$, and associated data \aux, and then performs
-    It generates a Chaum-Pedersen DLEQ proof  showing the following relation by running the algorithm $ \NIZK_{\mathcal{R}_{eval}}.\Prove(((\genG, \genB,\grE,\compk,\PreOut,\In); (x, \openpk))) $ which outputs $ \pi_{eval}$ and returns a signature $ \sigma = (\PreOut,\compk,\pi_{eval}) $
+    It generates a Chaum-Pedersen DLEQ proof  showing the following relation by running the algorithm $ \NIZK_{\mathcal{R}_{eval}}.\Prove(((\genG, \genB,\grE,\compk,\PreOut,\In); (\sk, \openpk))) $ which outputs $ \pi_{eval}$ and returns a signature $ \sigma = (\PreOut,\compk,\pi_{eval}) $
     \begin{align}
     	\mathcal{R}_{eval}= \{((\sk, \openpk); (\genG, \genB,\grE,\compk,\PreOut,\In)): \nonumber\\
     	\compk = \sk\genG + \openpk\, \genB, \PreOut = \sk \,\In \}  \label{rel:commit} 
@@ -93,7 +93,7 @@ Next, we describe how to generate a proof for the correct evaluation of an input
     computes $R = r_1 \genG + r_2 \genB$, and $R_m = r_1 \In$,
      $c = H_p(\aux,\msg,\compk,\PreOut,R,R_m)$,
      along with $s_1 = r_1 + c \, \sk$ and $s_2 = r_2 + c \, \openpk$.
-    and finally returns the signature $\pi_{eval} = (c,s_1,s_2)$.
+    and finally returns the proof $\pi_{eval} = (c,s_1,s_2)$.
     %TODO We might say something about ass here
 % \begin{enumerate}
 %    \item compute the VRF input point $\In := H_{\grE}(\msg)$ and pre-output $\PreOut := \sk \, \In$,
@@ -116,7 +116,7 @@ Next, we describe how to generate a proof for the correct evaluation of an input
 % \end{enumerate}
 \end{itemize}
 
-\noindent We remark that \PedVRF becomes EC VRF if we demand $\openpk = 0 = r_2$ in \Sign.
+\noindent We remark that \PedVRF becomes EC VRF if we demand $\openpk = 0 = r_2$ in \PedVRF.\Sign.
 
 %A signature $\sigma = (c,s_1, s_2)$ is a Fiat-Shamir transform of a
 %sigma protocol that shows equality of the discrete logarithm of $\PreOut$
@@ -136,7 +136,8 @@ Now, we are ready to introduce our ring VRF construction  $ \rVRF $.
 	\item $\rVRF.\Eval $ is the same as $ \PedVRF.\Eval$.
 	\item $ \rVRF.\CommitRing: \pkring \rightarrow \comring$ given a set of public keys $ \pkring $, it returns a Merkle tree root where the leaves are elements of  $ \pkring$. 
 	
-	We note that our construction works fine by replacing  $ \comring $ by $ \pkring $. However, the asymptotic complexity of our protocol improves by running the verification $ \comring $.
+	We note that our construction preserves its security properties when replacing $ \comring $
+	by $ \ring $. However, by using $ \comring $, we clearly improve the efficiency of our protocol
 	%COMMENT Handan: We can improve the previous sentence.
 	
 	%COMMENT Handan: We don't need to define opring here because our construction does not need it.
