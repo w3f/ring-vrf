@@ -17,10 +17,10 @@ use rand_core::{RngCore,CryptoRng};
 
 
 #[cfg(feature = "blake3")]
-mod blake3;
+pub mod blake3;
 
 #[cfg(feature = "merlin")]
-mod merlin;
+pub mod merlin;
 
 
 /// Arkworks friendly transcripts for Chaum-Pederson DLEQ proofs

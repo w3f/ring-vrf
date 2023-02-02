@@ -28,7 +28,10 @@ pub use flavor::Flavor;
 pub mod keys; // PublicKeyUnblinding
 pub use keys::{PublicKey, SecretKey};
 
-mod transcript;
+// #[cfg(not(feature = "transcript_io"))]
+// mod transcript;
+// #[cfg(feature = "transcript_io")]
+pub mod transcript;
 pub use transcript::{SigningTranscript}; // signing_context
 
 // #[cfg(feature = "merlin")]
