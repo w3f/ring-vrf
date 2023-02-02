@@ -64,8 +64,8 @@ In the SRS $S$, we distinguish the verifiers' string/key of elements
 % as separate from the provers' much longer string of elements in $\grE_1$ and $\grE_2$.
 A Groth16 \cite{Groth16} proof takes the form 
  $\pi = (A,B,C) \in \grE_1 \times \grE_2 \times \grE_1$.
-A verifier then produces a $X = \sum_i^k x_i \chi_i \in \grE_1$ from
- the instance's public inputs $x_i \in \F_p$ and then checks 
+A verifier then produces a $X+Y = \sum_i^k x_i \chi_i + \sum_i^k y_i \chi_i \in \grE_1$
+ from the instance's public inputs $x_i,y_i \in \F_p$ and then checks 
 $$ e(A,B) = e([\alpha]_1, [\beta]_2) \cdot
  e(X+Y, [\gamma]_2) \cdot e(C, [\delta]_2) \mathperiod $$
 
