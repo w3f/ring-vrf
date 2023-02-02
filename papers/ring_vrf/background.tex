@@ -42,7 +42,8 @@ Chaum-Pedersen DLEQ proofs though, as not doing so risks miss-readings by implem
 We also let $\ecJ$ denote a ZCash Sapling style ``JubJub'' Edwards curve
 over $\F_p$, with distinguished subgroup $\grJ$ of prime order $p_\grJ$, so that
 SNARKs on $\ecE$ prove $\grJ$ arithmetic relatively cheaply.
-Aside from Jubjub, we optionally want a ``sister'' Edwards curve $\ecE$,
+TODO: $\ecE'$ becomes $O'$.
+Aside from Jubjub, we optionally want a ``sister'' Edwards curve $\ecE'$,
 with a subgroup $\grE$ of the same order $p$ as $\grE_1$,
  but which lacks any pairing.
 
@@ -51,7 +52,7 @@ AGM is used for $\ecE$ in Groth16 sections.
 $\grE_1$, $\grE'$, and $\grJ$ always have a hard DDH problem
  and their cofactor are ignored.
 
-We let $H_p : \{0,1\}^* \to \F_p$ and $H_{\grE'} : \{0,1\}^* \to \grE_1$
+We let $H_p : \{0,1\}^* \to \F_p$ and $H_{\grE'} : \{0,1\}^* \to \grE'$
 denote a hash-to-scalar and a hash-to-curve  with ranges
 $\F_p$ and $\grE'$, respectively, always modeled as random oracles.  
 

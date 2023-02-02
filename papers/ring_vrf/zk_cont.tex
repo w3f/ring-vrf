@@ -51,7 +51,7 @@ In Groth16 \cite{Groth16}, we have an SRS $S$ consisting of curve
 points in $\grE_1$ and $\grE_2$ that encode the circuit being proven.
 We follow \cite{Groth16} in discussing the SRS $S$ in terms of
 its ``toxic waste''
- $(\alpha,\beta,\delta,\gamma,\tau^1,\tau^2,\ldots) \in \F_q^*$.
+ $(\alpha,\beta,\delta,\gamma,\tau^1,\tau^2,\ldots) \in \F_p^*$.
 In other words, we could write say $[ f(\tau)/\delta ]_1$ or $[\delta]_2$
 to denote an element of our SRS $S$ in $\grE_1$ or $\grE_2$ respectively,
 computed by scalar multiplication of the Groth16 generators from
@@ -59,7 +59,7 @@ the toxic waste $\tau$ and $\delta$,
  but for which nobody knows the underlying $\tau$ or $\delta$ anymore.
 
 In the SRS $S$, we distinguish the verifiers' string/key of elements
- $\chi_1,\ldots,\chi_k, [\alpha]_1 \in \grE_1$ and
+ $\chi_1,\ldots,\chi_k, \Upsilon_1,\ldots,\Upsilon_l, [\alpha]_1 \in \grE_1$ and
  $[\beta]_2, [\gamma]_2, [\delta]_2 \in \grE_2$.
 % as separate from the provers' much longer string of elements in $\grE_1$ and $\grE_2$.
 A Groth16 \cite{Groth16} proof takes the form 
@@ -170,7 +170,7 @@ which  BLS12 curves make roughly equivalent to
 \begin{lemma}\label{lem:knowledge_soundness}
 Assuming AGM plus the $(2n-1,n-1)$-DLOG assumption, and
  circuit size less than $n$,
-then our zero-knowledge continuation \SpecialG satisfies knowledge soundness.
+then our zero-knowledge continuation \SpecialG plus a proof-of-knowledge for $X$ satisfies knowledge soundness.
 \end{lemma}
 
 \begin{proof}[Proof idea.]
@@ -178,6 +178,7 @@ As our \Prove is composed from \Preprove and \Reprove, our challenger
 learns the actual public input wire values and blinding factors.
 Adapt the proof of Theorem 2 in \cite[\S3, pp. 9]{RandomizationGroth16},
 observing that $K_\gamma$ and $K_\delta$ never interact with other elements. 
+TODO: Use PoK of $X$.
 %TODO: Alistair or Oana, Do we even need the first sentense here?  nything more to say about the second?
 \end{proof}
 
