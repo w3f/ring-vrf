@@ -67,7 +67,7 @@ A Groth16 \cite{Groth16} proof takes the form
 A verifier then produces a $X = \sum_i^k x_i \chi_i \in \grE_1$ from
  the instance's public inputs $x_i \in \F_p$ and then checks 
 $$ e(A,B) = e([\alpha]_1, [\beta]_2) \cdot
- e(X, [\gamma]_2) \cdot e(C, [\delta]_2) \mathperiod $$
+ e(X+Y, [\gamma]_2) \cdot e(C, [\delta]_2) \mathperiod $$
 
 We need the rerandomization algorithm from \cite[Fig.~1]{RandomizationGroth16}:
 % to build a zero-knowledge continuation:
