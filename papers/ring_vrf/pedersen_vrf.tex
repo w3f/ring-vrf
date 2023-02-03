@@ -134,7 +134,7 @@ Now, we are ready to introduce our ring VRF construction  $ \rVRF $.
 \begin{itemize}
 	\item $\rVRF.\KeyGen $ is the same as $ \PedVRF.\KeyGen$.
 	\item $\rVRF.\Eval $ is the same as $ \PedVRF.\Eval$.
-	\item $ \rVRF.\CommitRing: \pkring \rightarrow \comring$ given a set of public keys $ \pkring $, it returns a Merkle tree root where the leaves are elements of  $ \pkring$. 
+	\item $ \rVRF.\CommitRing: \pkring, \pk \rightarrow \comring, \openring$ given a set of public keys $ \pkring $, it returns a Merkle tree root $ \comring $ where the leaves are elements of  $ \pkring$ and Merkle tree proof $ \openring $ showing that $ \pk \in \pkring $. 
 	
 	We note that our construction preserves its security properties when replacing $ \comring $
 	by $ \ring $. However, by using $ \comring $, we clearly improve the efficiency of our protocol
@@ -168,7 +168,7 @@ Now, we are ready to introduce our ring VRF construction  $ \rVRF $.
 	\def\tmpeprintaux{\eprint{\aux'}{\tmpaux}}
 	\def\tmpindent{\hspace*{5pt}}
 	\begin{itemize}
-		\item $\rVRF.\rSign\eprint{ : }{}(\sk,\msg,\aux)\eprint{ \mapsto \rho}{}$ returns $\rho = (\compk,\piring,\sigma)$ \eprint{where \\}{\\ where} 
+		\item $\rVRF.\rSign\eprint{ : }{}(\sk,\comring, \openring,\msg,\aux)\eprint{ \mapsto \rho}{}$ returns $\rho = (\compk,\piring,\sigma)$ if $ \openring $ is correct opening of $ \comring $. Here, 
 		\tmpindent $(\openpk,\compk) \leftarrow \PedVRF.\CommitKey(\sk)$,  \\
 		\tmpindent $\piring \leftarrow \NIZK_{\mathcal{R}_{ring}}.\Prove((\compk,\comring); \openpk)$, \\
 		where 
