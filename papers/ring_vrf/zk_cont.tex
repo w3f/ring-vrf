@@ -54,16 +54,17 @@ outputs a common reference string $\crs$,
 outputs a pair of proving key $\crspk$ and verification key $\crsvk$, 
 
 \item $\ZKCont.\Preprove: (\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone) \mapsto (X, \pi, {\color {red} b})$ \,
-constructs commitment $X$ and proof $\pi$ for relation $\relone$ from vector of inputs 
-$\bar{y}$ (called \emph{transparent}), a vector of inputs $\bar{x}$ (called \emph{opaque}), 
-and vector of witnesses $\bar{\omega}$,
+constructs commitment $X$ from a vector of inputs $\bar{x}$ (called \emph{opaque}) and 
+constructs proof $\pi$ from vector of inputs 
+$\bar{y}$ (called \emph{transparent}), from $\bar{x}$ and vector of witnesses $\bar{\omega}$, and 
+also outputs $b$ as the opening for $X$,
 
 \item $\ZKCont.\Reprove: (\crspk, X, \pi, \relone) \mapsto (X', \pi', b')$ \,
  finalises commitment $X'$ and proof $\pi'$ and returns an opening $b'$ for the commitment, 
  
 \item $\ZKCont.\Verify: (\crsvk, \bar{y}, X', \pi', \relone) \mapsto 0/1$ \, outputs $1$ in case it accepts and $0$ otherwise,
 \end{itemize}
-and satisfies completeness w.r.t,  completeness w.r.t,  knowledge soundness and zero-knowledge as defined below:
+and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledge soundness and zero-knowledge as defined below:\\
 %TO DO: Re-write this: We define (white-box) knowledge soundness for zero-knowledge continuations
 %exactly like for zero-knowledge proofs, but with the composition 
 %$\Prove : (\bar{y}, \bar{x}; \bar{\omega}) \mapsto \Reprove(\Preprove(\bar{y}, \bar{x}; \bar{\omega}))[0]$
@@ -71,6 +72,21 @@ and satisfies completeness w.r.t,  completeness w.r.t,  knowledge soundness and 
 %Zero-knowledge however should hold even if \Reprove gets invoked multiple
 %times upon the same \Preprove results,
 %again even with the additional proof-of-knowledge.
+\noindent \textbf{Perfect Completeness for $\Preprove$} For every $(\bary, \barx; \baromega) \in \relone$ it holds:
+\begin{align*}
+\mathit{Pr} (& \ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1 \ | \ \\ 
+                   & \crs \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
+                   & (X, \pi, {\color {red} b}) \leftarrow \ZKCont.\Preprove(\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone)) = 1
+\end{align*}
+
+\noindent \textbf{Perfect Completeness for $\Reprove$} For every efficient adversary $A$ it holds: 
+\begin{align*}
+\mathit{Pr} (& \ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1  = >  \ZKCont.\Verify(\crsvk, \bar{y}, X', \pi', \relone) = 1  \ | \ \\ 
+                   & \crs \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
+                   & (\bary, X, \pi) \leftarrow A(\crs,\relone), (X', \pi', b') \leftarrow \ZKCont.\Reprove(\crspk, X, \pi, \relone)) = 1
+\end{align*}
+\noindent \textbf{Knowledge Soundness} \\
+\noindent \textbf{Zero-knowledge}
 \end{definition} 
 
 
