@@ -1,34 +1,78 @@
-
 \section{Zero-knowledge continuations}
 \label{sec:rvrf_cont}
 
-We now develop our zero-knowledge continuation technique, called 
-{\em special(ized) Groth16} or \SpecialG, and
- build ring VRFs with fast amortized prover time.
-Anonymity demands we finalize the amortized ``continuation'' multiple
-times, with each time being unlinkable to the others, meaning our rVRF
-stays zero-knowledge even with the continuation being reused.
+\noindent In the following, we describe a NIZK for a relation $\rel$ where
+$$\rel = \{(\bary, \barz; \barx, \baromega, \baromegap):  (\bary, \barx; \baromega) \in \relone, (\barz, \barx; \baromegap) \in \reltwo \},$$
+and $\relone$, $\reltwo$ are some NP relations. Our NIZK is designed to efficiently re-prove membership for relation $\relone$
+via a new technique which we call \emph{zero-knowledge continuation}. In practice, using a NIZK that is a zero-knowledge continuation 
+ensures one essentially needs to create only once an otherwise expensive proof for $\relone$ which can later be 
+re-used multiple times (just after inexpensive re-randomisations) while preserving knowledge soundness and zero-knowledge. 
+Below, we formally define zero-knowledge continuation. In section~\ref{sec:rvrf_groth16} we instantiate it via a \emph{special(ized) 
+Groth16} or \SpecialG, and finally, in section~\ref{subsec:rvrf_faster} we use it to build a ring VRF with fast amortised prover time. \\
 
-Our zero-knowledge continuation $\SpecialG_\rel$ consists of three algorithms:
+\noindent In addition, the anonymity property of our ring VRF demands we not only finalise multiple times a component of the zero-knowledge 
+continuation and but also each time the result remains unlinkable to previous finalisations, meaning our ring VRF stays zero-knowledge 
+even with a continuation component being reused. We formalise such a more general zero-knowledge property in 
+section~\ref{sec:rvrf_groth16} and give an instantiation of our NIZK fulfilling such a property in section~\ref{subsec:rvrf_faster}. 
+%Moreover, the anonymity property of a ring VRF demands we finalise the amortized ``continuation'' multiple
+%times, with each time being unlinkable to the others, meaning our rVRF
+%stays zero-knowledge even with the continuation being reused.
+
+
+%\begin{definition}[ZK Continuations] A zero-knowledge continuation $\SpecialG_\rel$ consists of four algorithms 
+%($\SpecialG_\rel.\Preprove$, $\SpecialG_\rel.\Reprove$, $\ldots$, $\SpecialG_\rel.\Verify$) such that:
+%\begin{itemize}
+%\item $\SpecialG_\rel.\Preprove : (\bar{y}, \bar{x}; \bar{\omega}) \mapsto (X,\pi)$ \,
+%constructs a commitment $X$ and a proof $\pi$ for relation $\rel$ from a vector 
+%of inputs $\bar{y}$ (called \em{transparent}), a vector of inputs $\bar{x}$ (called \em{opaque}), and witnesses $\bar{\omega}$.
+%\item $\SpecialG_\rel.\Reprove : (X,\pi) \mapsto ((X',\pi'); b)$ \,
+%finalises the commitment $X'$ and proof $\pi'$ and returns an opening $b$ for the commitment. 
+%\item $\SpecialG_\rel.\Verify(\bar{y}; (X',\pi') )$ \, 
+%verifies the 
+%\end{itemize}
+%%TO DO: add an algorithm to the $\SpecialG_\rel$ such that: Our \Verify needs a separate proof-of-knowledge for $X'$, 
+%%the production of which requires knowledge of $\bar{x}$, and occurs in parallel to \Reprove.
+
+%We define (white-box) knowledge soundness for zero-knowledge continuations
+%exactly like for zero-knowledge proofs, but with the composition 
+%$\Prove : (\bar{y}, \bar{x}; \bar{\omega}) \mapsto \Reprove(\Preprove(\bar{y}, \bar{x}; \bar{\omega}))[0]$
+%as well as this additional proof-of-knowledge.
+%Zero-knowledge however should hold even if \Reprove gets invoked multiple
+%times upon the same \Preprove results, again even with the additional proof-of-knowledge.
+%\end{definition} 
+
+\begin{definition}[ZK Continuations] A zero-knowledge continuation $\ZKCont$ for a relation $\relone$ with 
+input $(\bary, \barx)$ and witness $\baromega$ is a tuple of efficient algorithms 
+($\ZKCont.\Setup$, $\ZKCont.\Gen$, $\ZKCont.\Preprove$, $\ZKCont.\Reprove$, $\ZKCont.\Verify$) 
+such that for implicit security parameter $\lambda$,
 \begin{itemize}
-\item $\SpecialG_\rel.\Preprove : (\bar{y}, \bar{x}; \bar{\omega}) \mapsto (X,\pi)$ \,
- constructs a pre-commitment $X$ and a pre-proof $\pi$ for $\rel$ from 
- transparent inputs $\bar{y}$, opaque inputs $\bar{x}$, and witnesses $\bar{\omega}$.
-\item $\SpecialG_\rel.\Reprove : (X,\pi) \mapsto ((X',\pi'); b)$ \,
- finalizes the commitment $X'$ and proof $\pi'$ and returns an opening $b$ for the commitment. 
-\item $\SpecialG_\rel.\Verify(\bar{y}; (X',\pi') )$ \, 
- verifies the 
-\end{itemize}
-Our \Verify needs a separate proof-of-knowledge for $X'$, the production
-of which requires knowledge of $\bar{x}$, and occurs in parallel to \Reprove.
 
-We define (white-box) knowledge soundness for zero-knowledge continuations
-exactly like for zero-knowledge proofs, but with the composition 
-$\Prove : (\bar{y}, \bar{x}; \bar{\omega}) \mapsto \Reprove(\Preprove(\bar{y}, \bar{x}; \bar{\omega}))[0]$
-as well as this additional proof-of-knowledge.
-Zero-knowledge however should hold even if \Reprove gets invoked multiple
-times upon the same \Preprove results,
- again even with the additional proof-of-knowledge.
+\item $\ZKCont.\Setup (1^{\lambda}) \mapsto \crs$ a setup algorithm that on input the security parameter 
+outputs a common reference string $\crs$, 
+
+\item $\ZKCont.\Gen: (\crs, \relone) \mapsto (\crspk, \crsvk)$ \, 
+outputs a pair of proving key $\crspk$ and verification key $\crsvk$, 
+
+\item $\ZKCont.\Preprove: (\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone) \mapsto (X, \pi, {\color {red} b})$ \,
+constructs commitment $X$ and proof $\pi$ for relation $\relone$ from vector of inputs 
+$\bar{y}$ (called \emph{transparent}), a vector of inputs $\bar{x}$ (called \emph{opaque}), 
+and vector of witnesses $\bar{\omega}$,
+
+\item $\ZKCont.\Reprove: (\crspk, X, \pi, \relone) \mapsto (X', \pi', b')$ \,
+ finalises commitment $X'$ and proof $\pi'$ and returns an opening $b'$ for the commitment, 
+ 
+\item $\ZKCont.\Verify: (\crsvk, \bar{y}, X', \pi', \relone) \mapsto 0/1$ \, outputs $1$ in case it accepts and $0$ otherwise,
+\end{itemize}
+and satisfies completeness w.r.t,  completeness w.r.t,  knowledge soundness and zero-knowledge as defined below:
+%TO DO: Re-write this: We define (white-box) knowledge soundness for zero-knowledge continuations
+%exactly like for zero-knowledge proofs, but with the composition 
+%$\Prove : (\bar{y}, \bar{x}; \bar{\omega}) \mapsto \Reprove(\Preprove(\bar{y}, \bar{x}; \bar{\omega}))[0]$
+%as well as this additional proof-of-knowledge.
+%Zero-knowledge however should hold even if \Reprove gets invoked multiple
+%times upon the same \Preprove results,
+%again even with the additional proof-of-knowledge.
+\end{definition} 
+
 
 % $$ \Lring = \Setst{ \compk, \comring }{
 %  \exists \openpk,\openring \textrm{\ s.t.\ } 
@@ -37,7 +81,7 @@ times upon the same \Preprove results,
 
 % \smallskip
 \subsection{Rerandomization}
-% \label{sec:rvrf_groth16}
+\label{sec:rvrf_groth16}
 
 Zero-knowledge invariably comes from random blinding factors.
 Zero-knowledge continuations need rerandomizable zkSNARKs,
