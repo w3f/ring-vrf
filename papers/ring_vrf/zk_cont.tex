@@ -53,7 +53,7 @@ outputs a common reference string $\crs$,
 \item $\ZKCont.\Gen: (\crs, \relone) \mapsto (\crspk, \crsvk)$ \, 
 outputs a pair of proving key $\crspk$ and verification key $\crsvk$, 
 
-\item $\ZKCont.\Preprove: (\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone) \mapsto (X, \pi, {\color {red} b})$ \,
+\item $\ZKCont.\Preprove: (\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone) \mapsto (X, \pi, b)$ \,
 constructs commitment $X$ from a vector of inputs $\bar{x}$ (called \emph{opaque}) and 
 constructs proof $\pi$ from vector of inputs 
 $\bar{y}$ (called \emph{transparent}), from $\bar{x}$ and vector of witnesses $\bar{\omega}$, and 
@@ -76,7 +76,7 @@ and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledg
 \begin{align*}
 \mathit{Pr} (& \ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1 \ | \ \\ 
                    & \crs \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
-                   & (X, \pi, {\color {red} b}) \leftarrow \ZKCont.\Preprove(\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone)) = 1
+                   & (X, \pi, b) \leftarrow \ZKCont.\Preprove(\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone)) = 1
 \end{align*}
 
 \noindent \textbf{Perfect Completeness for $\Reprove$} For every efficient adversary $A$ it holds: 
@@ -85,10 +85,17 @@ and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledg
                    & \crs \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
                    & (\bary, X, \pi) \leftarrow A(\crs,\relone), (X', \pi', b') \leftarrow \ZKCont.\Reprove(\crspk, X, \pi, \relone)) = 1
 \end{align*}
-\noindent \textbf{Knowledge Soundness} \\
+\noindent \textbf{Knowledge Soundness} For every efficient adversary $A$ there exists an efficient extractor $E$ such that 
+\begin{align*}
+& \mathit{Pr} (\ZKCont.\Verify(\crsvk, \bar{y}, \ZKCont.\Preprove_{|X}(\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone; b), \pi, \relone) = 1 \ \wedge \ \\
+& \wedge \ (\bary, \barx; \baromega) \in \relone \ | \ \crs \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
+                   & (\bary, \barx, b, \pi) \leftarrow A(\crs,\relone), \baromega \leftarrow E^{A}(\crs, \relone)) = 1 - \negl (\lambda),
+\end{align*}
+\noindent where $\ZKCont.\Preprove_{|X}(\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone; b)$ means running the part of algorithm $\ZKCont.\Preprove$ that computes and outputs $X$ with its regular inputs and using $b$ when randomness is required; and by $ E^{A}$ we denote 
+the extractor $E$ that has access to all of adversary's $A$ messages during the protocol with the honest verifier. \\
+
 \noindent \textbf{Zero-knowledge}
 \end{definition} 
-
 
 % $$ \Lring = \Setst{ \compk, \comring }{
 %  \exists \openpk,\openring \textrm{\ s.t.\ } 
