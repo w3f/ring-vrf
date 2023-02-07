@@ -108,7 +108,7 @@ where by $ E^{A}$ we denote the extractor $E$ that has access to all of adversar
 for every adversary $A$ it holds:
 \begin{align*}
 \mathit{Pr}(&(\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
-                  & (\pi', X', b') \leftarrow \ZKCont.\Reprove (\crspk, X, \pi, b, \relone) \ | \\ 
+                  & (\pi', X', \_) \leftarrow \ZKCont.\Reprove (\crspk, X, \pi, b, \relone) \ | \\ 
                   & A(\crs, \pp, \pi', X', \relone)= 1 \ \wedge \ \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1) =  \\
 = \mathit{Pr}(&(\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\
                      & (\pi', X') \leftarrow \ZKCont.\Sim(\tw, \bary, \relone) \ | \\ 
