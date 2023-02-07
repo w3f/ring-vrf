@@ -59,7 +59,7 @@ constructs proof $\pi$ from vector of inputs
 $\bar{y}$ (called \emph{transparent}), from $\bar{x}$ and vector of witnesses $\bar{\omega}$, and 
 also outputs $b$ as the opening for $X$,
 
-\item $\ZKCont.\Reprove: (\crspk, X, \pi, {\color{red} b}, \relone) \mapsto (X', \pi', b')$ \,
+\item $\ZKCont.\Reprove: (\crspk, X, \pi, b, \relone) \mapsto (X', \pi', b')$ \,
 finalises commitment $X'$ and proof $\pi'$ and returns an opening $b'$ for the commitment, 
 
 \item $\ZKCont.\VerifyCom: (\pp, X, \barx, b) \mapsto 0/1$ \, 
@@ -68,7 +68,7 @@ outputs 1 if indeed that is the case and 0 otherwise,
  
 \item $\ZKCont.\Verify: (\crsvk, \bar{y}, X', \pi', \relone) \mapsto 0/1$ \, outputs $1$ in case it accepts and $0$ otherwise,
 
-\item $\ZKCont.\Sim: (\tw, \bary, \barx, \relone) \mapsto \pi$ takes as input a simulation trapdoor $\tw$ and statement $(\bary, \barx)$ and returns an argument $\pi$,
+\item $\ZKCont.\Sim: (\tw, \bary, \relone) \mapsto \pi$ takes as input a simulation trapdoor $\tw$ and statement $(\bary, \barx)$ and returns an argument $\pi$,
 \end{itemize}
 and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledge soundness and zero-knowledge as defined below:\\
 %TO DO: Re-write this: We define (white-box) knowledge soundness for zero-knowledge continuations
@@ -81,7 +81,7 @@ and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledg
 \noindent \textbf{Perfect Completeness for $\Preprove$} For every $(\bary, \barx; \baromega) \in \relone$ it holds:
 \begin{align*}
 \mathit{Pr} (& \ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1 \ \wedge \ \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1\  | \ \\ 
-                   & \crs \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
+                   & (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
                    & (X, \pi, b) \leftarrow \ZKCont.\Preprove(\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone)) = 1
 \end{align*}
 
@@ -89,20 +89,30 @@ and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledg
 \begin{align*}
 \mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1  = >  \ZKCont.\Verify(\crsvk, \bar{y}, X', \pi', \relone) = 1)  \ \wedge \  \\
                    & \wedge \ (\ZKCont.\VerifyCom (\pp, X, \barx, b) = 1 => \ZKCont.\VerifyCom (\pp, X', \barx, b') = 1) \ | \\
-                   & \crs \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
-                   & (\bary, \barx, X, \pi, b) \leftarrow A(\crs,\relone), (X', \pi', b') \leftarrow \ZKCont.\Reprove(\crspk, X, \pi, b, \relone)) = 1
+                   & (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
+                   & (\bary, \barx, X, \pi, b) \leftarrow A(\crs,\pp, \relone), (X', \pi', b') \leftarrow \ZKCont.\Reprove(\crspk, X, \pi, b, \relone)) = 1
 \end{align*}
 \noindent \textbf{Knowledge Soundness} For every efficient adversary $A$ there exists an efficient extractor $E$ such that 
 \begin{align*}
-\mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1) \ \wedge \ (\ZKCont.\VerifyCom(X, \bar{x}, b) = 1) \ \wedge\ \\
-                   & \wedge \ ( (\bary, \barx; \baromega) \notin \relone) \ | \ \crs \leftarrow \ZKCont.\Setup (1^{\lambda}), (\bary, \barx, X, \pi, b) \leftarrow A(\crs,\relone), \\ 
+\mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1) \ \wedge \ (\ZKCont.\VerifyCom(\pp, X, \bar{x}, b) = 1) \ \wedge\ \\
+                   & \wedge \ ( (\bary, \barx; \baromega) \notin \relone) \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\bary, \barx, X, \pi, b) \leftarrow A(\crs, \pp, \relone), \\ 
 & \baromega \leftarrow E^{A}(\crs, \relone)) = \negl (\lambda),
 \end{align*}
 \noindent %where $\ZKCont.\Preprove_{|X}(\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone; b)$ means running the part of algorithm 
 %$\ZKCont.\Preprove$ that computes and outputs $X$ with its regular inputs and using $b$ when randomness is required; 
 where by $ E^{A}$ we denote the extractor $E$ that has access to all of adversary's $A$ messages during the protocol with the honest verifier. \\
 
-\noindent \textbf{Zero-knowledge}
+\noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for all  $(\bary, \barx; \baromega) \in \relone$, for all $X$, for all $b$, 
+for every adversary $A$ it holds:
+\begin{align*}
+\mathit{Pr}(&(\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
+                  & \pi' \leftarrow \ZKCont.\Reprove (\crspk, X, \pi, b, \relone) \ | \\ 
+                  & A(\crs, \pp, \pi', \relone)= 1 \ \wedge \ \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1) =  \\
+= \mathit{Pr}(&(\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\
+                     & \pi' \leftarrow \ZKCont.\Sim(\tw, \bary, \relone) \ | \\ 
+                     & A(\crs, \pp, \pi', \relone) = 1 \ \wedge \ \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1)
+\end{align*}
+ 
 \end{definition} 
 
 % $$ \Lring = \Setst{ \compk, \comring }{
