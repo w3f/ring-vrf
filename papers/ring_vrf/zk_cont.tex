@@ -43,11 +43,11 @@ section~\ref{sec:rvrf_groth16} and give an instantiation of our NIZK fulfilling 
 
 \begin{definition}[ZK Continuations] A zero-knowledge continuation $\ZKCont$ for a relation $\relone$ with 
 input $(\bary, \barx)$ and witness $\baromega$ is a tuple of efficient algorithms 
-($\ZKCont.\Setup$, $\ZKCont.\Gen$, $\ZKCont.\Preprove$, $\ZKCont.\VerifyCom$, $\ZKCont.\Reprove$, $\ZKCont.\Verify$) 
+($\ZKCont.\Setup$, $\ZKCont.\Gen$, $\ZKCont.\Preprove$, $\ZKCont.\Reprove$, $\ZKCont.\VerifyCom$, $\ZKCont.\Verify$, $\ZKCont.\Sim$) 
 such that for implicit security parameter $\lambda$,
 \begin{itemize}
 
-\item $\ZKCont.\Setup: (1^{\lambda}) \mapsto (\crs, \pp)$ a setup algorithm that on input the security parameter 
+\item $\ZKCont.\Setup: (1^{\lambda}) \mapsto (\crs, \pp, \tw)$ a setup algorithm that on input the security parameter 
 outputs a common reference string $\crs$ and a list $\pp$ of public parameters,
 
 \item $\ZKCont.\Gen: (\crs, \relone) \mapsto (\crspk, \crsvk)$ \, 
@@ -59,14 +59,16 @@ constructs proof $\pi$ from vector of inputs
 $\bar{y}$ (called \emph{transparent}), from $\bar{x}$ and vector of witnesses $\bar{\omega}$, and 
 also outputs $b$ as the opening for $X$,
 
+\item $\ZKCont.\Reprove: (\crspk, X, \pi, {\color{red} b}, \relone) \mapsto (X', \pi', b')$ \,
+finalises commitment $X'$ and proof $\pi'$ and returns an opening $b'$ for the commitment, 
+
 \item $\ZKCont.\VerifyCom: (\pp, X, \barx, b) \mapsto 0/1$ \, 
 verifies that indeed $X$ is a commitment to $\barx$ with opening (e.g., randomness) $b$ and 
 outputs 1 if indeed that is the case and 0 otherwise,
-
-\item $\ZKCont.\Reprove: (\crspk, X, \pi, {\color{red} b}, \relone) \mapsto (X', \pi', b')$ \,
-finalises commitment $X'$ and proof $\pi'$ and returns an opening $b'$ for the commitment, 
  
 \item $\ZKCont.\Verify: (\crsvk, \bar{y}, X', \pi', \relone) \mapsto 0/1$ \, outputs $1$ in case it accepts and $0$ otherwise,
+
+\item $\ZKCont.\Sim: (\tw, \bary, \barx, \relone) \mapsto \pi$ takes as input a simulation trapdoor $\tw$ and statement $(\bary, \barx)$ and returns an argument $\pi$,
 \end{itemize}
 and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledge soundness and zero-knowledge as defined below:\\
 %TO DO: Re-write this: We define (white-box) knowledge soundness for zero-knowledge continuations
@@ -92,9 +94,9 @@ and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledg
 \end{align*}
 \noindent \textbf{Knowledge Soundness} For every efficient adversary $A$ there exists an efficient extractor $E$ such that 
 \begin{align*}
-\mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1 \ \wedge \ \ZKCont.\VerifyCom(X, \bar{x}, b) = 1) \ \wedge\ \\
-                   & \wedge \ ( (\bary, \barx; \baromega) \in \relone) \ | \ \crs \leftarrow \ZKCont.\Setup (1^{\lambda}), (\bary, \barx, X, \pi, b) \leftarrow A(\crs,\relone), \\ 
-& \baromega \leftarrow E^{A}(\crs, \relone)) = 1 - \negl (\lambda),
+\mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1) \ \wedge \ (\ZKCont.\VerifyCom(X, \bar{x}, b) = 1) \ \wedge\ \\
+                   & \wedge \ ( (\bary, \barx; \baromega) \notin \relone) \ | \ \crs \leftarrow \ZKCont.\Setup (1^{\lambda}), (\bary, \barx, X, \pi, b) \leftarrow A(\crs,\relone), \\ 
+& \baromega \leftarrow E^{A}(\crs, \relone)) = \negl (\lambda),
 \end{align*}
 \noindent %where $\ZKCont.\Preprove_{|X}(\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone; b)$ means running the part of algorithm 
 %$\ZKCont.\Preprove$ that computes and outputs $X$ with its regular inputs and using $b$ when randomness is required; 
