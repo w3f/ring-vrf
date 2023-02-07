@@ -41,7 +41,9 @@ section~\ref{sec:rvrf_groth16} and give an instantiation of our NIZK fulfilling 
 %times upon the same \Preprove results, again even with the additional proof-of-knowledge.
 %\end{definition} 
 
-\begin{definition}[ZK Continuations] A zero-knowledge continuation $\ZKCont$ for a relation $\relone$ with 
+\begin{definition}[ZK Continuations]
+\label{def:zk_cont}
+ A zero-knowledge continuation $\ZKCont$ for a relation $\relone$ with 
 input $(\bary, \barx)$ and witness $\baromega$ is a tuple of efficient algorithms 
 ($\ZKCont.\Setup$, $\ZKCont.\Gen$, $\ZKCont.\Preprove$, $\ZKCont.\Reprove$, $\ZKCont.\VerifyCom$, $\ZKCont.\Verify$, $\ZKCont.\Sim$) 
 such that for implicit security parameter $\lambda$,
@@ -106,11 +108,11 @@ where by $ E^{A}$ we denote the extractor $E$ that has access to all of adversar
 for every adversary $A$ it holds:
 \begin{align*}
 \mathit{Pr}(&(\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
-                  & \pi' \leftarrow \ZKCont.\Reprove (\crspk, X, \pi, b, \relone) \ | \\ 
-                  & A(\crs, \pp, \pi', \relone)= 1 \ \wedge \ \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1) =  \\
+                  & (\pi', X', b') \leftarrow \ZKCont.\Reprove (\crspk, X, \pi, b, \relone) \ | \\ 
+                  & A(\crs, \pp, \pi', X', \relone)= 1 \ \wedge \ \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1) =  \\
 = \mathit{Pr}(&(\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\
-                     & \pi' \leftarrow \ZKCont.\Sim(\tw, \bary, \relone) \ | \\ 
-                     & A(\crs, \pp, \pi', \relone) = 1 \ \wedge \ \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1)
+                     & (\pi', X') \leftarrow \ZKCont.\Sim(\tw, \bary, \relone) \ | \\ 
+                     & A(\crs, \pp, \pi', X', \relone) = 1 \ \wedge \ \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1)
 \end{align*}
  
 \end{definition} 
@@ -123,6 +125,23 @@ for every adversary $A$ it holds:
 % \smallskip
 \subsection{Specialised Groth16}
 \label{sec:rvrf_groth16}
+
+Below we instantiate our zero-knowledge continuation notion starting from the Groth16~\cite{Groth16} SNARK;
+hence, we call our instantiation \emph{specialised Groth16} or \emph{special G}. 
+
+\begin{definition}[Specialised Groth16]
+\label{insta:sg16} 
+We call specialised Groth16 the following instantiation of our zero-knowledge continuation notion in Definition~\ref{def:zk_cont}:
+\begin{itemize}
+\item $\ZKCont.\Setup: (1^{\lambda}) \mapsto (\crs, \pp, \tw)$. \\ 
+\noindent Pick $\alpha, \beta, \gamma, \delta, \tau  \xleftarrow{\$} \F_q^{*}$.  
+Set $\tw = (\alpha, \beta, \gamma, \delta, \tau, ??)$. Set $\crs = ()$ 
+\item
+\item
+\item
+\item
+\end{itemize} 
+\end{definition}
 
 Zero-knowledge invariably comes from random blinding factors.
 Zero-knowledge continuations need rerandomizable zkSNARKs,
