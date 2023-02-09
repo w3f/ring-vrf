@@ -153,29 +153,30 @@ $\barx = (x_{l+1}, \ldots, x_n)$ and $\baromega = (w_1, \ldots, w_{m-n})$.
 \label{insta:sg16} 
 Specialised Groth16 for relation $\relRQ$ is the following instantiation of the zero-knowledge continuation notion from Definition~\ref{def:zk_cont}:
 \begin{itemize}
-
 \item $\ZKCont.\Setup: (1^{\lambda}) \mapsto (\crs, \pp, \tw)$. \\ 
-\noindent Pick $\alpha, \beta, \gamma, \delta, \tau  \xleftarrow{\$} \F_q^{*}$.  \\
-Let $\tw = (\alpha, \beta, \gamma, \delta, \tau, \eta)$. \\ 
+\noindent Let $\alpha, \beta, \gamma, \delta, \tau  \xleftarrow{\$} \F_q^{*}$. Let $\tw = (\alpha, \beta, \gamma, \delta, \tau, \eta)$. \\ 
 Let $\crs = ([\barsig_1]_1, [\barsig_2]_2)$ where 
 \begin{align*}
 \barsig_1 = (&1, \alpha, \beta, \delta, \{\tau_i\}_{i=1}^{d-1}, \{\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}\}_{i=1}^n,  
 \frac{\eta}{\gamma}, \\ 
 &\{\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\delta} \}_{i=n+1}^m, \{\frac{1}{\delta}\sigma^it(\sigma)\}_{i=0}^{d-2}, 
-\frac{\eta}{\delta}) 
+\frac{\eta}{\delta}), \\
+\barsig_2 = (&1, \beta, \gamma, \delta, \{\tau^i\}_{i=1}^{d-1}). 
 \end{align*} 
-and $\barsig_2 = (1, \beta, \gamma, \delta, \{\tau^i\}_{i=0}^{d-1})$. \\
+
 Let $\pp = ( \{[\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}]_1 \}_{i=l+1}^{n}, [\frac{\eta}{\gamma}]_1)$. \\
 \noindent Moreover, for simplicity and later use, we call $\Kgamma = [\frac{\eta}{\gamma}]_1$  and $\Kdelta = [\frac{\eta}{\delta}]_1$.
 
 \item $\ZKCont.\Gen: (\crs, \relRQ) \mapsto (\crspk, \crsvk)$ where \\
-$\crspk = {\color{red}\ldots}$ and $\crsvk = {\color{red}\ldots}$.  
+$\crspk = ([\barsig_1]_1, [\beta]_2, [\delta]_2, \{[\tau^i]_2\}_{i=0}^{d-1})$ and \\ 
+$\crsvk = ([\alpha]_1, \{ [\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}]_1\}_{i=1}^{l}, 
+[\beta]_2, [\gamma]_2, [\delta]_2)$.  
 
 \item $\ZKCont.\Preprove: (\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relRQ) \mapsto (X, \pi, b)$ such that \\
 \begin{align*}
 &b = 0; r, s\xleftarrow{\$} \F_p; X = \sum_{i=l+1}^{n} v_i [\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}]_1; \pi = (A, B, C); \\
 &A = \alpha + \sum_{i=0}^{m} v_i \cdot a_i(\tau) + r\delta; B = \beta + \sum_{i=0}^{m} v_i \cdot b_i(\tau) + s\delta; \\ 
-&C = \sum_{i=n+1}^{m} v_i \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\delta}   + As + Br - rs\delta, 
+&C = \frac{\sum_{i=n+1}^{m} v_i \beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau) + h(\tau)t(\tau)}{\delta}   + As + Br - rs\delta, 
 \end{align*}
 and where $\bary = (x_1, \ldots, x_l)$, $\barx = (x_{l+1}, \ldots, x_n)$, $\baromega = (w_1, \ldots, w_{m-n})$, \\
 $\barv = (1, x_1, \ldots, x_n, w_1, \ldots, w_{m-n})$ (same as in Definition~\ref{def:QAP}).
@@ -184,17 +185,20 @@ $\barv = (1, x_1, \ldots, x_n, w_1, \ldots, w_{m-n})$ (same as in Definition~\re
 \item $\ZKCont.\Reprove: (\crspk, X, \pi, b, \relRQ) \mapsto (X', \pi', b')$  such that
 \begin{align*}
 &b ', r_1, r_2  \xleftarrow{\$} \F_p, X' = X + b' \Kgamma, \pi' = (A', B', C'), \\
-&A' = \frac{1}{r_1} A, B' = r_1 B + r_1r_2[\delta]_2, C' = C + r_2A  + b\Kdelta \mathperiod
+&A' = \frac{1}{r_1} A, B' = r_1 B + r_1r_2[\delta]_2, C' = C + r_2A  + b'\Kdelta \mathperiod
 \end{align*}
  
 \item $\ZKCont.\VerifyCom: (\pp, X, \barx, b) \mapsto 0/1$ where the output is 1 iff the following holds
 $$X = \sum_{i=l+1}^{n} x_i [\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}]_1  + b \Kgamma,$$
-where $\barx = (x_{l+1}, \ldots, x_n)$, $ 0 \leq l \leq n$. 
+where $\barx = (x_{l+1}, \ldots, x_n)$, $ 0 \leq l \leq n-1$. 
 \item $\ZKCont.\Verify: (\crsvk, \bar{y}, X', \pi', \relRQ) \mapsto 0/1$ where the output is 1 iff the following holds 
 $$e(A',B') = e([\alpha]_1, [\beta]_2) \cdot e(X' + Y, [\gamma]_2) \cdot e(C', [\delta]_2),$$
-where $Y = \sum_{i=1}^{l} x_i [\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}]_1$ and $\bary = (x_1, \ldots, x_l)$.
+where $\pi' = (A', B', C')$, $Y = \sum_{i=1}^{l} x_i [\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}]_1$ 
+and $\bary = (x_1, \ldots, x_l)$.
 
-\item $\ZKCont.\Sim: (\tw, \bary, \relRQ) \mapsto \pi$ where \\
+\item $\ZKCont.\Sim: (\tw, \bary, \relRQ) \mapsto \pi$ where $u, f, g \xleftarrow {\$} \F_p$ and let \\
+$\pi = ([f]_1, [g]_2, [c]_1)$ where $c = \frac{fg - \alpha \beta - \sum_{i=1}^{l} x_i (\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau))- u}{\delta}  $ and, 
+by definition $\bary = (x_1, \ldots, x_l)$. Note that $\pi$ is a simulated proof for transparent input $\bary$ and commitment $X = [u]_1$.
 \end{itemize} 
 \end{definition}
 
