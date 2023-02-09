@@ -126,23 +126,43 @@ for every adversary $A$ it holds:
 \subsection{Specialised Groth16}
 \label{sec:rvrf_groth16}
 
-Below we instantiate our zero-knowledge continuation notion starting from the Groth16~\cite{Groth16} SNARK;
-hence, we call our instantiation \emph{specialised Groth16} or \emph{special G}. 
+Below we instantiate our zero-knowledge continuation notion with a scheme based on Groth16~\cite{Groth16} SNARK;
+hence, we call our instantiation \emph{specialised Groth16} or \emph{special G}. In order to do that, we need a 
+reminder of the definition of Quadratic Arithmetic Program (QAP).
+
+\begin{definition}[QAP] A Quadratic Arithmetic Program (QAP) $\cQ = (\cA, \cB, \cC, t(X))$ of size $m$ 
+and degree $d$ over a finite field $\F_q$ is defined by three sets of polynomials $\cA = \{a_i(X)\}_{i=0}^m$, 
+$\cB = \{b_i(X)\}_{i=0}^m$, $\cC = \{c_i(X)\}_{i=0}^m$ of degree less than $d-1$ and a target degree $d$ polynomial $t(X)$. Given 
+$\cQ$ we define $\relRQ$ over pairs $(\barx, \baromega) \in \F_q^{n} \times \F_q^{m-n}$ that holds iff there exist a polynomial $h(X)$ of degree 
+at most $d-2$ such that:
+$$(\sum_{k=0}^m y_k \cdot a_k(X)) \cdot (\sum_{k=0}^m y_k \cdot b_k(X)) = (\sum_{k=0}^m y_k \cdot c_k(X)) + h(X)t(X) \ \ (\ast)$$ 
+where $y_0 =1$, $y_k = x_k$ for all $k \in [n]$ and $y_k = w_{k-n}$ for $k  \in [m] \setminus [n]$ and $\barx = (x_1, \ldots, x_n)$ and 
+$\baromega = (w_1, \ldots, w_{m-n})$. 
+\end{definition}
+
+
+%Let $\mathbb{F}_q$ be a prime field, 
+%let $G_1$, $G_2$, $G_T$ be as defined in section~\ref{??}, let $e$, $g$, $h$ be defined as $\ldots$. Let $t(X)$ and
+%$\{u_i(X),v_i(X),w_i(X)\}_{i=0}^m$ be polynomials in $\F_q[X]$, let $\ldots$ be $\ldots$ such that there exists $h(X) \in \F_q[X]$ with
+% $$ \sum_{i=0}^m a_iu_i(X) \cdot  \sum_{i=0}^m a_iv_i(X)  = \sum_{i=0}^m a_iw_i(X) + h(X)t(X)  \ (\ast)$$
+%Then let $\relone = \{ (;) \ | \ (;)  (\ast) \}$
 
 \begin{definition}[Specialised Groth16]
 \label{insta:sg16} 
-We call specialised Groth16 the following instantiation of our zero-knowledge continuation notion in Definition~\ref{def:zk_cont}:
+Specialised Groth16 is the following instantiation of our zero-knowledge continuation notion in Definition~\ref{def:zk_cont}:
 \begin{itemize}
 \item $\ZKCont.\Setup: (1^{\lambda}) \mapsto (\crs, \pp, \tw)$. \\ 
-\noindent Pick $\alpha, \beta, \gamma, \delta, \tau  \xleftarrow{\$} \F_q^{*}$.  
-Set $\tw = (\alpha, \beta, \gamma, \delta, \tau, ??)$. Set $\crs = ()$ 
-\item
-\item
-\item
-\item
+\noindent Pick $\alpha, \beta, \gamma, \delta, \tau  \xleftarrow{\$} \F_q^{*}$.  \\
+Let $\tw = (\alpha, \beta, \gamma, \delta, \tau, \eta)$. \\ 
+Let $\crs = ([\barsig_1]_1, [\barsig_2]_2)$ where \\ 
+$\barsig_1$ = ($1$, $\alpha$, $\beta$, $\delta$, $\{\tau_i\}_{i=1}^{d-1}$, $\{\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}\}_{i=1}^n$,  
+$\frac{\eta}{\gamma}$, $\{\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\delta} \}_{i=n+1}^m$, $\{\frac{1}{\delta}\sigma^it(\sigma)\}_{i=0}^{d-2}$, $\frac{\eta}{\delta}$) \\ 
+and $\barsig_2 = (1, \beta, \gamma, \delta, \{\tau^i\}_{i=0}^{d-1})$. \\
+Let $\pp = ({\color{red}\ldots})$. 
 \end{itemize} 
 \end{definition}
 
+\begin{comment}
 Zero-knowledge invariably comes from random blinding factors.
 Zero-knowledge continuations need rerandomizable zkSNARKs,
 meaning Groth16 \cite{Groth16}, but beyond rerandomization their
@@ -291,7 +311,7 @@ much like Theorem 1 in \cite[\S3, pp. 8 \& 11]{RandomizationGroth16}.
 %TODO:  Alistair or Oana, what the hell did I mean by this?  -Jeff
 We depend upon the specific simulator though, which itself increases
 our dependence upon the usage of the zero knowledge continuation.
-
+\end{comment}
 
 \subsection{Continuation}
 \label{subsec:rvrf_faster}

@@ -11,13 +11,6 @@ Christian Badertscher, Peter Ga{\v{z}}i, I{\~n}igo Querejeta-Azurmendi, and
 \newblock On uc-secure range extension and batch verification for ecvrf.
 \newblock {\em Cryptology ePrint Archive}, 2022.
 
-\bibitem{cryptoeprint:2019/1162}
-Karim Baghery.
-\newblock Subversion-resistant simulation (knowledge) sound nizks.
-\newblock In Martin Albrecht, editor, {\em Cryptography and Coding}, pages
-  42--63, Cham, 2019. Springer International Publishing.
-\newblock \url{https://eprint.iacr.org/2019/1162}.
-
 \bibitem{RandomizationGroth16}
 Karim Baghery, Markulf Kohlweiss, Janno Siim, and Mikhail Volkhov.
 \newblock Another look at extraction and randomization of groth's zk-snark.
