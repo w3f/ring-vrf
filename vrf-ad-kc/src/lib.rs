@@ -22,6 +22,7 @@ extern crate arrayref;
 pub mod error;
 pub use error::{SignatureResult, SignatureError};
 
+// InnerFlavor is a sealed trait, so no pub here.
 mod flavor;
 pub use flavor::Flavor;
 
@@ -45,6 +46,7 @@ pub use thin::{ThinVrf};
 
 mod pedersen;
 pub use pedersen::{PedersenVrf};
+
 
 /// Any cofactor of this size or smaller gets treated as small,
 /// resulting in only doing on-curve checks, not full subgroup

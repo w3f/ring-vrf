@@ -4,6 +4,8 @@
 // - Jeffrey Burdges <jeff@web3.foundation>
 
 //! ### Pedersen VRF routines
+//! 
+//! 
 
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
