@@ -128,7 +128,7 @@ for every adversary $A$ it holds:
 
 Below we instantiate our zero-knowledge continuation notion with a scheme based on Groth16~\cite{Groth16} SNARK;
 hence, we call our instantiation \emph{specialised Groth16} or \emph{special G}. In order to do that, we need a 
-reminder of the definition of Quadratic Arithmetic Program (QAP)~\cite{legosnark}, ~\cite{BCTV14}.
+reminder of the definition of Quadratic Arithmetic Program (QAP)~\cite{legosnark}, ~\cite{GGPR13}.
 
 \begin{definition}[QAP] 
 \label{def:QAP}
@@ -142,7 +142,7 @@ where $\barv = (v_0, \ldots, v_m) = (1, x_1, \ldots, x_n, w_1, \ldots w_{m-n})$ 
 $\barx = (x_{l+1}, \ldots, x_n)$ and $\baromega = (w_1, \ldots, w_{m-n})$. 
 \end{definition}
 
-
+\noindent Given notation provided in section~\ref{sec:background}, we introduce
 %Let $\mathbb{F}_q$ be a prime field, 
 %let $G_1$, $G_2$, $G_T$ be as defined in section~\ref{??}, let $e$, $g$, $h$ be defined as $\ldots$. Let $t(X)$ and
 %$\{u_i(X),v_i(X),w_i(X)\}_{i=0}^m$ be polynomials in $\F_q[X]$, let $\ldots$ be $\ldots$ such that there exists $h(X) \in \F_q[X]$ with

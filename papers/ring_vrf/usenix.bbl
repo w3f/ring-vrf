@@ -195,4 +195,11 @@ Matteo Campanelli, Dario Fiore, and Ana\"{\i}s Querol.
 \newblock LegoSNARK: Modular Design and Composition of Succinct Zero-Knowledge Proofs.
 \newblock Proceedings of the 2019 ACM SIGSAC Conference on Computer and Communications Security, 2019.
 
+\bibitem{GGPR13}
+Rosario Gennaro, Craig Gentry, Bryan Parno, and Mariana Raykova.
+\newblock Quadratic Span Programs and Succinct NIZKs without PCPs.
+\newblock Cryptology ePrint Archive, Paper 2012/215, 2012.
+\newblock  \url{https://eprint.iacr.org/2012/215}.
+
+
 \end{thebibliography}
