@@ -204,4 +204,9 @@ Arantxa Zapico, Vitalik Buterin, Dmitry Khovratovich, Mary Maller, Anca
 \newblock Cryptology ePrint Archive, Paper 2022/621, 2022.
 \newblock \url{https://eprint.iacr.org/2022/621}.
 
+\bibitem{legosnark}
+Matteo Campanelli, Dario Fiore, and Ana\"{\i}s Querol.
+\newblock LegoSNARK: Modular Design and Composition of Succinct Zero-Knowledge Proofs.
+\newblock Proceedings of the 2019 ACM SIGSAC Conference on Computer and Communications Security, 2019.
+
 \end{thebibliography}
