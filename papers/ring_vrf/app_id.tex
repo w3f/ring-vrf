@@ -6,7 +6,7 @@ After a user and service establish a secure channel and
 the server authenticates itself with certificates, then
 the user authenticates themselves by providing an anonymous
 VRF signature with input \msg being the service's identity,
-thus creating an pseudo-nonymous identified session with
+thus creating an pseudonymous identified session with
 a pseudonym unlinkable from other contexts.
 
 We expand this identified session workflow with an extra
@@ -15,7 +15,7 @@ We discuss only \pifast here but all techniques apply to \pisk and \pipk similar
 
 \begin{itemize}
 \item {\em Register} --
- Adds users' public key commitments into some \ring,
+ Adds  Pedersen commitments of the secret keys of the users  into some \ring,
  after verifying the user does not currently exist in \ring.
 \item {\em Update} --
  User agents regenerate their stored SNARK \pifast every time \ring changes,
@@ -25,7 +25,7 @@ We discuss only \pifast here but all techniques apply to \pisk and \pipk similar
  both checking the server's name is \msg and checking certificate
  transparency logs, and then computes the shared session id \aux.
  Our user agent computes the user's identity
-  $\mathtt{id} = \PedVRF.\Eval(\sk,\msg)$ on the server \msg,
+  $\mathtt{id} = \rVRF.\Eval(\sk,\msg)$ on the server \msg,
  % Our user agent next rerandomizes \pifast, \compk, and \openpk, computes
  %  $\sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \pifast)$
  and finally sends the server their ring VRF signature
@@ -34,7 +34,7 @@ We discuss only \pifast here but all techniques apply to \pisk and \pipk similar
  After receiving $(\compk,\pifast,\sigma)$ in channel \aux,
  the server named \msg checks \pifast on the input $\compk + \comring$,
  checks the VRF signature and obtains the user's identity $\mathtt{id}$, ala \\
- $\mathtt{id} = \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \pifast,\sigma)$.
+ $\mathtt{id} = \rVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \pifast,\sigma)$.
 \end{itemize}
 
 
