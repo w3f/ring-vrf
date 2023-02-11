@@ -37,7 +37,7 @@ We do not expose a public key from \KeyGen, nor inject the public key in \Eval.
 \begin{itemize}
     \item $\PedVRF.\CommitKey(\sk)$ \,
     returns a blinding factor $\openpk \leftsample \F_p$
-    and a commitment $\compk = \sk \, \genB + \openpk \, \genB$.
+    and a commitment $\compk = \sk \, \genG + \openpk \, \genB$.
     % \item $\PedVRF.\OpenKey(\compk,\openpk)$ \,
     % returns $\pk = \compk - \openpk \, \genB$.
     % \item $\PedVRF.\OpenKey(\sk,\openpk)$ \,
@@ -51,10 +51,18 @@ Our \Sign and \Verify algorithms of \PedVRF correspond to
 the \Prove and \Verify algorithms of a Chaum-Pedersen DLEQ proof
  for relation $\mathcal{R}_{eval}$,
 instantiated by a Fiat-Shamir transform of a sigma protocol.
-\begin{align}
-	\mathcal{R}_{eval} = \{((\sk, \openpk); (\compk,\PreOut,\In)): \nonumber\\  % \genG,\genB,\grE,
-	\compk = \sk\,\genG + \openpk\,\genB, \PreOut = \sk\,\In \}  \mathperiod \label{rel:commit} 
-\end{align}
+$$ \mathcal{R}_{eval} = \Setst{
+  \begin{aligned}
+    & (\sk, \openpk); \\ 
+    & \,\, (\compk,\PreOut,\In) 
+  \end{aligned}
+}{
+  \begin{aligned}
+    & \compk = \sk\,\genG + \openpk\,\genB, \\
+    & \,\, \PreOut = \sk\,\In 
+  \end{aligned}
+}  \mathperiod \label{rel:commit} 
+$$
 %
 \begin{itemize}
 	\item $\PedVRF.\Sign : (\sk,\openpk,\msg,\aux) \mapsto \sigma$ \,
@@ -99,8 +107,16 @@ typically a Merkle tree of public keys.
 We choose the ring commitment scheme so the $\rVRF.\OpenRing$ invocation
 is relatively SNARK friendly in our ring membership relation
 % \vspace{-0.1in}
-$$ \Rring = \Setst{ (\openpk,\openring); (\compk, \comring): \compk, \comring }{
-	\compk - \openpk \, \genB = \rVRF.\OpenRing(\comring,\openring)
+$$ \Rring = \Setst{ 
+  \begin{aligned}
+    & (\openpk, \openring); \\ 
+    & \,\, (\compk,\comring) 
+  \end{aligned}
+}{
+  \begin{aligned}
+    & \compk - \openpk \, \genB = \\
+    & \,\, \rVRF.\OpenRing(\comring,\openring)
+  \end{aligned}
 } \mathperiod $$
 At this point, we need public keys for $\rVRF.\CommitRing$ of course,
 but exactly what form these public keys take depends upon how our computation
