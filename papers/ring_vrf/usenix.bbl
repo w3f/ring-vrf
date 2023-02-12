@@ -201,5 +201,10 @@ Rosario Gennaro, Craig Gentry, Bryan Parno, and Mariana Raykova.
 \newblock Cryptology ePrint Archive, Paper 2012/215, 2012.
 \newblock  \url{https://eprint.iacr.org/2012/215}.
 
-
+\bibitem{subversion_zk}
+Behzad Abdolmaleki, Karim Baghery, Helger Lipmaa and Michal Zajac.
+\newblock A Subversion-Resistant SNARK.
+\newblock Cryptology ePrint Archive, Paper 2017/599, 2017.
+\newblock \url{https://eprint.iacr.org/2017/599}. 
+     
 \end{thebibliography}
