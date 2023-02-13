@@ -70,7 +70,8 @@ outputs 1 if indeed that is the case and 0 otherwise,
  
 \item $\ZKCont.\Verify: (\crsvk, \bar{y}, X', \pi', \relone) \mapsto 0/1$ \, outputs $1$ in case it accepts and $0$ otherwise,
 
-\item $\ZKCont.\Sim: (\tw, \bary, \relone) \mapsto \pi$ takes as input a simulation trapdoor $\tw$ and statement $(\bary, \barx)$ and returns an argument $\pi$,
+\item $\ZKCont.\Sim: (\tw, \bary, \relone) \mapsto (\pi', X')$ takes as input a simulation trapdoor $\tw$ and statement $(\bary, \barx)$ and returns 
+arguments $\pi'$ and $X'$,
 \end{itemize}
 and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledge soundness and zero-knowledge as defined below:\\
 %TO DO: Re-write this: We define (white-box) knowledge soundness for zero-knowledge continuations
@@ -104,15 +105,15 @@ and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledg
 %$\ZKCont.\Preprove$ that computes and outputs $X$ with its regular inputs and using $b$ when randomness is required; 
 where by $ E^{A}$ we denote the extractor $E$ that has access to all of adversary's $A$ messages during the protocol with the honest verifier. \\
 
-\noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for all  $(\bary, \barx; \baromega) \in \relone$, for all $X$, for all $b$, 
-for every adversary $A$ it holds:
+\noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for all  $(\bary, \barx; \baromega) \in \relone$, 
+for all $X$, for all $\pi$, for all $b$, for every adversary $A$ it holds:
 \begin{align*}
-\mathit{Pr}(&(\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
-                  & (\pi', X', \_) \leftarrow \ZKCont.\Reprove (\crspk, X, \pi, b, \relone) \ | \\ 
-                  & A(\crs, \pp, \pi', X', \relone)= 1 \ \wedge \ \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1) =  \\
-= \mathit{Pr}(&(\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\
-                     & (\pi', X') \leftarrow \ZKCont.\Sim(\tw, \bary, \relone) \ | \\ 
-                     & A(\crs, \pp, \pi', X', \relone) = 1 \ \wedge \ \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1)
+\mathit{Pr}(& A(\crs, \pp, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
+                  & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi', X', \_) \leftarrow \ZKCont.\Reprove (\crspk, X, \pi, b, \relone), \\
+                  &  \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1) =  \\
+= \mathit{Pr}(& A(\crs, \pp, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
+                     & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi', X') \leftarrow \ZKCont.\Sim(\tw, \bary, \relone) \\ 
+                     &  \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1)
 \end{align*}
  
 \end{definition} 
@@ -174,7 +175,7 @@ $\crsvk = ([\alpha]_1, \{ [\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\
 
 \item $\specg.\Preprove: (\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relRQ) \mapsto (X, \pi, b)$ such that \\
 \begin{align*}
-&b = 0; r, s\xleftarrow{\$} \F_p; X = \sum_{i=l+1}^{n} v_i [\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}]_1; \pi = (A, B, C); \\
+&b = 0; r, s\xleftarrow{\$} \F_p; X = \sum_{i=l+1}^{n} v_i [\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}]_1; \pi = ([A]_1, [B]_2, [C]_1); \\
 &A = \alpha + \sum_{i=0}^{m} v_i \cdot a_i(\tau) + r\delta; B = \beta + \sum_{i=0}^{m} v_i \cdot b_i(\tau) + s\delta; \\ 
 &C = \frac{\sum_{i=n+1}^{m} v_i \beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau) + h(\tau)t(\tau)}{\delta}   + As + Br - rs\delta, 
 \end{align*}
@@ -184,21 +185,22 @@ $\barv = (1, x_1, \ldots, x_n, w_1, \ldots, w_{m-n})$ (same as in Definition~\re
 
 \item $\specg.\Reprove: (\crspk, X, \pi, b, \relRQ) \mapsto (X', \pi', b')$  such that
 \begin{align*}
-&b ', r_1, r_2  \xleftarrow{\$} \F_p, X' = X + b' \Kgamma, \pi' = (A', B', C'), \\
-&A' = \frac{1}{r_1} A, B' = r_1 B + r_1r_2[\delta]_2, C' = C + r_2A  - b'\Kdelta \mathperiod
+&b ', r_1, r_2  \xleftarrow{\$} \F_p, X' = X + b' \Kgamma, \pi' = (U', V', W'), \\
+&U' = \frac{1}{r_1} U, V' = r_1 V + r_1r_2[\delta]_2, W' = W + r_2U  - b'\Kdelta \mathperiod
 \end{align*}
+\noindent where $\pi = (U, V, W)$.
  
 \item $\specg.\VerifyCom: (\pp, X, \barx, b) \mapsto 0/1$ where the output is 1 iff the following holds
 $$X = \sum_{i=l+1}^{n} x_i [\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}]_1  + b \Kgamma,$$
 where $\barx = (x_{l+1}, \ldots, x_n)$, $ 0 \leq l \leq n-1$. 
 \item $\ZKCont.\Verify: (\crsvk, \bar{y}, X', \pi', \relRQ) \mapsto 0/1$ where the output is 1 iff the following holds 
-$$e(A',B') = e([\alpha]_1, [\beta]_2) \cdot e(X' + Y, [\gamma]_2) \cdot e(C', [\delta]_2),$$
-where $\pi' = (A', B', C')$, $Y = \sum_{i=1}^{l} x_i [\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}]_1$ 
+$$e(U',V') = e([\alpha]_1, [\beta]_2) \cdot e(X' + Y, [\gamma]_2) \cdot e(W', [\delta]_2),$$
+where $\pi' = (U', V', W')$, $Y = \sum_{i=1}^{l} x_i [\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}]_1$ 
 and $\bary = (x_1, \ldots, x_l)$.
 
-\item $\specg.\Sim: (\tw, \bary, \relRQ) \mapsto \pi$ where $u, f, g \xleftarrow {\$} \F_p$ and let \\
-$\pi = ([f]_1, [g]_2, [c]_1)$ where $c = \frac{fg - \alpha \beta - \sum_{i=1}^{l} x_i (\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau))- u}{\delta}  $ and, 
-by definition $\bary = (x_1, \ldots, x_l)$. Note that $\pi$ is a simulated proof for transparent input $\bary$ and commitment $X = [u]_1$.
+\item $\specg.\Sim: (\tw, \bary, \relRQ) \mapsto (\pi', X')$ where $u, A', B' \xleftarrow {\$} \F_p$ and let \\
+$\pi' = ([A']_1, [B']_2, [C']_1)$ where $C' = \frac{A'B' - \alpha \beta - \sum_{i=1}^{l} x_i (\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau))- u}{\delta}  $ and, 
+by definition $\bary = (x_1, \ldots, x_l)$. Note that $\pi$ is a simulated proof for transparent input $\bary$ and commitment $X' = [u]_1$.
 \end{itemize} 
 \end{definition}
 
@@ -209,7 +211,8 @@ elements $\Kgamma = [\frac{\eta}{\gamma}]_1$ and $\Kdelta = [\frac{\eta}{\delta}
 our instantiation is used in~\cite[Fig.~22]{legosnark}. Note that, if a trusted setup is used (for example the one described 
 in~\cite{subversion_zk}) such that there exist a public and efficient procedure for verifying it, then, by extending it with 
 $\Kgamma$ and $\Kdelta$ (which is our extension of the standard Groth16 trusted setup), the resulting setup remains publicly 
-verifiable, and, hence, according to~\cite{subversion_zk}, subversion zero-knowledge. 
+verifiable (i.e., by using the additional verification equation $e(\Kgamma, [\gamma]_2) = e(\Kdelta, [\delta]_2)$), and, 
+hence, according to~\cite{subversion_zk}, subversion zero-knowledge. 
 %From page 3 of ~\cite{subversion_zk}"We change Groth?s zk-SNARK by adding extra elements to the CRS so that the CRS will become 
 %publicly verifiable; this minimal step (clearly, some public verifiability of the CRS is needed in the case the CRS generator 
 %cannot be trusted) will be sufficient to obtain Sub-ZK. However, choosing which elements to add to the CRS is not straightforward 
@@ -223,7 +226,13 @@ Finally, we are ready to prove the following result:
 Let $\relRQ$ be such that $\{a_k(X)\}_{k=0}^n$ are linearly independent polynomials. Then, in the 
 AGM~\cite{Fuchs_AGM}, $\specg$ is a zero-knowledge continuation as per definition~\ref{def:zk_cont}. 
 \end{theorem}
-\begin{proof} It is straightforward to prove that $\specg$ has completeness for $\Preprove$ and for $\Reprove$.
+\begin{proof} It is straightforward to prove that $\specg$ has completeness for $\Preprove$ and for $\Reprove$. \\
+
+\noindent Finally, regarding zero-knowledge, it is clear that if $\pi' = (U', V', W')$ is part of the output of $\specg.\Reprove$, 
+then $U'$ and $V'$ are uniformly distributed as group elements in their respective groups. This holds, as long as the 
+input to $\specg.\Reprove$ is a possibly maliciously generated but otherwise a verifying proof. Hence, it is easy to see 
+that the output $\pi'$ by the simulator $\specg.\Sim$ is identically distributed to a proof $\pi'$ output by 
+$\specg.\Reprove$ so the perfect zero-knowledge property holds for $\specg$.
 \end{proof}
 
 \begin{comment}
