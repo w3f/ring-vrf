@@ -206,5 +206,12 @@ Behzad Abdolmaleki, Karim Baghery, Helger Lipmaa and Michal Zajac.
 \newblock A Subversion-Resistant SNARK.
 \newblock Cryptology ePrint Archive, Paper 2017/599, 2017.
 \newblock \url{https://eprint.iacr.org/2017/599}. 
-     
+
+\bibitem{Fuchs_AGM}
+Georg Fuchsbauer, Eike Kiltz and Julian Loss.
+\newblock The Algebraic Group Model and its Applications. 
+\newblock Cryptology ePrint Archive, Paper 2017/620, 2017.
+\newblock {\url{https://eprint.iacr.org/2017/620}}.
+ 
+    
 \end{thebibliography}

@@ -202,7 +202,7 @@ by definition $\bary = (x_1, \ldots, x_l)$. Note that $\pi$ is a simulated proof
 \end{itemize} 
 \end{definition}
 
-\noindent \paragraph{Notes:} Our $\mathsf{SpecialG}$ instantiation (i.e., $\Reprove$ algorithm) uses a  
+\noindent \paragraph{Notes:} Our $\specg$ instantiation (i.e., $\Reprove$ algorithm) uses a  
 Groth16 re-randomisation technique, (see~\cite[Fig.~1]{RandomizationGroth16}). Moreover, the trusted setup required by 
 $\mathsf{SpecialG}$ is the same as that required by original Groth16~\cite{Groth16} extended by two additional group 
 elements $\Kgamma = [\frac{\eta}{\gamma}]_1$ and $\Kdelta = [\frac{\eta}{\delta}]_1$. An identical trusted setup as in 
@@ -215,6 +215,16 @@ verifiable, and, hence, according to~\cite{subversion_zk}, subversion zero-knowl
 %cannot be trusted) will be sufficient to obtain Sub-ZK. However, choosing which elements to add to the CRS is not straightforward 
 %since the zk-SNARK must remain knowledge-sound even given enlarged CRS; adding too many (or just ?wrong?) elements to the 
 %CRS can break the knowledge-soundness."
+
+Finally, we are ready to prove the following result:
+
+\begin{theorem}
+\label{sec_specg}
+Let $\relRQ$ be such that $\{a_k(X)\}_{k=0}^n$ are linearly independent polynomials. Then, in the 
+AGM~\cite{Fuchs_AGM}, $\specg$ is a zero-knowledge continuation as per definition~\ref{def:zk_cont}. 
+\end{theorem}
+\begin{proof} It is straightforward to prove that $\specg$ has completeness for $\Preprove$. 
+\end{proof}
 
 \begin{comment}
 Zero-knowledge invariably comes from random blinding factors.
