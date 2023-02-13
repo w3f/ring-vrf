@@ -90,7 +90,7 @@ and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledg
 \noindent \textbf{Perfect Completeness for $\Reprove$} For every efficient adversary $A$ it holds: 
 \begin{align*}
 \mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1  = >  \ZKCont.\Verify(\crsvk, \bar{y}, X', \pi', \relone) = 1)  \ \wedge \  \\
-                   & \wedge \ (\ZKCont.\VerifyCom (\pp, X, \barx, b) = 1 => \ZKCont.\VerifyCom (\pp, X', \barx, b') = 1) \ | \\
+                   & \wedge \ (\ZKCont.\VerifyCom (\pp, X, \barx, b) = 1 => \ZKCont.\VerifyCom (\pp, X', \barx, b + b') = 1) \ | \\
                    & (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
                    & (\bary, \barx, X, \pi, b) \leftarrow A(\crs,\pp, \relone), (X', \pi', b') \leftarrow \ZKCont.\Reprove(\crspk, X, \pi, b, \relone)) = 1
 \end{align*}
@@ -185,7 +185,7 @@ $\barv = (1, x_1, \ldots, x_n, w_1, \ldots, w_{m-n})$ (same as in Definition~\re
 \item $\specg.\Reprove: (\crspk, X, \pi, b, \relRQ) \mapsto (X', \pi', b')$  such that
 \begin{align*}
 &b ', r_1, r_2  \xleftarrow{\$} \F_p, X' = X + b' \Kgamma, \pi' = (A', B', C'), \\
-&A' = \frac{1}{r_1} A, B' = r_1 B + r_1r_2[\delta]_2, C' = C + r_2A  {\color{red} -} b'\Kdelta \mathperiod
+&A' = \frac{1}{r_1} A, B' = r_1 B + r_1r_2[\delta]_2, C' = C + r_2A  - b'\Kdelta \mathperiod
 \end{align*}
  
 \item $\specg.\VerifyCom: (\pp, X, \barx, b) \mapsto 0/1$ where the output is 1 iff the following holds
@@ -223,7 +223,7 @@ Finally, we are ready to prove the following result:
 Let $\relRQ$ be such that $\{a_k(X)\}_{k=0}^n$ are linearly independent polynomials. Then, in the 
 AGM~\cite{Fuchs_AGM}, $\specg$ is a zero-knowledge continuation as per definition~\ref{def:zk_cont}. 
 \end{theorem}
-\begin{proof} It is straightforward to prove that $\specg$ has completeness for $\Preprove$. 
+\begin{proof} It is straightforward to prove that $\specg$ has completeness for $\Preprove$ and for $\Reprove$.
 \end{proof}
 
 \begin{comment}

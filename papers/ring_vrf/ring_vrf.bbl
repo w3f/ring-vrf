@@ -204,30 +204,4 @@ Arantxa Zapico, Vitalik Buterin, Dmitry Khovratovich, Mary Maller, Anca
 \newblock Cryptology ePrint Archive, Paper 2022/621, 2022.
 \newblock \url{https://eprint.iacr.org/2022/621}.
 
-\bibitem{legosnark}
-Matteo Campanelli, Dario Fiore, and Ana\"{\i}s Querol.
-\newblock LegoSNARK: Modular Design and Composition of Succinct Zero-Knowledge Proofs.
-\newblock Proceedings of the 2019 ACM SIGSAC Conference on Computer and Communications Security, 2019.
-
-\bibitem{GGPR13}
-Rosario Gennaro, Craig Gentry, Bryan Parno, and Mariana Raykova.
-\newblock Quadratic Span Programs and Succinct NIZKs without PCPs.
-\newblock Cryptology ePrint Archive, Paper 2012/215, 2012.
-\newblock  \url{https://eprint.iacr.org/2012/215}.
-
-\bibitem{subversion_zk}
-Behzad Abdolmaleki, Karim Baghery, Helger Lipmaa and Michal Zajac.
-\newblock A Subversion-Resistant SNARK.
-\newblock Cryptology ePrint Archive, Paper 2017/599, 2017.
-\newblock \url{https://eprint.iacr.org/2017/599}. 
-
-\bibitem{Fuchs_AGM}
-Georg Fuchsbauer, Eike Kiltz and Julian Loss.
-\newblock The Algebraic Group Model and its Applications. 
-\newblock Cryptology ePrint Archive, Paper 2017/620, 2017.
-\newblock {\url{https://eprint.iacr.org/2017/620}}.
-
-
-
-
 \end{thebibliography}
