@@ -95,23 +95,24 @@ and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledg
                    & (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
                    & (\bary, \barx, X, \pi, b) \leftarrow A(\crs,\pp, \relone), (X', \pi', b') \leftarrow \ZKCont.\Reprove(\crspk, X, \pi, b, \relone)) = 1
 \end{align*}
-\noindent \textbf{Knowledge Soundness} For every efficient adversary $A$ there exists an efficient extractor $E$ such that 
+\noindent \textbf{Knowledge Soundness} For every benign auxiliary input $z$ (see~\cite{bening_auxiliary}), 
+for every efficient adversary $A$, there exists an efficient extractor $E$ such that 
 \begin{align*}
 \mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1) \ \wedge \ (\ZKCont.\VerifyCom(\pp, X, \bar{x}, b) = 1) \ \wedge\ \\
-                   & \wedge \ ( (\bary, \barx; \baromega) \notin \relone) \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\bary, \barx, X, \pi, b) \leftarrow A(\crs, \pp, \relone), \\ 
+                   & \wedge \ ( (\bary, \barx; \baromega) \notin \relone) \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\bary, \barx, X, \pi, b) \leftarrow A(\crs, \pp, z, \relone), \\ 
 & \baromega \leftarrow E^{A}(\crs, \relone)) = \negl (\lambda),
 \end{align*}
 \noindent %where $\ZKCont.\Preprove_{|X}(\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone; b)$ means running the part of algorithm 
 %$\ZKCont.\Preprove$ that computes and outputs $X$ with its regular inputs and using $b$ when randomness is required; 
 where by $ E^{A}$ we denote the extractor $E$ that has access to all of adversary's $A$ messages during the protocol with the honest verifier. \\
 
-\noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for all  $(\bary, \barx; \baromega) \in \relone$, 
-for all $X$, for all $\pi$, for all $b$, for every adversary $A$ it holds:
+\noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $z$, 
+for all  $(\bary, \barx; \baromega) \in \relone$, for all $X$, for all $\pi$, for all $b$, for every adversary $A$ it holds:
 \begin{align*}
-\mathit{Pr}(& A(\crs, \pp, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
+\mathit{Pr}(& A(\crs, \pp, z, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
                   & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi', X', \_) \leftarrow \ZKCont.\Reprove (\crspk, X, \pi, b, \relone), \\
                   &  \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1) =  \\
-= \mathit{Pr}(& A(\crs, \pp, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
+= \mathit{Pr}(& A(\crs, \pp, z, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
                      & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi', X') \leftarrow \ZKCont.\Sim(\tw, \bary, \relone) \\ 
                      &  \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1)
 \end{align*}
@@ -129,7 +130,7 @@ for all $X$, for all $\pi$, for all $b$, for every adversary $A$ it holds:
 
 Below we instantiate our zero-knowledge continuation notion with a scheme based on Groth16~\cite{Groth16} SNARK;
 hence, we call our instantiation \emph{specialised Groth16} or \emph{$\mathsf{SpecialG}$}. In order to do that, we need a 
-reminder of the definition of Quadratic Arithmetic Program (QAP)~\cite{legosnark}, ~\cite{GGPR13}.
+reminder of the definition of Quadratic Arithmetic Program (QAP)~\cite{LegoSNARK}, ~\cite{GGPR13}.
 
 \begin{definition}[QAP] 
 \label{def:QAP}
@@ -158,24 +159,24 @@ Specialised Groth16 for relation $\relRQ$ is the following instantiation of the 
 \noindent Let $\alpha, \beta, \gamma, \delta, \tau, \eta  \xleftarrow{\$} \F_q^{*}$. Let $\tw = (\alpha, \beta, \gamma, \delta, \tau, \eta)$. \\ 
 Let $\crs = ([\barsig_1]_1, [\barsig_2]_2)$ where 
 \begin{align*}
-\barsig_1 = (&\alpha, \beta, \delta, \{\tau_i\}_{i=0}^{d-1}, \{\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}\}_{i=1}^n,  
+\barsig_1 = (&\alpha, \beta, \delta, \{\tau_i\}_{i=0}^{d-1}, \left\{\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}\right\}_{i=1}^n,  
 \frac{\eta}{\gamma}, \\ 
-&\{\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\delta} \}_{i=n+1}^m, \{\frac{1}{\delta}\sigma^it(\sigma)\}_{i=0}^{d-2}, 
+&\left\{\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\delta} \right\}_{i=n+1}^m, \left\{\frac{1}{\delta}\sigma^it(\sigma) \right\}_{i=0}^{d-2}, 
 \frac{\eta}{\delta}), \\
 \barsig_2 = (&\beta, \gamma, \delta, \{\tau^i\}_{i=0}^{d-1}). 
 \end{align*} 
 
-Let $\pp = ( \{[\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}]_1 \}_{i=l+1}^{n}, [\frac{\eta}{\gamma}]_1)$. \\
-\noindent Moreover, for simplicity and later use, we call $\Kgamma = [\frac{\eta}{\gamma}]_1$  and $\Kdelta = [\frac{\eta}{\delta}]_1$.
+Let $\pp = \left( \left \{ \left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1 \right \}_{i=l+1}^{n}, \left[ \frac{\eta}{\gamma} \right]_1 \right)$. \\
+\noindent Moreover, for simplicity and later use, we call $\Kgamma = \left[\frac{\eta}{\gamma}\right]_1$  and $\Kdelta = \left[ \frac{\eta}{\delta}\right] _1$.
 
 \item $\specg.\Gen: (\crs, \relRQ) \mapsto (\crspk, \crsvk)$ where \\
-$\crspk = ([\barsig_1]_1, [\beta]_2, [\delta]_2, \{[\tau^i]_2\}_{i=0}^{d-1})$ and \\ 
-$\crsvk = ([\alpha]_1, \{ [\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}]_1\}_{i=1}^{l}, 
-[\beta]_2, [\gamma]_2, [\delta]_2)$.  
+$\crspk = \left([\barsig_1]_1, [\beta]_2, [\delta]_2, \left\{[\tau^i]_2\right\}_{i=0}^{d-1}\right)$ and \\ 
+$\crsvk = \left([\alpha]_1, \left\{ \left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1 \right\}_{i=1}^{l}, 
+[\beta]_2, [\gamma]_2, [\delta]_2\right)$.  
 
 \item $\specg.\Preprove: (\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relRQ) \mapsto (X, \pi, b)$ such that \\
 \begin{align*}
-&b = 0; r, s\xleftarrow{\$} \F_p; X = \sum_{i=l+1}^{n} v_i [\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}]_1; \pi = ([A]_1, [B]_2, [C]_1); \\
+&b = 0; r, s\xleftarrow{\$} \F_p; X = \sum_{i=l+1}^{n} v_i\left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1; \pi = ([A]_1, [B]_2, [C]_1); \\
 &A = \alpha + \sum_{i=0}^{m} v_i \cdot a_i(\tau) + r\delta; B = \beta + \sum_{i=0}^{m} v_i \cdot b_i(\tau) + s\delta; \\ 
 &C = \frac{\sum_{i=n+1}^{m} v_i \beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau) + h(\tau)t(\tau)}{\delta}   + As + Br - rs\delta, 
 \end{align*}
@@ -191,11 +192,11 @@ $\barv = (1, x_1, \ldots, x_n, w_1, \ldots, w_{m-n})$ (same as in Definition~\re
 \noindent where $\pi = (U, V, W)$.
  
 \item $\specg.\VerifyCom: (\pp, X, \barx, b) \mapsto 0/1$ where the output is 1 iff the following holds
-$$X = \sum_{i=l+1}^{n} x_i [\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}]_1  + b \Kgamma,$$
+$$X = \sum_{i=l+1}^{n} x_i\left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1  + b \Kgamma,$$
 where $\barx = (x_{l+1}, \ldots, x_n)$, $ 0 \leq l \leq n-1$. 
 \item $\ZKCont.\Verify: (\crsvk, \bar{y}, X', \pi', \relRQ) \mapsto 0/1$ where the output is 1 iff the following holds 
 $$e(U',V') = e([\alpha]_1, [\beta]_2) \cdot e(X' + Y, [\gamma]_2) \cdot e(W', [\delta]_2),$$
-where $\pi' = (U', V', W')$, $Y = \sum_{i=1}^{l} x_i [\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}]_1$ 
+where $\pi' = (U', V', W')$, $Y = \sum_{i=1}^{l} x_i\left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1$ 
 and $\bary = (x_1, \ldots, x_l)$.
 
 \item $\specg.\Sim: (\tw, \bary, \relRQ) \mapsto (\pi', X')$ where $u, A', B' \xleftarrow {\$} \F_p$ and let \\
@@ -204,22 +205,28 @@ by definition $\bary = (x_1, \ldots, x_l)$. Note that $\pi$ is a simulated proof
 \end{itemize} 
 \end{definition}
 
-\noindent \paragraph{Notes:} Our $\specg$ instantiation (i.e., $\Reprove$ algorithm) uses a  
-Groth16 re-randomisation technique, (see~\cite[Fig.~1]{RandomizationGroth16}). Moreover, the trusted setup required by 
-$\mathsf{SpecialG}$ is the same as that required by original Groth16~\cite{Groth16} extended by two additional group 
-elements $\Kgamma = [\frac{\eta}{\gamma}]_1$ and $\Kdelta = [\frac{\eta}{\delta}]_1$. An identical trusted setup as in 
-our instantiation is used in~\cite[Fig.~22]{legosnark}. Note that, if a trusted setup is used (for example the one described 
-in~\cite{subversion_zk}) such that there exist a public and efficient procedure for verifying it, then, by extending it with 
-$\Kgamma$ and $\Kdelta$ (which is our extension of the standard Groth16 trusted setup), the resulting setup remains publicly 
-verifiable (i.e., by using the additional verification equation $e(\Kgamma, [\gamma]_2) = e(\Kdelta, [\delta]_2)$), and, 
-hence, according to~\cite{subversion_zk}, subversion zero-knowledge. 
+\noindent \paragraph{Notes:} First, the trusted setup required by \specg is 
+an extension of that required by original Groth16~\cite{Groth16} by two additional 
+group elements $\Kgamma = [\frac{\eta}{\gamma}]_1$ and $\Kdelta = [\frac{\eta}{\delta}]_1$. 
+An identical trusted setup to that used by \specg was used in LegoSNARK~\cite[Fig.~22]{LegoSNARK} which defines 
+a commit-carrying SNARK based on Groth16. Second, our $\specg.\Reprove$ algorithm uses a Groth16 re-randomisation 
+technique for the proof (see~\cite[Fig.~1]{RandomizationGroth16} or LegoSNARK~\cite[Fig.~22]{LegoSNARK}), 
+but, in addition, $\specg.\Reprove$ also re-randomises $X$ which is a commitment to a slice of the public input; moreover 
+we appropriately define the zero-knowledge property for zk continuations such that even after iteratively applying 
+$\specg.\Reprove$ zero-knowledge property is preserved for both the witness as well as the public input committed to in $X$.  \\
+
+%{\color{red}Note that, if a trusted setup is used (for example the one described in~\cite{subversion_zk}) such that there 
+%exist a public and efficient procedure for verifying it, then, by extending it with $\Kgamma$ and $\Kdelta$ (which is our 
+%extension of the standard Groth16 trusted setup), the resulting setup remains publicly verifiable (i.e., by using the additional 
+%verification equation $e(\Kgamma, [\gamma]_2) = e(\Kdelta, [\delta]_2)$), and, hence, according to~\cite{subversion_zk}, 
+%subversion zero-knowledge. }
 %From page 3 of ~\cite{subversion_zk}"We change Groth?s zk-SNARK by adding extra elements to the CRS so that the CRS will become 
 %publicly verifiable; this minimal step (clearly, some public verifiability of the CRS is needed in the case the CRS generator 
 %cannot be trusted) will be sufficient to obtain Sub-ZK. However, choosing which elements to add to the CRS is not straightforward 
 %since the zk-SNARK must remain knowledge-sound even given enlarged CRS; adding too many (or just ?wrong?) elements to the 
 %CRS can break the knowledge-soundness."
 
-Finally, we are ready to prove the following result:
+\noindent Finally, we are ready to prove the following result:
 
 \begin{theorem}
 \label{sec_specg}
@@ -230,9 +237,9 @@ AGM~\cite{Fuchs_AGM}, $\specg$ is a zero-knowledge continuation as per definitio
 
 \noindent Finally, regarding zero-knowledge, it is clear that if $\pi' = (U', V', W')$ is part of the output of $\specg.\Reprove$, 
 then $U'$ and $V'$ are uniformly distributed as group elements in their respective groups. This holds, as long as the 
-input to $\specg.\Reprove$ is a possibly maliciously generated but otherwise a verifying proof. Hence, it is easy to see 
-that the output $\pi'$ by the simulator $\specg.\Sim$ is identically distributed to a proof $\pi'$ output by 
-$\specg.\Reprove$ so the perfect zero-knowledge property holds for $\specg$.
+input to $\specg.\Reprove$ is a verifying proof, even when the proof was maliciously generated. Hence, it is easy to check  
+that the output$\pi'$ of $\specg.\Sim$ is identically distributed to a proof $\pi'$ output by $\specg.\Reprove$ so the perfect 
+zero-knowledge property holds for $\specg$.
 \end{proof}
 
 \begin{comment}
