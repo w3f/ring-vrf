@@ -109,7 +109,7 @@ is relatively SNARK friendly in our ring membership relation
 % \vspace{-0.1in}
 $$ \Rring = \Setst{ 
   \begin{aligned}
-    & (\openpk, \openring); \\ 
+    & (\openpk, \openring, \pk); \\ 
     & \,\, (\compk,\comring) 
   \end{aligned}
 }{
@@ -122,7 +122,7 @@ At this point, we need public keys for $\rVRF.\CommitRing$ of course,
 but exactly what form these public keys take depends upon how our computation
  $\compk - \openpk \, \genB$ inside $\Rring$ works.
 We therefore have a relation $\overset{\sk}{\equiv}$ that proves
- the secret key behind $\pk$ matches $\sk \, \genG = \compk - \openpk \, \genB$.
+ the secret key $\sk$ behind $\pk$ matches $\sk \, \genG = \compk - \openpk \, \genB$.
 We provide one optimal public key design in \S\ref{subsec:rvrf_faster},
  although some further nuances only appear later in \S\ref{subsec:AML_KYC}.
 Anyways $\rVRF.\KeyGen$ always generate both a secret key similar to
