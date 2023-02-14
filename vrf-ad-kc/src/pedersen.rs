@@ -4,6 +4,8 @@
 // - Jeffrey Burdges <jeff@web3.foundation>
 
 //! ### Pedersen VRF routines
+//! 
+//! 
 
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
@@ -28,9 +30,17 @@ use core::borrow::{BorrowMut};
 pub struct PedersenVrf<K,H=K> 
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
-    keying_base: K,
+    // keying_base: K,
+    thin: crate::ThinVrf<K>,
     blinding_base: K,
     _pd: core::marker::PhantomData<H>,
+}
+
+impl<K,H> core::ops::Deref for PedersenVrf<K,H> 
+where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
+{
+    type Target = crate::ThinVrf<K>;
+    fn deref(&self) -> &crate::ThinVrf<K> { &self.thin }
 }
 
 impl<K,H> Flavor for PedersenVrf<K,H>
@@ -88,7 +98,8 @@ impl<K,H> PedersenVrf<K,H>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     pub fn new(keying_base: K, blinding_base: K) -> PedersenVrf<K,H> {
-        PedersenVrf { keying_base, blinding_base, _pd: core::marker::PhantomData, }
+        let thin = crate::ThinVrf { keying_base };
+        PedersenVrf { thin, blinding_base, _pd: core::marker::PhantomData, }
     }
 
     pub fn compute_blinded_publickey(
@@ -127,7 +138,7 @@ impl<F: Flavor> Zeroize for Scalars<F> {
         self.blinding.zeroize();
     }
 }
-
+ 
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct Affines<P: Flavor> {
     pub(crate) keyish:  <P as Flavor>::KeyAffine,

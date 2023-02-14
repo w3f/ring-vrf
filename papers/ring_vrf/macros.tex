@@ -1,10 +1,11 @@
 
+\def\openpk{\ensuremath{\mathsf{b}}\xspace} % redefinition
+
 \renewcommand{\msg}{\ensuremath{\mathsf{input}}\xspace}
 \renewcommand{\aux}{\ensuremath{\mathsf{ass}}\xspace}
 
 
 \newcommand{\PedVRF}{\primalgo{PedVRF}} 
-
 
 \newcommand\crs{\ensuremath{\mathit{crs}}\xspace}
 \newcommand\crspk{\ensuremath{\mathit{crs}_{\mathit{pk}}}\xspace}
@@ -31,11 +32,21 @@
 \newcommand\reltwo{\ensuremath{\mathcal{R}_2}\xspace}
 \newcommand\relRQ{\ensuremath{\mathcal{R}_{\mathcal{Q}}}\xspace}
 
-\newcommand\baseL{L}
+\newcommand\baseL{\mathcal{L}}
 \newcommand\Lrvrf{\ensuremath{\baseL_{\mathtt{rvrf}}}\xspace}
 \newcommand\Leval{\ensuremath{\baseL_{\mathtt{eval}}}\xspace}
 \newcommand\Lring{\ensuremath{\baseL_{\mathtt{ring}}}\xspace}
 \newcommand\Lfast{\ensuremath{\baseL_{\mathtt{fast}}}\xspace}
+
+\newcommand\baseR{\mathcal{R}}
+\newcommand\Reval{\ensuremath{\baseR_{\mathtt{eval}}}\xspace}
+\newcommand\Rring{\ensuremath{\baseR_{\mathtt{ring}}}\xspace}
+\newcommand\Rfast{\ensuremath{\baseR_{\mathtt{fast}}}\xspace}
+
+\newcommand\hsis{{h'}}
+\newcommand\ecEsis{{\mathbb{G}'}}
+\newcommand\grEsis{{\mathbf{G}'}}
+
 \newcommand\Lsk{\ensuremath{\baseL_{\mathtt{sk}}}\xspace}
 \newcommand\Lpk{\ensuremath{\baseL_{\mathtt{pk}}}\xspace}
 

@@ -106,7 +106,7 @@ argument with a set commitment to \ring, roughly like what ZCash does \cite{zcas
 % \item $\rVRF.\CheckRing : \ring \mapsto \comring$ takes a set \ring of public keys and returns a public key set commitment \comring.
 \item $\rVRF.\CommitRing : (\ring,\pk) \mapsto (\comring,\openring)$ \,
     returns a commitment for a set \ring of public keys, and
-    optionally the opening \openring for some $\pk \in \ring$ as well.
+    optionally the opening \openring if $\pk \in \ring$ as well.
 \item $\rVRF.\OpenRing : (\comring,\openring) \mapsto \pk \, \lor \perp$ \,
     returns a public key \pk, provided \openring correctly opens
     the ring commitment \comring, or failure $\perp$ otherwise.

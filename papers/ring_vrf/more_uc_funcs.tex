@@ -1,36 +1,36 @@
 \section{Ring VRF Variations}
 \label{sec:morefuncs}
-In this section, we give ring VRF functionalities which give more security properties than the basic ring VRF functionality $ \fgvrf $ that we define in Figure \ref{f:gvrf}.
-
-\newcommand{\faux}{\fgvrf^{\mathsf{aux}}}
-\subsection{Ring VRF with Associated DATA}
-We define a variation of ring VRF which signs also an associated data (aux) along with a message. It is very similar to $ \fgvrf $. It additionally requires unforgeability notion for $ \aux $ as well. See Figure \ref{f:aux} for the details.
-\begin{figure}
-\begin{tcolorbox}
-	{  $ \faux $ runs two PPT algorithms $\gen_{sign} $ during the execution.
-		
-		\begin{description}
-			
-			\item[Key Generation.] Same as in $ \fgvrf $.
-			
-			\item[Malicious Ring VRF Evaluation.] Same as in $ \fgvrf $.
-			
-			\item[Honest Ring VRF Signature.] upon receiving a message $(\oramsg{sign}, \sid, \ring, \pk_i, m, \underline{aux})$ from $\user_i$, verify that $\pk_i \in \ring$ and that there exists a public key $\pk_i$ associated to $\user_i$ in the table $ \vklist $. If that wasn't the case, just ignore the request. 	
-			If there exists no $ W' $ such that $ \anonymouskeymap[m,W'] =  \pk_i $, let $ W \leftarrow \setsym{S}_W$. Then, let $y \leftsample \setsym{S}_{eval}$ and set $ \anonymouskeymap[W] = (m,\pk_i) $ and set $ \evaluationslist[m, W] = y$.
-			%					\begin{itemize}
-				%						%\item If there exists $ W \in  \anonymouskeymap  $, abort.
-				%						\item Else 
-				%						%TODO define what \in \anonymouskeymap mean
-				%					\end{itemize}
-			%			    \end{itemize}
-		Obtain $ W, y $ where  $ \evaluationslist[m, W] = y$, $ \anonymouskeymap[m,W] = \pk_i $ and run  $ \gen_{sign}(\ring, W, m,\underline{aux}) \rightarrow \sigma $. Verify that $ [m, \underline{aux},W, \sigma, 0] $ is not recorded. If not, abort. Otherwise, record $ [m,\underline{aux}, W, \sigma, 1] $. Return $(\oramsg{signature}, \sid, \ring,W,m,\underline{aux}, y, \sigma)$ to $\user_i$.
-		\item[Ring VRF Verification.] Same as in $ \fgvrf $ except that $ \faux $ checks records $  [m,\underline{aux},W,\ring,\sigma, b]   $ in the places where $ \fgvrf $ checks $ [m,W,\ring,\sigma, b] $.
-	\end{description}
-	
-}
-\end{tcolorbox}
-\caption{Functionality $\faux$.\label{f:aux}}
-\end{figure}
+In this section, we give a ring VRF functionality which gives more security properties than the basic ring VRF functionality $ \fgvrf $ that we define in Figure \ref{f:gvrf}.
+%
+%\newcommand{\faux}{\fgvrf^{\mathsf{aux}}}
+%\subsection{Ring VRF with Associated DATA}
+%We define a variation of ring VRF which signs also an associated data (aux) along with a message. It is very similar to $ \fgvrf $. It additionally requires unforgeability notion for $ \aux $ as well. See Figure \ref{f:aux} for the details.
+%\begin{figure}
+%\begin{tcolorbox}
+%	{  $ \faux $ runs two PPT algorithms $\gen_{sign} $ during the execution.
+%		
+%		\begin{description}
+%			
+%			\item[Key Generation.] Same as in $ \fgvrf $.
+%			
+%			\item[Malicious Ring VRF Evaluation.] Same as in $ \fgvrf $.
+%			
+%			\item[Honest Ring VRF Signature.] upon receiving a message $(\oramsg{sign}, \sid, \ring, \pk_i, m, \underline{aux})$ from $\user_i$, verify that $\pk_i \in \ring$ and that there exists a public key $\pk_i$ associated to $\user_i$ in the table $ \vklist $. If that wasn't the case, just ignore the request. 	
+%			If there exists no $ W' $ such that $ \anonymouskeymap[m,W'] =  \pk_i $, let $ W \leftarrow \setsym{S}_W$. Then, let $y \leftsample \setsym{S}_{eval}$ and set $ \anonymouskeymap[W] = (m,\pk_i) $ and set $ \evaluationslist[m, W] = y$.
+%			%					\begin{itemize}
+%				%						%\item If there exists $ W \in  \anonymouskeymap  $, abort.
+%				%						\item Else 
+%				%						%TODO define what \in \anonymouskeymap mean
+%				%					\end{itemize}
+%			%			    \end{itemize}
+%		Obtain $ W, y $ where  $ \evaluationslist[m, W] = y$, $ \anonymouskeymap[m,W] = \pk_i $ and run  $ \gen_{sign}(\ring, W, m,\underline{aux}) \rightarrow \sigma $. Verify that $ [m, \underline{aux},W, \sigma, 0] $ is not recorded. If not, abort. Otherwise, record $ [m,\underline{aux}, W, \sigma, 1] $. Return $(\oramsg{signature}, \sid, \ring,W,m,\underline{aux}, y, \sigma)$ to $\user_i$.
+%		\item[Ring VRF Verification.] Same as in $ \fgvrf $ except that $ \faux $ checks records $  [m,\underline{aux},W,\ring,\sigma, b]   $ in the places where $ \fgvrf $ checks $ [m,W,\ring,\sigma, b] $.
+%	\end{description}
+%	
+%}
+%\end{tcolorbox}
+%\caption{Functionality $\faux$.\label{f:aux}}
+%\end{figure}
 
 
 

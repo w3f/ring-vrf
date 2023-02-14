@@ -8,7 +8,7 @@
 /// `TranscriptIO` attaches the `label` required by merlin.
 ///
 #[derive(Clone)]
-struct TranscriptIO<T> {
+pub struct TranscriptIO<T> {
     pub label: &'static [u8],
     pub t: T,
 }

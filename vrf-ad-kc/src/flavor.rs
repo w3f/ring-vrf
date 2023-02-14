@@ -3,26 +3,31 @@
 //! # Architecture
 //! 
 //! Our two signatures each handle different public v secret flavors,
-//! a regular `Public = Secret * Base`, and also a Pedersen commitment
-//! like `Public = Secret * Base + BlindingSecret * BlindingBase`.
-//! A signature creates a `k: NonceSecret` and `NoncePublic` pair,
-//! computes a challenge scalar via Fiat-Shamir, and then as proof reveals
-//! the secret-like component of `NoncePublic + Challenge * Public`.
+//! a regular `public = secret * base`, and also a Pedersen commitment
+//! like `public = secret * base + blinding_secret * BlindingBase`.
+//! A signature creates fresh a `Witness { k, r }` pair, computes a
+//! challenge scalar via Fiat-Shamir, and then as proof reveals the
+//! secret-like component of `k + challenge * public`.
 //! 
 //! `ThinVrf` has only one verification equation of the regular flavor,
 //! in which we choose base to be a delinearized combination of the
 //! signer's public key base and the `VrfInput` bases.
 //! 
-//! `PedersenVrf` has one verification equation of each flavor, with
-//! seperate `NoncePublic`s, but which share the same challenge, and
-//! the regular proof is a prefix of the Pedersen proof.
+//! `PedersenVrf` has one verification equation of each flavor, but
+//! which share the same challenge.  In this, `Witness::k` has nonces
+//! for both the public key and blinding base, and `Witness::r` has
+//! curve points for both the keying curve and the hashing curve
 //! 
 //! ### Batching
 //! 
-//! We support half-aggregation aka pre-batching for both, which retains
-//! each signature's own distinct `NoncePublic`s, and other publics, but
-//! only retains a delinearized combination of the proof proof components,
-//! and thereby merges the verification equations.
+//! An EC VRF cannot save any space through half-aggregation aka
+//! pre-batching, as sending two nonces point consumes the space saved
+//! by sending one less scalar.  Yet, our `ThinVrf` and `PedersenVrf`
+//! both do save space when half-aggregated aka pre-batched.
+//! `ThinVrf` needs only one nonces point.  `PedersenVrf` needs two
+//! nonce points, but also needs two scalars, which then merge in
+//! half-aggregation aka pre-batching, again saving 50%.   We thus
+//! choose batch verifiable forms for both signature flavors.
 //!  
 //! ### Multi-signatures
 //!

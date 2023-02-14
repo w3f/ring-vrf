@@ -111,6 +111,11 @@ pub struct VrfInput<C: AffineRepr>(pub(crate) C);
 impl<C: AffineRepr> VrfInput<C> {
     /// Create a new VRF input from a `Transcript`.
     /// 
+    /// As the arkworks hash-to-curve infrastructure looks complex,
+    /// we employ arkworks' simpler `UniformRand` here, which uses
+    /// shitty try and increment.  We strongly recommend you construct
+    /// `VrfInput`s directly using a better hash-to-curve.
+    /// 
     /// TODO: Ask Syed to use the correct hash-to-curve
     #[inline(always)]
     pub fn from_transcript<T,M>(mut t: T, m: &M) -> Self
@@ -131,7 +136,7 @@ impl<F: Flavor> SecretKey<F> {
         VrfPreOut( p.into_affine() )
     }
 
-    /// Compute VRF pre-output paired with input from secret key and input.
+    /// Compute VRF pre-output paired with input from secret key and input point.
     pub fn vrf_inout(
         &self, input: VrfInput<<F as Flavor>::PreOutAffine>
     ) -> VrfInOut<<F as Flavor>::PreOutAffine>
@@ -140,6 +145,12 @@ impl<F: Flavor> SecretKey<F> {
         VrfInOut { input, preoutput }
     }
 
+    /// Compute VRF pre-output paired with input from secret key and input transcript.
+    /// 
+    /// As the arkworks hash-to-curve infrastructure looks complex,
+    /// we employ arkworks' simpler `UniformRand` here, which uses
+    /// shitty try and increment.  We strongly recommend you use a
+    /// better hash-to-curve manually.
     pub fn vrf_inout_from_transcript<T,M>(&self, t: T, m: &M) -> VrfInOut<<F as Flavor>::PreOutAffine>
     where T: SigningTranscript, M: VrfMalleability+?Sized
     {
@@ -156,6 +167,11 @@ pub struct VrfPreOut<C: AffineRepr>(pub(crate) C);
 impl<C: AffineRepr> VrfPreOut<C> {
     /// Create `VrfInOut` by attaching to our pre-output the VRF input
     /// with given malleablity from the given transcript. 
+    /// 
+    /// As the arkworks hash-to-curve infrastructure looks complex,
+    /// we employ arkworks' simpler `UniformRand` here, which uses
+    /// shitty try and increment.  We strongly recommend you use a
+    /// better hash-to-curve manually.
     pub fn attach_input<T,M>(&self, malleability: &M, t: T) -> VrfInOut<C>
     where T: SigningTranscript, M: VrfMalleability
     {
