@@ -1,47 +1,309 @@
-
 \section{Applications}
-\label{sec:applicaitons_short}
+\label{sec:app_short}
 
-TODO: Compltely rewrite shorter applications section
+We briefly outline how ring VRFs could be used for
+ identity, moderation, rationing, and games.
 
 
-%TODO We can improve the following paragraph
-In this paper,  we defined a new cryptographic primitive ring VRF in the UC model. It is a ring signature which also lets generate a random number with respect to their keys and the signed message. We  also defined a new technique called zero-knowledge continuation. It helps to regenerate a zero-knowledge proof for the same statement and witness without running the prove algorithm after it is run once. We constructed  $ \SpecialG $ based on Groth16 \cite{Groth16} and showed that it is a zero-knowledge continuation. Our UC-secure ring VRF construction can deploy $ \SpecialG $ to efficiently instantiate the signing process. 
-We conclude our paper by giving some specific applications that shows the usability of a ring VRF.
+\subsection{Identity}
+\label{subsec:app_identity}
 
-\paragraph{Identity:} 
-TODO For Jeff, I added some stuff from the Identity section, but we can add more from that section if they are formal and consistent with our construction.
+Ring VRF outputs could provide users with stable identities across
+arbitrarily many services given several conditions:
+First, our ring VRF input should be stable for a given services,
+ like by using services' urls.
+Second, we demand an encrypted connection between the user agent and
+the service, in which the service authenticates itself first,
+ like by verifying TLS certificates.
+Third, the user agent avoids identity leakage between different services,
+ like by denying cross site resources.
+Fourth, the server trusts the ring membership, like by trusting
+ a third party who enforces a ring registration procedure.
+Also, this third party updates users as the ring membership evolves.
 
- Ring VRFs yield anonymous identity systems:
-After a user and service establish a secure channel and
-the server authenticates itself with certificates, then
-the user authenticates themselves by providing an anonymous
-VRF signature with input \msg being the service's identity,
-thus creating an pseudonymous identified session with
-a pseudonym unlinkable from other contexts. We informally foresee a system that identifies a user anonymously with our ring VRF construction as follows:
-
+An HTTPS workflow satisfying these conditions resembles:
 
 \begin{itemize}
-	\item {\em Register} --
-	Adds Pedersen commitments of the secret keys of the users into some \ring,
+\item {\em Register} --
+	Adds users' public key commitments into some \ring,
 	after verifying the user does not currently exist in \ring.
-	\item {\em Update} --
-	User agents regenerate their stored  \pifast every time \ring changes since $ \rel_{ring} $ changes,
-	likely receiving \comring and \openring from some ring management service.  
-	\item {\em Identify} --
+\item {\em Update} --
+	User agents regenerate their stored SNARK $(\pk,\pifast^\inner)$ using
+	$\SpecialG.\Preprove( (\sk_1,\sk_2,\openring); (\sk,\comring) )$
+	each time \ring changes, perhaps even receiving \comring and \openring
+	from some ring management service.
+\item {\em Identify} --
 	Our user agent first opens a standard TLS connection to a server \msg,
-	both checking the server's name is \msg and checking certificate
+	both checking the server's url is \msg and checking certificate
 	transparency logs, and then computes the shared session id \aux.
 	Our user agent computes the user's identity
-	$\mathtt{id} = \rVRF.\Eval(\sk,\msg)$ on the server \msg,
-	% Our user agent next rerandomizes \pifast, \compk, and \openpk, computes
-	%  $\sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \pifast)$
-	and finally sends the server their ring VRF signature
-	$\sigma \leftarrow \rVRF.\rSign(\sk,\openring,\msg,\aux)$. % $ = (\compk,\pifast,\sigma)$.
-	\item {\em Verify} -- 
-	After receiving $\sigma$ in channel \aux,
-	the server named \msg runs $ \rVRF.\Verify(\comring,\msg,\aux, \pifast,\sigma) $ and obtains $ \mathtt{id} $ if it verifies. In this way, the server makes sure that the user wit $ \mathtt{id} $ connects to it.
+	$\mathtt{id} = \PedVRF.\Eval(\sk,\msg)$ on the server id \msg,
+	Our user agent next rerandomizes \pifast, \compk, and \openpk using
+	$\SpecialG.\Reprove( \pk, \pifast^\inner )$, computes
+	$\sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \pifast)$,
+	and finally sends the server their ring VRF signature $(\compk,\pifast,\sigma)$
+	% $\rVRF.\rSign(\sk,\openring,\msg,\aux)$ % $ = (\compk,\pifast,\sigma)$.
+	Our user agent rejects identity requests from resources besides
+	top/outer most frame.
+\item {\em Verify} -- 
+	After receiving $(\compk,\pifast,\sigma)$ in channel \aux,
+	the server \msg checks $\SpecialG.\Verify( \comring, (\compk,\pifast) )$,
+	checks the VRF signature, and obtains the user's identity $\mathtt{id}$, ala \\
+	$\mathtt{id} = \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \pifast,\sigma)$.
 \end{itemize}
 
-\paragraph{Rate Limiting:}
-TODO for Jeff
+Anonymity depends largely upon certificate authentication, including
+certificate transparency logs, in that users could otherwise login to
+a site with fraudulent credentials.  We think cross site restrictions
+ and \aux being the channel limit this attack vector somewhat though.
+If stronger defenses are desired then instead of \msg being the url,
+\msg could be an air gapped public ``root'' key for the site or CA, which
+then also certifies its TLS certificate.  
+
+As an optimization, \Reprove could rerandomize deterministically based
+upon $H(\sk,\msg)$, so servers could then cache $\pifast$ verification.
+
+
+\eprint{}{\begin{comment}}
+\subsection{AML/KYC}
+\label{subsec:AML_KYC}
+
+We shall not discuss AML/KYC in detail, because the entire field lacks
+clear goals, and thus winds up being ineffective
+\cite{doi:10.1080/25741292.2020.1725366}.
+% https://www.tandfonline.com/doi/full/10.1080/25741292.2020.1725366
+% via https://twitter.com/ronaldpol/status/1491548352189587460
+We do however observe that AML/KYC typically conflicts with security
+and privacy laws like GDPR.  As a compromise between these regulations,
+one needs a compliance party who know users' identities,
+while another separate service party knows the users' activities.
+We propose a safer and more efficient solution:
+
+Instead our compliance party becomes an identity issuer who maintains
+a public \ring, and privately knows the users behind each public key.
+As above, identity systems could employ \ring freely for diverse purposes.
+If later asked or subpoenaed, users could prove their relevant identities
+to investigators, or maybe prove which services they use and do not use. 
+
+Interestingly \PedVRF could run ``backwards'' like
+$H_{\grE'}(\msg) \ne \sk^{-1} \, \PreOut$
+to show a ring VRF output associated to $\PreOut$
+does not belong to the user, without revealing the users'
+identity $H'(\msg, \sk \, H_{\grE'}(\msg))$ to investigators. 
+
+Our applications mostly ignore key multiplicity. 
+AML/KYC demands suspects prove non-involvement using ring VRFs.
+
+\begin{definition}\label{def:rvrf_exculpability}
+	We say \rVRF is {\em exculpatory} if we have an efficient algorithm
+	for equivalence of public keys, but a PPT adversary \adv cannot
+	find non-equivalent public keys $\pk_0,\pk_1$ with colliding VRF outputs.
+	% (perfectly or computationally)
+	% (either ever or with advantage negligible advantage in $\secparam$)
+\end{definition}
+
+A priori, our JubJub representations $\sk_0 \genJ_0 + \sk_1 \genJ_1$
+used in \S\ref{subsec:rvrf_faster} and \S\ref{subsec:rvrf_side_channel}
+costs us exculpability from Definition \ref{def:rvrf_exculpability}.
+% Ad hoc rings ...
+% Rings used for AML/KYC would be maintained by an authority and require
+% some registration procedure, using government issued identity documents.
+
+There is however a natural {\em exculpable public key} flavor $(\pk,\sigma)$,
+in which
+$\sigma = \Sign(\sk, \CommitRing(\{ \pk \},\pk).\openring, \mathtt{ring\_name}, \mathtt{""})$.
+The singleton ring $\{ \pk \}$ ensure that 
+$\rVerify(\CommitRing(\{\pk\}), \mathtt{ring\_name}, \mathtt{""}, \sigma)$
+uniquely determines the secret key, so exculpability holds
+if joining the ring requires $(\pk,\sigma)$.
+
+% \begin{proposition}
+% \end{proposition}
+\eprint{}{\end{comment}}
+
+
+\subsection{Moderation}
+\label{subsec:moderation}
+
+\eprint{%
+All discussion or collaboration sites have behavioral guidelines and
+moderation rules that deeply impact their culture and collective values.%
+}{}
+
+Our ring VRFs enables a simple blacklisting operation:
+If a user misbehaves, then sites could blacklist or otherwise penalizes
+their site local identity $\mathtt{id}$.
+As $\mathtt{id}$ remains unlinked from other sites, we avoid thorny
+questions about how such penalties impact the user elsewhere, and thus
+can assess and dispense justice more precisely. 
+
+At the same time, there exist sites who must forget users' histories
+eventually, like under a ``right to be forgotten'' principle ala GDPR.
+% or an ethical principles of social mistakes being ephemeral.
+
+As users have distinct $\mathtt{id}$ for each \msg,
+we obtain ephemeral identities if \msg consists of the url plus
+the current week and month, or some other approximate date.
+At this point, users have only one stable $\mathtt{id}$ within each
+approximate date range, but they obtain fresh $\mathtt{id}$s merely
+by waiting until the next week or month.
+
+We then adjust \PedVRF to simultaneously prove multiple VRF input-output
+pairs $(\msg_j,\mathtt{id}_j)$.  As in \cite{PrivacyPass}, we merely
+delinearize \In and \PreOut in \rSign and \rVerify like:
+\begin{align*}
+	x &= H(\msg_j,\mathtt{id}_j,\ldots,\msg_j,\mathtt{id}_j) \\
+	\In &= \sum_j H_p(x,j) \, \In_j \\
+	\PreOut &= \sum_j H_p(x,j) \, \PreOut_j \\
+\end{align*}
+In this way, \PedVRF proves the same secret key controls two or more
+ephemeral identities, thereby constructing a stable identity from the
+ephemeral identities.
+
+At login, our site demands linked two input-output pairs given by
+$\msg_1 = \mathtt{site\_name} \doubleplus \mathtt{current\_month}$ and
+$\msg_2 = \mathtt{site\_name} \doubleplus \mathtt{registration\_month}$,
+so users could have multiple active pseudo-nyms given by $\mathtt{id}_2$,
+but only one active pseudo-nym per week, enforced by deduplicating
+$\mathtt{id}_1$, which still prevents spam and abuse.
+
+Alternatively, we could associate users pseudo-nyms with their recently
+seen $\mathtt{id}_1$ but link adjacent months.  In other words, we define
+$\msg_j$ by the $j$th previous month, until reaching a previously used
+$\mathtt{id}_1$.  In this model, pseudo-nyms could be abandoned, but
+abandoned pseudo-nyms cannot then be reclaimed without linking intervening ones.
+% Although more costly, sites could permanently bans a few problematic
+% users via the inequality proofs described in \S\ref{subsec:AML_KYC} too.
+
+In these ways, sites encode important aspects of their moderation rules
+into the ring VRF inputs they demand.  
+% % We expect this makes sites' values and culture more uniform, predictable, and transparent.
+
+
+\section{Rate limiting}
+\label{sec:app_rate_limits}
+
+As a rate limiting device, we repeat this approximate date trick from
+moderation, but also include a counter $k = 1 \ldots n$ in \msg, so
+ $\msg = \mathtt{domain} \doubleplus \mathtt{date} \doubleplus k$.
+Instead of treating ring VRF outputs like identities,
+we now treat them like nullifiers which could each be spent exactly once,
+ similarly to the nullifiers in ZCash or ecash systems.
+
+We do leak information about nullifiers' ownership by revealing $k$ here:
+%
+An adversary Eve observes two ring VRF signatures with the same
+$\mathtt{domain}$ and $\mathtt{date}$ so
+$\msg_i = \mathtt{domain} \doubleplus \mathtt{date} \doubleplus k_i$
+for $i=1,2$, but with different outputs $\Out_1$ and $\Out_2$.
+If $k_1 \ne k_2$ then Eve learns nothing, but if $k_1 = k_2$ then
+Eve learns that $sk_1 \ne \sk_2$, representing different users. 
+
+We do not always care if Eve learns this much information, but users'
+threat models should be clearly understood before making this choice.
+In principle, we could hide $k$ if we replace \PedVRF by a flavor of
+\Reval implemented using Groth16, 
+ but which still fits our formulation in \S\ref{sec:overview}.
+Indeed these \Reval choices could provide post-quantum anonymity, 
+without expensive post-quantum soundness, perhaps interesting if leaking $k$ matters.
+
+
+\subsection{Ration cards}
+\label{subsec:app_ration_carts}
+
+As a species, we expect $+3^{\circ}$C over the pre-industrial climate
+by 2100 \cite{IPCC2022}, or more likely above $+4^{\circ}$C given
+tipping points \cite{tipping2022}.  % https://www.youtube.com/watch?v=LxoyaCSWFGs
+At these levels, we experience devastating famines as the Earth's
+carrying capacity drops below one billion people \cite{carrying_capacity}.
+In the near term, our shortages of resources, energy, goods, water,
+and food shall steadily worsen over the next several decades, due to
+climate change, ecosystem damage or collapse, and resource exhaustion
+ala peak oil.  We expect synchronous crop failures around the 2040s
+in particular \cite{climaterisk2021}. % https://nitter.it/ThierryAaron/status/1442442451541807109#m
+% off topic: https://12ft.io/proxy?q=https%3A%2F%2Fwww.bbc.com%2Ftravel%2Farticle%2F20220816-why-theres-no-dijon-in-dijon-mustard
+Invariably, nations manage shortages through rationing, like during WWI, WWII, and the oil shocks.  
+
+Anonymous rationing works much like rate limiting, except with
+ multiple resources, an issuing authority, and limited time shifting:
+%
+\def\expiry{e}
+We fix a set $U$ of limited resource types, overseen by
+an authority who certifies verifiers from a key $\mathtt{root}$.
+We dynamically define an expiry date $\expiry_{u,d}$ and an availability $n_{u,d}$,
+both dependent upon the resource $u \in U$ and date $d$.
+% We typically want a randomness beacon $r_d$ too, which prevents
+% anyone learning $r_d$ much before date $d$. 
+As ring VRF inputs for the spend operation, we choose
+$\msg = \mathtt{root} \doubleplus u \doubleplus d \doubleplus k$
+where $u \in U$ denotes a limited resource,
+the expiry check $d < \mathtt{today} \le \expiry_{u,d}$ passes,
+and $1 \le k \le n_{u,d}$.
+We also choose \aux to be a preliminary receipt signed by the merchant.
+%
+At this point, our merchant sends the ring VRF signature to the authority,
+who enforces that each nullifier by spent at most once.
+Our authority stores the nullifiers until expiry aka $d \le \expiry_{u,d_0}$.
+
+% We do not discuss ring updates here, 
+
+% We remark that fully transferable assets could have constrained lifetimes
+% too, which similarly eases nullifier management when implements using
+% blind signatures, ZCash sapling, etc.  Yet, all these tokens require
+% an explicit issuance stage, while ring VRFs self-issue.
+
+Among the political hurdles to rationing, we know certificates have
+a considerable forgery problem, as witnessed by the long history of
+fraudulent covid and TLS certificates.  It follows citizens would
+justifiably protest to ration carts that operate by simple certificates.
+Ring VRFs avoid this political unrest by proving membership in a public list.
+
+\eprint{}{\begin{comment}}
+\subsection{Multi-constraint rationing}
+\label{subsec:multi_io}
+
+% \cite{PrivacyPass}
+As in \S\ref{subsec:moderation}, we could impose simultaneous rationing
+constraints for multiple resources $u_1,\ldots,u_k$ by producing one
+ring VRF signature in which \PedVRF proves correctness of pre-outputs
+for multiple messages 
+$\msg_j = \mathtt{root} \doubleplus u_j \doubleplus r_d \doubleplus d \doubleplus k$ for $j=1 \ldots k$.
+
+As an example, purchasing some prepared food product could require spending
+rations for multiple base food sources, like making a cake from wheat, butter,
+eggs, and sugar.  
+
+\subsection{Decommodification}
+
+There exist many reasons to decommodify important services, like
+energy, water, or internet, beyond rationing real physical shortages.
+Ring VRFs fit these cases using similar \msg formulations.
+
+As an example, a municipal ISP allocates some limited bandwidth capacity
+among all residents.  It allocates bandwidth fairly by verifying ring VRFs
+signatures on hourly \msg and then tracking nullifiers until expiry.
+
+Aside from essential government services, commercial service providers
+typically offers some free service tier, usually because doing so
+familiarizes users with their intimidating technical product.
+
+Some free and paid tier examples include DuoLingo's hearts on mobile, 
+continuous integration testing services, and many dating sites.
+
+A priori, rate limiting cases benefit from unlinkability among individual
+usages, not merely at some site boundary like moderation requires.
+We thus use each ring VRF output only once, which prevents our cashing
+trick of \S\ref{sec:reduced_pairings} from reducing verifier pairings.
+
+Although rationing sounds valuable enough, we foresee services like ISP,
+VPNs, or mixnets having many low value transactions.
+In such cases, ring VRFs could authorize issuing a limited number of
+fast simple single-use blind issued credentials, like blind signatures
+ala GNU Taler \cite{taler} or PrivacyPass OPRF tokens \cite{PrivacyPass},
+which both solve the leakage of $k$ above too.
+%
+In principle, commercial service providers could sell the same tokens,
+which avoids leaking whether the user uses the free or commercial tier.
+\eprint{}{\end{comment}}
+
+
