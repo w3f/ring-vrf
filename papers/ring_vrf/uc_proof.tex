@@ -19,7 +19,7 @@
 \newcommand{\keytransform}{T_{\mathsf{key}}}
 %Before giving the security proof of our protocol, we give the protocol in Section \ref{sec:pederson_vrf} without the abstraction from $ \PedVRF $ for the sake of  clarity of the security proof.
 %
-%We instantiate parameter generation by constructing a group $\GG$ of order $ p $ and two generators $ \genG, \genB \in  \GG$.  We consider three hash functions: $ \hash, \hash': \{0,1\}^* \rightarrow \FF_p $ and a hash-to-group function $\hashG : \{0,1\}^* \rightarrow \GG$ and . \name \ works as follows:
+%We instantiate parameter generation by constructing a group $\GG$ of order $ p $ and two generators $ \genG, \genB \in  \GG$.  We consider three hash functions: $ \hash, \hash_p: \{0,1\}^* \rightarrow \FF_p $ and a hash-to-group function $\hashG : \{0,1\}^* \rightarrow \GG$ and . \name \ works as follows:
 %
 %\begin{itemize}
 %	\item $ \rVRF.\KeyGen(1^\kappa):  $ It selects randomly a secret key $ x \in \FF_p$ and computes the public key $ X = xG $. In the end, it outputs $ \sk = x $ and $ \pk = X $.
@@ -30,7 +30,7 @@
 %	%	\rdl = \{(x,(X,G,\GG)): X,G \in \GG, x \in \FF_p, x = xG\}
 %	%\end{equation}
 %	
-%	%For this, it does the following: $ a \leftsample \FF_p $, $ c = \hash'(a\genG, X) $, $ s = a + cx $. 
+%	%For this, it does the following: $ a \leftsample \FF_p $, $ c = \hash_p(a\genG, X) $, $ s = a + cx $. 
 %	
 %	%	\item $ \rVRF.\eval(\sk, \ring, m) $: It lets $ P = \hashG(m, \ring) $ and computes $ W = xP  $. Then, it outputs $ y = \hash(m, \ring, W) $. So, the deterministic function $ F $ in our rVRF protocol is $ F(\sk, \ring, m) = H(m, \ring, x\hashG(m,\ring)) $.
 %	%	
@@ -51,7 +51,7 @@
 %		\end{align}}
 %		Here $ \Prove $ algorithm runs a non-interactive Chaum-Pedersen DLEQ proof with the Fiat-Shamir transform:  Sample random $r_1, r_2 \leftarrow \F_p$.
 %		Let $R = r_1 \genG + r_2 K$, $R_m = r_1 \In$, and
-%		$c = \hash'(\ring, m, \PreOut,\compk,R,R_m)$.
+%		$c = \hash_p(\ring, m, \PreOut,\compk,R,R_m)$.
 %		Set $\pi_{eval} = (c,s_1,s_2)$ where $s_1 = r_1 + c x$ and $s_2= r_2 + c \, \openpk$.
 %		\item %It obtains $ crs $ from $ \gcrs $ for the second proof by sending the message $ (\oramsg{learncrs}, \sid) $ to $ \gcrs $. Then,
 %		%It constructs a Merkle tree $ \mathsf{MT} $ with the nodes $ X_i $ where  $ X_i \in \pk_i $ and $ \pk_i \in  \ring $. We denote its  root by $ \mathsf{root} $. In the end, 
@@ -76,7 +76,7 @@
 %	\item $ \rVRF.\Verify(\ring,\PreOut, m, \sigma) $: Given $  \sigma = (\pi_{eval}, \pi_{ring},\compk)  $ and $ \ring, \PreOut $,
 %	% it first runs $ \NIZK.\Verify(\rdl,(X_i,\genG,\GG), \pi_{dl_i}) $ for each $ \pk_i= (X_i, \pi_{dl_i})  \in \ring $. If each of key in $ \ring $ verifies,
 %	it runs $ \NIZK_{\rcom}.\Verify((\genG, \genB,\GG,\compk,\PreOut,\In), \pi_{eval} ) $ where $ P = \hashG(m) $. $ \NIZK_{\rcom}.\Verify $ works as follows: $ \pi_{eval} = (c,s_1, s_2) $, it lets $R' = s_1 \genG + s_2 \, \genB - c \,\compk$ and $R'_m = s_1 \hashG(m) - c \, \PreOut$. It
-%	returns true if $c = \hash'(\ring,m,\PreOut,\compk,R',R'_m)$. If  $ \NIZK_{\rcom}.\Verify((\genG, \genB,\GG,\compk,\PreOut,\In), \pi_{eval} ) $ outputs 1, it runs $ \NIZK_{\rsnark}.\Verify((\genG,\genB,\GG,\ring, \compk), \pi_{ring}) $. 
+%	returns true if $c = \hash_p(\ring,m,\PreOut,\compk,R',R'_m)$. If  $ \NIZK_{\rcom}.\Verify((\genG, \genB,\GG,\compk,\PreOut,\In), \pi_{eval} ) $ outputs 1, it runs $ \NIZK_{\rsnark}.\Verify((\genG,\genB,\GG,\ring, \compk), \pi_{ring}) $. 
 %	If all verification algorithms verify, it outputs $ 1 $ and the evaluation value $ y =  \hash(m,\PreOut)  $. Otherwise, it outputs $( 0, \perp) $.
 %	
 %\end{itemize}
@@ -141,7 +141,7 @@ We next show that \name \ realizes $ \fgvrf $  in the random oracle model under 
 %\end{definition}
 
 \begin{theorem}
-	Assuming that $ \hashG, \hash,\hash', \hash_\ring $ are random oracles,  the DDH problem is hard in the group structure $ (\GG, \genG,\genB, p) $ and NIZK algorithms are zero-knowledge and knowledge sound, \name \ UC-realizes $\fgvrf$ running Algorithm \ref{alg:gensign} according to Definition \ref{def:uc}.
+	Assuming that $ \hashG, \hash,\hash_p, \hash_\ring $ are random oracles,  the DDH problem is hard in the group structure $ (\GG, \genG,\genB, p) $ and NIZK algorithms are zero-knowledge and knowledge sound, \name \ UC-realizes $\fgvrf$ running Algorithm \ref{alg:gensign} according to Definition \ref{def:uc}.
 \end{theorem}
 
 \begin{proof}
@@ -156,7 +156,7 @@ We next show that \name \ realizes $ \fgvrf $  in the random oracle model under 
 		
 		\item \textbf{[Simulation of corruption:]} Upon receiving a message $ (\oramsg{corrupted}, \sid, \user_i) $ from $ \fgvrf $, $ \simulator $ removes the public key $ \pk $ from $ \hkeys $ which is stored as a key of $ \user_i $ and adds $ \pk $ to $ \malkeys $.
 		
-		\item\textbf{[Simulation of the random oracles:]} We  describe how $ \simulator $ simulates the random oracles $ \hashG, \hash, \hash' $ against the real world adversaries. 	
+		\item\textbf{[Simulation of the random oracles:]} We  describe how $ \simulator $ simulates the random oracles $ \hashG, \hash, \hash_p $ against the real world adversaries. 	
 		
 		$ \simulator $ simulates the random oracle $ \hashG $ as described in Figure \ref{oracle:HgnoPK}. It selects a random element  $ h $ from $ \FF_p $ for each new input and outputs $ hG $ as an output of the random oracle $ \hashG $. Thus, $ \simulator $ knows \emph{the discrete logarithm of each random oracle output of $\hashG  $}. 
 
@@ -275,7 +275,7 @@ We next show that \name \ realizes $ \fgvrf $  in the random oracle model under 
 		\end{minipage}
 		\end{figure}
 		
-		The simulation of the random oracle $ \hash' $ (See Figure \ref{oracle:H'}) checks whether the random oracle query $ (\ring,m,W,\compk,R,R_m) $ is an $ \rcom $ verification query before answering the oracle call. For this, it checks whether $ \fgvrf $ has a recorded valid signature for the message $ m $ and the ring $ \ring $ with the anonymous key $ W $. If there exists such valid signature where $ \compk $ is part of it, $ \simulator $ checks whether the first proof of the signature $ (c,s_1, s_2) $ generates $ R, R_m $ as in $ \rVRF.\Verify $ in order to make sure that it is a $ \rcom $ verification query. If it is the case, it assigns $ c $ as an answer of $ \hash' (\ring,m,W,\compk,R,R_m) $ so that $ \rcom $ verifies. However, if this input has already been set to another value which is not equal to $ c $ or $ W $ is a pre-output of an honest key, then $ \simulator $ aborts because the output of the real world for this signature and the ideal world will be different.
+		The simulation of the random oracle $ \hash_p $ (See Figure \ref{oracle:H'}) checks whether the random oracle query $ (\ring,m,W,\compk,R,R_m) $ is an $ \rcom $ verification query before answering the oracle call. For this, it checks whether $ \fgvrf $ has a recorded valid signature for the message $ m $ and the ring $ \ring $ with the anonymous key $ W $. If there exists such valid signature where $ \compk $ is part of it, $ \simulator $ checks whether the first proof of the signature $ (c,s_1, s_2) $ generates $ R, R_m $ as in $ \rVRF.\Verify $ in order to make sure that it is a $ \rcom $ verification query. If it is the case, it assigns $ c $ as an answer of $ \hash_p (\ring,m,W,\compk,R,R_m) $ so that $ \rcom $ verifies. However, if this input has already been set to another value which is not equal to $ c $ or $ W $ is a pre-output of an honest key, then $ \simulator $ aborts because the output of the real world for this signature and the ideal world will be different.
 		We remind that if an anonymous key $ W $ of an honest party  for a message $ m $ sampled by $ \fgvrf $ equals to a pre-output generated by $ \rVRF.\Sign $  for the same honest party's key and the message $ m $, then $ \env $ can distinguish the ideal and real world outputs because the evaluation value in the ideal world and real world for $ m,W $ will be different because of the simulation of the random oracle $ \hash $ i.e., $ \mathtt{oracle\_queries\_h}[m,W] \neq \evaluationslist[m,W] $.  Therefore, $ \simulator $ aborts if it is ever happen.
 		
 		\begin{figure}
@@ -283,7 +283,7 @@ We next show that \name \ realizes $ \fgvrf $  in the random oracle model under 
 			
 			\noindent\fbox{%
 				\parbox{\columnwidth}{%
-					\underline{\textbf{Oracle $ \hash' $}} \\
+					\underline{\textbf{Oracle $ \hash_p $}} \\
 					\textbf{Input:} $ (\aux', \msg,\compk,W,R,R_m) $ \\					
 					
 					\textbf{parse} $ \aux' $ as $\tmpaux $
@@ -318,7 +318,7 @@ We next show that \name \ realizes $ \fgvrf $  in the random oracle model under 
 					{\textbf{return} $ \mathtt{oracle\_queries\_h\_CP}[\aux, m,\compk,W,R,R_m] $}
 					
 			}}
-			\caption{The random oracle $ \hash' $}
+			\caption{The random oracle $ \hash_p $}
 			\label{oracle:H'}
 		\end{figure}
 		
@@ -328,7 +328,7 @@ We next show that \name \ realizes $ \fgvrf $  in the random oracle model under 
 		%		Upon receiving $(\oramsg{sign}, \sid, \ring, m, y)$  from the functionality $\fgvrf$, $ \simulator $ generates the signature $ \sigma $ as follows:
 		%		
 		%		For the first proof, it samples $ c, s_1, s_2 \in \FF_p $ and $ \compk, W \in \GG$. Then, it lets the first proof be $\pi_1 =  (c, s_1, s_2) $. 
-		%		In addition, it sets $ R = sG+ \delta K+ c\compk $ and $ R_m = s \hashG(m, \ring)+ cW $ and maps the input $ \ring,m, W,\compk, R, R_m$ to $ c $ in the table of the random oracle $ \hash' $ so that $ \pi_1 $ verifies in the real-world execution.  
+		%		In addition, it sets $ R = sG+ \delta K+ c\compk $ and $ R_m = s \hashG(m, \ring)+ cW $ and maps the input $ \ring,m, W,\compk, R, R_m$ to $ c $ in the table of the random oracle $ \hash_p $ so that $ \pi_1 $ verifies in the real-world execution.  
 		%		It adds $ W $ to the list $ \preoutputlist[m, \ring] $.
 		%		
 		%		$ \simulator $ gets the trapdoor $ \tau $ that it generated during the simulation of $ \gcrs $ to simulate the second proof. Then, it runs $ \mathsf{SNARK}.\mathsf{Simulate}(\rsnark,\tau, crs) $ and obtains $ \pi_2 $.
@@ -412,15 +412,16 @@ We next show that \name \ realizes $ \fgvrf $  in the random oracle model under 
 		Next we show that the simulation executed by $ \simulator $ against $ \adv $ is indistinguishable from the real protocol execution.
 		
 		\begin{lemma} \label{lem:simulation-ind}
-			The view of $ \adv $ in its interaction with the simulator $ \simulator $ is indistinguishable from the view of $ \adv $ in its interaction with real honest parties assuming that CDH is hard in $ \GG $, $\hashG, \hash, \hash', \hash_\ring $ are random oracles, $ \NIZK_{\rcom}, \NIZK_{\rsnark} $ are knowledge sound and $ \keytransform $ is computationally indistinguishable and binding.
+			The view of $ \adv $ in its interaction with the simulator $ \simulator $ is indistinguishable from the view of $ \adv $ in its interaction with real honest parties assuming that CDH is hard in $ \GG $, $\hashG, \hash, \hash_p, \hash_\ring $ are random oracles, $ \NIZK_{\rcom}, \NIZK_{\rsnark} $ are knowledge sound and $ \keytransform $ is computationally indistinguishable and binding.
 		\end{lemma}
 		
 		
 		\begin{proof}
-			The  simulation against the real world adversary $ \adv $ is identical to the real protocol except the output of the honest parties and cases where $ \simulator $ aborts. We have already shown in Lemma \ref{lem:honestoutput} that the output of honest parties are indistinguishable from the real protocol. Next, we show that the abort cases happen with a negligible probability during the simulation. $ \simulator $ aborts during the simulation of random oracles $ \hash $ and $ \hash' $ and during the simulation of verification. We have already explained that the abort case during the simulation of $ \hash $ cannot happen. The abort case happens in the simulation of $ \hash' $ if $ W = hX $ where $ X $ is an honest commitment key or if $ \mathtt{oracle\_queries\_h\_CP}[\comring,m,W,\compk,R,R_m] $ has already been defined by a value which is different than $ c $. The first case happens in $ \hash' $ if $ \fgvrf $ selects a random $ W \in \GG$ for an anonymous key of $ m, \pk  $ for the honest party with the commitment key $ X $ and the random oracle $ \hashG $ selects a random $ h \in \FF_p  $ where $ \hashG(m) = hG $ and $ W = hX $. Clearly, this can happen with a negligible probability in $ \secparam $. The 
-			second case happens in $ \hash' $ if $ \adv $ queries with the input $ (\comring,m,W,\compk,R,R_m) $ before $ (\pi_1,\pi_2,\compk,\comring,W) $ generated by $ \gen_{sign} $. Since $ \compk $ is randomly selected by $ \fgvrf $, the probability that $ \adv $ guesses $ \compk $ before it is generated is negligible.
+			The  simulation against the real world adversary $ \adv $ is identical to the real protocol except the output of the honest parties and cases where $ \simulator $ aborts. 
+			We show that the abort cases happen with a negligible probability during the simulation. $ \simulator $ aborts during the simulation of random oracles $ \hash $ and $ \hash_p $ and during the simulation of verification. We have already explained that the abort case during the simulation of $ \hash $ cannot happen. The abort case happens in the simulation of $ \hash_p $ if $ W = hX $ where $ X = x\genG $ or if $ \mathtt{oracle\_queries\_h\_CP}[\comring,m,W,\compk,R,R_m] $ has already been defined by a value which is different than $ c $. The first case happens in $ \hash_p $ if $ \fgvrf $ selects a random $ W \in \GG$ for an anonymous key of $ m, \pk  $ for the honest party with the other key $ X  $ and the random oracle $ \hashG $ selects a random $ h \in \FF_p  $ where $ \hashG(m) = hG $ and $ W = hX $. Clearly, this can happen with a negligible probability in $ \secparam $. The 
+			second case happens in $ \hash_p $ if $ \adv $ queries with the input $ (\comring,m,W,\compk,R,R_m) $ before $ (\pi_1,\pi_2,\compk,\comring,W) $ generated by $ \gen_{sign} $. Since $ \compk $ is randomly selected by $ \fgvrf $, the probability that $ \adv $ guesses $ \compk $ before it is generated is negligible.
 			Now, we are left with the abort case during the verification.
-			For this, we show that if there exists an adversary $ \adv $ which makes $ \simulator $ abort during the simulation, then we construct another adversary $ \bdv $ which breaks either the CDH problem or the binding property of $ \keytransform $. 
+			For this, we show that if there exists an adversary $ \adv $ which makes $ \simulator $ abort during the simulation, then we construct another adversary $ \bdv $ which breaks either the CDH problem or the binding property of $ \rVRF.\KeyGen $.
 			
 			Consider a CDH game in a prime $ p $-order group  $ \grE $ with the challenges $ \genG,U, V \in \grE$. The CDH challenges are given to the simulator $ \bdv $. Then $ \bdv $ runs a simulated copy of $ \env $ and starts to simulate $ \fgvrf $ and $ \simulator $ for $ \env $. For this, it first runs the simulated copy of $ \adv $ as $ \simulator $ does. $ \bdv $ provides $ (\grE, p, \genG , \genB) $ as a public parameter of the ring VRF protocol to $ \adv $.
 			
@@ -444,33 +445,32 @@ We next show that \name \ realizes $ \fgvrf $  in the random oracle model under 
 				\caption{$\gen_{sign}(\ring,W,\{X,\pk\},\aux,m)$}
 				\label{alg:gensignbdv}	 	
 				\begin{algorithmic}[1]
-					\State $ c,s_1, s_2 \leftsample \FF_p $
-					\State $ \pi_{eval}  \leftarrow (c,s_1, s_2)$
+%					\State $ c,s_1, s_2 \leftsample \FF_p $
+%					\State $ \pi_{eval}  \leftarrow (c,s_1, s_2)$
 					\State $ \openpk \leftsample \FF_p $
 					\State $ \compk =  X + \openpk \, K$
+					\State $ \pieval \leftarrow \NIZK_{\mathcal{R}_{eval}}.\Simulate(\compk, W,\hashG(m)) $
 					\State $ \comring, \openring \leftarrow \rVRF.\CommitRing(\ring) $
-					%\State $ \pi_{eval} \leftarrow \NIZK.\mathsf{Simulate}(\rcom, (G, \genB,\GG,\compk,W,\In)) $
-					%\State \textbf{send} $(\oramsg{learn\_\tau},\sid)  $ to $ \gcrs $
-					%\State \textbf{receive} $(\oramsg{trapdoor},\sid, \tau,crs)  $ from $ \gcrs $
-					\State $ \pi_{ring} \leftarrow \NIZK_{\rsnark}.\Prove((\comring, \compk); (\openpk, \openring)) $ 
-					\State $ R' = s\genG +\delta K + c\compk$
-					\State $ R_m = s\hashG(m) + c W $
-					\State $ \aux' = \tmpaux $
-					\State $ \mathtt{oracle\_queries\_h\_CP}[\aux',m, \compk,W,R',R'_m] = c$						
+					\State $ \piring \leftarrow \NIZK_{\rsnark}.\Simulate(\comring, \compk) $ 
+%					\State $ R' = s\genG +\delta K + c\compk$
+%					\State $ R_m = s\hashG(m) + c W $
+%					\State $ \aux' = \tmpaux $
+%					\State $ \mathtt{oracle\_queries\_h\_CP}[\aux',m, \compk,W,R',R'_m] = c$						
 					\State\Return$ \sigma = (\pi_{eval},\pi_{ring},\compk,\comring,W) $
 				\end{algorithmic}
 				
 			\end{algorithm}
 			
 			
-			Clearly the ring signature of an honest party outputted by $ \simulator $ (remember $ \fgvrf$ generates it by Algorithm \ref{alg:gensign}) and the ring signature generated by $ \bdv $ are the same except that it sets up the random oracle $ \hash' $ so that $ \pi_1 $ verifies for $ \rcom $. Therefore, the simulation of $ \hash' $ is simulated as a usual random oracle by $ \bdv $.
+			Clearly the ring signature of an honest party outputted by $ \simulator $ (remember $ \fgvrf$ generates it by Algorithm \ref{alg:gensign}) and the ring signature generated by $ \bdv $ are the same. The only difference is that now $ \bdv $ does not need to set $ \hash_p $ so that $ \pieval $ verifies because $ \Gen_{sign} $ in Algorithm \ref{alg:gensignbdv} does it while simulating the proof for $ \rel_{eval} $. Therefore, the simulation of $ \hash_p $ is simulated as a usual random oracle by $ \bdv $.
 			
-			In order to generate the public keys of honest parties, $ \bdv $ picks a random $ r_x\in \FF_p $ and generates the a commitment public key of each honest party as $ r_xV$. Then it picks a random public key $ \pk $ as a public key.
-			Remark that $ \bdv$  never needs to know the secret key of honest parties to simulate them since $ \bdv $ selects anonymous keys randomly  and generates the ring signatures  without the secret keys. Since $ \keytransform $ is indistinguishable, generating the honest public keys in this way is indistinguishable. 			
+			In order to generate the public keys of honest parties, $ \bdv $ picks a random $ r_x\in \FF_p $ and sets $ X =r_xV$. If $ \rVRF.\KeyGen $ is defined as $ \pk = \sk \genG $, it lets $ \pk $ be $ X $ otherwise it picks a random public key $ \pk $ .
+			Remark that $ \bdv$  never needs to know the secret key of honest parties to simulate them since $ \bdv $ selects anonymous keys randomly  and generates the ring signatures  without the secret keys. Since the public key generated by $ \rVRF.\KeyGen $ is random and independent from the secret key, $ \bdv $'s key generation is indistinguishable from $ \simulator $'s key generation.
 			
+				
 			$ \bdv $ simulates $ \fgvrf $ as described but with a difference of the following: whenever $ \fgvrf $ sets up $ \evaluationslist[m,W] $ it queries $ m,W $ to the random oracle $ \hash $ described in Figure \ref{oracle:HbyB}. $ \bdv $ simulates the random oracle $ \hash $ in Figure \ref{oracle:HbyB} a usual random oracle.
 			The only difference from the simulation of $ \hash $ by $ \simulator $ is that $ \bdv $ does not ask for the output of $ \hash(m,W) $ to $ \fgvrf $ but it does not change the simulation because now $\fgvrf $ asks for it.  Remark that since $ \hashG $ is not simulated as in Figure \ref{oracle:HgnoPK}, $ \bdv $ cannot check whether $ W $ is an anonymous key generated by an honest secret key or not.  However, it does not need this information because $ \hash $ is simulated as a usual random oracle. $ \bdv $ also simulates $ \hash_\ring $ for the ring commitments as a usual random oracle. 			
-			Simulation of $ \hashG $ is as described in Figure \ref{oracle:HgbyB} i.e., it returns $ hU $ instead of $ hG $. The simulation of $ \hashG $ is indistinguishable from the simulation of $ \hashG $ in Figure \ref{oracle:HgnoPK}. 
+			Simulation of $ \hashG $ by $ \bdv $ returns $ hU $ instead of $ hG $. The simulation of $ \hashG $ is indistinguishable from the simulation of $ \hashG $ in Figure \ref{oracle:HgnoPK}. 
 			
 			\begin{figure}
 				\centering
@@ -494,47 +494,50 @@ We next show that \name \ realizes $ \fgvrf $  in the random oracle model under 
 				\label{oracle:HbyB}
 			\end{figure}
 			
-			\begin{figure}
-				\centering
-				
-				\noindent\fbox{%
-					\parbox{\columnwidth}{%
-						\underline{\textbf{Oracle $ \hashG $}} \\
-						\textbf{Input:} $ m$ \\
-						\textbf{if} $\mathtt{oracle\_queries\_gg}[m] = \perp  $
-						
-						\tab{$ h \leftsample \FF_p $}
-						
-						
-						\tab{$ P \leftarrow hU $} 
-						
-						\tab{$\mathtt{oracle\_queries\_gg}[m] := h$}
-						
-						\textbf{else}:
-						
-						\tab{$ h \leftarrow \mathtt{oracle\_queries\_gg}[m] $}
-						
-						\tab{$ P \leftarrow hU$}
-						
-						\textbf{return $ \In$}
-						
-				}}	
-				\caption{The random oracle $ \hashG $}
-				\label{oracle:HgbyB}
-			\end{figure}
+%			\begin{figure}
+%				\centering
+%				
+%				\noindent\fbox{%
+%					\parbox{\columnwidth}{%
+%						\underline{\textbf{Oracle $ \hashG $}} \\
+%						\textbf{Input:} $ m$ \\
+%						\textbf{if} $\mathtt{oracle\_queries\_gg}[m] = \perp  $
+%						
+%						\tab{$ h \leftsample \FF_p $}
+%						
+%						
+%						\tab{$ P \leftarrow hU $} 
+%						
+%						\tab{$\mathtt{oracle\_queries\_gg}[m] := h$}
+%						
+%						\textbf{else}:
+%						
+%						\tab{$ h \leftarrow \mathtt{oracle\_queries\_gg}[m] $}
+%						
+%						\tab{$ P \leftarrow hU$}
+%						
+%						\textbf{return $ \In$}
+%						
+%				}}	
+%				\caption{The random oracle $ \hashG $}
+%				\label{oracle:HgbyB}
+%			\end{figure}
 
 			
-			During the simulation, when $ \adv $ outputs a signature $ \sigma = (\pi_{eval},\pi_{ring},\compk,\comring,W) $ of message $ m $ with $ \aux $, $ \bdv $ runs $ \rVRF.\Verify(\comring,m, \aux, \sigma) $. If it verifies, it finds the corresponding ring $ \ring $ of $ \comring $ by checking the random oracle $ \hash_\ring $'s database. Remark that there exists $ \ring $ where Merkle tree root of $ \ring $ is $ \comring $ because if it was not the case $ \sigma $ would not verify which also checks  $ \pi_{ring} $. Then, if  $ W \notin \anonymouskeylist[m, \ring] $, $ \simulator $ increments  $ \counter[m,\ring] $ and adds $ W $ to $ \anonymouskeylist[m,\ring] $.
-			Then it runs the extractor algorithm of $ \NIZK_{\rsnark} $ i.e., $ \mathsf{Ext}(\rsnark,\pi_{\pk_j},(\genG,\genB,\GG,\comring, \compk) ) \rightarrow b, \openring$. Then it obtains a commitment public key $ X = \compk  - \openpk \, \genB $. It also runs 	the extractor algorithm of $ \NIZK_{\rcom} $ i.e., $ \mathsf{Ext}(\rcom,\pi_{eval},(\genG,\genB,\GG, \compk,W,\hashG(m))) \rightarrow (\hat{x},\hat{\openpk} )$ such that $ \compk = \hat{x}\genG + \hat{\openpk} \, \genB $ and $ W = \hat{x} \hashG(m) $. 
+			During the simulation, when $ \adv $ outputs a signature $ \sigma = (\pi_{eval},\pi_{ring},\compk,\comring,W) $ of message $ m $ with $ \aux $ which is not recorded in $ \fgvrf $'s record, $ \bdv $ runs $ \rVRF.\Verify(\comring,m, \aux, \sigma) $. If it verifies, it finds the corresponding ring $ \ring $ of $ \comring $ by checking the random oracle $ \hash_\ring $'s database. Remark that there exists $ \ring $ where Merkle tree root of $ \ring $ is $ \comring $ because if it was not the case $ \sigma $ would not verify which also checks  $ \pi_{ring} $. 
+			Then it runs the extractor algorithm of $ \NIZK_{\Rring} $ i.e., $ \mathsf{Ext}(\Rring,\piring,(\genG,\genB,\GG,\comring, \compk) ) \rightarrow b, \openring$. Then it obtains $ X = \compk  - \openpk \, \genB $. 
+			If $ \pk = \rVRF.\OpenRing(\comring,\openring) $ is not an honest key then $\bdv $ adds $ W $  to $ \anonymouskeylist[m, \ring] $.  If $ \pk $ is not a malicious key but $ X $ is  generated for honest parties by $ \bdv $ while simulating $ \simulator $, $ \bdv $ aborts \footnote{This case never happens if $ \pk  $ is defined $ \sk\genG $}. The abort case happen with a negligible probability because all the outputs seen by the adversary are independent from $ X $.
+			Otherwise, it  runs the extractor algorithm of $ \NIZK_{\rcom} $ i.e., $ \mathsf{Ext}(\rcom,\pi_{eval},(\genG,\genB,\GG, \compk,W,\hashG(m))) \rightarrow (\hat{x},\hat{\openpk} )$ such that $ \compk = \hat{x}\genG + \hat{\openpk} \, \genB $ and $ W = \hat{x} \hashG(m) $. If  $ W \notin \anonymouskeylist[m, \ring] $, $ \bdv $ increments  $ \counter[m,\ring] $ and adds $ W $ to $ \anonymouskeylist[m,\ring] $ for $ \Rring $.
+
+			If $ X  $ is a key which is generated by $ \bdv $ and $ X = \hat{x}G $, $ \bdv $ solves the CDH problem as follows: $ W = \hat{x} h U $ where $ h = \mathtt{oracle\_queries\_gg}[m] $. Since $ X = r V $, $ W = \hat{x}huG =rhuV $. So, $ \bdv $ outputs $ r^{-1}h^{-1}W $ as a CDH solution and simulation ends. Remark that this case happens when $ \simulator $ aborts because of \ref{cond:forgery}.
 			
-			If $ X  $ is an honest public key and $ X = \hat{x}G $, $ \bdv $ solves the CDH problem as follows: $ W = \hat{x} h U $ where $ h = \mathtt{oracle\_queries\_gg}[m] $. Since $ X = r V $, $ W = \hat{x}huG =rhuV $. So, $ \bdv $ outputs $ r^{-1}h^{-1}W $ as a CDH solution and simulation ends. Remark that this case happens when $ \simulator $ aborts because of \ref{cond:forgery}.
+			If $ \anonymouskeylist[m,\ring] \geq |\ring_{mal}| =t$, $ \bdv $ obtains all the signatures $ \{\sigma_i\}_{i =1}^t $ that make $ \bdv $ to add an anonymous key to $ \anonymouskeylist[m,\ring] $. Then it solves the CDH problem as follows: Remark that this case happens when $ \simulator $ aborts because of \ref{cond:uniqueness}.
 			
-			If $  \counter[m,\ring] = t \geq |\ring_{mal}| $, $ \bdv $ obtains all the signatures $ \{\sigma_i\}_{i =1}^t $ that make $ \bdv $ increment $ \counter[m,\ring] $ and solves the CDH problem as follows: Remark that this case happens when $ \simulator $ aborts because of \ref{cond:uniqueness}.
-			
-			For all $ \sigma_j = (\pi_{eval_j},\pi_{\pk_j},\compk_j,W_j) \in \{\sigma_i\}_{i =1}^t $, $ \bdv $ runs $ \mathsf{Ext}(\rsnark,\piring,(\genG,\genB,\GG,\ring, \compk_j) ) \rightarrow \openring_j, \openpk_j$. Then it obtains the public key $ \pk_j = \rVRF.\OpenRing(\ring, \openring_j) $ where $ \pk_j \in \ring $ and a commitment public key $ X_j = \compk- \openpk \genB $. Then it adds $ X_j $ to a list $ \setsym{X}  $. One of the following cases happens:
+			For all $ \sigma_j = (\pieval,\piring,\compk_j,W_j) \in \{\sigma_i\}_{i =1}^t $, $ \bdv $ runs $ \mathsf{Ext}(\rsnark,\piring,(\genG,\genB,\GG,\ring, \compk_j) ) \rightarrow \openring_j, \openpk_j$. Then it obtains the public key $ \pk_j = \rVRF.\OpenRing(\ring, \openring_j) $ where $ \pk_j \in \ring $ and  $ X_j = \compk- \openpk \genB $. Then it adds $ X_j $ to a list $ \setsym{X}  $ and $ \pk_j $ to a set $ \setsym{PK} $. One of the following cases happens:
 			
 			\begin{itemize}
-				\item All $ X_j $ in $ \setsym{X} $ are different: If $ \bdv $ is in this case, it means that there exists one commitment public key $ X_a \in \setsym{X} $ which belongs to an honest party or . Then $ \bdv $ runs the extractor algorithm of $ \NIZK_{\rcom} $ i.e., $ \mathsf{Ext}(\rcom,\pi_{com_a},(\genG,\genB,\GG,\ring, \compk_a,W_a,\hashG(m))) \rightarrow (\hat{x}_a,\hat{\openpk}_a )$ such that $ \compk_a = \hat{x}_a\genG + \hat{\openpk}_a \,\genB $ and $ W_a = \hat{x}_a \hashG(m) $.  If $ \bdv $ is in this case, $ \hat{x}_a\genG\neq X_a $ because otherwise it would solve the CDH as described before. Therefore, $ \openpk_a \neq \hat{\openpk}_a $. Since $ X_a + \openpk_a \, \genB = \hat{x}_a\genG + \hat{\openpk}_a \,\genB  $ and $ X_a = r_aV $ where $ r_a $ is generated by $ \bdv $ during the key generation process, $ \bdv $ obtains a representation of $ V = \gamma \genG + \delta \genB $ where $ \gamma = \hat{x}_ar^{-1}_a  $ and $ \delta = (\hat{\openpk}_a -\openpk)\,r_a^{-1} $. Then $ \bdv $ stores $ (\gamma, \delta) $ to a list $ \mathsf{rep} $. If $ \mathsf{rep} $ does not include another element $ (\gamma', \delta')  \neq (\gamma, \delta) $, $ \bdv $ rewinds $ \adv $ to the beginning with a new random coin.  Otherwise, it obtains $ (\gamma', \delta') $ which is another representation of $ V $ i.e., $ V = \gamma' \genG + \delta' \genB $. Thus, $ \bdv $ can find discrete logarithm of $ V $ on base $ G $ which is $ v = \gamma + \delta \theta $ where $ \theta = (\gamma - \gamma')(\delta' - \delta)^{-1} $. $ \bdv $ outputs $ vU $ as a CDH solution and the simulation ends.
+				\item All $ X_j $ in $ \setsym{X} $ are different and $ |\setsym{PK}| \leq t $, $ \bdv $ aborts: Each $ \pk \in \setsym{PK} $ commits to a secret key $ \sk $. Since it is a binding commitment there exists one opening $ r $ except with a negligible probability. Since $ \piring $ verifies in $ \Rring $ whether $ \rel_{\pk} $ is satisfied, if  $ X_j $ in $ \setsym{X} $ are different and $ |\setsym{PK}| \leq t $, means that the binding property is broken. Therefore, $ \bdv  $ aborts with a negligible probability. We note $ \bdv $ can be in this case only if $ \pk \neq \sk \genG $.
+				\item All $ X_j $ in $ \setsym{X} $ are different and $ |\setsym{PK}| > t $: If $ \bdv $ is in this case, it means that there exists one commitment public key $ X_a \in \setsym{X} $ which belongs to an honest party or . Then $ \bdv $ runs the extractor algorithm of $ \NIZK_{\rcom} $ i.e., $ \mathsf{Ext}(\rcom,\pi_{com_a},(\genG,\genB,\GG,\ring, \compk_a,W_a,\hashG(m))) \rightarrow (\hat{x}_a,\hat{\openpk}_a )$ such that $ \compk_a = \hat{x}_a\genG + \hat{\openpk}_a \,\genB $ and $ W_a = \hat{x}_a \hashG(m) $.  If $ \bdv $ is in this case, $ \hat{x}_a\genG\neq X_a $ because otherwise it would solve the CDH as described before. Therefore, $ \openpk_a \neq \hat{\openpk}_a $. Since $ X_a + \openpk_a \, \genB = \hat{x}_a\genG + \hat{\openpk}_a \,\genB  $ and $ X_a = r_aV $ where $ r_a $ is generated by $ \bdv $ during the key generation process, $ \bdv $ obtains a representation of $ V = \gamma \genG + \delta \genB $ where $ \gamma = \hat{x}_ar^{-1}_a  $ and $ \delta = (\hat{\openpk}_a -\openpk)\,r_a^{-1} $. Then $ \bdv $ stores $ (\gamma, \delta) $ to a list $ \mathsf{rep} $. If $ \mathsf{rep} $ does not include another element $ (\gamma', \delta')  \neq (\gamma, \delta) $, $ \bdv $ rewinds $ \adv $ to the beginning with a new random coin.  Otherwise, it obtains $ (\gamma', \delta') $ which is another representation of $ V $ i.e., $ V = \gamma' \genG + \delta' \genB $. Thus, $ \bdv $ can find discrete logarithm of $ V $ on base $ G $ which is $ v = \gamma + \delta \theta $ where $ \theta = (\gamma - \gamma')(\delta' - \delta)^{-1} $. $ \bdv $ outputs $ vU $ as a CDH solution and the simulation ends.
 				
 				
 				\item There exists at least two $ X_a,X_b \in \setsym{X} $ where $ X_a = X_b $. $ \bdv $ runs the extractor algorithm of $ \NIZK_{\rcom} $ i.e., $ \mathsf{Ext}(\rcom,\pi_{com_a},(\genG,\genB,\GG,\ring, \compk_a,W_a,\hashG(m))) \rightarrow (\hat{x}_a,\hat{\openpk}_a )$ and $ \mathsf{Ext}(\rcom,\pi_{com_b},(\genG,\genB,\GG,\ring, \compk_b,W_b,\hashG(m))) \rightarrow (\hat{x}_b,\hat{\openpk}_b )$ such that $ \compk_a = \hat{x}_a\genG + \hat{\openpk}_a \, \genB \compk_b = \hat{x}_b\genG + \hat{\openpk}_b \, \genB $ and $ W_a = \hat{x}_a \hashG(m), W_b = \hat{x}_b \hashG(m) $. Since $ W_a \neq W_b $, $ \hat{x}_a \neq \hat{x}_b $.  Therefore, $ \bdv $ can obtain  two different and non trivial representation of $ X_a = X_b $ i.e., $ X_a = X_b = \hat{x}_a\genG + (\hat{\openpk}_a - \openpk_a) \, \genB = \hat{x}_b\genG + (\hat{\openpk}_b - \openpk_b) \, \genB  $. Thus, $ \bdv $ finds the discrete logarithm of $ K = U $ in base $ G $ which is $ u = \frac{\hat{x}_a - \hat{x}_b}{\hat{\openpk}_a -\openpk_a -\hat{\openpk}_b + \openpk_b} $. $ \bdv $ outputs $ uV $ as a CDH solution.
