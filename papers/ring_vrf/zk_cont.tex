@@ -1,10 +1,8 @@
 \section{Zero-knowledge Continuations}
 \label{sec:rvrf_cont}
 
-NOT READY YET
-
 \noindent In the following, we describe a NIZK for a relation $\rel$ where
-$$\rel = \{(\bary, \barz; \barx, \baromega, \baromegap):  (\bary, \barx; \baromega) \in \relone, (\barz, \barx; \baromegap) \in \reltwo \},$$
+$$\rel = \{(\bary, \barz; \barx, \baromega_1, \baromega_2):  (\bary, \barx; \baromega_1) \in \relone, (\barz, \barx; \baromega_2) \in \reltwo \},$$
 and $\relone$, $\reltwo$ are some NP relations. Our NIZK is designed to efficiently re-prove membership for relation $\relone$
 via a new technique which we call \emph{zero-knowledge continuation}. In practice, using a NIZK that is a zero-knowledge continuation 
 ensures one essentially needs to create only once an otherwise expensive proof for $\relone$ which can later be 
@@ -24,9 +22,9 @@ section~\ref{sec:rvrf_groth16} and give an instantiation of our NIZK fulfilling 
 %\begin{definition}[ZK Continuations] A zero-knowledge continuation $\SpecialG_\rel$ consists of four algorithms 
 %($\SpecialG_\rel.\Preprove$, $\SpecialG_\rel.\Reprove$, $\ldots$, $\SpecialG_\rel.\Verify$) such that:
 %\begin{itemize}
-%\item $\SpecialG_\rel.\Preprove : (\bar{y}, \bar{x}; \bar{\omega}) \mapsto (X,\pi)$ \,
+%\item $\SpecialG_\rel.\Preprove : (\bar{y}, \bar{x}; \baromega_1) \mapsto (X,\pi)$ \,
 %constructs a commitment $X$ and a proof $\pi$ for relation $\rel$ from a vector 
-%of inputs $\bar{y}$ (called \em{transparent}), a vector of inputs $\bar{x}$ (called \em{opaque}), and witnesses $\bar{\omega}$.
+%of inputs $\bar{y}$ (called \em{transparent}), a vector of inputs $\bar{x}$ (called \em{opaque}), and witnesses $\baromega_1$.
 %\item $\SpecialG_\rel.\Reprove : (X,\pi) \mapsto ((X',\pi'); b)$ \,
 %finalises the commitment $X'$ and proof $\pi'$ and returns an opening $b$ for the commitment. 
 %\item $\SpecialG_\rel.\Verify(\bar{y}; (X',\pi') )$ \, 
@@ -37,7 +35,7 @@ section~\ref{sec:rvrf_groth16} and give an instantiation of our NIZK fulfilling 
 
 %We define (white-box) knowledge soundness for zero-knowledge continuations
 %exactly like for zero-knowledge proofs, but with the composition 
-%$\Prove : (\bar{y}, \bar{x}; \bar{\omega}) \mapsto \Reprove(\Preprove(\bar{y}, \bar{x}; \bar{\omega}))[0]$
+%$\Prove : (\bar{y}, \bar{x}; \baromega_1) \mapsto \Reprove(\Preprove(\bar{y}, \bar{x}; \baromega_1))[0]$
 %as well as this additional proof-of-knowledge.
 %Zero-knowledge however should hold even if \Reprove gets invoked multiple
 %times upon the same \Preprove results, again even with the additional proof-of-knowledge.
@@ -46,7 +44,7 @@ section~\ref{sec:rvrf_groth16} and give an instantiation of our NIZK fulfilling 
 \begin{definition}[ZK Continuations]
 \label{def:zk_cont}
  A zero-knowledge continuation $\ZKCont$ for a relation $\relone$ with 
-input $(\bary, \barx)$ and witness $\baromega$ is a tuple of efficient algorithms 
+input $(\bary, \barx)$ and witness $\baromega_1$ is a tuple of efficient algorithms 
 ($\ZKCont.\Setup$, $\ZKCont.\Gen$, $\ZKCont.\Preprove$, $\ZKCont.\Reprove$, $\ZKCont.\VerifyCom$, $\ZKCont.\Verify$, $\ZKCont.\Sim$) 
 such that for implicit security parameter $\lambda$,
 \begin{itemize}
@@ -57,10 +55,10 @@ outputs a common reference string $\crs$ and a trapdoor $\tw$,
 \item $\ZKCont.\Gen: (\crs, \relone) \mapsto (\pp, \crspk, \crsvk)$ \, 
 outputs a list $\pp$ of public parameters and a pair of proving key $\crspk$ and verification key $\crsvk$, 
 
-\item $\ZKCont.\Preprove: (\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone) \mapsto (X, \pi, b)$ \,
+\item $\ZKCont.\Preprove: (\crspk, \bar{y}, \bar{x}, \baromega_1, \relone) \mapsto (X, \pi, b)$ \,
 constructs commitment $X$ from a vector of inputs $\bar{x}$ (called \emph{opaque}) and 
 constructs proof $\pi$ from vector of inputs 
-$\bar{y}$ (called \emph{transparent}), from $\bar{x}$ and vector of witnesses $\bar{\omega}$, and 
+$\bar{y}$ (called \emph{transparent}), from $\bar{x}$ and vector of witnesses $\baromega_1$, and 
 also outputs $b$ as the opening for $X$,
 
 \item $\ZKCont.\Reprove: (\crspk, X, \pi, b, \relone) \mapsto (X', \pi', b')$ \,
@@ -78,16 +76,16 @@ arguments $\pi'$ and $X'$,
 and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledge soundness and zero-knowledge as defined below:\\
 %TO DO: Re-write this: We define (white-box) knowledge soundness for zero-knowledge continuations
 %exactly like for zero-knowledge proofs, but with the composition 
-%$\Prove : (\bar{y}, \bar{x}; \bar{\omega}) \mapsto \Reprove(\Preprove(\bar{y}, \bar{x}; \bar{\omega}))[0]$
+%$\Prove : (\bar{y}, \bar{x}; \baromega_1) \mapsto \Reprove(\Preprove(\bar{y}, \bar{x}; \baromega_1))[0]$
 %as well as this additional proof-of-knowledge.
 %Zero-knowledge however should hold even if \Reprove gets invoked multiple
 %times upon the same \Preprove results,
 %again even with the additional proof-of-knowledge.
-\noindent \textbf{Perfect Completeness for $\Preprove$} For every $(\bary, \barx; \baromega) \in \relone$ it holds:
+\noindent \textbf{Perfect Completeness for $\Preprove$} For every $(\bary, \barx; \baromega_1) \in \relone$ it holds:
 \begin{align*}
 \mathit{Pr} (& \ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1 \ \wedge \ \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1\  | \ \\ 
                    & (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
-                   & (X, \pi, b) \leftarrow \ZKCont.\Preprove(\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone)) = 1
+                   & (X, \pi, b) \leftarrow \ZKCont.\Preprove(\crspk, \bar{y}, \bar{x}, \baromega_1, \relone)) = 1
 \end{align*}
 
 \noindent \textbf{Perfect Completeness for $\Reprove$} For every efficient adversary $A$ it holds: 
@@ -97,20 +95,20 @@ and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledg
                    & (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
                    & (\bary, \barx, X, \pi, b) \leftarrow A(\crs,\pp, \relone), (X', \pi', b') \leftarrow \ZKCont.\Reprove(\crspk, X, \pi, b, \relone)) = 1
 \end{align*}
-\noindent \textbf{Knowledge Soundness} For every benign auxiliary input $z$ (see~\cite{bening_auxiliary}), 
-for every non-uniform efficient adversary $A$, there exists an efficient non-uniform extractor $E$ such that 
+\noindent \textbf{Knowledge Soundness} For every benign auxiliary input $z$ (as per~\cite{bening_auxiliary}) and 
+every non-uniform efficient adversary $A$, there exists efficient non-uniform extractor $E$  
 \begin{align*}
 \mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1) \ \wedge \ (\ZKCont.\VerifyCom(\pp, X, \bar{x}, b) = 1) \ \wedge\ \\
-                   & \wedge \ ( (\bary, \barx; \baromega) \notin \relone) \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), 
-                   (\bary, \barx, X, \pi, b; \baromega ) \leftarrow A || E (\crs, z, \relone)) = \negl (\lambda),
+                   & \wedge \ ( (\bary, \barx; \baromega_1) \notin \relone) \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
+                   & (\bary, \barx, X, \pi, b; \baromega_1 ) \leftarrow A || E (\crs, z, \relone)) = \negl (\lambda),
 \end{align*}
-\noindent %where $\ZKCont.\Preprove_{|X}(\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone; b)$ means running the part of algorithm 
+\noindent %where $\ZKCont.\Preprove_{|X}(\crspk, \bar{y}, \bar{x}, \baromega_1, \relone; b)$ means running the part of algorithm 
 %$\ZKCont.\Preprove$ that computes and outputs $X$ with its regular inputs and using $b$ when randomness is required; 
-where by $(\mathit{output_{A}};\mathit{output_{B}}) \leftarrow A || B(\mathit{input})$ we denote algorithms that run on the same 
-$\mathit{input}$, and, moreover $B$ has access to the random coins of $A$. \\
+where by $(\mathit{output_{A}};\mathit{output_{B}}) \leftarrow A || B(\mathit{input})$ we denote algorithms $A$, $B$  running on the same 
+$\mathit{input}$ and $B$ having access to the random coins of $A$. \\
 
 \noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $z$, 
-for all  $(\bary, \barx; \baromega) \in \relone$, for all $X$, for all $\pi$, for all $b$, for every adversary $A$ it holds:
+for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X$, for all $\pi$, for all $b$, for every adversary $A$ it holds:
 \begin{align*}
 \mathit{Pr}(& A(\crs, z, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
                   & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi', X', \_) \leftarrow \ZKCont.\Reprove (\crspk, X, \pi, b, \relone), \\
@@ -178,7 +176,7 @@ $\crsvk = \left([\alpha]_1, \left\{ \left[ \frac{\beta a_i(\tau)+ \alpha b_i(\ta
 $\pp = \left( \left \{ \left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1 \right \}_{i=l+1}^{n}, \left[ \frac{\eta}{\gamma} \right]_1 \right)$.
 
 
-\item $\SpecialG.\Preprove: (\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relRQ) \mapsto (X, \pi, b)$ such that \\
+\item $\SpecialG.\Preprove: (\crspk, \bar{y}, \bar{x}, \baromega_1, \relRQ) \mapsto (X, \pi, b)$ such that \\
 \begin{align*}
 &b = 0; r, s\xleftarrow{\$} \F_p; X = \sum_{i=l+1}^{n} v_i\left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1; \pi = ([A]_1, [B]_2, [C]_1); \\
 &A = \alpha + \sum_{i=0}^{m} v_i \cdot a_i(\tau) + r\delta; B = \beta + \sum_{i=0}^{m} v_i \cdot b_i(\tau) + s\delta; \\ 
@@ -239,13 +237,12 @@ AGM~\cite{Fuchs_AGM}, $\SpecialG$ is a zero-knowledge continuation as per defini
 \end{theorem}
 \begin{proof} It is straightforward to prove that $\SpecialG$ has completeness for $\Preprove$ and for $\Reprove$. \\
 
-\noindent In order to prove knowledge-soundness an in Definition~\ref{def:zk_cont}, first we argue that $\SpecialG$ is a 
-commit-carrying SNARK with double binding as per Definition 3.4~\cite{LegoSNARK}. We use the fact that $\ccgroth$ as 
-defined by the NILP detailed in Fig.22, Appendix H.5~\cite{LegoSNARK} satisfies that latter definition. Moreover, 
+\noindent We prove knowledge-soundness (KS) an in Definition~\ref{def:zk_cont} by first arguing $\SpecialG$ is a 
+commit-carrying SNARK with double binding (cc-SNARK with double binding) as per Definition 3.4~\cite{LegoSNARK}. 
+We use the fact that $\ccgroth$ as defined by the NILP detailed in Fig.22, Appendix H.5~\cite{LegoSNARK} satisfies that latter definition. Moreover, 
 $\SpecialG$'s $\Setup$ together with $\Gen$ and $\ccgroth$'s $\mathit{KeyGen}$ are the same procedure. Also $\SpecialG$ 
-and $\ccgroth$ share the same verification algorithm. Hence, translating the notation appropriately, $\SpecialG$ also satisfies 
-the knowledge soundness properties for a cc-SNARK with double binding. \\
-
+and $\ccgroth$ share the same verification algorithm. Hence, translating the notation appropriately, $\SpecialG$ also satisfies KS 
+for a cc-SNARK with double binding. \\
 
 % we first argue that We prove knowledge-soundness by reducing it to the knowledge-soundness property of the Groth16 
 %commit-carrying with double binding scheme (for short $\ccgroth$). This knowledge-soundness property has been formalised in 
@@ -253,22 +250,33 @@ the knowledge soundness properties for a cc-SNARK with double binding. \\
 %Indeed, $\SpecialG$'s $\Setup$ together with $\Gen$ and $\ccgroth$'s $\mathit{KeyGen}$ are the same procedure. Moreover $\SpecialG$ 
 %and $\ccgroth$ share the same verification algorithm. Since $\ccgroth$ satisfies the definition of a cc-SNARK with double binding, translating 
 %the notation appropriately, $\SpecialG$ also satisfies the knowledge soundness properties for a cc-SNARK with double binding. 
-
-
-\noindent Let now $A_{\SpecialG}$ be some adversary for the knowledge-soundness property as in Definition~\ref{def:zk_cont} then, we define a 
-$A_{\ccgroth}$ adversary for the knowledge-soundness property as in Definition 3.4~\cite{LegoSNARK} as follows:
+\noindent Let $A_{\SpecialG}$ be an adversary for KS in Definition~\ref{def:zk_cont} and 
+define adversary $A_{\ccgroth}$ for KS  in Definition 3.4~\cite{LegoSNARK}:
 \begin{align*}
-& \mathit{If} \ (\bary, \barx, X, \pi, b) \leftarrow A_{\SpecialG} (\crs, \pp, z, \relRQ)\  \mathit{then}  \\
-& (\bary, X, \pi) \leftarrow A_{\ccgroth} (\relRQ, \crs, z)
+&\mathit{If} \ (\bary, \barx, X, \pi, b) \leftarrow A_{\SpecialG} (\crs, \pp, z, \relRQ)\  (1)\ \mathit{then} \ (\bary, X, \pi) \leftarrow A_{\ccgroth} (\relRQ, \crs, z).
 \end{align*}
 
-\noindent Given an extractor $E_{\ccgroth}$ for $A_{\ccgroth}$ such that it verifies Definition 3.4~\cite{LegoSNARK}, 
-we construct an extractor $E_{\ccgroth}$ for $A_{\ccgroth}$ such that 
+\noindent Given extractor $E_{\ccgroth}$ for $A_{\ccgroth}$ fulfilling Definition 3.4~\cite{LegoSNARK}, 
+construct extractor $E_{\ccgroth}$ for $A_{\ccgroth}$
 \begin{align*}
-& \mathit{If} \ (\barx^*, b^*, \baromega^*) \leftarrow E_{\ccgroth} (\relRQ, \crs, z)\  \mathit{then}  \\
-& \baromega^* \leftarrow E_{\SpecialG} (\relRQ, \crs, z)
+&\mathit{If} \ (\barx^*, b^*, \baromega^*) \leftarrow E_{\ccgroth} (\relRQ, \crs, z)\ (2)\ \mathit{then} \ \baromega^* \leftarrow E_{\SpecialG} (\relRQ, \crs, z).
 \end{align*}
-and we show by contradiction that $E_{\SpecialG}$ verifies Definition~\ref{def:zk_cont} for $A_{\SpecialG}$. \\
+We show $E_{\SpecialG}$ fulfils Definition~\ref{def:zk_cont} for $A_{\SpecialG}$. Assume by contradiction that is not the case. 
+This implies there exist auxiliary input $z$ such that each: 
+\begin{align*}
+\ZKCont.\Verify(\crsvk, \bary, X, \pi, &\relRQ) =1 \ (10)\ ; \ \ZKCont.\VerifyCom(\pp, X, \barx, b) =1 \ (20) \\
+& (\bary, \barx; \baromega) \notin \relRQ  \ \ (30) 
+\end{align*}
+hold with non-negligible probability. Since $(20)$ holds with non-negligible probability and verification is identical for 
+$\SpecialG$ and $\ccgroth$, and since $E_{\ccgroth}$ is an extractor for $A_{\ccgroth}$ as per Definition 3.4~\cite{LegoSNARK},
+ then each of the two events 
+\begin{align*}
+\mathit{VerCommit^*}(\pp, X, \barx^*, b^*) =1 \ (40) \ ; \ (\bary, \barx^*; \baromega^*) \in  \relRQ \ (50)
+\end{align*}
+holds with overwhelming probability. Since $(20)$ holds with non-negligible probability and $(40)$ holds with overwhelming probability and 
+together with (ii) from Definition 3.4~\cite{LegoSNARK} we obtain that $\barx^* = \barx$. Since $(50)$ holds with overwhelming probability, it implies 
+$(\bary, \barx; \baromega^*) \in \relRQ $ with overwhelming probability which contradicts our assumption, so our claim that $\SpecialG$ does not have 
+KS as per Definition~\ref{def:zk_cont} is false. \\
 
 \noindent Finally, regarding zero-knowledge, it is clear that if $\pi' = (U', V', W')$ is part of the output of $\SpecialG.\Reprove$, 
 then $U'$ and $V'$ are uniformly distributed as group elements in their respective groups. This holds, as long as the 
@@ -277,257 +285,5 @@ that the output $\pi'$ of $\SpecialG.\Sim$ is identically distributed to a proof
 zero-knowledge property holds for $\SpecialG$. 
 \end{proof}
 
-\begin{comment}
-Zero-knowledge invariably comes from random blinding factors.
-Zero-knowledge continuations need rerandomizable zkSNARKs,
-meaning Groth16 \cite{Groth16}, but beyond rerandomization their
-unlinkability demands hiding public inputs.
-In our case, we ``specialize'' Groth16 to permit alteration of \openpk
-in the $\PedVRF.\OpenKey$ invocation without reproving our heavy
-$\rVRF.\OpenRing$ invocation.
-
-In Groth16 \cite{Groth16}, we have an SRS $S$ consisting of curve
-points in $\grE_1$ and $\grE_2$ that encode the circuit being proven.
-We follow \cite{Groth16} in discussing the SRS $S$ in terms of
-its ``toxic waste''
- $(\alpha,\beta,\delta,\gamma,\tau^1,\tau^2,\ldots) \in \F_p^*$.
-In other words, we could write say $[ f(\tau)/\delta ]_1$ or $[\delta]_2$
-to denote an element of our SRS $S$ in $\grE_1$ or $\grE_2$ respectively,
-computed by scalar multiplication of the Groth16 generators from
-the toxic waste $\tau$ and $\delta$,
- but for which nobody knows the underlying $\tau$ or $\delta$ anymore.
-
-In the SRS $S$, we distinguish the verifiers' string/key of elements
- $\chi_1,\ldots,\chi_k, \Upsilon_1,\ldots,\Upsilon_l, [\alpha]_1 \in \grE_1$ and
- $[\beta]_2, [\gamma]_2, [\delta]_2 \in \grE_2$.
-% as separate from the provers' much longer string of elements in $\grE_1$ and $\grE_2$.
-A Groth16 \cite{Groth16} proof takes the form 
- $\pi = (A,B,C) \in \grE_1 \times \grE_2 \times \grE_1$.
-A verifier then produces a $X+Y = \sum_i^k x_i \chi_i + \sum_i^k y_i \chi_i \in \grE_1$
- from the instance's public inputs $x_i,y_i \in \F_p$ and then checks 
-$$ e(A,B) = e([\alpha]_1, [\beta]_2) \cdot
- e(X+Y, [\gamma]_2) \cdot e(C, [\delta]_2) \mathperiod $$
-
-We need the rerandomization algorithm from \cite[Fig.~1]{RandomizationGroth16}:
-% to build a zero-knowledge continuation:
-% https://eprint.iacr.org/2020/811
-% https://github.com/arkworks-rs/groth16/pull/16/files
-% \algo{rerandomize}
-An existing SNARK $(A,B,C)$ is transformed into a fresh
-SNARK $(A',B',C')$ by sampling random $r_1,r_2 \in \F_p$ and computing
-% $$
-% A' = {1 \over r_1} A, \qquad
-% B' = r_1 B + r_1 r_2 [\delta]_2, \qquad
-% C' = C + r_2 A \mathperiod
-% $$
-$$ \begin{aligned}
-A' &= {1 \over r_1} A \\
-B' &= r_1 B + r_1 r_2 [\delta]_2 \\
-C' &= C + r_2 A \mathperiod \\
-\end{aligned} $$
-At this point, our $x_i$ remain identical after rerandomization,
-so $X$ links $(A,B,C)$ to $(A',B',C')$.
-Alone rerandomization cannot alter public inputs $x_i$, so
-we instead need an opaque public input point $X$, which then becomes
-part of our proof and incurs its own separate proof of correctness.
-
-We build {\em special Groth16} aka \SpecialG by adding one fresh
-basepoint $\genB_\gamma$ independent from all others,
- including the $H_{\grE}(\msg)$ in \PedVRF.%
-\footnote{Apply the underlying $H_\grE$ to an input outside the \msg domain for example.}
-In the trusted setup, we build one additional prover SRS element
-$$ \genB_\delta := {\gamma\over\delta} \genB_\gamma \mathperiod $$
-% Although $\genB_\gamma$ is independent,  we create $\genB_\delta$ during the trusted setup,  so the toxic waste $\gamma$ and $\delta$ remain secret.
-After $\genB_\delta$ is created, our toxic waste $\gamma$ and $\delta$
-disappear and subversion resistance could be checked
- like in \cite{cryptoeprint:2019/1162} plus also checking
-$$ e(\genB_\gamma, [\gamma]_2) = e(\genB_\delta, [\delta]_2) \mathperiod $$
-
-We now have a zero-knowledge continuation $\pi = (X,A,B,C)$ from which
-our algorithm $\SpecialG.\Reprove : (X,A,B,C) \mapsto ((X',A',B',C'); b)$ produces an
-unlinkable instance $\pi' = (X',A',B',C')$ by
- first sampling random $b,r_1,r_2 \in \F_p$ and then computing
-$$ \begin{aligned}
-X' &= X + b \genB_\gamma \\
-A' &= {1 \over r_1} A \\
-B' &= r_1 B + r_1 r_2 [\delta]_2 \\
-C' &= C + r_2 A + b \genB_\delta \mathperiod \\
-\end{aligned} $$
-As our two $b$ terms cancel in the pairings, our special Groth16
-rerandomization reduces to the standard Groth16 rerandomization
-construction above,
- except with $X$ now an opaque Pedersen commitment.
-
-% TODO:  Should we be saying opaque less and Pedersen more below?
-
-Along side opaque inputs in $X = \sum_i^k x_i \chi_i$,
-our verifier should typically enforce specific values by assembling
-a few {\em transparent} inputs $Y = \sum_i^l y_i \Upsilon_i$ themselves.
-In particular, our ring VRF verifiers should enforce the commitment
-\comring for $\ring$, even if they outsource computing \comring.
-We thus write $\SpecialG.\Preprove : (\bar{y}, \bar{x}; \bar{\omega}) \mapsto (X,A,B,C)$
-where $(A,B,C) \leftarrow \primalgo{Groth16}.\Prove(\bar{y}, \bar{x}; \bar{\omega})$,
-so a full \Prove algorithm works by composing \Preprove and \Reprove.
-
-At this point $\SpecialG.\Verify(\bar{y}; (X',A',B',C') )$
- computes $X' + Y = X' + \sum_i^l y_i \Upsilon_i$ and checks
- the tuple $(X' + Y,A',B',C')$ like Groth16 does,
-$$ e(A',B') = e([\alpha]_1, [\beta]_2) \cdot
- e(X' + Y, [\gamma]_2) \cdot e(C', [\delta]_2) \mathperiod $$
-As our verifier does not build $X'$ themselves, we prove nothing
-with this pairing equation unless the verifier separately checks
- a proof-of-knowledge that $X' = b \genB_\gamma + \sum_i^k x_i \chi_i$
- for some unknown $b,\bar{x}$.
-
-\begin{lemma}\label{lem:unlinkable}
-Our rerandomization procedure % $(X,A,B,C) \mapsto (X',A',B',C')$
-transforms honestly generated \SpecialG zero-knowledge continuation $(X,A,B,C)$
-into identically distributed \SpecialG proof $(X',A',B',C')$,
-with identical opaque inputs $x_1,\ldots,x_k$ and
- identical transparent inputs $y_1,\ldots,y_l$.
-\end{lemma}
-
-\begin{proof}[Proof idea.]
-Adapt the proof of Theorem 3 in \cite[Appendix C, pp. 31]{RandomizationGroth16}.
-\end{proof}
-
-% \begin{corollary}\label{cor:unlinkable}
-%	If $\sigma'$ and $\sigma''$ are \PedVRF{}s then ???
-% \end{corollary}
-
-All told, our opaque rerandomization trick converts any conventional
-Groth16 zkSNARK $\pi$ for $\Lring^\inner$ into a zkSNARK $\pi'$ for $\Lring$
-with inputs split into a transparent part $\bar{y}$ vs opaque unlinkable part $X$.
-% We explore two concrete $\pi$ proposals below.
-
-Importantly, rerandomization requires only
- four scalar multiplications on $\ecE_1$ and
- two scalar multiplications on $\ecE_2$,
-which  BLS12 curves make roughly equivalent to
- eight scalar multiplications on $\ecE_1$.
-
-\begin{lemma}\label{lem:knowledge_soundness}
-Assuming AGM plus the $(2n-1,n-1)$-DLOG assumption, and
- circuit size less than $n$,
-then our zero-knowledge continuation \SpecialG plus a proof-of-knowledge for $X$ satisfies knowledge soundness.
-\end{lemma}
-
-\begin{proof}[Proof idea.]
-As our \Prove is composed from \Preprove and \Reprove, our challenger
-learns the actual public input wire values and blinding factors.
-Adapt the proof of Theorem 2 in \cite[\S3, pp. 9]{RandomizationGroth16},
-observing that $K_\gamma$ and $K_\delta$ never interact with other elements. 
-TODO: Use PoK of $X$.
-%TODO: Alistair or Oana, Do we even need the first sentense here?  nything more to say about the second?
-\end{proof}
-
-In fact, one could prove zero-knowledge continuations satisfy
-weak white-box simulation extractability,  % under similar restrictions,
-much like Theorem 1 in \cite[\S3, pp. 8 \& 11]{RandomizationGroth16}.
-%TODO:  Alistair or Oana, what the hell did I mean by this?  -Jeff
-We depend upon the specific simulator though, which itself increases
-our dependence upon the usage of the zero knowledge continuation.
-\end{comment}
-
-\subsection{Continuation}
-\label{subsec:rvrf_faster}
-
-% TODO \PedVRF.\OpenKey(\compk,\openpk)
-
-\def\longeq{=\mathrel{\mkern-10mu}=}% {=\joinrel=} % https://tex.stackexchange.com/questions/35404/is-there-a-wider-equal-sign
-We describe a much faster choice \pifast for \piring with
-opaque inputs $x_1 \longeq \sk$ and transparent inputs $y_1 \longeq \comring$
- so that taking
- $\genG \longeq \chi_1$, $\genB \longeq \genB_\gamma$, and $\openpk \longeq b$
-in \PedVRF yields an incredibly fast amortized ring VRF prover.
-Also \PedVRF itself proves knowledge of $X' =  \sk\, \chi_1 + b \genB_\gamma $,
- as required by $\SpecialG.\Verify$.
-% $$ X' + Y = \comring\, \Upsilon_1 + \sk\, \chi_1 + b \genB_\gamma $$
-
-A priori, we do not know $\chi_1$ during the trusted setup for $\pifast$,
-which prevents computing $\pk = \sk\, \chi_1$ inside $\pifast$.
-Instead, we propose $\ring$ contain commitments to $\sk$ over
-some Jubjub curve $\ecJ$, while $\sk \in \F_p$ remains a scale for $\grJ$.
-
-We know the large subgroup $\grJ$ of $\ecJ$ typically has smaller prime
-order $p_\grJ$ than $\grE$, itself due to $\ecJ$ being an Edwards curve.
-%
-We thus choose $\sk_0,\sk_1 < p_\grJ$ with at least $\lambda$ bits
-so that
- $\PedVRF.\sk = \sk_0 + \sk_1 \, 2^{\lambda} \mod p_\grE$
-becomes our secret key.
-\footnote{If $\lambda \approx 128$ then $p, p_\grJ > 2^{2\lambda-3}$.}
-Our $\rVRF.\KeyGen$ \eprint{returns}{shall now return}
-a secret key of the form $\rVRF.\sk = (\sk_0,\sk_1,d)$
- with $d \leftsample \F_{p_\grJ}$ and
-a public key of the form
- $\rVRF.\pk = \sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$,
-for some independent $\genJ_0,\genJ_1,\genJ_2 \in \grJ$. % (see \S\ref{subsec:AML_KYC}).
-\footnote{Interestingly we avoid range proofs for $\sk_1$ and $\sk_2$ by this independence.}
-We thus have a fairly efficient instantiation for $\Lring^\inner$ give by
-
-$$ \Lfast^\inner = \Setst{ \sk_0 + 2^{128} \sk_1, \comring }{
- \eprint{ \exists d,\openring \textrm{\ s.t.\ } }{}
- % 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
- \genfrac{}{}{0pt}{}{ \eprint{\rVRF.}{}\OpenRing(\comring,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
-} \mathperiod $$
-
-Applying our rerandomization \Reprove to $\pifast^\inner$ with opaque input
-yields a zkSNARK $\pifast$ with the extra $\PedVRF.\OpenKey$ arithmetic to
-have exactly the form $\piring$.
-
-We explain later in \S\ref{sec:ring_hiding} how one could
-choose $\chi_1$ independent before doing the trusted setup,
- and then wire $\chi_1$ into $\pifast$ inside $C$.
-We could then prove $\pk = \sk\, \chi_1$ directly inside $\pifast^\inner$,
-but doing so here requires slow non-native field arithmetic.
-
-At this point, $\PedVRF.\Sign$ requires two scalar multiplications on $\ecE_1$
- and two on the somewhat faster $\ecE'$,
-so together with rerandomization costing four scalar multiplications
-on $\ecE_1$ and two on $\ecE_2$, our amortized prover time
- runs faster than 12 scalar multiplications on typical $\ecE_1$ curves. 
-We expect the three pairings dominate verifier time, but
- verifiers also need five scalar multiplications on $\ecE_1$.
-
-As an aside, one could construct a second faster curve with the same
-group order as $\grE$, which speeds up two scalar multiplications
- in both the prover and verifier. 
-
-Importantly, our fast ring VRF' amortized prover time now rivals
-group signature schemes' performance \cite{group_sig_survey,}.
-We hope this ends the temptation to deploy group signature like
- constructions where the deanonymization vectors matter.
-
-% BEGIN TODO: Oana
-
-\begin{theorem}\label{thm:knowledge_soundness}
-\rVRF instantiated with \pifast and \PedVRF satisfies knowledge soundness.
-\end{theorem}
-
-\begin{proof}[Proof stetch.]
-An extractor for \PedVRF reveals the opening of $X$ for us,
-so our result follows from Lemma \ref{lem:knowledge_soundness}.
-\end{proof}
-
-% \begin{corollary}\label{cor:???}
-% Our Pedersen ring VRF instantiated with \pifast satisfies ring unforgability and uniqueness.
-% \end{corollary}
-
-% \begin{theorem}\label{thm:pifast_anonymity}
-% \rVRF instantiated with \pifast and \PedVRF satisfies zero-knowledge.
-% \end{theorem}
-%
-% \begin{proof}[Proof stetch.]
-% Assuming the same \comring, we know the zero-knowledge continuations
-% are identically distributed by Lemma \ref{lem:unlinkable},
-% even when reusing a zero-knowledge continuation $(X,A,B,C)$.
-% It follows the typical simulator for \PedVRF ... WHAT???
-% \end{proof}
-
-% \begin{corollary}\label{cor:???}
-% Our Pedersen ring VRF instantiated with \pifast satisfies ring anonymity.
-% \end{corollary}
-
-% END TODO: Oana
-
+\input{reval_PedVRF.tex}
+\input{r1_r2.tex}

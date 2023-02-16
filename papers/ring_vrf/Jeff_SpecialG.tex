@@ -1,0 +1,150 @@
+Zero-knowledge invariably comes from random blinding factors.
+Zero-knowledge continuations need rerandomizable zkSNARKs,
+meaning Groth16 \cite{Groth16}, but beyond rerandomization their
+unlinkability demands hiding public inputs.
+In our case, we ``specialize'' Groth16 to permit alteration of \openpk
+in the $\PedVRF.\OpenKey$ invocation without reproving our heavy
+$\rVRF.\OpenRing$ invocation.
+
+In Groth16 \cite{Groth16}, we have an SRS $S$ consisting of curve
+points in $\grE_1$ and $\grE_2$ that encode the circuit being proven.
+We follow \cite{Groth16} in discussing the SRS $S$ in terms of
+its ``toxic waste''
+ $(\alpha,\beta,\delta,\gamma,\tau^1,\tau^2,\ldots) \in \F_p^*$.
+In other words, we could write say $[ f(\tau)/\delta ]_1$ or $[\delta]_2$
+to denote an element of our SRS $S$ in $\grE_1$ or $\grE_2$ respectively,
+computed by scalar multiplication of the Groth16 generators from
+the toxic waste $\tau$ and $\delta$,
+ but for which nobody knows the underlying $\tau$ or $\delta$ anymore.
+
+In the SRS $S$, we distinguish the verifiers' string/key of elements
+ $\chi_1,\ldots,\chi_k, \Upsilon_1,\ldots,\Upsilon_l, [\alpha]_1 \in \grE_1$ and
+ $[\beta]_2, [\gamma]_2, [\delta]_2 \in \grE_2$.
+% as separate from the provers' much longer string of elements in $\grE_1$ and $\grE_2$.
+A Groth16 \cite{Groth16} proof takes the form 
+ $\pi = (A,B,C) \in \grE_1 \times \grE_2 \times \grE_1$.
+A verifier then produces a $X+Y = \sum_i^k x_i \chi_i + \sum_i^k y_i \chi_i \in \grE_1$
+ from the instance's public inputs $x_i,y_i \in \F_p$ and then checks 
+$$ e(A,B) = e([\alpha]_1, [\beta]_2) \cdot
+ e(X+Y, [\gamma]_2) \cdot e(C, [\delta]_2) \mathperiod $$
+
+We need the rerandomization algorithm from \cite[Fig.~1]{RandomizationGroth16}:
+% to build a zero-knowledge continuation:
+% https://eprint.iacr.org/2020/811
+% https://github.com/arkworks-rs/groth16/pull/16/files
+% \algo{rerandomize}
+An existing SNARK $(A,B,C)$ is transformed into a fresh
+SNARK $(A',B',C')$ by sampling random $r_1,r_2 \in \F_p$ and computing
+% $$
+% A' = {1 \over r_1} A, \qquad
+% B' = r_1 B + r_1 r_2 [\delta]_2, \qquad
+% C' = C + r_2 A \mathperiod
+% $$
+$$ \begin{aligned}
+A' &= {1 \over r_1} A \\
+B' &= r_1 B + r_1 r_2 [\delta]_2 \\
+C' &= C + r_2 A \mathperiod \\
+\end{aligned} $$
+At this point, our $x_i$ remain identical after rerandomization,
+so $X$ links $(A,B,C)$ to $(A',B',C')$.
+Alone rerandomization cannot alter public inputs $x_i$, so
+we instead need an opaque public input point $X$, which then becomes
+part of our proof and incurs its own separate proof of correctness.
+
+We build {\em special Groth16} aka \SpecialG by adding one fresh
+basepoint $\genB_\gamma$ independent from all others,
+ including the $H_{\grE}(\msg)$ in \PedVRF.%
+\footnote{Apply the underlying $H_\grE$ to an input outside the \msg domain for example.}
+In the trusted setup, we build one additional prover SRS element
+$$ \genB_\delta := {\gamma\over\delta} \genB_\gamma \mathperiod $$
+% Although $\genB_\gamma$ is independent,  we create $\genB_\delta$ during the trusted setup,  so the toxic waste $\gamma$ and $\delta$ remain secret.
+After $\genB_\delta$ is created, our toxic waste $\gamma$ and $\delta$
+disappear and subversion resistance could be checked
+ like in \cite{cryptoeprint:2019/1162} plus also checking
+$$ e(\genB_\gamma, [\gamma]_2) = e(\genB_\delta, [\delta]_2) \mathperiod $$
+
+We now have a zero-knowledge continuation $\pi = (X,A,B,C)$ from which
+our algorithm $\SpecialG.\Reprove : (X,A,B,C) \mapsto ((X',A',B',C'); b)$ produces an
+unlinkable instance $\pi' = (X',A',B',C')$ by
+ first sampling random $b,r_1,r_2 \in \F_p$ and then computing
+$$ \begin{aligned}
+X' &= X + b \genB_\gamma \\
+A' &= {1 \over r_1} A \\
+B' &= r_1 B + r_1 r_2 [\delta]_2 \\
+C' &= C + r_2 A + b \genB_\delta \mathperiod \\
+\end{aligned} $$
+As our two $b$ terms cancel in the pairings, our special Groth16
+rerandomization reduces to the standard Groth16 rerandomization
+construction above,
+ except with $X$ now an opaque Pedersen commitment.
+
+% TODO:  Should we be saying opaque less and Pedersen more below?
+
+Along side opaque inputs in $X = \sum_i^k x_i \chi_i$,
+our verifier should typically enforce specific values by assembling
+a few {\em transparent} inputs $Y = \sum_i^l y_i \Upsilon_i$ themselves.
+In particular, our ring VRF verifiers should enforce the commitment
+\comring for $\ring$, even if they outsource computing \comring.
+We thus write $\SpecialG.\Preprove : (\bar{y}, \bar{x}; \bar{\omega}) \mapsto (X,A,B,C)$
+where $(A,B,C) \leftarrow \primalgo{Groth16}.\Prove(\bar{y}, \bar{x}; \bar{\omega})$,
+so a full \Prove algorithm works by composing \Preprove and \Reprove.
+
+At this point $\SpecialG.\Verify(\bar{y}; (X',A',B',C') )$
+ computes $X' + Y = X' + \sum_i^l y_i \Upsilon_i$ and checks
+ the tuple $(X' + Y,A',B',C')$ like Groth16 does,
+$$ e(A',B') = e([\alpha]_1, [\beta]_2) \cdot
+ e(X' + Y, [\gamma]_2) \cdot e(C', [\delta]_2) \mathperiod $$
+As our verifier does not build $X'$ themselves, we prove nothing
+with this pairing equation unless the verifier separately checks
+ a proof-of-knowledge that $X' = b \genB_\gamma + \sum_i^k x_i \chi_i$
+ for some unknown $b,\bar{x}$.
+
+\begin{lemma}\label{lem:unlinkable}
+Our rerandomization procedure % $(X,A,B,C) \mapsto (X',A',B',C')$
+transforms honestly generated \SpecialG zero-knowledge continuation $(X,A,B,C)$
+into identically distributed \SpecialG proof $(X',A',B',C')$,
+with identical opaque inputs $x_1,\ldots,x_k$ and
+ identical transparent inputs $y_1,\ldots,y_l$.
+\end{lemma}
+
+\begin{proof}[Proof idea.]
+Adapt the proof of Theorem 3 in \cite[Appendix C, pp. 31]{RandomizationGroth16}.
+\end{proof}
+
+% \begin{corollary}\label{cor:unlinkable}
+%	If $\sigma'$ and $\sigma''$ are \PedVRF{}s then ???
+% \end{corollary}
+
+All told, our opaque rerandomization trick converts any conventional
+Groth16 zkSNARK $\pi$ for $\Lring^\inner$ into a zkSNARK $\pi'$ for $\Lring$
+with inputs split into a transparent part $\bar{y}$ vs opaque unlinkable part $X$.
+% We explore two concrete $\pi$ proposals below.
+
+Importantly, rerandomization requires only
+ four scalar multiplications on $\ecE_1$ and
+ two scalar multiplications on $\ecE_2$,
+which  BLS12 curves make roughly equivalent to
+ eight scalar multiplications on $\ecE_1$.
+
+\begin{lemma}\label{lem:knowledge_soundness}
+Assuming AGM plus the $(2n-1,n-1)$-DLOG assumption, and
+ circuit size less than $n$,
+then our zero-knowledge continuation \SpecialG plus a proof-of-knowledge for $X$ satisfies knowledge soundness.
+\end{lemma}
+
+\begin{proof}[Proof idea.]
+As our \Prove is composed from \Preprove and \Reprove, our challenger
+learns the actual public input wire values and blinding factors.
+Adapt the proof of Theorem 2 in \cite[\S3, pp. 9]{RandomizationGroth16},
+observing that $K_\gamma$ and $K_\delta$ never interact with other elements. 
+TODO: Use PoK of $X$.
+%TODO: Alistair or Oana, Do we even need the first sentense here?  nything more to say about the second?
+\end{proof}
+
+In fact, one could prove zero-knowledge continuations satisfy
+weak white-box simulation extractability,  % under similar restrictions,
+much like Theorem 1 in \cite[\S3, pp. 8 \& 11]{RandomizationGroth16}.
+%TODO:  Alistair or Oana, what the hell did I mean by this?  -Jeff
+We depend upon the specific simulator though, which itself increases
+our dependence upon the usage of the zero knowledge continuation.
+
