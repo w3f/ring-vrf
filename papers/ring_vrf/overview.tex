@@ -128,14 +128,14 @@ We solve this obstacle in \S\ref{sec:rvrf_cont} below by introducing
 {\em zero-knowledge continuations}, a new zkSNARK technique built from
 rerandomizable Groth16s \cite{Groth16} and designed for SNARK composition and reuse.
 
-As a step towards this, we split the language \Lrvrf into a language
-\Leval for \rVRF evaluation and a language \Lring, which enforces our
+As a step towards this, we split the relation $ \rel_{\mathsf{rvrf}} $ into a relation
+$ \rel_{eval} $ for \rVRF evaluation and a relation $ \Rring $, which enforces our
 computationally expensive condition $\pk = \rVRF.\OpenRing(\comring,\openring)$.
-We want to reuse \Lring across multiple \rVRF signatures, so anonymity
-requires we rerandomize a Groth16 SNARK for \Lring
+We want to reuse the proof for $ \Rring $ across multiple \rVRF signatures, so anonymity
+requires we rerandomize a Groth16 SNARK for $ \Rring $
 ala \cite[Theorem 3, Appendix C, pp. 31]{RandomizationGroth16}.
 %
-Yet, we must connect together the NIZKs for the two languages  \Leval and \Lring. We do this by passing \pk from \Lring to \Leval, which
+Yet, we must connect together the NIZKs for the two languages  $ \rel_{eval} $ and $ \Rring  $. We do this by passing \pk from \Lring to \Leval, which
 demands some hiding commitment \compk to \pk.
 
 %
