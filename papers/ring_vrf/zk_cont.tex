@@ -97,17 +97,17 @@ and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledg
                    & (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
                    & (\bary, \barx, X, \pi, b) \leftarrow A(\crs,\pp, \relone), (X', \pi', b') \leftarrow \ZKCont.\Reprove(\crspk, X, \pi, b, \relone)) = 1
 \end{align*}
-\noindent \textbf{Knowledge Soundness} For every benign auxiliary input $z$ (see~\cite{bening_auxiliary}), 
-for every non-uniform efficient adversary $A$, there exists an efficient non-uniform extractor $E$ such that 
+\noindent \textbf{Knowledge Soundness} For every benign auxiliary input $z$ (as per~\cite{bening_auxiliary}) and 
+every non-uniform efficient adversary $A$, there exists efficient non-uniform extractor $E$  
 \begin{align*}
 \mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1) \ \wedge \ (\ZKCont.\VerifyCom(\pp, X, \bar{x}, b) = 1) \ \wedge\ \\
-                   & \wedge \ ( (\bary, \barx; \baromega) \notin \relone) \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), 
-                   (\bary, \barx, X, \pi, b; \baromega ) \leftarrow A || E (\crs, z, \relone)) = \negl (\lambda),
+                   & \wedge \ ( (\bary, \barx; \baromega) \notin \relone) \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
+                   & (\bary, \barx, X, \pi, b; \baromega ) \leftarrow A || E (\crs, z, \relone)) = \negl (\lambda),
 \end{align*}
 \noindent %where $\ZKCont.\Preprove_{|X}(\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone; b)$ means running the part of algorithm 
 %$\ZKCont.\Preprove$ that computes and outputs $X$ with its regular inputs and using $b$ when randomness is required; 
-where by $(\mathit{output_{A}};\mathit{output_{B}}) \leftarrow A || B(\mathit{input})$ we denote algorithms that run on the same 
-$\mathit{input}$, and, moreover $B$ has access to the random coins of $A$. \\
+where by $(\mathit{output_{A}};\mathit{output_{B}}) \leftarrow A || B(\mathit{input})$ we denote algorithms $A$, $B$  running on the same 
+$\mathit{input}$ and $B$ having access to the random coins of $A$. \\
 
 \noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $z$, 
 for all  $(\bary, \barx; \baromega) \in \relone$, for all $X$, for all $\pi$, for all $b$, for every adversary $A$ it holds:
@@ -245,29 +245,40 @@ We use the fact that $\ccgroth$ as defined by the NILP detailed in Fig.22, Appen
 $\SpecialG$'s $\Setup$ together with $\Gen$ and $\ccgroth$'s $\mathit{KeyGen}$ are the same procedure. Also $\SpecialG$ 
 and $\ccgroth$ share the same verification algorithm. Hence, translating the notation appropriately, $\SpecialG$ also satisfies KS 
 for a cc-SNARK with double binding. \\
-\vspace{-0.01cm}
+
 % we first argue that We prove knowledge-soundness by reducing it to the knowledge-soundness property of the Groth16 
 %commit-carrying with double binding scheme (for short $\ccgroth$). This knowledge-soundness property has been formalised in 
 %Definition 3.4~\cite{LegoSNARK} and the NILP corresponding to $\ccgroth$ has been detailed in Fig.22, Appendix H.5~\cite{LegoSNARK}. 
 %Indeed, $\SpecialG$'s $\Setup$ together with $\Gen$ and $\ccgroth$'s $\mathit{KeyGen}$ are the same procedure. Moreover $\SpecialG$ 
 %and $\ccgroth$ share the same verification algorithm. Since $\ccgroth$ satisfies the definition of a cc-SNARK with double binding, translating 
 %the notation appropriately, $\SpecialG$ also satisfies the knowledge soundness properties for a cc-SNARK with double binding. 
-\noindent Let $A_{\SpecialG}$ be an adversary for KS as in Definition~\ref{def:zk_cont} and 
-define adversary $A_{\ccgroth}$ for KS as in Definition 3.4~\cite{LegoSNARK} as:
+\noindent Let $A_{\SpecialG}$ be an adversary for KS in Definition~\ref{def:zk_cont} and 
+define adversary $A_{\ccgroth}$ for KS  in Definition 3.4~\cite{LegoSNARK}:
 \begin{align*}
 &\mathit{If} \ (\bary, \barx, X, \pi, b) \leftarrow A_{\SpecialG} (\crs, \pp, z, \relRQ)\  (1)\ \mathit{then} \ (\bary, X, \pi) \leftarrow A_{\ccgroth} (\relRQ, \crs, z).
 \end{align*}
 
-\noindent Given extractor $E_{\ccgroth}$ for $A_{\ccgroth}$ fulfilling Definition 3.4~\cite{LegoSNARK},construct extractor $E_{\ccgroth}$ for $A_{\ccgroth}$ such that 
+\noindent Given extractor $E_{\ccgroth}$ for $A_{\ccgroth}$ fulfilling Definition 3.4~\cite{LegoSNARK}, 
+construct extractor $E_{\ccgroth}$ for $A_{\ccgroth}$
 \begin{align*}
 &\mathit{If} \ (\barx^*, b^*, \baromega^*) \leftarrow E_{\ccgroth} (\relRQ, \crs, z)\ (2)\ \mathit{then} \ \baromega^* \leftarrow E_{\SpecialG} (\relRQ, \crs, z).
 \end{align*}
 We show $E_{\SpecialG}$ fulfils Definition~\ref{def:zk_cont} for $A_{\SpecialG}$. Assume by contradiction that is not the case. 
-This implies there exist auxiliary input $z$ such that the following hold with non-negligible probability: 
+This implies there exist auxiliary input $z$ such that each: 
 \begin{align*}
 \ZKCont.\Verify(\crsvk, \bary, X, \pi, &\relRQ) =1 \ (10)\ ; \ \ZKCont.\VerifyCom(\pp, X, \barx, b) =1 \ (20) \\
 & (\bary, \barx; \baromega) \notin \relRQ  \ \ (30) 
 \end{align*}
+hold with non-negligible probability. Since $(20)$ holds with non-negligible probability and verification is identical for 
+$\SpecialG$ and $\ccgroth$, and since $E_{\ccgroth}$ is an extractor for $A_{\ccgroth}$ as per Definition 3.4~\cite{LegoSNARK},
+ then each of the two events 
+\begin{align*}
+\mathit{VerCommit^*}(\pp, X, \barx^*, b^*) =1 \ (40) \ ; \ (\bary, \barx^*; \baromega^*) \in  \relRQ \ (50)
+\end{align*}
+holds with overwhelming probability. Since $(20)$ holds with non-negligible probability and $(40)$ holds with overwhelming probability and 
+together with (ii) from Definition 3.4~\cite{LegoSNARK} we obtain that $\barx^* = \barx$. Since $(50)$ holds with overwhelming probability, it implies 
+$(\bary, \barx; \baromega^*) \in \relRQ $ with overwhelming probability which contradicts our assumption, so our claim that $\SpecialG$ does not have 
+KS as per Definition~\ref{def:zk_cont} is false. \\
 
 \noindent Finally, regarding zero-knowledge, it is clear that if $\pi' = (U', V', W')$ is part of the output of $\SpecialG.\Reprove$, 
 then $U'$ and $V'$ are uniformly distributed as group elements in their respective groups. This holds, as long as the 
