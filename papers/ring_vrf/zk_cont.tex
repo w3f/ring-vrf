@@ -51,11 +51,11 @@ input $(\bary, \barx)$ and witness $\baromega$ is a tuple of efficient algorithm
 such that for implicit security parameter $\lambda$,
 \begin{itemize}
 
-\item $\ZKCont.\Setup: (1^{\lambda}) \mapsto (\crs, \pp, \tw)$ a setup algorithm that on input the security parameter 
-outputs a common reference string $\crs$ and a list $\pp$ of public parameters,
+\item $\ZKCont.\Setup: (1^{\lambda}) \mapsto (\crs, \tw)$ a setup algorithm that on input the security parameter 
+outputs a common reference string $\crs$ and a trapdoor $\tw$,
 
-\item $\ZKCont.\Gen: (\crs, \relone) \mapsto (\crspk, \crsvk)$ \, 
-outputs a pair of proving key $\crspk$ and verification key $\crsvk$, 
+\item $\ZKCont.\Gen: (\crs, \relone) \mapsto (\pp, \crspk, \crsvk)$ \, 
+outputs a list $\pp$ of public parameters and a pair of proving key $\crspk$ and verification key $\crsvk$, 
 
 \item $\ZKCont.\Preprove: (\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone) \mapsto (X, \pi, b)$ \,
 constructs commitment $X$ from a vector of inputs $\bar{x}$ (called \emph{opaque}) and 
@@ -157,7 +157,7 @@ $\barx = (x_{l+1}, \ldots, x_n)$ and $\baromega = (w_1, \ldots, w_{m-n})$.
 \label{insta:sg16} 
 Specialised Groth16 for relation $\relRQ$ is the following instantiation of the zero-knowledge continuation notion from Definition~\ref{def:zk_cont}:
 \begin{itemize}
-\item $\SpecialG.\Setup: (1^{\lambda}) \mapsto (\crs, \pp, \tw)$. \\ 
+\item $\SpecialG.\Setup: (1^{\lambda}) \mapsto (\crs, \tw)$. \\ 
 \noindent Let $\alpha, \beta, \gamma, \delta, \tau, \eta  \xleftarrow{\$} \F_q^{*}$. Let $\tw = (\alpha, \beta, \gamma, \delta, \tau, \eta)$. \\ 
 Let $\crs = ([\barsig_1]_1, [\barsig_2]_2)$ where 
 \begin{align*}
@@ -168,13 +168,14 @@ Let $\crs = ([\barsig_1]_1, [\barsig_2]_2)$ where
 \barsig_2 = (&\beta, \gamma, \delta, \{\tau^i\}_{i=0}^{d-1}). 
 \end{align*} 
 
-Let $\pp = \left( \left \{ \left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1 \right \}_{i=l+1}^{n}, \left[ \frac{\eta}{\gamma} \right]_1 \right)$. \\
 \noindent Moreover, for simplicity and later use, we call $\Kgamma = \left[\frac{\eta}{\gamma}\right]_1$  and $\Kdelta = \left[ \frac{\eta}{\delta}\right] _1$.
 
-\item $\SpecialG.\Gen: (\crs, \relRQ) \mapsto (\crspk, \crsvk)$ where \\
+\item $\SpecialG.\Gen: (\crs, \relRQ) \mapsto (\pp, \crspk, \crsvk)$ where \\
 $\crspk = \left([\barsig_1]_1, [\beta]_2, [\delta]_2, \left\{[\tau^i]_2\right\}_{i=0}^{d-1}\right)$ and \\ 
 $\crsvk = \left([\alpha]_1, \left\{ \left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1 \right\}_{i=1}^{l}, 
-[\beta]_2, [\gamma]_2, [\delta]_2\right)$.  
+[\beta]_2, [\gamma]_2, [\delta]_2\right)$ and \\ 
+$\pp = \left( \left \{ \left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1 \right \}_{i=l+1}^{n}, \left[ \frac{\eta}{\gamma} \right]_1 \right)$.
+
 
 \item $\SpecialG.\Preprove: (\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relRQ) \mapsto (X, \pi, b)$ such that \\
 \begin{align*}
@@ -237,10 +238,14 @@ AGM~\cite{Fuchs_AGM}, $\SpecialG$ is a zero-knowledge continuation as per defini
 \end{theorem}
 \begin{proof} It is straightforward to prove that $\SpecialG$ has completeness for $\Preprove$ and for $\Reprove$. \\
 
+\noindent We prove knowledge-soundness by reducing it to the knowledge soundness property of the commit-carrying 
+Groth16 with double binding (for short $\ccgroth$). This knowledge soundness property has been formalised in 
+Definition 3.4~\cite{LegoSNARK} and the NILP corresponding to $\ccgroth$ has been detailed in Fig.22, Appendix H.5~\cite{LegoSNARK}.\\
+
 \noindent Finally, regarding zero-knowledge, it is clear that if $\pi' = (U', V', W')$ is part of the output of $\SpecialG.\Reprove$, 
 then $U'$ and $V'$ are uniformly distributed as group elements in their respective groups. This holds, as long as the 
 input to $\SpecialG.\Reprove$ is a verifying proof, even when the proof was maliciously generated. Hence, it is easy to check  
-that the output$\pi'$ of $\SpecialG.\Sim$ is identically distributed to a proof $\pi'$ output by $\SpecialG.\Reprove$ so the perfect 
+that the output $\pi'$ of $\SpecialG.\Sim$ is identically distributed to a proof $\pi'$ output by $\SpecialG.\Reprove$ so the perfect 
 zero-knowledge property holds for $\SpecialG$.
 \end{proof}
 
