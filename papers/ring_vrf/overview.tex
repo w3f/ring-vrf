@@ -50,12 +50,12 @@ In other words, this simplified ring VRF could be instantiated by making
 \rVRF.\Eval a pseudo-random (hash) function, and using a NIZK for a language like
 $$ \Lrvrf = \Setst{ \Out, \msg, \ring}{
     \eprint{
-        \exists (\pk,\sk) \leftarrow \rVRF.\KeyGen, \quad %   \textrm{ and }
+        (\pk,\sk) \leftarrow \rVRF.\KeyGen, \quad %   \textrm{ and }
         \pk \in \ring, \quad
         \Out = \rVRF.\Eval(\sk,\msg)
     }{
         \begin{aligned}
-        & \exists (\pk,\sk) \leftarrow \rVRF.\KeyGen \\
+        & (\pk,\sk) \leftarrow \rVRF.\KeyGen \\
         & \pk \in \ring \\
         & \Out = \rVRF.\Eval(\sk,\msg)
         \end{aligned}
@@ -114,7 +114,7 @@ argument with a set commitment to \ring, roughly like what ZCash does \cite{zcas
 
 We thus replace the membership condition $\pk \in \ring$ in the above
 language and NIZK by the opening condition
-$$ \exists \openring \textrm{\ s.t.\ } \pk = \rVRF.\OpenRing(\comring,\openring) \mathperiod $$
+$$ \pk = \rVRF.\OpenRing(\comring,\openring) \textrm{\ for some known \ } \openring \mathperiod $$
 % $\pk = \OpenRing(\comring,\openring)$.
 %
 % $$ \pi_0 = \NIZK \Setst{ \Out, \msg, \comring }{

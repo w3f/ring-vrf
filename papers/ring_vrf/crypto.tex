@@ -1,9 +1,7 @@
 \documentclass{llncs}
-% \documentclass[a4paper,11pt]{amsart}
 
-
-\def\eprint#1#2{#2} % eprint
-% \def\eprint#1#2{#2} % PETS
+% \def\eprint#1#2{#2} % eprint
+\def\eprint#1#2{#2} % crypto
 \eprint{\usepackage[margin=2.5cm,includefoot]{geometry}}{}
 % \sloppy
 
@@ -21,7 +19,7 @@
 \usepackage{url}
 \usepackage{hyperref}
 % \usepackage[capitalize,nameinlink]{cleveref}
- 
+
 % \usepackage{graphicx}
 % \usepackage{xcolor}
 
@@ -82,7 +80,7 @@
 
 \input{overview}
 \input{background}
-\input{games} 
+% \input{games} 
 
 \input{uc_fun}
 \input{uc_model}
@@ -90,15 +88,7 @@
 \input{pedersen_vrf}
 \input{zk_cont}
 
-\input{ring_updates}
-\input{ring_hiding}
-% Handan writes: We cannot prove the UC security of our protocol with these options. Also, they are not formally described for a conference submission. We  should just say merkle tree or ring in the protocol description section
-
-
-\input{app_id}
-\input{app_rate}
-
-% \input{conclusion}
+\input{app_short}
 
 \bibliographystyle{plain}
 \bibliography{../climate,../commit,../anoncred,../sassafras,../identity,../vrf,../zkp}

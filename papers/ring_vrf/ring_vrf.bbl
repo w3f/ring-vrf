@@ -11,13 +11,6 @@ Christian Badertscher, Peter Ga{\v{z}}i, I{\~n}igo Querejeta-Azurmendi, and
 \newblock On uc-secure range extension and batch verification for ecvrf.
 \newblock {\em Cryptology ePrint Archive}, 2022.
 
-\bibitem{cryptoeprint:2019/1162}
-Karim Baghery.
-\newblock Subversion-resistant simulation (knowledge) sound nizks.
-\newblock In Martin Albrecht, editor, {\em Cryptography and Coding}, pages
-  42--63, Cham, 2019. Springer International Publishing.
-\newblock \url{https://eprint.iacr.org/2019/1162}.
-
 \bibitem{RandomizationGroth16}
 Karim Baghery, Markulf Kohlweiss, Janno Siim, and Mikhail Volkhov.
 \newblock Another look at extraction and randomization of groth's zk-snark.
@@ -25,6 +18,20 @@ Karim Baghery, Markulf Kohlweiss, Janno Siim, and Mikhail Volkhov.
   Cryptography and Data Security}, pages 457--475, Berlin, Heidelberg, 2021.
   Springer Berlin Heidelberg.
 \newblock \url{https://ia.cr/2020/811}.
+
+\bibitem{cryptoeprint:2005:304}
+Adam Bender, Jonathan Katz, and Ruggero Morselli.
+\newblock Ring signatures: Stronger definitions, and constructions without
+  random oracles.
+\newblock In Shai Halevi and Tal Rabin, editors, {\em Theory of Cryptography},
+  pages 60--79, Berlin, Heidelberg, 2006. Springer Berlin Heidelberg.
+\newblock \url{https://ia.cr/2005/304}.
+
+\bibitem{bening_auxiliary}
+Nir Bitansky, Ran Canetti, Omer Paneth, and Alon Rosen.
+\newblock On the existence of extractable one-way functions.
+\newblock In {\em Proceedings of the Forty-Sixth Annual ACM Symposium on Theory
+  of Computing}, 2014.
 
 \bibitem{pop2017}
 Maria Borge, Eleftherios Kokoris-Kogias, Philipp Jovanovic, Linus Gasser,
@@ -43,7 +50,7 @@ Privacy by~Design~Foundation.
 \newblock \url{https://irma.app/docs/v0.2.0/overview/}.
 
 \bibitem{LegoSNARK}
-Matteo Campanelli, Dario Fiore, and Anaïs Querol.
+Matteo Campanelli, Dario Fiore, and Ana\"{\i}s Querol.
 \newblock Legosnark: Modular design and composition of succinct zero-knowledge
   proofs.
 \newblock Cryptology ePrint Archive, Paper 2019/142, 2019.
@@ -99,6 +106,18 @@ Bryan Ford and Jacob Strauss.
   SocialNets '08, page 31–36, New York, NY, USA, 2008. Association for
   Computing Machinery.
 
+\bibitem{Fuchs_AGM}
+Georg Fuchsbauer, Eike Kiltz, and Julian Loss.
+\newblock The algebraic group model and its applications.
+\newblock Cryptology ePrint Archive, Paper 2017/620, 2017, 2017.
+\newblock \url{https://eprint.iacr.org/2017/620}.
+
+\bibitem{GGPR13}
+Rosario Gennaro, Craig Gentry, Bryan Parno, and Mariana Raykova.
+\newblock Quadratic span programs and succinct nizks without pcps.
+\newblock Cryptology ePrint Archive, Paper 2012/215, 2012, 2012.
+\newblock \url{https://eprint.iacr.org/2012/215}.
+
 \bibitem{draft-irtf-cfrg-vrf-10}
 Sharon Goldberg, Leonid Reyzin, Dimitrios Papadopoulos, and Jan Včelák.
 \newblock {Verifiable Random Functions (VRFs)}.
@@ -121,10 +140,13 @@ Jens Groth.
   Springer Berlin Heidelberg.
 \newblock IACR ePrint Archive 2016/260.
 
-\bibitem{zkfunc}
-Jens Groth, Rafail Ostrovsky, and Amit Sahai.
-\newblock New techniques for noninteractive zero-knowledge.
-\newblock {\em Journal of the ACM (JACM)}, 59(3):1--35, 2012.
+\bibitem{agg_dkg}
+Kobi Gurkan, Philipp Jovanovic, Mary Maller, Sarah Meiklejohn, Gilad Stern, and
+  Alin Tomescu.
+\newblock Aggregatable distributed key generation.
+\newblock In Anne Canteaut and Fran{\c{c}}ois{-}Xavier Standaert, editors, {\em
+  {EUROCRYPT} 2021}, volume 12696 of {\em LNCS}, pages 147--176, 2021.
+\newblock \url{https://ia.cr/2021/005}.
 
 \bibitem{zcash_protocol}
 Daira Hopwood, Sean Bowe, Taylor Hornby, and Nathan Wilcox.
