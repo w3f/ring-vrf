@@ -113,20 +113,11 @@ but exactly what form these public keys take depends upon how our computation
 We therefore define $ \rVRF.\KeyGen $ as follows:
 
 \begin{itemize}
-	\item $\rVRF.\KeyGen$ \, returns as secret key $\sk,r \leftsample \F_p$ and $ \pk $ as public key where $ \pk = \mathsf{Com}.\mathsf{Commit}(\sk,r)  $. We note that $ \pk  $ can be defined as $ \pk = \sk \genG $ according to the SNARK used for $ \Rring $. In this case, we would not have $ r $ as a part of the secret key.
+	\item $\rVRF.\KeyGen$ \, returns as secret key $\sk,r \leftsample \F_p$ and $ \pk $ as public key where $ \pk = \mathsf{Com}.\mathsf{Commit}(\sk,r)  $. We note that $ \pk  $ can be alternatively defined as $ \pk = \sk \genG $ according to the SNARK used for $ \Rring $. In this case, we would not have $ r $ as a part of the secret key.
 \end{itemize}
 
- have a relation $\overset{\sk}{\equiv}$ that proves
- the secret key $\sk$ behind $\pk$ matches $\sk \, \genG = \compk - \openpk \, \genB$.\\
  
-
- 
-We provide one optimal public key design in \S\ref{subsec:rvrf_faster} for our SNARK used for $ \Rring $. 
-
-	% although some further nuances only appear later in \S\ref{subsec:AML_KYC}.
-	%Anyways $\rVRF.\KeyGen$ always generate both a secret key similar to
-	%$\PedVRF.\KeyGen$ as well as some corresponding public key type
-	% compatible with $\rVRF.\CommitRing$.
+We provide one optimal public key design in \S\ref{subsec:rvrf_faster} for our SNARK  for $ \Rring $. 
 
 We define $\rVRF.\Eval = \PedVRF.\Eval$.
 We let  $ \Rring $ be
