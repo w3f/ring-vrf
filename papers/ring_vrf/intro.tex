@@ -35,7 +35,7 @@ By asking users trust a public list, not certificates.
 % \smallskip 
 \paragraph{Ring VRFs:}
 
-A ring signature proves only that its actual signer lies in a ``ring''
+A ring signature \cite{ring_accountable,ring_efficient,ring_linkable,ring_noRO,ring_sublinear} proves only that its actual signer lies in a ``ring''
 of public keys, without revealing which signer really signed the message.
 A {\it verifiable random function} (VRF) is a signature that proves
 correct evaluation of a PRF defined by the signer's key.
@@ -47,13 +47,12 @@ but also proves correct evaluation of a pseudo-random function (PRF)
 defined by the actual signer's key. % (see \S\ref{sec:rvrf_games}).
 %
 Ring VRF outputs then provide linking proofs between different signatures
-iff the signatures have identical inputs, as well as pseudo-randomness.
-
+if and only if the signatures have identical inputs, as well as pseudo-randomness.
 As this pseudo-random output is uniquely determined by the signed message
 and signer's actual secret key, we can therefore link signatures by the
 same signer if and only if they sign identical messages.
 In effect, ring VRFs restrict anonymity similarly to but less than
-linkable ring signatures do, which makes them multi-use and contextual.
+linkable ring signatures \cite{ring_linkable,ring_linkablee} do, which makes them multi-use and contextual.
 
 We define the security of ring VRFs in both the standard model
 and in the universally composable (UC) \cite{canetti1,canetti2} model. 
@@ -74,9 +73,7 @@ individual VRF evaluations.
 
 Rerandomizable zkSNARKs like Groth16 \cite{Groth16} admit a
 transformation of a valid proof into another valid but unlinkable
-proof of the exact same statement.  In practice, rerandomization
-never gets deployed because the public inputs link different usages,
-breaking privacy.
+proof of the exact same statement.  We formally define this transformation and call it ``zero-knowledge continuation''.
 
 We demonstrate in \S\ref{sec:rvrf_cont} a simple transformation of
 any Groth16 zkSNARK into a {\it zero-knowledge continuation} whose
@@ -85,36 +82,31 @@ rerandomizable blinding factors and proofs.
 These zero-knowledge continuations then prove validity of the contents
 of Pedersen commitments, but can now be reused arbitrarily many times,
 without linking the usages.
-
 In brief, we adjust the trusted setup of the Groth16 to additionally
 produce an independent blinding factor base for the Groth16 public input, 
 along with an absorbing base that cancels out this blinding factor in the
 Groth16 verification.
 As our public inputs involve opaque Pedersen commitments,
 they now require proofs-of-knowledge resentment of to \cite{LegoSNARK}. 
-% In essence, this specializes the Groth16 
-
 As recursive SNARKs might remain slow,
 we expect zero-knowledge continuations via rerandomization become
-essential for zkSNARKs used in identity and elsewhere outside the crypto-currency space.
+essential for zkSNARKs used in identity.
 
 % Second
 % \smallskip
+Now, we briefly list the use of ring VRF in real-world applications.
 \paragraph{Identity uses:}
 
 An identity system can be based upon ring VRFs in an natural way:
 After verifying an identity requesting domain name in TLS,
 our user agent signs into the session by returning a ring VRF
 signature whose input is the requesting domain name, so their
-ring VRF output becomes their unique identity at that domain
-(see \S\ref{sec:app_identity}).
-
+ring VRF output becomes their unique identity at that domain.
 At this point, our requesting domain knows each users represents
 distinct ring members, which prevents Sybil behavior, and permits
 banning specific users.
 At the same time, users' activities remain unlinkable across different
-domains
-
+domains.
 In essence, ring VRF based credentials, if correctly deployed, only
 prevent users being Sybil, but leak nothing more about users.  We argue
 this yields diverse legally and ethically straightforward identity usages.
@@ -190,14 +182,13 @@ We define single-use tokens to be ring VRF signatures whose VRF input
 consists of a resource name, an approximate date, and a bounded counter.
 Now merchants reports each anonymous token back to some authority who
 enforces rate limits by rejecting duplicate ring VRF outputs.
-(See \S\ref{sec:app_rate_limits})
-
+%(See \S\ref{sec:app_rate_limits})
 In other words, our rate limiting authority treats outputs like the
 ``nullifiers'' in anonymous payment schemes.
 Yet, ring VRF nullifiers need only temporarily storage, as eventually one
 expires the date in the VRF input.  Asymptotically we thus only need
 $O(\mathtt{users})$ storage vs the $O(\mathtt{history})$ storage
-required by anonymous payment schemes like ZCash and blind signed tokens.
+required by anonymous payment schemes like ZCash \cite{zcash_protocol} and blind signed tokens.
 
 We further benefit from the ``ring'' credential format too,
  as opposed to certificate based designs like group signatures:\quad 
@@ -217,18 +208,17 @@ those credentials' heavy issuance phase represents a major adoption hurdle.
 A ring VRF systems issue fresh tokens almost non-interactively merely by
 adjusting allowed VRF input on resource names, dates, and bounds.
 This reduces complexity, simplifies scaling, and increases flexibility.
-
 In particular, if governments issue ration cards based upon ring VRFs
 then these credentials could safely support other use cases, like
 free tiers in online services or games, and advertiser promotions,
 as well as identity applications like prevention of spam and online abuse.
-
 In this, we need authenticated domain separation of products or identity
-consumers in queries to users' ring VRF credentials.  We briefly discuss
-some sensible patterns in \S\ref{subsec:app_ration_carts} below, but
-overall authenticated domain separation resemble TLS certificates except
-simpler in that roots of trust can self authenticate if root keys act as
-domain separators.
+consumers in queries to users' ring VRF credentials.  
+%We briefly discuss
+%some sensible patterns in \S\ref{subsec:app_ration_carts} below, but
+%overall authenticated domain separation resemble TLS certificates except
+%simpler in that roots of trust can self authenticate if root keys act as
+%domain separators.
 
 
 %TODO Our contributions should be listed here: https://crypto.iacr.org/2023/papersubmission.php says that 'The introduction should summarize the contributions of the paper at the level understandable for a non-expert reader.'
