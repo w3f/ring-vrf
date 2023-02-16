@@ -172,17 +172,17 @@ $$ \Rring = \Setst{ (\compk, \comring);(\sk,\pk) }{
 %\sk and even \pk remain secret by transforming the trusted setup to have
 %a rerandomizable Pedersen commitment \compk outside this Groth16 SNARK.
 %$$ \Lring^\inner = \Setst{ \sk, \comring}{
-%	\eprint{
-%		(\pk,\sk) \leftarrow \rVRF.\KeyGen, \, % \textrm{\,and }
-%		\pk = \rVRF.\OpenRing(\comring,\openring) 
-%	}{
-%		\begin{aligned}
-%			&(\pk,\sk) \leftarrow \rVRF.\KeyGen, \\
-%			% \exists \openring \textrm{\ s.t.\ }
-%			&\pk = \rVRF.\OpenRing(\comring,\openring)  \\      
-%		\end{aligned}
-%	}
-%} $$
+	%	\eprint{
+		%		(\pk,\sk) \leftarrow \rVRF.\KeyGen, \, % \textrm{\,and }
+		%		\pk = \rVRF.\OpenRing(\comring,\openring) 
+		%	}{
+		%		\begin{aligned}
+			%			&(\pk,\sk) \leftarrow \rVRF.\KeyGen, \\
+			%			% \exists \openring \textrm{\ s.t.\ }
+			%			&\pk = \rVRF.\OpenRing(\comring,\openring)  \\      
+			%		\end{aligned}
+		%	}
+	%} $$
 
 %Our zero-knowledge continuation in \S\ref{sec:rvrf_cont} rerandomizes
 %$\compk = \pk + b \, K$ without reproving the Groth16 SNARK for $\Lring^\inner$.
