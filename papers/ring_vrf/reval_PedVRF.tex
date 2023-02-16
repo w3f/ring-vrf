@@ -30,4 +30,17 @@ for $\reltwo'$ then the $\nizkR$ construction described above is indeed a NIZK f
 \begin{proof}
 \end{proof} 
 
+\noindent \textbf{Perfect Zero-knowledge after reusing a $\ZKCont$ proof} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $aux$, 
+for all $\bary,\barx,\barz, \baromega_1, \baromega_2$ with $(\bary, \barx; \baromega_1) \in \relone \wedge (\barz, \barx; \baromega_2) \in \reltwo$, for all $X,\pi_1,\pi_2, b$, for every adversary $A$ it holds:
+\begin{align*}
+\mathit{Pr}(& A(\crs, aux, \pi'_1,\pi_2, X', \rel) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
+                  & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi'_1, X', \_) \leftarrow \ZKCont.\Reprove (\crspk, X, \pi, b, \relone), \\
+                  & \pi_2 \leftarrow \nizktwo.\Prove(\crspktwo, X, \barz, \barx, b, \baromega_2), \\
+                  &  \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1 
+                  \wedge \VerifyCom(\pp, X, \bar{x}, b) = 1) =  \\
+= \mathit{Pr}(& A(\crs, aux, \pi',\pi_2, X', \rel) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
+                     & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi'_1, X',\pi_2) \leftarrow \nizkR.\Sim(\tw, \bary, \relone) \\ 
+                     &  \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1
+                    \wedge \VerifyCom(\pp, X, \bar{x}, b) = 1)
+\end{align*}
 
