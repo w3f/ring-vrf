@@ -1,20 +1,20 @@
 \subsection{RingVRFs with SpecialG}
 \label{subsec:rvrf_faster}
 
-We can apply the results of the previous subsections to construct a ringVRF using $\SpecialG$ that allows a\eprint{n incredibly }{ }fast amortized ring VRF prover. \PedVRF has a sigma protocol which proves the relation $\reltwo=\mathcal{R}_{eval}$ and we can then use SpecialG for relation $\relone=\Rring$.
+We can apply the results of the previous subsections to construct a ringVRF using $\SpecialG$ that allows a\eprint{n incredibly }{ }fast amortized ring VRF prover. \PedVRF has a sigma protocol which proves the relation $\reltwo=\mathcal{R}_{eval}$ and we can then use SpecialG for relation $\relone$ similar to $\Rring$.
 
 For this, we need an appropriate choice of $\pk$ to commit to $\sk$. We use a Pedersen commitment using some Jubjub curve $\ecJ$. $\ecJ$ contains a large subgroup $\grJ$ of prime order $p_\grJ$. Typically $p_\grJ$ is smaller than $p$, the order of $\grE$, certainly when $\ecJ$ is an Edwards curve with a cofactor. Since $\sk \in \F_p$, we represent it with two $\F_{p_\grJ}$ elements $\sk_0,\sk_1 \leq 2^{\lambda}$ 
 so that $\sk = \sk_0 + \sk_1 \, 2^{\lambda} \mod p_\grE$ for some fixed $(\log_2 p)/2  < \lambda < \log_2 p_\grJ$. $\rVRF.\KeyGen$ now samples $\sk\leftsample \F_{p}$, computes $\sk_1,\sk_2$, samples a blinding factor $d \leftsample \F_{p_\grJ}$ and then returns a blinded Pedersen commitment as the public key $\rVRF.\pk=\sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$ and the secret key $\rVRF.\sk = (\sk_0,\sk_1,d)$. Here $\genJ_0,\genJ_1,\genJ_2 \in \grJ$ are indepedent generators.
 
 We thus have a fairly efficient instantiation for $\Lring^\inner$ give by
 
-$$ \relone = \Setst{ \sk_0 + 2^{\lambda} \sk_1, \comring }{
+$$ \relone = \Setst{ (\comring, \sk ; \sk_0, \sk_1) }{
  \eprint{ \exists d,\openring \textrm{\ s.t.\ } }{}
- % 0 < \sk_0,\sk_1 < 2^{\lambda} \textrm{\ and\ } 
+  \sk = \sk_0+ 2^{\lambda} \sk_1 \textrm{\ and\ } 
  \genfrac{}{}{0pt}{}{ \eprint{\rVRF.}{}\OpenRing(\comring,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
 } \mathperiod $$
 
-If we have a proof for $\relone$ for our $\pk$ in a ring $\comring$, to generate a RingVRF proof for the same ring, we need to run $\SpecialG.\Reprove$ and $\PedVRF.\Sign$. $\PedVRF.\Sign$ requires two scalar multiplications on $\ecE_1$
+If we have a $\SpecialG$ proof for $\relone$ for our $\pk$ in a ring $\comring$, to generate a RingVRF proof for the same ring, we need to run $\SpecialG.\Reprove$ and $\PedVRF.\Sign$. $\PedVRF.\Sign$ requires two scalar multiplications on $\ecE_1$
  and two on the same or faster $\ecE'$,
 so together with $\SpecialG.\Reprove$ costing four scalar multiplications
 on $\ecE_1$ and two on $\ecE_2$, our amortized prover time
