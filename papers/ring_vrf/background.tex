@@ -1,16 +1,23 @@
-
+\newcommand{\com}{\mathsf{Com}}
+\newcommand{\open}{\mathsf{Open}}
+\newcommand{\commit}{\mathsf{Commit}}
 \section{Preliminaries} %It is better name because this section contains information that helps reader to understand the later sections better
 \label{sec:background}
+We  briefly establish elliptic curve notion  give definitions of some cryptographic primitives that help us to construct our ring VRF protocol.
 
-We briefly establish elliptic curve notion and recall some standard
-definitions and assumptions.
 % underlying both Chaum-Pedersen DLEQ proofs and pairing based zkSNARKs.
 
 % As our ring VRF is built by composing them,
 % We briefly recall the primitives and security assumptions underlying
 % both Chaum-Pedersen DLEQ proofs and pairing based zkSNARKs.
 
-
+\begin{definition}[Commitment Scheme]
+	A commitment scheme $ \com $ consists of two algorithms:
+	\begin{itemize}
+		\item $ \com.\commit(x,r) \mapsto c$ creates a commitment to $ x $ with a randomness $ r $.
+		\item $ \com.\open(c;x,r)  \mapsto x'$ opens the commitment $ c $ with the openings $ x,r$ to $ x' $. If $ x = x' $, then $ x,r $ are the correct openings.
+	\end{itemize}
+\end{definition}
 \subsection{Elliptic curves}
 \label{sec:ec_background}
 
@@ -149,6 +156,10 @@ where $ (o_A;o_B)\leftarrow A||B(input) $ denote the algorithms that run on the 
 % \end{definition}
 
 % TODO: AGM and Groth16 here?
+
+
+%\subsection{Commitment Scheme}
+
 
 
 %\subsection{Universal Composability (UC) Model}
