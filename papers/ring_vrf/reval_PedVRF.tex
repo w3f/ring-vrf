@@ -1,5 +1,5 @@
 \subsection{Putting NIZKs Together}
-$$\rel = \{(\bary, \barz; \barx, \baromega_1, \baromega_2):  (\bary, \barx; \baromega_1) \in \relone, (\barz, \barx; \baromega_2) \in \reltwo \},$$
+%$$\rel = \{(\bary, \barz; \barx, \baromega_1, \baromega_2):  (\bary, \barx; \baromega_1) \in \relone, (\barz, \barx; \baromega_2) \in \reltwo \},$$
 Let $\ZKCont$ and $\nizktwo$ be a zk continuation for $\relone$ (from preamble of Section~\ref{sec:rvrf_cont}) and respectively a NIZK 
 for $\reltwo'$ defined by:
 $$\reltwo' = \{(X, \barz; \barx, b, \baromega_2): \VerifyCom(X, \barx, b) =1 \ \wedge \ (\barz, \barx; \baromega_2) \in \reltwo \},$$
@@ -22,5 +22,12 @@ $$\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi_1, \relone) = 1 \  \wedge \ \nizktwo.\
 \item $\nizkR.\Sim(\twR, \bary, \barz) \mapsto (\pi_1, \pi_2, X)$ where \\
 $(\pi_1, X) \leftarrow \ZKCont.\Sim: (\tw, \bary, \relone)$, $\pi_2 \leftarrow \nizktwo.\Sim: (\twtwo, X, \barz)$ 
  \end{itemize}
+ 
+\begin{corollary}If $\ZKCont$ and $\nizktwo$ are a zk continuation for $\relone$, and, respectively, a NIZK 
+for $\reltwo'$ then the $\nizkR$ construction described above is indeed a NIZK for $\rel$.
+ \end{corollary}
+ 
+\begin{proof}
+\end{proof} 
 
 
