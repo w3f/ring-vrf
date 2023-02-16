@@ -3,7 +3,7 @@
 \newcommand{\commit}{\mathsf{Commit}}
 \section{Preliminaries} %It is better name because this section contains information that helps reader to understand the later sections better
 \label{sec:background}
-We  briefly establish elliptic curve notion  give definitions of some cryptographic primitives that help us to construct our ring VRF protocol.
+We   give definitions of some cryptographic primitives that help us to construct our ring VRF protocol.
 
 % underlying both Chaum-Pedersen DLEQ proofs and pairing based zkSNARKs.
 
@@ -18,64 +18,64 @@ We  briefly establish elliptic curve notion  give definitions of some cryptograp
 		\item $ \com.\open(c;x,r)  \mapsto x'$ opens the commitment $ c $ with the openings $ x,r$ to $ x' $. If $ x = x' $, then $ x,r $ are the correct openings.
 	\end{itemize}
 \end{definition}
-\subsection{Elliptic curves}
-\label{sec:ec_background}
+%\subsection{Elliptic curves}
+%\label{sec:ec_background}
 
 % As our ring VRF is built by composing them, 
 % We briefly recall the primitives and security assumptions underlying
 % both Chaum-Pedersen DLEQ proofs and pairing based zkSNARKs. 
 
-We obey mathematical and cryptographic implementation convention by 
-adopting additive notation for elliptic curve and multiplicative notation
-for elliptic curve scalar multiplications and pairing target groups.
-
-All object implicitly depend a security parameter \secparam.
-All protocols therefore have an implicit parameter generation algorithm,
-which output their hash functions, elliptic curves, and
- some independent base points on the elliptic curves.
-
-We need an elliptic curve $\ecE$ over a field of characteristic $q$,
-equipped with a type III pairing $e : \grE_1 \times \grE_2 \to \grE_T$,
-where the groups  $\grE_1 \le \ecE[\F_q]$, $\grE_2 \le \ecE[\F_{q^2}]$, and
-$\grE_T \le \F^*_{q^{12}}$ all have prime order $p \approx 2^{2\secparam}$.
-
-We write $\grE$ when discussing the Chaum-Pedersen DLEQ proofs, which do
-not employ pairings, but $\grE$ always denotes $\grE_1$ eventually.
-We avoid pairing unfriendly assumptions like DDH of course, but really
-we employ the algebraic group model (AGM) throughout.
-
-We sweep cofactor concerns under the rug when discussing Groth16,
-where our pairings demand deserialization prove group membership in $\grE_1$
-or $\grE_2$.  We explicitly multiply by the effective cofactor $h$ when
-doing Chaum-Pedersen DLEQ proofs though, as not doing so risks miss-reading
-by implementers.  Yet, this becomes redundant if deserialization proves
-group membership, meaning $h=1$.
-
-We also let $\ecJ$ denote a ZCash Sapling style ``JubJub'' Edwards curve
-over $\F_p$, with distinguished subgroup $\grJ$ of prime order $p_\grJ$, so that
-SNARKs on $\ecE$ prove $\grJ$ arithmetic relatively cheaply.
-Aside from Jubjub, we optionally want a ``sister'' Edwards curve $\ecEsis$,
-with a subgroup $\grE$ of the same order $p$ as $\grE_1$,
- but which lacks any pairing.
-
-We let $H_p : \{0,1\}^* \to \F_p$ and $H_{\grEsis} : \{0,1\}^* \to \grEsis$
-denote a hash-to-scalar and a hash-to-curve  with ranges
-$\F_p$ and $\grEsis$, respectively, always modeled as random oracles.  
-We only ever hash-to-$\ecEsis$ because hash-to-$\grE_1$ create a miss-use
-footgun for an anonymity protocol.  Also hash-to-$\ecEsis$ is faster.
-We let $H'$ denote the hash to the VRF output space, usually
- a key derivation function plus a stream cipher, also modeled as a random oracle.
-
-All our security proofs ignore these underlying elliptic curve concerns,
-so $\grE_1 = \grEsis$ and cofactors are ignores.
-All hashes are random oracles.  DDH is hard in $\grE_1$ and $\grJ$.
-AGM is used for $\ecE$ in Groth16 sections, or wherever is convenient. 
-
-
+%We obey mathematical and cryptographic implementation convention by 
+%adopting additive notation for elliptic curve and multiplicative notation
+%for elliptic curve scalar multiplications and pairing target groups.
+%
+%All object implicitly depend a security parameter \secparam.
+%All protocols therefore have an implicit parameter generation algorithm,
+%which output their hash functions, elliptic curves, and
+% some independent base points on the elliptic curves.
+%
+%We need an elliptic curve $\ecE$ over a field of characteristic $q$,
+%equipped with a type III pairing $e : \grE_1 \times \grE_2 \to \grE_T$,
+%where the groups  $\grE_1 \le \ecE[\F_q]$, $\grE_2 \le \ecE[\F_{q^2}]$, and
+%$\grE_T \le \F^*_{q^{12}}$ all have prime order $p \approx 2^{2\secparam}$.
+%
+%We write $\grE$ when discussing the Chaum-Pedersen DLEQ proofs, which do
+%not employ pairings, but $\grE$ always denotes $\grE_1$ eventually.
+%We avoid pairing unfriendly assumptions like DDH of course, but really
+%we employ the algebraic group model (AGM) throughout.
+%
+%We sweep cofactor concerns under the rug when discussing Groth16,
+%where our pairings demand deserialization prove group membership in $\grE_1$
+%or $\grE_2$.  We explicitly multiply by the effective cofactor $h$ when
+%doing Chaum-Pedersen DLEQ proofs though, as not doing so risks miss-reading
+%by implementers.  Yet, this becomes redundant if deserialization proves
+%group membership, meaning $h=1$.
+%
+%We also let $\ecJ$ denote a ZCash Sapling style ``JubJub'' Edwards curve
+%over $\F_p$, with distinguished subgroup $\grJ$ of prime order $p_\grJ$, so that
+%SNARKs on $\ecE$ prove $\grJ$ arithmetic relatively cheaply.
+%Aside from Jubjub, we optionally want a ``sister'' Edwards curve $\ecEsis$,
+%with a subgroup $\grE$ of the same order $p$ as $\grE_1$,
+% but which lacks any pairing.
+%
+%We let $H_p : \{0,1\}^* \to \F_p$ and $H_{\grEsis} : \{0,1\}^* \to \grEsis$
+%denote a hash-to-scalar and a hash-to-curve  with ranges
+%$\F_p$ and $\grEsis$, respectively, always modeled as random oracles.  
+%We only ever hash-to-$\ecEsis$ because hash-to-$\grE_1$ create a miss-use
+%footgun for an anonymity protocol.  Also hash-to-$\ecEsis$ is faster.
+%We let $H'$ denote the hash to the VRF output space, usually
+% a key derivation function plus a stream cipher, also modeled as a random oracle.
+%
+%All our security proofs ignore these underlying elliptic curve concerns,
+%so $\grE_1 = \grEsis$ and cofactors are ignores.
+%All hashes are random oracles.  DDH is hard in $\grE_1$ and $\grJ$.
+%AGM is used for $\ecE$ in Groth16 sections, or wherever is convenient. 
 
 
-\subsection{Non-Interactive Zero-Knowledge Proofs}
-\label{subsec:zkp_background}
+
+
+%\subsection{Non-Interactive Zero-Knowledge Proofs}
+%\label{subsec:zkp_background}
 
 % refs.
 % https://people.csail.mit.edu/silvio/Selected%20Scientific%20Papers/Zero%20Knowledge/Noninteractive_Zero-Knowkedge.pdf
