@@ -1,17 +1,21 @@
 \subsection{Putting NIZKs Together}
 $$\rel = \{(\bary, \barz; \barx, \baromega_1, \baromega_2):  (\bary, \barx; \baromega_1) \in \relone, (\barz, \barx; \baromega_2) \in \reltwo \},$$
-Let $\nizkone$ and $\nizktwo$ be two NIZKs for $\relone$ (from preamble of Section~\ref{sec:rvrf_cont}) and respectively for $\reltwo'$ defined by:
+Let $\ZKCont$ and $\nizktwo$ be a zk continuation for $\relone$ (from preamble of Section~\ref{sec:rvrf_cont}) and respectively a NIZK 
+for $\reltwo'$ defined by:
 $$\reltwo' = \{(X, \barz; \barx, b, \baromega_2): \VerifyCom(X, \barx, b) =1 \ \wedge \ (\barz, \barx; \baromega_2) \in \reltwo \},$$
 \noindent with $\reltwo$ from preamble of Section~\ref{sec:rvrf_cont}. Then we define $\nizkR$ for relation $\mathcal{R}$ as:
 \begin{itemize}
-\item $\nizkR.\Setup: (1^{\lambda}) \mapsto (\crsR, \twR)$
-\item $\nizkR.\Gen: (\crsR) \mapsto (\ppR, \crspkR, \crsvkR)$
-\item $\nizkR.\Prove(\crspkR,\bary, \barz; \barx, \baromega_1, \baromega_2 ) \mapsto (\pi_1, \pi_2, X)$ \\
-$(X', \pi'_1, b')\leftarrow \ZKCont.\Preprove:(\crspkone, \bar{y}, \bar{x}, \baromega_1, \relone)$ \\
-$(X, \pi_1, b) \leftarrow \ZKCont.\Reprove: (\crspkone, X', \pi', b', \relone)$ \\
+\item $\nizkR.\Setup: (1^{\lambda}) \mapsto (\crsR, \twR)$ where
+\item $\nizkR.\Gen: (\crsR) \mapsto (\ppR, \crspkR, \crsvkR)$ where
+\item $\nizkR.\Prove(\crspkR,\bary, \barz; \barx, \baromega_1, \baromega_2 ) \mapsto (\pi_1, \pi_2, X)$ where \\
+$(X', \pi'_1, b')\leftarrow \ZKCont.\Preprove:(\crspk, \bar{y}, \bar{x}, \baromega_1, \relone)$ \\
+$(X, \pi_1, b) \leftarrow \ZKCont.\Reprove: (\crspk, X', \pi', b', \relone)$ \\
 $ \pi_2 \leftarrow \nizktwo.\Prove(\crspktwo, X, \barz, \barx, b, \baromega_2)$ 
-\item $\nizkR.\Verify(\crsvkR,\bary, \barz, \pi_1, \pi_2, X') \mapsto 0/1$
-\item $\nizkR.\Sim(\twR, \bary, \barz) \mapsto (\pi_1, \pi_2, X')$
+\item $\nizkR.\Verify(\crsvkR,\bary, \barz, \pi_1, \pi_2, X) \mapsto 0/1$ where the output is $1$ iff 
+$$\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi_1, \relone) = 1 \  \wedge \ \nizktwo.\Verify(\crsvktwo, X, \barz, \pi_2) =1$$ 
+\item $\nizkR.\Sim(\twR, \bary, \barz) \mapsto (\pi_1, \pi_2, X)$ where \\
+$(\pi_1, X) \leftarrow \ZKCont.\Sim: (\twone, \bary, \relone)$, $\pi_2 \leftarrow \nizktwo.\Sim: (\twtwo, X, \barz)$ 
+ 
 \end{itemize}
 
 
