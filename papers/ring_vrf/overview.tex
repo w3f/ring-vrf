@@ -1,3 +1,4 @@
+\vspace{-3mm}
 \section{Protocol overview}
 \label{sec:overview}
 
@@ -5,8 +6,7 @@ As a beginning, we introduce the ring VRF interface, give a simple
 unamortized non-interactive zero-knowledge (NIZK) protocol that
 realizes the ring VRF properties discussed later in our UC model,
 and give some intuition for our later amortization trick.
-
-As a VRF construction do \cite{vrf_micali}, a ring VRF construction need: 
+SImilar to VRF \cite{vrf_micali}, a ring VRF construction need: 
 \begin{itemize}
 	\item $\rVRF.\KeyGen : (1^{\lambda}) \mapsto (\sk, \pk)$ algorithm,
 	which creates a random secret key \sk and associated public key \pk;
@@ -15,7 +15,7 @@ As a VRF construction do \cite{vrf_micali}, a ring VRF construction need:
 \end{itemize}
 %
 % Although many constructions exist,
-I
+
 We demand a pseudo-randomness property from \Eval. In our construction in \S\ref{sec:pederson_vrf},  \rVRF.\KeyGen and \rVRF.\Eval initially resemble EC VRF like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}.
 % In other words,
 % internally we prove a VUF output $\PreOut = \sk H_{\grE}(\msg)$,
@@ -43,6 +43,7 @@ $\Out = \rVRF.\Eval(\sk,\msg)$ for some $(\pk,\sk) \leftarrow \rVRF.\KeyGen$,
 and that $\Out$ is pseudo-random.
 In other words, this simplified ring VRF could be instantiated by making
 \rVRF.\Eval a pseudo-random (hash) function, and using a NIZK for a relation
+\vspace{-3mm}
 $$ \rel_{\mathsf{rvrf}} = \Setst{ (\Out, \msg, \ring);(\sk,\pk)}{
 	\eprint{
 		(\pk,\sk) \leftarrow \rVRF.\KeyGen, \quad %   \textrm{ and }
@@ -137,7 +138,7 @@ ala \cite[Theorem 3, Appendix C, pp. 31]{RandomizationGroth16}.
 %
 Yet, we must connect together the NIZKs for the two languages  $ \rel_{eval} $ and $ \Rring  $ that we define below informally. We do this by passing \pk from $ \Rring  $ to $ \rel_{eval} $, which
 demands some hiding commitment \compk to \pk.
-
+\vspace{-3mm}
 %
 \def\tmpAA{\Out = \rVRF.\Eval(\sk,\msg)}%
 \def\tmpBB{\textrm{\compk commits to\ \sk}}%
@@ -151,6 +152,7 @@ $$ \rel_{eval} = \Setst{ (\Out, \msg, \aux, \compk); \sk}{
 		\end{aligned}
 	}
 } $$
+\vspace{-3mm}
 \def\tmpAA{\textrm{\compk commits to $ \sk $ with public key\ }}%
 \def\tmpBB{\rVRF.\OpenRing(\comring,\openring)}%
 $$ \Rring = \Setst{ (\compk, \comring);(\sk,\pk) }{

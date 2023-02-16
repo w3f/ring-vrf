@@ -12,29 +12,20 @@ across a range of concerns, including formalization, optimizations,
 the nuances of use-cases, and miss-use resistance.
 
 Along with some formalizations, we address three questions within
-the unfolding ring VRF story:
-\begin{enumerate} 
-% \item
-% How can credentials use be contextual?  \qaudbreak
-% Prove evaluation of a secret function.
-\item
-What are the cheapest SNARK proofs?  \qaudbreak
+the unfolding ring VRF story: 
+What are the cheapest SNARK proofs? 
 Ones users reuse without reproving.
-\item
-How can identity be safe for general use?  \qaudbreak
+How can identity be safe for general use? 
 By revealing nothing except users' uniqueness.
-\item
-How can ration card issuance be transparent?  \qaudbreak
+How can ration card issuance be transparent?  
 By asking users trust a public list, not certificates.
-\end{enumerate}
 
 % After briefly introducing ring VRFs, we discuss these three questions,
 % which we later elaborate upon in
 %  \S\ref{sec:rvrf_cont}, \S\ref{sec:app_identity}, and \S\ref{sec:app_rate_limits} 
 
 % \smallskip 
-\paragraph{Ring VRFs:}
-
+\noindent\textbf{Ring VRFs:}
 A ring signature \cite{ring_accountable,ring_efficient,ring_linkable,ring_noRO,ring_sublinear} proves only that its actual signer lies in a ``ring''
 of public keys, without revealing which signer really signed the message.
 A {\it verifiable random function} (VRF) is a signature that proves
@@ -69,8 +60,7 @@ individual VRF evaluations.
 
 % First
 % \smallskip 
-\paragraph{Zero-knowledge continuations:}
-
+\noindent\textbf{Zero-knowledge continuations:}
 Rerandomizable zkSNARKs like Groth16 \cite{Groth16} admit a
 transformation of a valid proof into another valid but unlinkable
 proof of the exact same statement.  We formally define this transformation and call it ``zero-knowledge continuation''.
@@ -95,8 +85,7 @@ essential for zkSNARKs used in identity.
 % Second
 % \smallskip
 Now, we briefly list the use of ring VRF in real-world applications.
-\paragraph{Identity uses:}
-
+\noindent\textbf{Identity uses:}
 An identity system can be based upon ring VRFs in an natural way:
 After verifying an identity requesting domain name in TLS,
 our user agent signs into the session by returning a ring VRF
@@ -166,8 +155,7 @@ ring VRFs contextual linkability covers the most important use cases.
 
 % Third
 % \smallskip
-\paragraph{Rationing uses:}
-
+\noindent\textbf{Rationing uses:}
 A rate limiting or rationing system should provide users with a stream
 of single-use anonymous tokens that each enable consuming some resource.
 As a rule, cryptographers always construct these either
