@@ -69,14 +69,14 @@ The only place that $ \fgvrf $ does not respond any query is when it aborts. It 
 	$ \fgvrf $ satisfies anonymity, if any PPT distinguisher $ \mathcal{D} $ has a negligible advantage in $ \secparam $ to win the anonymity game defined as follows:
 	We define the anonymity game between a challenger and $ \mathcal{D} $.  $\mathcal{D}$ accesses a signing oracle $ \mathcal{O}_{Sign} $ and $ \fgvrf $ simulated by the challenger as described in Figure \ref{f:gvrf}. 
 	\begin{itemize}
-		\item Given the input $ '\mathsf{keygen}' $, $\mathcal{O}_{Sign} $ sends $ (\oramsg{keygen, \sid}) $ to the challenger and obtains a verification key $ \pk $. Then, it stores $ \pk  $ to a list $ \mathcal{K} $ and outputs $ \pk $.
-		\item Given the input $ '(\pk,\ring,\aux,\msg)' $, $ \mathcal{O}_{Sign} $ sends $ (\oramsg{sign}, \sid,\ring,\pk, \aux, \msg) $ to the challenger and receives $ (\oramsg{signature}, \sid, \ring, W,\aux, \msg, y, \sigma) $ if $ \pk \in \ring $ and $\pk \in \mathcal{K}  $.  Then $ \mathcal{O}_{Sign} $ stores $ \msg $ to a list $ \arraysym{signed}[\pk]  $.
+		\item Given the input $ '\mathsf{keygen}' $, $\mathcal{O}_{Sign} $ sends $ (\oramsg{keygen, \sid}) $ to the challenger and obtains a verification key $ X,\pk $. Then, it stores $ X,\pk  $ to a list $ \mathcal{K} $ and outputs $ X,\pk $.
+		\item Given the input $ '(\pk,\ring,\aux,\msg)' $, $ \mathcal{O}_{Sign} $ sends $ (\oramsg{sign}, \sid,\ring,\pk, \aux, \msg) $ to the challenger and receives $ (\oramsg{signature}, \sid, \ring, W,\aux, \msg, y, \sigma) $ if $ \pk \in \ring $.  Then $ \mathcal{O}_{Sign} $ stores $ \msg $ to a list $ \arraysym{signed}[\pk]  $.
 		% and $ W  $ to a list $ \anonymouskeylist $. 
 		It outputs $ (\sigma,W) $. Otherwise, it outputs $ \perp $.
 	\end{itemize}
 	At some point,	
 	$ \mathcal{D} $ sends $ (\ring, \pk_0, \pk_1, \msg,\aux)$ to  the challenger where $ \pk_0, \pk_1 \in \ring $, $ \msg  \notin \arraysym{signed}[\pk_0]$ and $ \msg  \notin \arraysym{signed}[\pk_1] $.  Challenger lets $ b \leftarrow_r\bin$. Then it gives the input $ (\pk_b, \ring, \msg,\aux) $ to $ \ora{Sign} $ and receives either $ \perp $ or $(\sigma,W)$. If it is $ (\sigma,W) $, it sends $ (\sigma,W) $ to $ \mathcal{D} $ as a challenge.
-	Otherwise, $ \mathcal{D}  $ loses the game.
+	If $ \mathcal{D} $ sends $ '(\pk,\ring,\aux,\msg)' $ to $ \mathcal{O}_{Sign} $ where $ \pk = \pk_0 $ or $ \pk = \pk_1 $, it loses the game. 
 	During the game if $ \mathcal{D} $ outputs $ b' = b $, $ \mathcal{D} $ wins.
 	
 	

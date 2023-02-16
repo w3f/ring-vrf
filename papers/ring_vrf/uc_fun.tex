@@ -13,8 +13,7 @@
 		
 				
 			\textbf{[Key Generation.]} upon receiving a message $(\oramsg{keygen}, \sid)$ from a party $\user_i$, send $(\oramsg{keygen}, \sid, \user_i)$ to the simulator $\simulator$.
-			Upon receiving a message $(\oramsg{verificationkey}, \sid, \pk)$ from $\simulator$, verify that $\pk$ has not been recorded before for $ \sid $; then, store in the table $\vklist$, under $\user_i$, the value $\pk$.
-			Return $(\oramsg{verificationkey}, \sid, \pk)$ to $ \user_i$.
+			Upon receiving a message $(\oramsg{verificationkey}, \sid, X,\pk)$ from $\simulator$, verify that $X,\pk$ has not been recorded before for $ \sid $ i.e., there exists no $ (X', \pk') $ in $ \vklist $ such that $ X' = X $ or $ \pk' = \pk $. If it is the case, store in the table $\vklist$, under $\user_i$, the value $X,\pk$ and return $(\oramsg{verificationkey}, \sid, \pk)$ to $ \user_i$.
 				
 			%\textbf{[Malicious Key Generation.]} upon receiving a message $(\oramsg{keygen}, \sid, \pk)$ from $\simulator$, verify that $\pk$ was not yet recorded, and if so record in the table $\vklist$ the value $\pk$ under $\simulator$. Else, ignore the message.
 				
@@ -81,7 +80,7 @@
 			In the end,  record $ [\msg,\aux,W,\ring,\sigma, 0] $ if it is not stored. If $ b = 0 $, let $y = \perp $. Otherwise,   do the following:
 			\begin{itemize}
 				\item if $ W \notin \anonymouskeylist[\msg,\ring] $, add $ W $ to $ \anonymouskeylist[\msg,\ring]  $.
-				\item if $ \pk_\simulator $ is not recorded, record it in $ \vklist $ under $ \simulator $.
+				%\item if $ \pk_\simulator $ is not recorded, record it in $ \vklist $ under $ \simulator $.
 				\item if $ \evaluationslist[\msg,W] $ is not defined, set $ \evaluationslist[\msg, W]\leftsample \setsym{S}_{eval}$, $ \anonymouskeymap[\msg,W]  = \pk_\simulator$.  Set $ y= \evaluationslist[\msg, W]$.
 				\item otherwise, set $ y = \evaluationslist[\msg, W]$. 	
 			\end{itemize}
