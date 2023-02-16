@@ -98,23 +98,24 @@ and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledg
                    & (\bary, \barx, X, \pi, b) \leftarrow A(\crs,\pp, \relone), (X', \pi', b') \leftarrow \ZKCont.\Reprove(\crspk, X, \pi, b, \relone)) = 1
 \end{align*}
 \noindent \textbf{Knowledge Soundness} For every benign auxiliary input $z$ (see~\cite{bening_auxiliary}), 
-for every efficient adversary $A$, there exists an efficient extractor $E$ such that 
+for every non-uniform efficient adversary $A$, there exists an efficient non-uniform extractor $E$ such that 
 \begin{align*}
 \mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1) \ \wedge \ (\ZKCont.\VerifyCom(\pp, X, \bar{x}, b) = 1) \ \wedge\ \\
-                   & \wedge \ ( (\bary, \barx; \baromega) \notin \relone) \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\bary, \barx, X, \pi, b) \leftarrow A(\crs, \pp, z, \relone), \\ 
-& \baromega \leftarrow E^{A}(\crs, \relone)) = \negl (\lambda),
+                   & \wedge \ ( (\bary, \barx; \baromega) \notin \relone) \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), 
+                   (\bary, \barx, X, \pi, b; \baromega ) \leftarrow A || E (\crs, z, \relone)) = \negl (\lambda),
 \end{align*}
 \noindent %where $\ZKCont.\Preprove_{|X}(\crspk, \bar{y}, \bar{x}, \bar{\omega}, \relone; b)$ means running the part of algorithm 
 %$\ZKCont.\Preprove$ that computes and outputs $X$ with its regular inputs and using $b$ when randomness is required; 
-where by $ E^{A}$ we denote the extractor $E$ that has access to all of adversary's $A$ messages during the protocol with the honest verifier. \\
+where by $(\mathit{output_{A}};\mathit{output_{B}}) \leftarrow A || B(\mathit{input})$ we denote algorithms that run on the same 
+$\mathit{input}$, and, moreover $B$ has access to the random coins of $A$. \\
 
 \noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $z$, 
 for all  $(\bary, \barx; \baromega) \in \relone$, for all $X$, for all $\pi$, for all $b$, for every adversary $A$ it holds:
 \begin{align*}
-\mathit{Pr}(& A(\crs, \pp, z, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
+\mathit{Pr}(& A(\crs, z, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
                   & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi', X', \_) \leftarrow \ZKCont.\Reprove (\crspk, X, \pi, b, \relone), \\
                   &  \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1) =  \\
-= \mathit{Pr}(& A(\crs, \pp, z, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
+= \mathit{Pr}(& A(\crs, z, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
                      & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi', X') \leftarrow \ZKCont.\Sim(\tw, \bary, \relone) \\ 
                      &  \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1)
 \end{align*}
@@ -238,15 +239,42 @@ AGM~\cite{Fuchs_AGM}, $\SpecialG$ is a zero-knowledge continuation as per defini
 \end{theorem}
 \begin{proof} It is straightforward to prove that $\SpecialG$ has completeness for $\Preprove$ and for $\Reprove$. \\
 
-\noindent We prove knowledge-soundness by reducing it to the knowledge soundness property of the commit-carrying 
-Groth16 with double binding (for short $\ccgroth$). This knowledge soundness property has been formalised in 
-Definition 3.4~\cite{LegoSNARK} and the NILP corresponding to $\ccgroth$ has been detailed in Fig.22, Appendix H.5~\cite{LegoSNARK}.\\
+\noindent In order to prove knowledge-soundness an in Definition~\ref{def:zk_cont}, first we argue that $\SpecialG$ is a 
+commit-carrying SNARK with double binding as per Definition 3.4~\cite{LegoSNARK}. We use the fact that $\ccgroth$ as 
+defined by the NILP detailed in Fig.22, Appendix H.5~\cite{LegoSNARK} satisfies that latter definition. Moreover, 
+$\SpecialG$'s $\Setup$ together with $\Gen$ and $\ccgroth$'s $\mathit{KeyGen}$ are the same procedure. Also $\SpecialG$ 
+and $\ccgroth$ share the same verification algorithm. Hence, translating the notation appropriately, $\SpecialG$ also satisfies 
+the knowledge soundness properties for a cc-SNARK with double binding. \\
+
+
+% we first argue that We prove knowledge-soundness by reducing it to the knowledge-soundness property of the Groth16 
+%commit-carrying with double binding scheme (for short $\ccgroth$). This knowledge-soundness property has been formalised in 
+%Definition 3.4~\cite{LegoSNARK} and the NILP corresponding to $\ccgroth$ has been detailed in Fig.22, Appendix H.5~\cite{LegoSNARK}. 
+%Indeed, $\SpecialG$'s $\Setup$ together with $\Gen$ and $\ccgroth$'s $\mathit{KeyGen}$ are the same procedure. Moreover $\SpecialG$ 
+%and $\ccgroth$ share the same verification algorithm. Since $\ccgroth$ satisfies the definition of a cc-SNARK with double binding, translating 
+%the notation appropriately, $\SpecialG$ also satisfies the knowledge soundness properties for a cc-SNARK with double binding. 
+
+
+\noindent Let now $A_{\SpecialG}$ be some adversary for the knowledge-soundness property as in Definition~\ref{def:zk_cont} then, we define a 
+$A_{\ccgroth}$ adversary for the knowledge-soundness property as in Definition 3.4~\cite{LegoSNARK} as follows:
+\begin{align*}
+& \mathit{If} \ (\bary, \barx, X, \pi, b) \leftarrow A_{\SpecialG} (\crs, \pp, z, \relRQ)\  \mathit{then}  \\
+& (\bary, X, \pi) \leftarrow A_{\ccgroth} (\relRQ, \crs, z)
+\end{align*}
+
+\noindent Given an extractor $E_{\ccgroth}$ for $A_{\ccgroth}$ such that it verifies Definition 3.4~\cite{LegoSNARK}, 
+we construct an extractor $E_{\ccgroth}$ for $A_{\ccgroth}$ such that 
+\begin{align*}
+& \mathit{If} \ (\barx^*, b^*, \baromega^*) \leftarrow E_{\ccgroth} (\relRQ, \crs, z)\  \mathit{then}  \\
+& \baromega^* \leftarrow E_{\SpecialG} (\relRQ, \crs, z)
+\end{align*}
+and we show by contradiction that $E_{\SpecialG}$ verifies Definition~\ref{def:zk_cont} for $A_{\SpecialG}$. \\
 
 \noindent Finally, regarding zero-knowledge, it is clear that if $\pi' = (U', V', W')$ is part of the output of $\SpecialG.\Reprove$, 
 then $U'$ and $V'$ are uniformly distributed as group elements in their respective groups. This holds, as long as the 
 input to $\SpecialG.\Reprove$ is a verifying proof, even when the proof was maliciously generated. Hence, it is easy to check  
 that the output $\pi'$ of $\SpecialG.\Sim$ is identically distributed to a proof $\pi'$ output by $\SpecialG.\Reprove$ so the perfect 
-zero-knowledge property holds for $\SpecialG$.
+zero-knowledge property holds for $\SpecialG$. 
 \end{proof}
 
 \begin{comment}
