@@ -239,36 +239,35 @@ AGM~\cite{Fuchs_AGM}, $\SpecialG$ is a zero-knowledge continuation as per defini
 \end{theorem}
 \begin{proof} It is straightforward to prove that $\SpecialG$ has completeness for $\Preprove$ and for $\Reprove$. \\
 
-\noindent In order to prove knowledge-soundness an in Definition~\ref{def:zk_cont}, first we argue that $\SpecialG$ is a 
-commit-carrying SNARK with double binding as per Definition 3.4~\cite{LegoSNARK}. We use the fact that $\ccgroth$ as 
-defined by the NILP detailed in Fig.22, Appendix H.5~\cite{LegoSNARK} satisfies that latter definition. Moreover, 
+\noindent We prove knowledge-soundness (KS) an in Definition~\ref{def:zk_cont} by first arguing $\SpecialG$ is a 
+commit-carrying SNARK with double binding (cc-SNARK with double binding) as per Definition 3.4~\cite{LegoSNARK}. 
+We use the fact that $\ccgroth$ as defined by the NILP detailed in Fig.22, Appendix H.5~\cite{LegoSNARK} satisfies that latter definition. Moreover, 
 $\SpecialG$'s $\Setup$ together with $\Gen$ and $\ccgroth$'s $\mathit{KeyGen}$ are the same procedure. Also $\SpecialG$ 
-and $\ccgroth$ share the same verification algorithm. Hence, translating the notation appropriately, $\SpecialG$ also satisfies 
-the knowledge soundness properties for a cc-SNARK with double binding. \\
-
-
+and $\ccgroth$ share the same verification algorithm. Hence, translating the notation appropriately, $\SpecialG$ also satisfies KS 
+for a cc-SNARK with double binding. \\
+\vspace{-0.01cm}
 % we first argue that We prove knowledge-soundness by reducing it to the knowledge-soundness property of the Groth16 
 %commit-carrying with double binding scheme (for short $\ccgroth$). This knowledge-soundness property has been formalised in 
 %Definition 3.4~\cite{LegoSNARK} and the NILP corresponding to $\ccgroth$ has been detailed in Fig.22, Appendix H.5~\cite{LegoSNARK}. 
 %Indeed, $\SpecialG$'s $\Setup$ together with $\Gen$ and $\ccgroth$'s $\mathit{KeyGen}$ are the same procedure. Moreover $\SpecialG$ 
 %and $\ccgroth$ share the same verification algorithm. Since $\ccgroth$ satisfies the definition of a cc-SNARK with double binding, translating 
 %the notation appropriately, $\SpecialG$ also satisfies the knowledge soundness properties for a cc-SNARK with double binding. 
-
-
-\noindent Let now $A_{\SpecialG}$ be some adversary for the knowledge-soundness property as in Definition~\ref{def:zk_cont} then, we define a 
-$A_{\ccgroth}$ adversary for the knowledge-soundness property as in Definition 3.4~\cite{LegoSNARK} as follows:
+\noindent Let $A_{\SpecialG}$ be an adversary for KS as in Definition~\ref{def:zk_cont} and 
+define adversary $A_{\ccgroth}$ for KS as in Definition 3.4~\cite{LegoSNARK} as:
 \begin{align*}
-& \mathit{If} \ (\bary, \barx, X, \pi, b) \leftarrow A_{\SpecialG} (\crs, \pp, z, \relRQ)\  \mathit{then}  \\
-& (\bary, X, \pi) \leftarrow A_{\ccgroth} (\relRQ, \crs, z)
+&\mathit{If} \ (\bary, \barx, X, \pi, b) \leftarrow A_{\SpecialG} (\crs, \pp, z, \relRQ)\  (1)\ \mathit{then} \ (\bary, X, \pi) \leftarrow A_{\ccgroth} (\relRQ, \crs, z).
 \end{align*}
 
-\noindent Given an extractor $E_{\ccgroth}$ for $A_{\ccgroth}$ such that it verifies Definition 3.4~\cite{LegoSNARK}, 
-we construct an extractor $E_{\ccgroth}$ for $A_{\ccgroth}$ such that 
+\noindent Given extractor $E_{\ccgroth}$ for $A_{\ccgroth}$ fulfilling Definition 3.4~\cite{LegoSNARK},construct extractor $E_{\ccgroth}$ for $A_{\ccgroth}$ such that 
 \begin{align*}
-& \mathit{If} \ (\barx^*, b^*, \baromega^*) \leftarrow E_{\ccgroth} (\relRQ, \crs, z)\  \mathit{then}  \\
-& \baromega^* \leftarrow E_{\SpecialG} (\relRQ, \crs, z)
+&\mathit{If} \ (\barx^*, b^*, \baromega^*) \leftarrow E_{\ccgroth} (\relRQ, \crs, z)\ (2)\ \mathit{then} \ \baromega^* \leftarrow E_{\SpecialG} (\relRQ, \crs, z).
 \end{align*}
-and we show by contradiction that $E_{\SpecialG}$ verifies Definition~\ref{def:zk_cont} for $A_{\SpecialG}$. \\
+We show $E_{\SpecialG}$ fulfils Definition~\ref{def:zk_cont} for $A_{\SpecialG}$. Assume by contradiction that is not the case. 
+This implies there exist auxiliary input $z$ such that the following hold with non-negligible probability: 
+\begin{align*}
+\ZKCont.\Verify(\crsvk, \bary, X, \pi, &\relRQ) =1 \ (10)\ ; \ \ZKCont.\VerifyCom(\pp, X, \barx, b) =1 \ (20) \\
+& (\bary, \barx; \baromega) \notin \relRQ  \ \ (30) 
+\end{align*}
 
 \noindent Finally, regarding zero-knowledge, it is clear that if $\pi' = (U', V', W')$ is part of the output of $\SpecialG.\Reprove$, 
 then $U'$ and $V'$ are uniformly distributed as group elements in their respective groups. This holds, as long as the 
