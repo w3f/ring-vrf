@@ -3,10 +3,10 @@
 
 As a beginning, we introduce the ring VRF interface, give a simple
 unamortized non-interactive zero-knowledge (NIZK) protocol that
-realizes the ring VRF properties discussed later,
+realizes the ring VRF properties discussed later in our UC model,
 and give some intuition for our later amortization trick.
 
-As VRFs do \cite{vrf_micali}, ring VRFs need: 
+As a VRF construction do \cite{vrf_micali}, a ring VRF construction need: 
 \begin{itemize}
 \item $\rVRF.\KeyGen : (1^{\lambda}) \mapsto (\sk, \pk)$ algorithm,
  which creates a random secret key \sk and associated public key \pk;
@@ -15,47 +15,41 @@ As VRFs do \cite{vrf_micali}, ring VRFs need:
 \end{itemize}
 %
 % Although many constructions exist,
-Our \rVRF.\KeyGen and \rVRF.\Eval initially resemble EC VRFs like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}.
+I
+We demand a pseudo-randomness property from \Eval. In our construction in \S\ref{sec:pederson_vrf},  \rVRF.\KeyGen and \rVRF.\Eval initially resemble EC VRF like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}.
 % In other words,
 % internally we prove a VUF output $\PreOut = \sk H_{\grE}(\msg)$,
 % with a hash-to-curve $H_{\grE}$, so then applying a PRF $H'$ yields a
 % VRF output $\Out = H'(\msg, h \PreOut)$ ala \cite[Prop. 1]{vrf_micali},
 % using a key pair like $\pk = \sk \genG$ for a generator $\genG$.
-We demand pseudo-randomness properties from \Eval, which could mirror
-\cite{vrf_micali} if desired.  We provide a UC definition resembling
-\cite{praos,ucvrf} which handles adversarial keys better however.
+
 
 % TODO: Should this text be moved elsewhere?
-Ring VRFs differ from VRFs in that they do not expose a specific signer,
+A Ring VRF construction differ from VRF in that they do not expose a specific signer,
 and instead prove the signer's key lies in some plausible signer set \ring,
  much like how ring signatures differ from signatures.
-Ring VRFs differ from ring signatures in that they prove a VRF output \Out.
-% and prove it corresponds to $\rVRF.\Eval$ for some plausible signer.
-
-% As an instructive but insecure over simplification, 
-At their simplest,
-ring VRFs' other algorithms operate directly upon
- the plausible signer set \ring, like:
+It also differ from a ring signature scheme in that they prove a ring VRF output \Out.
+So, it has the following algorithms operate directly upon
+ the plausible signer set \ring:
 \begin{itemize}
-\item $\rVRF.\rSign : (\sk,\ring,\msg) \mapsto \sigma$ \,
-    returns a ring VRF signature $\sigma$ for an input \msg.
-\item $\rVRF.\rVerify : (\ring,\msg,\sigma) \mapsto \Out \, \lor \perp$ \,
+\item $\rVRF.\rSign : (\sk,\ring,\msg,\aux) \mapsto \sigma$ \,
+    returns a signature $\sigma$ for an input \msg.
+\item $\rVRF.\rVerify : (\ring,\msg,\aux,\sigma) \mapsto \Out \, \lor \perp$ \,
     returns either an output $\Out$ or else failure $\perp$.
 \end{itemize}
 
-After success, our verifier should be convinced that $\pk \in \ring$, that
+After success verification, our verifier should be convinced that $\pk \in \ring$, that
 $\Out = \rVRF.\Eval(\sk,\msg)$ for some $(\pk,\sk) \leftarrow \rVRF.\KeyGen$,
  and that $\Out$ is pseudo-random.
 In other words, this simplified ring VRF could be instantiated by making
-\rVRF.\Eval a pseudo-random (hash) function, and using a NIZK for a language like
-$$ \Lrvrf = \Setst{ \Out, \msg, \ring}{
+\rVRF.\Eval a pseudo-random (hash) function, and using a NIZK for a relation
+$$ \rel_{\mathsf{rvrf}} = \Setst{ (\Out, \msg, \ring);(\sk,\pk)}{
     \eprint{
         (\pk,\sk) \leftarrow \rVRF.\KeyGen, \quad %   \textrm{ and }
         \pk \in \ring, \quad
         \Out = \rVRF.\Eval(\sk,\msg)
     }{
         \begin{aligned}
-        & (\pk,\sk) \leftarrow \rVRF.\KeyGen \\
         & \pk \in \ring \\
         & \Out = \rVRF.\Eval(\sk,\msg)
         \end{aligned}
@@ -64,7 +58,7 @@ $$ \Lrvrf = \Setst{ \Out, \msg, \ring}{
 % TODO:  \PRF vs \rVRF.\Eval here??
 % Although convenient for security arguments, % formalization
 The zero-knowledge property of the NIZK ensures that our verifier learns nothing about the specific
-signer, except that their key is in the ring and maps $\msg$ to $\Out$.
+signer (witness $ \sk,\pk $), except that their key is in the ring and maps $\msg$ to $\Out$.
 Importantly, pseudo-randomness also says that \Out is an identity
 for the specific signer, but only within the context of \msg.
 
@@ -74,26 +68,26 @@ Aside from proving an evaluation using \rVRF.\Eval,
 we always need \rVRF.\Sign and \rVRF.\Verify to sign some associated data \aux,
 as otherwise the ring VRF signature become unmoored and permits replay attacks.
 %
-As an example, our identity protocol below in \S\ref{sec:app_identity}
+As an example, an identity protocol that we described in \S\ref{sec:intro}
 yields the same ring VRF outputs each time the same user logs into the
 same site, which suffers replay attacks unless \aux binds the
 ring VRF signature to the TLS session.
 
-Indeed, regular (non-anonymous) VRF uses always encounter similar tension
-with VRF inputs \msg being smaller than full message bodies $(\msg,\aux)$.
-As an example, Praos \cite{praos} binds their VRF public key together
-with a second public key for another (forward secure) signature scheme,
-with which they sign their \aux, the block itself.
-%
-An EC VRF should expose an \aux parameter which it hashes when computing
-its challenge hashes.  Aside from saving redundant signatures, exposing
-\aux avoids user key handling mistakes that create replay attacks.
+%Indeed, regular (non-anonymous) VRF uses always encounter similar tension
+%with VRF inputs \msg being smaller than full message bodies $(\msg,\aux)$.
+%As an example, Praos \cite{praos} binds their VRF public key together
+%with a second public key for another (forward secure) signature scheme,
+%with which they sign their \aux, the block itself.
+%%
+%An EC VRF should expose an \aux parameter which it hashes when computing
+%its challenge hashes.  Aside from saving redundant signatures, exposing
+%\aux avoids user key handling mistakes that create replay attacks.
 
-Ring VRFs cannot so easily be combined with another signatures, which
+Ring VRF cannot so easily be combined with another signatures, which
 makes \aux essential,%
-\footnote{If ring VRFs authorized creating blocks in an anonymous Praos blockchain then \aux must include the block being created, or else others could steal their block production turn.}
-but thankfully our ring VRFs in in \S\ref{sec:pederson_vrf} expose \aux exactly like EC VRFs should do .%
-\footnote{We suppress multiple input-output pairs until \S\ref{subsec:multi_io} below, but they work like in \cite{PrivacyPass} too.}
+%\footnote{If ring VRFs authorized creating blocks in an anonymous Praos blockchain then \aux must include the block being created, or else others could steal their block production turn.}
+but thankfully our ring VRF in \S\ref{sec:pederson_vrf} expose \aux exactly like EC VRFs should do.%
+%\footnote{We suppress multiple input-output pairs until \S\ref{subsec:multi_io} below, but they work like in \cite{PrivacyPass} too.}
 
 % \smallskip
 
@@ -101,20 +95,20 @@ If one used the $\rVRF$ interface described above, then one needs time
 $O(|\ring|)$ in \rVRF.\rSign and \rVRF.\rVerify merely to read their \ring
 argument, which severely limits applications.
 Instead, ring signatures run asymptotically faster by replacing the \ring
-argument with a set commitment to \ring, roughly like what ZCash does \cite{zcash_protocol}.
-\begin{itemize}
+argument with a set commitment to \ring, roughly like what ZCash does \cite{zcash_protocol}. Therefore, we introduce the following algorithms for $ \rVRF $.
+\begin{itemize} 
 % \item $\rVRF.\CheckRing : \ring \mapsto \comring$ takes a set \ring of public keys and returns a public key set commitment \comring.
 \item $\rVRF.\CommitRing : (\ring,\pk) \mapsto (\comring,\openring)$ \,
-    returns a commitment for a set \ring of public keys, and
-    optionally the opening \openring if $\pk \in \ring$ as well.
+    returns a commitment of the set \ring of public keys, and
+    optionally the opening \openring if $\pk \in \ring$.
 \item $\rVRF.\OpenRing : (\comring,\openring) \mapsto \pk \, \lor \perp$ \,
-    returns a public key \pk, provided \openring correctly opens
+    returns \pk, provided \openring correctly opens
     the ring commitment \comring, or failure $\perp$ otherwise.
 \end{itemize}
 
 We thus replace the membership condition $\pk \in \ring$ in the above
 language and NIZK by the opening condition
-$$ \pk = \rVRF.\OpenRing(\comring,\openring) \textrm{\ for some known \ } \openring \mathperiod $$
+$ \pk = \rVRF.\OpenRing(\comring,\openring) \textrm{\ for some known \ } \openring \mathperiod $
 % $\pk = \OpenRing(\comring,\openring)$.
 %
 % $$ \pi_0 = \NIZK \Setst{ \Out, \msg, \comring }{
@@ -127,14 +121,6 @@ $$ \pk = \rVRF.\OpenRing(\comring,\openring) \textrm{\ for some known \ } \openr
 % } $$
 
 % \smallskip
-
-Addressing these concerns, our notion should really be named 
- \emph{ring verifiable random function with additional data}
-and its basic methods look like
-\begin{itemize}
-\item $\rVRF.\rSign : (\sk,\openring,\msg,\aux) \mapsto \sigma$, \quad and
-\item $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto \Out \,\, \lor \perp$.
-\end{itemize}
 
 Although an asymptotic improvement, our opening \rVRF.\OpenRing based condition invariably
 still winds up being computationally expensive to prove inside a zkSNARK.
