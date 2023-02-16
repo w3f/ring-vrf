@@ -9,39 +9,39 @@ TODO: Compltely rewrite shorter applications section
 In this paper,  we defined a new cryptographic primitive ring VRF in the UC model. It is a ring signature which also lets generate a random number with respect to their keys and the signed message. We  also defined a new technique called zero-knowledge continuation. It helps to regenerate a zero-knowledge proof for the same statement and witness without running the prove algorithm after it is run once. We constructed  $ \SpecialG $ based on Groth16 \cite{Groth16} and showed that it is a zero-knowledge continuation. Our UC-secure ring VRF construction can deploy $ \SpecialG $ to efficiently instantiate the signing process. 
 We conclude our paper by giving some specific applications that shows the usability of a ring VRF.
 
-\paragraph{Identity:} 
-TODO For Jeff, I added some stuff from the Identity section, but we can add more from that section if they are formal and consistent with our construction.
-
- Ring VRFs yield anonymous identity systems:
-After a user and service establish a secure channel and
-the server authenticates itself with certificates, then
-the user authenticates themselves by providing an anonymous
-VRF signature with input \msg being the service's identity,
-thus creating an pseudonymous identified session with
-a pseudonym unlinkable from other contexts. We informally foresee a system that identifies a user anonymously with our ring VRF construction as follows:
-
-
-\begin{itemize}
-	\item {\em Register} --
-	Adds Pedersen commitments of the secret keys of the users into some \ring,
-	after verifying the user does not currently exist in \ring.
-	\item {\em Update} --
-	User agents regenerate their stored  \pifast every time \ring changes since $ \rel_{ring} $ changes,
-	likely receiving \comring and \openring from some ring management service.  
-	\item {\em Identify} --
-	Our user agent first opens a standard TLS connection to a server \msg,
-	both checking the server's name is \msg and checking certificate
-	transparency logs, and then computes the shared session id \aux.
-	Our user agent computes the user's identity
-	$\mathtt{id} = \rVRF.\Eval(\sk,\msg)$ on the server \msg,
-	% Our user agent next rerandomizes \pifast, \compk, and \openpk, computes
-	%  $\sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \pifast)$
-	and finally sends the server their ring VRF signature
-	$\sigma \leftarrow \rVRF.\rSign(\sk,\openring,\msg,\aux)$. % $ = (\compk,\pifast,\sigma)$.
-	\item {\em Verify} -- 
-	After receiving $\sigma$ in channel \aux,
-	the server named \msg runs $ \rVRF.\Verify(\comring,\msg,\aux, \pifast,\sigma) $ and obtains $ \mathtt{id} $ if it verifies. In this way, the server makes sure that the user wit $ \mathtt{id} $ connects to it.
-\end{itemize}
-
-\paragraph{Rate Limiting:}
-TODO for Jeff
+%\paragraph{Identity:} 
+%TODO For Jeff, I added some stuff from the Identity section, but we can add more from that section if they are formal and consistent with our construction.
+%
+% Ring VRFs yield anonymous identity systems:
+%After a user and service establish a secure channel and
+%the server authenticates itself with certificates, then
+%the user authenticates themselves by providing an anonymous
+%VRF signature with input \msg being the service's identity,
+%thus creating an pseudonymous identified session with
+%a pseudonym unlinkable from other contexts. We informally foresee a system that identifies a user anonymously with our ring VRF construction as follows:
+%
+%
+%\begin{itemize}
+%	\item {\em Register} --
+%	Adds Pedersen commitments of the secret keys of the users into some \ring,
+%	after verifying the user does not currently exist in \ring.
+%	\item {\em Update} --
+%	User agents regenerate their stored  \pifast every time \ring changes since $ \rel_{ring} $ changes,
+%	likely receiving \comring and \openring from some ring management service.  
+%	\item {\em Identify} --
+%	Our user agent first opens a standard TLS connection to a server \msg,
+%	both checking the server's name is \msg and checking certificate
+%	transparency logs, and then computes the shared session id \aux.
+%	Our user agent computes the user's identity
+%	$\mathtt{id} = \rVRF.\Eval(\sk,\msg)$ on the server \msg,
+%	% Our user agent next rerandomizes \pifast, \compk, and \openpk, computes
+%	%  $\sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \pifast)$
+%	and finally sends the server their ring VRF signature
+%	$\sigma \leftarrow \rVRF.\rSign(\sk,\openring,\msg,\aux)$. % $ = (\compk,\pifast,\sigma)$.
+%	\item {\em Verify} -- 
+%	After receiving $\sigma$ in channel \aux,
+%	the server named \msg runs $ \rVRF.\Verify(\comring,\msg,\aux, \pifast,\sigma) $ and obtains $ \mathtt{id} $ if it verifies. In this way, the server makes sure that the user wit $ \mathtt{id} $ connects to it.
+%\end{itemize}
+%
+%\paragraph{Rate Limiting:}
+%TODO for Jeff
