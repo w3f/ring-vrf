@@ -129,7 +129,7 @@ We say $\NIZK$ is {computational knowledge sound} for all $ (\rel,z)  $ outputte
 for any non-uniform PPT adversary \adv there exists a PPT extractor $ \Extract $
 such that
 \begin{align}
-	\Pr[\NIZK_\rel.\Verify(x,\pi) = 1 \wedge  (x;\omega) \notin \rel | (crs,\tau) \leftarrow \NIZK.\Setup(\rel),\nonumber\\ ((x,\pi);\omega)\leftarrow (\adv||\Extract)(\rel,z,\pi)] =  \negl(\secparam) \nonumber
+	\Pr[\NIZK_\rel.\Verify(x,\pi) = 1 \wedge  (x;\omega) \notin \rel | (crs,\tau) \leftarrow \NIZK.\Setup(\rel),\nonumber\\ ((x,\pi);\omega)\leftarrow (\adv||\Extract)(\rel,z,crs)] =  \negl(\secparam) \nonumber
 \end{align}
 	
 where $ (o_A;o_B)\leftarrow A||B(input) $ denote the algorithms that run on the same input and $ B $ has access the random coins of $ A $.
