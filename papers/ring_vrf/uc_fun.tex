@@ -13,7 +13,7 @@
 		
 				
 			\textbf{[Key Generation.]} upon receiving a message $(\oramsg{keygen}, \sid)$ from a party $\user_i$, send $(\oramsg{keygen}, \sid, \user_i)$ to the simulator $\simulator$.
-			Upon receiving a message $(\oramsg{verificationkey}, \sid, X,\pk)$ from $\simulator$, verify that $X,\pk$ has not been recorded before for $ \sid $ i.e., there exists no $ (X', \pk') $ in $ \vklist $ such that $ X' = X $ or $ \pk' = \pk $. If it is the case, store in the table $\vklist$, under $\user_i$, the value $X,\pk$ and return $(\oramsg{verificationkey}, \sid, \pk)$ to $ \user_i$.
+			Upon receiving a message $(\oramsg{verificationkey}, \sid, x,\pk)$ from $\simulator$, verify that $x,\pk$ has not been recorded before for $ \sid $ i.e., there exists no $ (x', \pk') $ in $ \vklist $ such that $ x' = X $ or $ \pk' = \pk $. If it is the case, store in the table $\vklist$, under $\user_i$, the value $x,\pk$ and return $(\oramsg{verificationkey}, \sid, \pk)$ to $ \user_i$.
 				
 			%\textbf{[Malicious Key Generation.]} upon receiving a message $(\oramsg{keygen}, \sid, \pk)$ from $\simulator$, verify that $\pk$ was not yet recorded, and if so record in the table $\vklist$ the value $\pk$ under $\simulator$. Else, ignore the message.
 				
@@ -40,7 +40,7 @@
 			\textbf{[Honest Ring VRF Signature and Evaluation.]} upon receiving a message $(\oramsg{sign}, \sid, \ring, \pk_i,\aux, \msg)$ from $\user_i$, verify that $\pk_i \in \ring$ and that there exists a public key $\pk_i$ associated to $\user_i$ in $ \vklist $. If it is not the case, just ignore the request. 	
 			If there exists no $ W' $ such that $ \anonymouskeymap[\msg,W'] =  \pk_i $, let $ W \leftsample \setsym{S}_W $ and let $y \leftsample \setsym{S}_{eval}$. If there exists $ W $ where $ \anonymouskeymap[\msg,W] $ is defined, then abort. Otherwise, set $ \anonymouskeymap[\msg,W] = \pk_i $ and set $ \evaluationslist[\msg, W] = y$.
 			
-			In any case (except ignoring and aborting), obtain $ W, y $ where $ \anonymouskeymap[\msg,W] =\pk_i $ and $ \evaluationslist[\msg, W] = y$  and run  $ \Gen_{sign}(\ring, W,\pk,\aux,\msg) \rightarrow \sigma $. 
+			In any case (except ignoring and aborting), obtain $ W, y $ where $ \anonymouskeymap[\msg,W] =\pk_i $ and $ \evaluationslist[\msg, W] = y$  and run  $ \Gen_{sign}(\ring, W,x,\pk,\aux,\msg) \rightarrow \sigma $. 
 			%Verify that $ [\msg,\aux, W,\ring, \sigma, 0] $ is not recorded. If it is recorded, abort. Otherwise,
 			Record $ [\msg,\aux, W, \ring,\sigma, 1] $. Return $(\oramsg{signature}, \sid, \ring,W,\aux,\msg, y, \sigma)$ to $\user_i$.
 			
