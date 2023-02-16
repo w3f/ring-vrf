@@ -33,9 +33,20 @@ knowledge-soundness.
 \end{proof}
  
 \noindent Next, we define \\ 
-\noindent {\color{red}\textbf{Perfect Completeness after Reusing a $\ZKCont$ Proof}}
+%\noindent {\color{red}\textbf{Perfect Completeness after Reusing a $\ZKCont$ Proof}}
+\noindent \textbf{Special Perfect Completeness} For every efficient adversary $A$, for every 
+ $(\barz, \barx; \baromega_2) \in \reltwo$ it holds: 
+\begin{align*}
+\mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X', \pi'_1, \relone) = 1  = >  \ZKCont.\Verify(\crsvk, \bar{y}, X, \pi_1, \relone) = 1)  \ \wedge \  \\
+                   & \wedge \ (\ZKCont.\VerifyCom (\pp, X', \barx, b') = 1 => \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1) \ \wedge \\
+                   & \wedge \ \nizktwo.\Verify(\crsvktwo, X, \barz, \pi_2) =1 | \\
+                   & (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
+                   & (\crstwo, \twtwo) \leftarrow \nizktwo.\Setup: (1^{\lambda}), (\crspktwo, \crsvktwo) \leftarrow \nizktwo.\Gen(\crstwo) \\
+                   & (\bary, \barx, X', \pi'_1, b') \leftarrow A(\crs,\pp, \relone), (X, \pi_1, b) \leftarrow \ZKCont.\Reprove(\crspk, X', \pi'_1, b', \relone) \\
+                   &\pi_2 \leftarrow \nizktwo.\Prove(\crspktwo, X, \barz, \barx, b, \baromega_2)) = 1
+\end{align*}
 
-\begin{lemma}[Perfect Completeness after Reusing a $\ZKCont$ Proof] 
+\begin{lemma}[Special Perfect Completeness] 
 \label{le:specialCompl_for_nizkR}
 If $\ZKCont$ and $\nizktwo$ are a zk continuation for $\relone$, and, respectively, a NIZK 
 for $\reltwo'$ then the $\nizkR$ construction described above has perfect completeness after reusing a $\ZKCont$ proof.
