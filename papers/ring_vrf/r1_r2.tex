@@ -1,0 +1,102 @@
+\subsection{Continuation}
+\label{subsec:rvrf_faster}
+
+% TODO \PedVRF.\OpenKey(\compk,\openpk)
+
+\def\longeq{=\mathrel{\mkern-10mu}=}% {=\joinrel=} % https://tex.stackexchange.com/questions/35404/is-there-a-wider-equal-sign
+We describe a much faster choice \pifast for \piring with
+opaque inputs $x_1 \longeq \sk$ and transparent inputs $y_1 \longeq \comring$
+ so that taking
+ $\genG \longeq \chi_1$, $\genB \longeq \genB_\gamma$, and $\openpk \longeq b$
+in \PedVRF yields an incredibly fast amortized ring VRF prover.
+Also \PedVRF itself proves knowledge of $X' =  \sk\, \chi_1 + b \genB_\gamma $,
+ as required by $\SpecialG.\Verify$.
+% $$ X' + Y = \comring\, \Upsilon_1 + \sk\, \chi_1 + b \genB_\gamma $$
+
+A priori, we do not know $\chi_1$ during the trusted setup for $\pifast$,
+which prevents computing $\pk = \sk\, \chi_1$ inside $\pifast$.
+Instead, we propose $\ring$ contain commitments to $\sk$ over
+some Jubjub curve $\ecJ$, while $\sk \in \F_p$ remains a scale for $\grJ$.
+
+We know the large subgroup $\grJ$ of $\ecJ$ typically has smaller prime
+order $p_\grJ$ than $\grE$, itself due to $\ecJ$ being an Edwards curve.
+%
+We thus choose $\sk_0,\sk_1 < p_\grJ$ with at least $\lambda$ bits
+so that
+ $\PedVRF.\sk = \sk_0 + \sk_1 \, 2^{\lambda} \mod p_\grE$
+becomes our secret key.
+\footnote{If $\lambda \approx 128$ then $p, p_\grJ > 2^{2\lambda-3}$.}
+Our $\rVRF.\KeyGen$ \eprint{returns}{shall now return}
+a secret key of the form $\rVRF.\sk = (\sk_0,\sk_1,d)$
+ with $d \leftsample \F_{p_\grJ}$ and
+a public key of the form
+ $\rVRF.\pk = \sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$,
+for some independent $\genJ_0,\genJ_1,\genJ_2 \in \grJ$. % (see \S\ref{subsec:AML_KYC}).
+\footnote{Interestingly we avoid range proofs for $\sk_1$ and $\sk_2$ by this independence.}
+We thus have a fairly efficient instantiation for $\Lring^\inner$ give by
+
+$$ \Lfast^\inner = \Setst{ \sk_0 + 2^{128} \sk_1, \comring }{
+ \eprint{ \exists d,\openring \textrm{\ s.t.\ } }{}
+ % 0 < \sk_0,\sk_1 < 2^{128} \textrm{\ and\ } 
+ \genfrac{}{}{0pt}{}{ \eprint{\rVRF.}{}\OpenRing(\comring,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
+} \mathperiod $$
+
+Applying our rerandomization \Reprove to $\pifast^\inner$ with opaque input
+yields a zkSNARK $\pifast$ with the extra $\PedVRF.\OpenKey$ arithmetic to
+have exactly the form $\piring$.
+
+We explain later in \S\ref{sec:ring_hiding} how one could
+choose $\chi_1$ independent before doing the trusted setup,
+ and then wire $\chi_1$ into $\pifast$ inside $C$.
+We could then prove $\pk = \sk\, \chi_1$ directly inside $\pifast^\inner$,
+but doing so here requires slow non-native field arithmetic.
+
+At this point, $\PedVRF.\Sign$ requires two scalar multiplications on $\ecE_1$
+ and two on the somewhat faster $\ecE'$,
+so together with rerandomization costing four scalar multiplications
+on $\ecE_1$ and two on $\ecE_2$, our amortized prover time
+ runs faster than 12 scalar multiplications on typical $\ecE_1$ curves. 
+We expect the three pairings dominate verifier time, but
+ verifiers also need five scalar multiplications on $\ecE_1$.
+
+As an aside, one could construct a second faster curve with the same
+group order as $\grE$, which speeds up two scalar multiplications
+ in both the prover and verifier. 
+
+Importantly, our fast ring VRF' amortized prover time now rivals
+group signature schemes' performance \cite{group_sig_survey,}.
+We hope this ends the temptation to deploy group signature like
+ constructions where the deanonymization vectors matter.
+
+% BEGIN TODO: Oana
+
+\begin{theorem}\label{thm:knowledge_soundness}
+\rVRF instantiated with \pifast and \PedVRF satisfies knowledge soundness.
+\end{theorem}
+
+\begin{proof}[Proof stetch.]
+An extractor for \PedVRF reveals the opening of $X$ for us,
+so our result follows from Lemma \ref{lem:knowledge_soundness}.
+\end{proof}
+
+% \begin{corollary}\label{cor:???}
+% Our Pedersen ring VRF instantiated with \pifast satisfies ring unforgability and uniqueness.
+% \end{corollary}
+
+% \begin{theorem}\label{thm:pifast_anonymity}
+% \rVRF instantiated with \pifast and \PedVRF satisfies zero-knowledge.
+% \end{theorem}
+%
+% \begin{proof}[Proof stetch.]
+% Assuming the same \comring, we know the zero-knowledge continuations
+% are identically distributed by Lemma \ref{lem:unlinkable},
+% even when reusing a zero-knowledge continuation $(X,A,B,C)$.
+% It follows the typical simulator for \PedVRF ... WHAT???
+% \end{proof}
+
+% \begin{corollary}\label{cor:???}
+% Our Pedersen ring VRF instantiated with \pifast satisfies ring anonymity.
+% \end{corollary}
+
+% END TODO: Oana
+
