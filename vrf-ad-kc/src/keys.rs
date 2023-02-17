@@ -44,6 +44,8 @@ pub const NONCE_SEED_LENGTH: usize = 32;
 /// Seceret key consisting of a scalar and a secret nonce seed.
 #[derive(Clone)] // Debug
 pub struct SecretKey<F: Flavor> {
+    /// VRF signature flavor which specifies base points
+    /// TODO: Can we make this be &'static F somehow?
     pub(crate) flavor: F,
 
     /// Secret key represented as a scalar.
@@ -122,9 +124,9 @@ impl<F: Flavor> SecretKey<F> {
     }
 
     /// Generate a `SecretKey` with the default randomness source.
-    #[cfg(feature = "std")]
+    #[cfg(feature = "getrandom")]
     pub fn new(flavor: F) -> Self {
-        SecretKey::from_rng(flavor, ::rand::thread_rng())
+        SecretKey::from_rng(flavor, &mut ::rand_core::OsRng)
     }
 
     /// Reference the `PublicKey` corresponding to this `SecretKey`.

@@ -141,6 +141,10 @@ impl<C: AffineRepr> ThinVrf<C> {
     where T: SigningTranscript+Clone, B: BorrowMut<T>
     {
         let t = t.borrow_mut();
+        // A priori, one expects thin_vrf_merge's msm could be merged
+        // into the multiplication by c below, except thin_vrf_merge
+        // only needs 128 bit scalar multiplications, so doing this
+        // should only boosts performance when ios.len() = 2.
         let io = self.thin_vrf_merge(t, public, ios);
 
         // verify_final

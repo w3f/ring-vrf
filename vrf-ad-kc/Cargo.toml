@@ -11,7 +11,7 @@ license = "MIT/Apache-2.0"
 [dependencies]
 arrayvec = { version = "0.7.2", default-features = false }
 arrayref = { version = "0.3", default-features = false }
-rand = { version = "0.8", default-features = false }
+# rand = { version = "0.8", default-features = false }
 rand_core = { version = "0.6", default-features = false }
 rand_chacha = { version = "0.3", default-features = false }
 blake3 = { version = "1.3", default-features = false, optional = true }
@@ -28,14 +28,14 @@ zeroize = { version = "1.0", default-features = false, features = [ "zeroize_der
 # thiserror = "1.0"
 
 [dev-dependencies]
-ark-bls12-381 = { version = "0.3", default-features = false, features = [ "curve" ] }
-ark-bls12-377 = { version = "0.3", default-features = false, features = [ "curve" ] }
+ark-bls12-377 = { version = "0.4", default-features = false, features = [ "curve" ] }
+# ark-bls12-381 = { version = "0.4", default-features = false, features = [ "curve" ] }
 
 [features]
-default = ["merlin"]
+default = ["merlin", "getrandom"] # "std", "rand"
 merlin = ["dep:merlin"]
 blake3 = ["dep:blake3"]  # blake3 is much faster than merlin, but our transcript scheme seems suboptimal
-
+getrandom = ["rand_core/getrandom"]
 
 
 
