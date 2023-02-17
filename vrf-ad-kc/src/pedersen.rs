@@ -7,6 +7,7 @@
 //! 
 //! 
 
+use ark_ff::{PrimeField};
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
 
@@ -27,23 +28,23 @@ use core::borrow::{BorrowMut};
 
 /// Pedersen VRF flavor
 #[derive(Clone)]
-pub struct PedersenVrf<K,H=K> 
+pub struct PedersenVrf<K, H=K, const B: usize=1> 
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     // keying_base: K,
     thin: crate::ThinVrf<K>,
-    blinding_base: K,
+    blinding_bases: [K; B],
     _pd: core::marker::PhantomData<H>,
 }
 
-impl<K,H> core::ops::Deref for PedersenVrf<K,H> 
+impl<K,H,const B: usize> core::ops::Deref for PedersenVrf<K,H,B> 
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     type Target = crate::ThinVrf<K>;
     fn deref(&self) -> &crate::ThinVrf<K> { &self.thin }
 }
 
-impl<K,H> Flavor for PedersenVrf<K,H>
+impl<K,H,const B: usize> Flavor for PedersenVrf<K,H,B>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>
 {
     type ScalarField = K::ScalarField;
@@ -53,40 +54,44 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>
     fn keying_base(&self) -> &K { &self.keying_base }
 }
 
-impl<K,H> InnerFlavor for PedersenVrf<K,H>
+impl<K,H,const B: usize> InnerFlavor for PedersenVrf<K,H,B>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>
 {
     type KeyCommitment = KeyCommitment<K>;
-    type Scalars = Scalars<PedersenVrf<K,H>>;
-    type Affines = Affines<PedersenVrf<K,H>>;
+    type Scalars = Scalars<K::ScalarField,B>;
+    type Affines = Affines<K,H>;
 }
 
 /// Pederson commitment openning for a public key, consisting of a scalar
 /// that reveals the difference ebtween two public keys.
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct SecretBlinding<C: AffineRepr>(pub(crate) <C as AffineRepr>::ScalarField);
+pub struct SecretBlinding<C: AffineRepr,const B: usize>(
+    pub(crate) [<C as AffineRepr>::ScalarField; B]
+);
 
-impl<C: AffineRepr> Zeroize for SecretBlinding<C> {
+impl<C: AffineRepr,const B: usize> Zeroize for SecretBlinding<C,B> {
     fn zeroize(&mut self) {
         self.0.zeroize();
     }
 }
-impl<C: AffineRepr> Drop for SecretBlinding<C> {
+impl<C: AffineRepr,const B: usize> Drop for SecretBlinding<C,B> {
     fn drop(&mut self) { self.zeroize() }
 }
 
 /*
-impl<C: AffineRepr> SecretBlinding<C> {
+impl<C: AffineRepr,const B: usize> Drop for SecretBlinding<C,B> {
     pub fn is_blinded(&self) -> bool {
         use ark_ff::Zero;
+        TODO: loop
         self.0.is_zero() // != <<C as AffineRepr>::ScalarField as Zero>::zero()
     }
 }
 
-impl<K,H> PedersenVrf<K,H>
+impl<K,H,const B: usize> PedersenVrf<K,H,B>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     pub fn verify(&self, blinded: PublicKey<K>, unblinded: PublicKey<K>) -> bool {
+        TODO: loop
         let mut b = self.blinding_base.mul(self.0);  // FIX !!
         b.add_assign_mixed(& unblinded.0);
         crate::eq_mod_small_cofactor_projective(b, blinded.into_group())
@@ -94,21 +99,23 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 }
 */
 
-impl<K,H> PedersenVrf<K,H>
+impl<K,H,const B: usize> PedersenVrf<K,H,B>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
-    pub fn new(keying_base: K, blinding_base: K) -> PedersenVrf<K,H> {
+    pub fn new(keying_base: K, blinding_bases: [K; B],) -> PedersenVrf<K,H,B> {
         let thin = crate::ThinVrf { keying_base };
-        PedersenVrf { thin, blinding_base, _pd: core::marker::PhantomData, }
+        PedersenVrf { thin, blinding_bases, _pd: core::marker::PhantomData, }
     }
 
     pub fn compute_blinded_publickey(
         &self,
         public: &PublicKey<K>, 
-        secret_blinding: &SecretBlinding<K>
+        secret_blindings: &SecretBlinding<K,B>
     ) -> KeyCommitment<K> {
-        let mut b = self.blinding_base * secret_blinding.0;
-        b += public.0;
+        let mut b = public.0.into();
+        for i in 0..B {
+            b += self.blinding_bases[i] * secret_blindings.0[i];
+        }
         KeyCommitment(b.into_affine())
     }
 }
@@ -127,44 +134,53 @@ impl<C: AffineRepr> Zeroize for KeyCommitment<C> {
 
 
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
-pub struct Scalars<F: Flavor> {
-    pub(crate) keying:   <F as Flavor>::ScalarField,
-    pub(crate) blinding: <F as Flavor>::ScalarField,
+pub struct Scalars<SF: PrimeField,const B: usize> {
+    pub(crate) keying:   SF,
+    pub(crate) blindings: [SF; B],
 }
 
-impl<F: Flavor> Zeroize for Scalars<F> {
+impl<SF: PrimeField,const B: usize> Zeroize for Scalars<SF,B> {
     fn zeroize(&mut self) {
         self.keying.zeroize();
-        self.blinding.zeroize();
+        for mut b in self.blindings {
+            b.zeroize();
+        }
     }
 }
  
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
-pub struct Affines<P: Flavor> {
-    pub(crate) keyish:  <P as Flavor>::KeyAffine,
-    pub(crate) preoutish: <P as Flavor>::PreOutAffine,
+pub struct Affines<K,H> 
+where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
+{
+    pub(crate) keyish:  K, // <P as Flavor>::KeyAffine,
+    pub(crate) preoutish: H, // <P as Flavor>::PreOutAffine,
 }
 
 
 // --- Sign --- //
 
-impl<K,H> SecretKey<PedersenVrf<K,H>>
+impl<K,H,const B: usize> SecretKey<PedersenVrf<K,H,B>>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     pub(crate) fn new_pedersen_witness<T,R>(
         &self,
         t: &T,
         input: &VrfInput<H>,
-        rng: R
-    ) -> Witness<PedersenVrf<K,H>>
+        rng: &mut R
+    ) -> Witness<PedersenVrf<K,H,B>>
     where T: SigningTranscript, R: RngCore+CryptoRng
     {
-        let k: [<PedersenVrf<K,H> as Flavor>::ScalarField; 2]
-         = t.witnesses(b"MakeWitness", &[&self.nonce_seed], rng);
-        let k = Scalars { keying: k[0], blinding: k[1], };
-        let keyish: <K as AffineRepr>::Group = 
-            self.flavor.keying_base * k.keying
-            + self.flavor.blinding_base * k.blinding;
+        // We'll need two calls here until const generics lands 
+         let keying: [K::ScalarField; 1]
+         = t.witnesses(b"MakeWitness0", &[&self.nonce_seed], &mut *rng);
+         let blindings: [K::ScalarField; B]
+         = t.witnesses(b"MakeWitness0", &[&self.nonce_seed], rng);
+        let k = Scalars { keying: keying[0], blindings, };
+
+        let mut keyish: <K as AffineRepr>::Group = self.flavor.keying_base * k.keying;
+        for i in 0..B {
+            keyish += self.flavor.blinding_bases[i] * k.blindings[i];
+        }
         let preoutish: <H as AffineRepr>::Group = input.0 * k.keying;
         let r = Affines {
             keyish: keyish.into_affine(),
@@ -173,22 +189,22 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         Witness { r, k }
     }
 
-    pub fn new_secret_blinding<T,R>(&self, t: &T, rng: &mut R) -> SecretBlinding<K>
+    pub fn new_secret_blinding<T,R>(&self, t: &T, rng: &mut R) -> SecretBlinding<K,B>
     where T: SigningTranscript+Clone, R: RngCore+CryptoRng
     {
-        let [secret_blinding]: [<K as AffineRepr>::ScalarField; 1]
+        let secret_blinding: [<K as AffineRepr>::ScalarField; B]
          = t.witnesses(b"MakeSecretBlinding", &[&self.nonce_seed], rng);
         SecretBlinding(secret_blinding)
     }
 
     /// Sign Pedersen VRF signature
-    pub fn sign_pedersen_vrf<T,B,R>(
+    pub fn sign_pedersen_vrf<T,BT,R>(
         &self,
-        mut t: B,
+        mut t: BT,
         ios: &[VrfInOut<H>],
         rng: &mut R
-    ) -> (Signature<PedersenVrf<K,H>>, SecretBlinding<K>)
-    where T: SigningTranscript+Clone, B: BorrowMut<T>, R: RngCore+CryptoRng
+    ) -> (Signature<PedersenVrf<K,H,B>>, SecretBlinding<K,B>)
+    where T: SigningTranscript+Clone, BT: BorrowMut<T>, R: RngCore+CryptoRng
     {
         let t = t.borrow_mut();
         let io = vrf::vrfs_merge(t, ios);
@@ -203,14 +219,14 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     }
 
     /// Sign Pedersen VRF signature, wtih a user supplied secret blinding.
-    pub fn sign_pedersen_vrf_with_secret_blinding<T,B,R>(
+    pub fn sign_pedersen_vrf_with_secret_blinding<T,BT,R>(
         &self,
-        mut t: B,
+        mut t: BT,
         ios: &[VrfInOut<H>],
-        secret_blinding: SecretBlinding<K>,
+        secret_blinding: SecretBlinding<K,B>,
         rng: &mut R
-    ) -> Signature<PedersenVrf<K,H>>
-    where T: SigningTranscript+Clone, B: BorrowMut<T>, R: RngCore+CryptoRng
+    ) -> Signature<PedersenVrf<K,H,B>>
+    where T: SigningTranscript+Clone, BT: BorrowMut<T>, R: RngCore+CryptoRng
     {
         let t = t.borrow_mut();
         let io = vrf::vrfs_merge(t, ios);
@@ -224,7 +240,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     }
 }
 
-impl<K,H> Witness<PedersenVrf<K,H>>
+impl<K,H,const B: usize> Witness<PedersenVrf<K,H,B>>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     /// Complete Pedersen VRF signature.
@@ -234,16 +250,20 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     pub(crate) fn sign_final<T: SigningTranscript>(
         self,
         t: &mut T,
-        secret_blinding: &SecretBlinding<K>,
-        secret: &SecretKey<PedersenVrf<K,H>>,
+        secret_blindings: &SecretBlinding<K,B>,
+        secret: &SecretKey<PedersenVrf<K,H,B>>,
         compk: KeyCommitment<K>,
-    ) -> Signature<PedersenVrf<K,H>> {
+    ) -> Signature<PedersenVrf<K,H,B>> {
         let Witness { r, k } = self;
         t.append(b"Witness", &r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge");
+        let mut blindings = arrayvec::ArrayVec::<K::ScalarField,B>::new();
+        for i in 0..B {
+            blindings.push( k.blindings[i] + c * secret_blindings.0[i] );
+        }
         let s = Scalars {
             keying: k.keying + c * secret.key,
-            blinding: k.blinding + c * secret_blinding.0,
+            blindings: blindings.into_inner().unwrap(),
         };
         // k.zeroize();
         Signature { compk, r, s }
@@ -253,17 +273,17 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 
 // --- Verify --- //
 
-impl<K,H> PedersenVrf<K,H>
+impl<K,H,const B: usize> PedersenVrf<K,H,B>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     /// Verify Pedersen VRF signature 
-    pub fn verify_pedersen_vrf<'a,T,B>(
+    pub fn verify_pedersen_vrf<'a,T,BT>(
         &self,
-        mut t: B,
+        mut t: BT,
         ios: &'a [VrfInOut<H>],
-        signature: &Signature<PedersenVrf<K,H>>,
+        signature: &Signature<PedersenVrf<K,H,B>>,
     ) -> SignatureResult<&'a [VrfInOut<H>]>
-    where T: SigningTranscript+Clone, B: BorrowMut<T>
+    where T: SigningTranscript+Clone, BT: BorrowMut<T>
     {
         let t = t.borrow_mut();
         let io = vrf::vrfs_merge(t, ios);
@@ -278,8 +298,12 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         if ! crate::eq_mod_small_cofactor_projective(&lhs, &rhs) {
             return Err(SignatureError::Invalid);
         }
-        let lhs = self.keying_base.mul(signature.s.keying)
-                  + self.blinding_base.mul(signature.s.blinding);
+        // TODO: Use an MSM here
+        let mut lhs = self.keying_base.mul(signature.s.keying);
+        for i in 0..B {
+            lhs += self.blinding_bases[i].mul(signature.s.blindings[i]);
+        }
+        // TODO: Try an MSM here
         let rhs = signature.r.keyish.into_group() + signature.compk.0 * c;
         if ! crate::eq_mod_small_cofactor_projective(&lhs, &rhs) {
             return Err(SignatureError::Invalid);
