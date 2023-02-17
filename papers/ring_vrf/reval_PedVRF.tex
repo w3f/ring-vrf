@@ -75,15 +75,13 @@ for all $\bary,\barx,\barz, \baromega_1, \baromega_2$ with $(\bary, \barx; \baro
 \noindent \textbf{Zero-knowledge after Reusing a $\ZKCont$ Proof} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $aux$, 
 for all $\bary,\barx,\barz, \baromega_1, \baromega_2$ with $(\bary, \barx; \baromega_1) \in \relone \wedge (\barz, \barx; \baromega_2) \in \reltwo$, for all $X',\pi_1',\pi_2, b'$, for every adversary $A$ it holds:
 \begin{align*}
-| \mathit{Pr}(& A(\crs, aux, \pi_1,\pi_2, X, \rel) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
+| \mathit{Pr}(& A(\crs, aux, \pi_1,\pi_2, X, \rel \wedge \ZKCont.\Verify(\crsvk, \bary, X', \pi'_1, \relone) = 1 \\
+                  & \wedge \VerifyCom(\pp, X', \barx', b') = 1) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
                   & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi_1, X, \_) \leftarrow \ZKCont.\Reprove (\crspk, X', \pi_1', b', \relone), \\
-                  & \pi_2 \leftarrow \nizktwo.\Prove(\crspktwo, X, \barz, \barx, b, \baromega_2), \\
-                  &  \ZKCont.\Verify(\crsvk, \bary, X', \pi'_1, \relone) = 1 
-                  \wedge \VerifyCom(\pp, X', \barx', b') = 1) =  \\
-- \mathit{Pr}(& A(\crs, aux, \pi_1,\pi_2, X, \rel) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
-                     & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi_1, X,\pi_2) \leftarrow \nizkR.\Sim(\tw, \bary, \relone) \\ 
-                     &  \ZKCont.\Verify(\crsvk, \bary, X', \pi'_1, \relone) = 1
-                    \wedge \VerifyCom(\pp, X', \barx', b') = 1) | \\
+                  & \pi_2 \leftarrow \nizktwo.\Prove(\crspktwo, X, \barz, \barx, b, \baromega_2)) =  \\
+- \mathit{Pr}(& A(\crs, aux, \pi_1,\pi_2, X, \rel) = 1 \wedge \ZKCont.\Verify(\crsvk, \bary, X', \pi'_1, \relone) = 1 \\
+                    & \wedge \VerifyCom(\pp, X', \barx', b') = 1\ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
+                     & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi_1, X,\pi_2) \leftarrow \nizkR.\Sim(\tw, \bary, \relone)) | \\
                     \leq \negl(\lambda)
 \end{align*}
 
