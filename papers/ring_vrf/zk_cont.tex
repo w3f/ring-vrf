@@ -93,7 +93,8 @@ and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledg
 \mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1  = >  \ZKCont.\Verify(\crsvk, \bar{y}, X', \pi', \relone) = 1)  \ \wedge \  \\
                    & \wedge \ (\ZKCont.\VerifyCom (\pp, X, \barx, b) = 1 => \ZKCont.\VerifyCom (\pp, X', \barx, b') = 1) \ | \\
                    & (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
-                   & (\bary, \barx, X, \pi, b) \leftarrow A(\crs,\pp, \relone), (X', \pi', b') \leftarrow \ZKCont.\Reprove(\crspk, X, \pi, b, \relone)) = 1
+                   & (\bary, \barx, X, \pi, b) \leftarrow A(\crs,\pp, \relone) \\
+                   & (X', \pi', b') \leftarrow \ZKCont.\Reprove(\crspk, X, \pi, b, \relone)) = 1
 \end{align*}
 \noindent \textbf{Knowledge Soundness} For every benign auxiliary input $z$ (as per~\cite{bening_auxiliary}) and 
 every non-uniform efficient adversary $A$, there exists efficient non-uniform extractor $E$  
@@ -214,8 +215,8 @@ group elements $\Kgamma = [\frac{\eta}{\gamma}]_1$ and $\Kdelta = [\frac{\eta}{\
 An identical trusted setup to that used by \SpecialG was used in LegoSNARK~\cite[Fig.~22]{LegoSNARK} which defines 
 a commit-carrying SNARK based on Groth16. Second, our $\SpecialG.\Reprove$ algorithm uses a Groth16 re-randomisation 
 technique for the proof (see~\cite[Fig.~1]{RandomizationGroth16} or LegoSNARK~\cite[Fig.~22]{LegoSNARK}), 
-but, in addition, $\SpecialG.\Reprove$ also re-randomises $X$ which is a commitment to a slice of the public input; moreover 
-we appropriately define the zero-knowledge property for zk continuations such that even after iteratively applying 
+but, in addition, $\SpecialG.\Reprove$ also re-randomises $X$ which is a commitment to a slice of the public input; moreover, in terms of security 
+properties, we appropriately define the zero-knowledge for zk continuations such that even after iteratively applying 
 $\SpecialG.\Reprove$ zero-knowledge property is preserved for both the witness as well as the public input committed to in $X$.  \\
 
 %{\color{red}Note that, if a trusted setup is used (for example the one described in~\cite{subversion_zk}) such that there 
