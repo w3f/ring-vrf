@@ -61,17 +61,17 @@ constructs proof $\pi$ from vector of inputs
 $\bar{y}$ (called \emph{transparent}), from $\bar{x}$ and vector of witnesses $\baromega_1$, and 
 also outputs $b$ as the opening for $X$,
 
-\item $\ZKCont.\Reprove: (\crspk, X, \pi, b, \relone) \mapsto (X', \pi', b')$ \,
-finalises commitment $X'$ and proof $\pi'$ and returns an opening $b'$ for the commitment, 
+\item $\ZKCont.\Reprove: (\crspk, X', \pi', b', \relone) \mapsto (X, \pi, b)$ \,
+finalises commitment $X$ and proof $\pi$ and returns an opening $b$ for the commitment, 
 
 \item $\ZKCont.\VerifyCom: (\pp, X, \barx, b) \mapsto 0/1$ \, 
 verifies that indeed $X$ is a commitment to $\barx$ with opening (e.g., randomness) $b$ and 
 outputs 1 if indeed that is the case and 0 otherwise,
  
-\item $\ZKCont.\Verify: (\crsvk, \bar{y}, X', \pi', \relone) \mapsto 0/1$ \, outputs $1$ in case it accepts and $0$ otherwise,
+\item $\ZKCont.\Verify: (\crsvk, \bar{y}, X, \pi, \relone) \mapsto 0/1$ \, outputs $1$ in case it accepts and $0$ otherwise,
 
-\item $\ZKCont.\Sim: (\tw, \bary, \relone) \mapsto (\pi', X')$ takes as input a simulation trapdoor $\tw$ and statement $(\bary, \barx)$ and returns 
-arguments $\pi'$ and $X'$,
+\item $\ZKCont.\Sim: (\tw, \bary, \relone) \mapsto (\pi, X)$ takes as input a simulation trapdoor $\tw$ and statement $(\bary, \barx)$ and returns 
+arguments $\pi$ and $X$,
 \end{itemize}
 and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledge soundness and zero-knowledge as defined below:\\
 %TO DO: Re-write this: We define (white-box) knowledge soundness for zero-knowledge continuations
@@ -90,12 +90,23 @@ and satisfies perfect completeness for $\Preprove$ and for $\Reprove$,  knowledg
 
 \noindent \textbf{Perfect Completeness for $\Reprove$} For every efficient adversary $A$ it holds: 
 \begin{align*}
+\mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X', \pi', \relone) = 1  = >  \ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1)  \ \wedge \  \\
+                   & \wedge \ (\ZKCont.\VerifyCom (\pp, X', \barx, b') = 1 => \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1) \ | \\
+                   & (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
+                   & (\bary, \barx, X', \pi', b') \leftarrow A(\crs,\pp, \relone) \\
+                   & (X, \pi, b) \leftarrow \ZKCont.\Reprove(\crspk, X', \pi', b', \relone)) = 1
+\end{align*}
+
+\begin{comment}
+\begin{align*}
 \mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1  = >  \ZKCont.\Verify(\crsvk, \bar{y}, X', \pi', \relone) = 1)  \ \wedge \  \\
                    & \wedge \ (\ZKCont.\VerifyCom (\pp, X, \barx, b) = 1 => \ZKCont.\VerifyCom (\pp, X', \barx, b') = 1) \ | \\
                    & (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
                    & (\bary, \barx, X, \pi, b) \leftarrow A(\crs,\pp, \relone) \\
                    & (X', \pi', b') \leftarrow \ZKCont.\Reprove(\crspk, X, \pi, b, \relone)) = 1
 \end{align*}
+\end{comment}
+
 \noindent \textbf{Knowledge Soundness} For every benign auxiliary input $\realaux$ (as per~\cite{bening_auxiliary}) and 
 every non-uniform efficient adversary $A$, there exists efficient non-uniform extractor $E$  
 \begin{align*}
@@ -103,13 +114,33 @@ every non-uniform efficient adversary $A$, there exists efficient non-uniform ex
                    & \wedge \ ( (\bary, \barx; \baromega_1) \notin \relone) \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
                    & (\bary, \barx, X, \pi, b; \baromega_1 ) \leftarrow A || E (\crs, \realaux, \relone)) = \negl (\lambda),
 \end{align*}
+
+\begin{comment}
+\begin{align*}
+\mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1) \ \wedge \ (\ZKCont.\VerifyCom(\pp, X, \bar{x}, b) = 1) \ \wedge\ \\
+                   & \wedge \ ( (\bary, \barx; \baromega_1) \notin \relone) \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
+                   & (\bary, \barx, X, \pi, b; \baromega_1 ) \leftarrow A || E (\crs, \realaux, \relone)) = \negl (\lambda),
+\end{align*}
+\end{comment}
+
 \noindent %where $\ZKCont.\Preprove_{|X}(\crspk, \bar{y}, \bar{x}, \baromega_1, \relone; b)$ means running the part of algorithm 
 %$\ZKCont.\Preprove$ that computes and outputs $X$ with its regular inputs and using $b$ when randomness is required; 
 where by $(\mathit{output_{A}};\mathit{output_{B}}) \leftarrow A || B(\mathit{input})$ we denote algorithms $A$, $B$  running on the same 
 $\mathit{input}$ and $B$ having access to the random coins of $A$. \\
 
 \noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $\realaux$, 
-for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X$, for all $\pi$, for all $b$, for every adversary $A$ it holds:
+for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$, for all $b'$, for every adversary $A$ it holds:
+\begin{align*}
+\mathit{Pr}(& A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
+                  & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
+                  & (\pi, X, \_) \leftarrow \ZKCont.\Reprove (\crspk, X', \pi', b', \relone), \\
+                  &  \ZKCont.\Verify(\crsvk, \bary, X', \pi', \relone) = 1) =  \\
+= \mathit{Pr}(& A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
+                     & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone) \\ 
+                     &  \ZKCont.\Verify(\crsvk, \bary, X', \pi', \relone) = 1)
+\end{align*}
+
+\begin{comment}
 \begin{align*}
 \mathit{Pr}(& A(\crs, \realaux, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
                   & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
@@ -119,6 +150,7 @@ for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X$, for all $\pi$, 
                      & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi', X') \leftarrow \ZKCont.\Sim(\tw, \bary, \relone) \\ 
                      &  \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1)
 \end{align*}
+\end{comment}
  
 \end{definition} 
 
@@ -178,9 +210,9 @@ $\crsvk = \left([\alpha]_1, \left\{ \left[ \frac{\beta a_i(\tau)+ \alpha b_i(\ta
 $\pp = \left( \left \{ \left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1 \right \}_{i=l+1}^{n}, \left[ \frac{\eta}{\gamma} \right]_1 \right)$.
 
 
-\item $\SpecialG.\Preprove: (\crspk, \bar{y}, \bar{x}, \baromega_1, \relRQ) \mapsto (X, \pi, b)$ such that \\
+\item $\SpecialG.\Preprove: (\crspk, \bar{y}, \bar{x}, \baromega_1, \relRQ) \mapsto (X', \pi', b')$ such that \\
 \begin{align*}
-&b = 0; r, s\xleftarrow{\$} \F_p; X = \sum_{i=l+1}^{n} v_i\left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1; \pi = ([A]_1, [B]_2, [C]_1); \\
+&b' = 0; r, s\xleftarrow{\$} \F_p; X' = \sum_{i=l+1}^{n} v_i\left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1; \pi' = ([A]_1, [B]_2, [C]_1); \\
 &A = \alpha + \sum_{i=0}^{m} v_i \cdot a_i(\tau) + r\delta; B = \beta + \sum_{i=0}^{m} v_i \cdot b_i(\tau) + s\delta; \\ 
 &C = \frac{\sum_{i=n+1}^{m} v_i \beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau) + h(\tau)t(\tau)}{\delta}   + As + Br - rs\delta, 
 \end{align*}
@@ -188,24 +220,25 @@ and where $\bary = (x_1, \ldots, x_l)$, $\barx = (x_{l+1}, \ldots, x_n)$, $\baro
 $\barv = (1, x_1, \ldots, x_n, w_1, \ldots, w_{m-n})$ (same as in Definition~\ref{def:QAP}).
 
 
-\item $\SpecialG.\Reprove: (\crspk, X, \pi, b, \relRQ) \mapsto (X', \pi', b')$  such that
+\item $\SpecialG.\Reprove: (\crspk, X', \pi', b', \relRQ) \mapsto (X, \pi, b)$  such that
 \begin{align*}
-&b ', r_1, r_2  \xleftarrow{\$} \F_p, X' = X + (b'- b) \Kgamma, \pi' = (U', V', W'), \\
-&U' = \frac{1}{r_1} U, V' = r_1 V + r_1r_2[\delta]_2, W' = W + r_2U  - (b' - b) \Kdelta \mathperiod
+&b , r_1, r_2  \xleftarrow{\$} \F_p, X = X' + (b- b') \Kgamma, \pi = (U, V, W), \\
+&U = \frac{1}{r_1} U', V = r_1 V' + r_1r_2[\delta]_2, W = W' + r_2U'  - (b - b') \Kdelta \mathperiod
 \end{align*}
-\noindent where $\pi = (U, V, W)$.
+\noindent where $\pi' = (U', V', W')$.
  
 \item $\SpecialG.\VerifyCom: (\pp, X, \barx, b) \mapsto 0/1$ where the output is 1 iff the following holds
 $$X = \sum_{i=l+1}^{n} x_i\left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1  + b \Kgamma,$$
 where $\barx = (x_{l+1}, \ldots, x_n)$, $ 0 \leq l \leq n-1$. 
-\item $\ZKCont.\Verify: (\crsvk, \bar{y}, X', \pi', \relRQ) \mapsto 0/1$ where the output is 1 iff the following holds 
-$$e(U',V') = e([\alpha]_1, [\beta]_2) \cdot e(X' + Y, [\gamma]_2) \cdot e(W', [\delta]_2),$$
-where $\pi' = (U', V', W')$, $Y = \sum_{i=1}^{l} x_i\left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1$ 
+
+\item $\ZKCont.\Verify: (\crsvk, \bar{y}, X, \pi, \relRQ) \mapsto 0/1$ where the output is 1 iff the following holds 
+$$e(U,V) = e([\alpha]_1, [\beta]_2) \cdot e(X + Y, [\gamma]_2) \cdot e(W, [\delta]_2),$$
+where $\pi = (U, V, W)$, $Y = \sum_{i=1}^{l} x_i\left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1$ 
 and $\bary = (x_1, \ldots, x_l)$.
 
-\item $\SpecialG.\Sim: (\tw, \bary, \relRQ) \mapsto (\pi', X')$ where $u, A', B' \xleftarrow {\$} \F_p$ and let \\
-$\pi' = ([A']_1, [B']_2, [C']_1)$ where $C' = \frac{A'B' - \alpha \beta - \sum_{i=1}^{l} x_i (\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau))- u}{\delta}  $ and, 
-by definition $\bary = (x_1, \ldots, x_l)$. Note that $\pi$ is a simulated proof for transparent input $\bary$ and commitment $X' = [u]_1$.
+\item $\SpecialG.\Sim: (\tw, \bary, \relRQ) \mapsto (\pi, X)$ where $u, A, B \xleftarrow {\$} \F_p$ and let \\
+$\pi = ([A]_1, [B]_2, [C]_1)$ where $C = \frac{AB - \alpha \beta - \sum_{i=1}^{l} x_i (\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau))- u}{\delta}  $ and, 
+by definition $\bary = (x_1, \ldots, x_l)$. Note that $\pi$ is a simulated proof for transparent input $\bary$ and commitment $X = [u]_1$.
 \end{itemize} 
 \end{definition}
 
@@ -255,7 +288,8 @@ for a cc-SNARK with double binding. \\
 \noindent Let $A_{\SpecialG}$ be an adversary for KS in Definition~\ref{def:zk_cont} and 
 define adversary $A_{\ccgroth}$ for KS  in Definition 3.4~\cite{LegoSNARK}:
 \begin{align*}
-&\mathit{If} \ (\bary, \barx, X, \pi, b) \leftarrow A_{\SpecialG} (\crs, \pp, \realaux, \relRQ)\  (1)\ \mathit{then} \ (\bary, X, \pi) \leftarrow A_{\ccgroth} (\relRQ, \crs, \realaux).
+&\mathit{If} \ (\bary, \barx, X, \pi, b) \leftarrow A_{\SpecialG} (\crs, \pp, \realaux, \relRQ)\  (1)\ \\ 
+&\mathit{then} \ (\bary, X, \pi) \leftarrow A_{\ccgroth} (\relRQ, \crs, \realaux).
 \end{align*}
 
 \noindent Given extractor $E_{\ccgroth}$ for $A_{\ccgroth}$ fulfilling Definition 3.4~\cite{LegoSNARK}, 
