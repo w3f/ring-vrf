@@ -111,7 +111,8 @@ $\mathit{input}$ and $B$ having access to the random coins of $A$. \\
 for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X$, for all $\pi$, for all $b$, for every adversary $A$ it holds:
 \begin{align*}
 \mathit{Pr}(& A(\crs, z, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
-                  & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi', X', \_) \leftarrow \ZKCont.\Reprove (\crspk, X, \pi, b, \relone), \\
+                  & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
+                  & (\pi', X', \_) \leftarrow \ZKCont.\Reprove (\crspk, X, \pi, b, \relone), \\
                   &  \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1) =  \\
 = \mathit{Pr}(& A(\crs, z, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
                      & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi', X') \leftarrow \ZKCont.\Sim(\tw, \bary, \relone) \\ 
@@ -285,5 +286,5 @@ that the output $\pi'$ of $\SpecialG.\Sim$ is identically distributed to a proof
 zero-knowledge property holds for $\SpecialG$. 
 \end{proof}
 
-\input{reval_PedVRF.tex}
+\input{NIZK_for_R.tex}
 \input{r1_r2.tex}
