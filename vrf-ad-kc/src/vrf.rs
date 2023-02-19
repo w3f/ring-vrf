@@ -27,84 +27,23 @@ use crate::{
 use std::borrow::{Borrow}; // BorrowMut
 
 
-/// VRF Malleability Type
-pub trait VrfMalleability {
-    /// True if suitable for use with anonymized aka ring VRFs.
-    /// Flase if suitable for use with soft key derivation.
-    const ANONYMOUS : bool = true;
-
-    /// Append malleability to transcript
-    fn add_malleability<T: SigningTranscript>(&self, t: &mut T);
-}
-
-
-/// Malleable VRF input transcript.
-///
-/// Avoid use with related keys, aka HDKD.
-/// Acknoledge malleability by never making this default behavior.
-pub struct Malleable;
-impl VrfMalleability for Malleable {
-    /// Malleable VRF transcript.  
-    ///
-    /// We caution that malleable VRF inputs often become insecure if used
-    /// with related keys, like blockchain wallets produce via "soft" HDKD.
-    /// Instead you want a session key layer in which machines create
-    /// unrelated VRF keys, and then users' account keys certify them.
-    ///
-    /// TODO: Verify that Point::rand is stable or find a stable alternative.
-    fn add_malleability<T: SigningTranscript>(&self, _t: &mut T) { }
-}
-
-/// Non-malleable VRF transcript.  Unsuitable for ring VRFs.
-impl<C: AffineRepr> VrfMalleability for crate::PublicKey<C> {
-    const ANONYMOUS : bool = false;
-
-    /// Non-malleable VRF transcript.
-    ///
-    /// Actually safe with user created related keys, aka HDKD, but
-    /// incompatable with our ring VRF.  Avoids malleability within
-    /// the small order subgroup here by multiplying by the cofactor.paramaters
-    ///
-    /// We expect full signer sets should be registered well in advance,
-    /// so our removing the malleability here never creates more valid
-    /// VRF outputs, but reconsider this if you've more dynamic key
-    /// registration process.
-    fn add_malleability<T: SigningTranscript>(&self, t: &mut T) {
-        t.append(b"vrf-nm-pk", &self.0.mul_by_cofactor());
-    }
-}
-
-/*
-/// Ring-malleable VRF transcript for usage with ring VRFs
-impl VrfMalleability for crate::merkle::RingRoot {
-    /// Ring-malleable VRF transcript
-    ///
-    /// We caution that ring malleable VRF inputs could become insecure
-    /// when the same ring contains related keys, like blockchain wallets
-    /// produce via "soft" HDKD.  
-    /// We strongly suggest some session key abstraction in which servers
-    /// make unrelated VRF keys, which users' account keys then certify.
-    ///
-    /// In this, we need the ring to be fixed protocol wide in advance
-    /// because if users choose their ring then they enjoy potentially 
-    /// unlimited VRF output choices too.  If you do this then your VRF
-    /// reduces to proof-of-work, making it worthless.
-    /// Use `Malleable` instead if you must choice over the ring.  
-    fn add_malleability<T: SigningTranscript>(&self, t: &mut T) {
-    {
-        t.commit_bytes(b"vrf-nm-ar", self.0.to_repr().as_ref());
-    }
-}
-*/
-
-
 /// VRF input, consisting of an elliptic curve point.  
 ///
-/// Always created locally from a `SigningTranscript` using the
-/// `VrfMalleability` trait, which makes developers acknoledge their
-/// malleability choice.
-///
-/// Not necessarily in the prime order subgroup.
+/// Always created locally, either by hash-to-cuve or ocasionally
+/// some base point, never sent over the wire nor deserialized.
+/// 
+/// `VrfInput` should always be consructed inside the prime order
+/// subgroup, as otherwise risks leaking secret key material.
+/// 
+/// We do not enforce that key material be hashed in hash-to-curve,
+/// so our VRF pre-outputs and signatures reveal VRF outputs for
+/// algebraically related secret keys.  We need this for ring VRFs
+/// but this makes insecure the soft derivations in hierarchical
+/// key derivation (HDKD) schemes.
+/// 
+/// As a defense in depth, we suggest thin VRF usages hash their
+/// public, given some broken applications might do soft derivations
+/// anyways.
 #[derive(Debug,Clone,CanonicalSerialize)] // CanonicalDeserialize, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
 pub struct VrfInput<C: AffineRepr>(pub(crate) C);
 
@@ -112,16 +51,13 @@ impl<C: AffineRepr> VrfInput<C> {
     /// Create a new VRF input from a `Transcript`.
     /// 
     /// As the arkworks hash-to-curve infrastructure looks complex,
-    /// we employ arkworks' simpler `UniformRand` here, which uses
+    /// we support arkworks' simpler `UniformRand` here, which uses
     /// shitty try and increment.  We strongly recommend you construct
-    /// `VrfInput`s directly using a better hash-to-curve.
+    /// `VrfInput`s directly using a better hash-to-curve though.
     /// 
     /// TODO: Ask Syed to use the correct hash-to-curve
     #[inline(always)]
-    pub fn from_transcript<T,M>(mut t: T, m: &M) -> Self
-    where T: SigningTranscript, M: VrfMalleability+?Sized
-    {
-        m.add_malleability(&mut t);
+    pub fn from_transcript<T: SigningTranscript>(mut t: T) -> Self {
         let p: <C as AffineRepr>::Group = t.challenge(b"vrf-input");
         VrfInput( p.into_affine() )
     }
@@ -151,10 +87,10 @@ impl<F: Flavor> SecretKey<F> {
     /// we employ arkworks' simpler `UniformRand` here, which uses
     /// shitty try and increment.  We strongly recommend you use a
     /// better hash-to-curve manually.
-    pub fn vrf_inout_from_transcript<T,M>(&self, t: T, m: &M) -> VrfInOut<<F as Flavor>::PreOutAffine>
-    where T: SigningTranscript, M: VrfMalleability+?Sized
+    pub fn vrf_inout_from_transcript<T>(&self, t: T) -> VrfInOut<<F as Flavor>::PreOutAffine>
+    where T: SigningTranscript,
     {
-        let input = VrfInput::from_transcript(t,m);
+        let input = VrfInput::from_transcript(t);
         self.vrf_inout(input)
     }
 }
@@ -172,10 +108,8 @@ impl<C: AffineRepr> VrfPreOut<C> {
     /// we employ arkworks' simpler `UniformRand` here, which uses
     /// shitty try and increment.  We strongly recommend you use a
     /// better hash-to-curve manually.
-    pub fn attach_input<T,M>(&self, malleability: &M, t: T) -> VrfInOut<C>
-    where T: SigningTranscript, M: VrfMalleability
-    {
-        let input = VrfInput::from_transcript(t, malleability);
+    pub fn attach_input<T: SigningTranscript>(&self, t: T) -> VrfInOut<C> {
+        let input = VrfInput::from_transcript(t);
         VrfInOut { input, preoutput: self.clone() }
     }
 }
