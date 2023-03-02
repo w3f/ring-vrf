@@ -101,3 +101,13 @@ impl<P: Flavor> Valid for Signature<F> {
 }
 */
 
+/// Non-batchable signature, resembling EC VRF
+#[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
+pub struct NonBatchableSignature<F: Flavor> 
+// where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
+{
+    pub(crate) compk: <F as InnerFlavor>::KeyCommitment,
+    pub(crate) s: <F as InnerFlavor>::Scalars,
+    pub(crate) c: <F as Flavor>::ScalarField,
+}
+

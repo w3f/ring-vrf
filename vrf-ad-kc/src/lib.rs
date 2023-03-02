@@ -47,6 +47,9 @@ pub use thin::{ThinVrf};
 mod pedersen;
 pub use pedersen::{PedersenVrf};
 
+#[cfg(test)]
+mod tests;
+
 
 /// Any cofactor of this size or smaller gets treated as small,
 /// resulting in only doing on-curve checks, not full subgroup

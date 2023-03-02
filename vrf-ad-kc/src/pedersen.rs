@@ -17,7 +17,7 @@ use zeroize::Zeroize;
 
 use crate::{
     SigningTranscript,
-    flavor::{Flavor, InnerFlavor, Witness, Signature},
+    flavor::{Flavor, InnerFlavor, Witness, Signature, NonBatchableSignature},
     keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut},
@@ -198,10 +198,13 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     }
 
     /// Sign Pedersen VRF signature
+    /// 
+    /// We create the secret blinding unless the user supplies one.
     pub fn sign_pedersen_vrf<T,BT,R>(
         &self,
         mut t: BT,
         ios: &[VrfInOut<H>],
+        secret_blinding: Option<SecretBlinding<K,B>>,
         rng: &mut R
     ) -> (Signature<PedersenVrf<K,H,B>>, SecretBlinding<K,B>)
     where T: SigningTranscript+Clone, BT: BorrowMut<T>, R: RngCore+CryptoRng
@@ -210,33 +213,47 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         let io = vrf::vrfs_merge(t, ios);
 
         // Allow derandomization by constructing secret_blinding and witness as late as possible.
-        let secret_blinding = self.new_secret_blinding(t,rng);
+        let secret_blinding = secret_blinding.unwrap_or_else( || self.new_secret_blinding(t,rng) );
         let compk = self.flavor.compute_blinded_publickey(self.as_publickey(), &secret_blinding);
         t.append(b"KeyCommitment",&compk);
 
         let w = self.new_pedersen_witness(t,&io.input,rng);
-        ( w.sign_final(t,&secret_blinding,self,compk), secret_blinding )
+        let signature = w.sign_final(t,&secret_blinding,self,compk).0;
+        ( signature, secret_blinding )
     }
 
-    /// Sign Pedersen VRF signature, wtih a user supplied secret blinding.
-    pub fn sign_pedersen_vrf_with_secret_blinding<T,BT,R>(
+    /// Sign a non-batchable Pedersen VRF signature
+    /// 
+    /// Non-batchable Pedersen VRF signatures resemble EC VRF,
+    /// especially if `B=1`, except they contain the public key.
+    /// We suggest thin VRF instead though for the EC VRF case when
+    /// `H=K` and `B=1`.
+    /// 
+    /// We envision non-batchable VRF signatures being useful for
+    /// proofs that public keys agree aross curves match, so when
+    /// `H != K` but `B=1`.
+    /// 
+    /// We create the secret blinding unless the user supplies one.
+    pub fn sign_non_batchable_vrf<T,BT,R>(
         &self,
         mut t: BT,
         ios: &[VrfInOut<H>],
-        secret_blinding: SecretBlinding<K,B>,
+        secret_blinding: Option<SecretBlinding<K,B>>,
         rng: &mut R
-    ) -> Signature<PedersenVrf<K,H,B>>
+    ) -> (NonBatchableSignature<PedersenVrf<K,H,B>>, SecretBlinding<K,B>)
     where T: SigningTranscript+Clone, BT: BorrowMut<T>, R: RngCore+CryptoRng
     {
         let t = t.borrow_mut();
         let io = vrf::vrfs_merge(t, ios);
 
         // Allow derandomization by constructing secret_blinding and witness as late as possible.
+        let secret_blinding = secret_blinding.unwrap_or_else( || self.new_secret_blinding(t,rng) );
         let compk = self.flavor.compute_blinded_publickey(self.as_publickey(), &secret_blinding);
         t.append(b"KeyCommitment",&compk);
 
-        self.new_pedersen_witness(t,&io.input,rng)
-        .sign_final(t,&secret_blinding,self,compk)
+        let w = self.new_pedersen_witness(t,&io.input,rng);
+        let signature = w.sign_final(t,&secret_blinding,self,compk).1;
+        ( signature, secret_blinding )
     }
 }
 
@@ -253,7 +270,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         secret_blindings: &SecretBlinding<K,B>,
         secret: &SecretKey<PedersenVrf<K,H,B>>,
         compk: KeyCommitment<K>,
-    ) -> Signature<PedersenVrf<K,H,B>> {
+    ) -> (Signature<PedersenVrf<K,H,B>>,NonBatchableSignature<PedersenVrf<K,H,B>>) {
         let Witness { r, k } = self;
         t.append(b"Witness", &r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge");
@@ -266,7 +283,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
             blindings: blindings.into_inner().unwrap(),
         };
         // k.zeroize();
-        Signature { compk, r, s }
+        (Signature { compk: compk.clone(), r, s: s.clone() }, NonBatchableSignature { compk, c, s })
     }
 }
 
@@ -309,6 +326,42 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
             return Err(SignatureError::Invalid);
         }
         Ok(ios)
+    }
+
+    /// Verify Pedersen VRF signature 
+    pub fn verify_non_batchable_pedersen_vrf<'a,T,BT>(
+        &self,
+        mut t: BT,
+        ios: &'a [VrfInOut<H>],
+        signature: &NonBatchableSignature<PedersenVrf<K,H,B>>,
+    ) -> SignatureResult<&'a [VrfInOut<H>]>
+    where T: SigningTranscript+Clone, BT: BorrowMut<T>
+    {
+        let t = t.borrow_mut();
+        let io = vrf::vrfs_merge(t, ios);
+        t.append(b"KeyCommitment",&signature.compk);
+
+        // Recompute Witness, but cofactors not a concern this way..
+        // TODO: Use an MSM here
+        let preoutish = io.preoutput.0 * signature.c - io.input.0 * signature.s.keying;
+        // TODO: Try an MSM here
+        let mut keyish = signature.compk.0 * signature.c;
+        let mut keyish = self.keying_base.mul(signature.s.keying);
+        for i in 0..B {
+            keyish += self.blinding_bases[i].mul(signature.s.blindings[i]);
+        }
+        let r: Affines <K,H> = Affines {
+            keyish: keyish.into_affine(),
+            preoutish: preoutish.into_affine(),
+        };
+
+        t.append(b"Witness", &r);
+        let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge");
+        if c == signature.c {
+            Ok(ios)
+        } else {
+            return Err(SignatureError::Invalid);
+        }
     }
 }
 
