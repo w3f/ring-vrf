@@ -343,13 +343,13 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 
         // Recompute Witness, but cofactors not a concern this way..
         // TODO: Use an MSM here
-        let preoutish = io.preoutput.0 * signature.c - io.input.0 * signature.s.keying;
+        let preoutish = io.input.0 * signature.s.keying - io.preoutput.0 * signature.c;
         // TODO: Try an MSM here
-        let mut keyish = signature.compk.0 * signature.c;
         let mut keyish = self.keying_base.mul(signature.s.keying);
         for i in 0..B {
             keyish += self.blinding_bases[i].mul(signature.s.blindings[i]);
         }
+        keyish -= signature.compk.0 * signature.c;
         let r: Affines <K,H> = Affines {
             keyish: keyish.into_affine(),
             preoutish: preoutish.into_affine(),
