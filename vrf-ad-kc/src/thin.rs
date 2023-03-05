@@ -68,13 +68,13 @@ impl<C: AffineRepr> ThinVrf<C> {
 
 // --- Sign --- //
 
-impl<C: AffineRepr> SecretKey<C> {
+impl<K: AffineRepr> SecretKey<K> {
     pub(crate) fn new_thin_witness<T,R>(
-        &self, t: &T, input: &VrfInput<C>, rng: &mut R
-    ) -> Witness<ThinVrf<C>>
+        &self, t: &T, input: &VrfInput<K>, rng: &mut R
+    ) -> Witness<ThinVrf<K>>
     where T: SigningTranscript, R: RngCore+CryptoRng
     {
-        let k: [<C as AffineRepr>::ScalarField; 1]
+        let k: [<K as AffineRepr>::ScalarField; 1]
          = t.witnesses(b"MakeWitness", &[&self.nonce_seed], rng);
         let k = k[0];
         let r = input.0.mul(k).into_affine();
@@ -85,12 +85,12 @@ impl<C: AffineRepr> SecretKey<C> {
     /// 
     /// If `ios = &[]` this reduces to a Schnorr signature.
     pub fn sign_thin_vrf<T,B,R>(
-        &self, mut t: B, ios: &[VrfInOut<C>], rng: &mut R
-    ) -> Signature<ThinVrf<C>>
+        &self, mut t: B, ios: &[VrfInOut<K>], rng: &mut R
+    ) -> Signature<ThinVrf<K>>
     where T: SigningTranscript+Clone, B: BorrowMut<T>, R: RngCore+CryptoRng
     {
         let t = t.borrow_mut();
-        let io = self.flavor.thin_vrf_merge(t, self.as_publickey(), ios);
+        let io = self.thin.thin_vrf_merge(t, self.as_publickey(), ios);
         // Allow derandomization by constructing witness late.
         self.new_thin_witness(t,&io.input,rng).sign_final(t,self)
     }
@@ -127,11 +127,10 @@ impl<C: AffineRepr> Valid for Signature<ThinVrf<C>> {
 
 // --- Verify --- //
 
-impl<C: AffineRepr> ThinVrf<C> {
-    pub(crate) fn make_public(&self, secret: &<C as AffineRepr>::ScalarField) -> PublicKey<C> {
+impl<K: AffineRepr> ThinVrf<K> {
+    pub(crate) fn make_public(&self, secret: &<K as AffineRepr>::ScalarField) -> PublicKey<K> {
         PublicKey( (*self.keying_base() * secret).into_affine() )
     }
-    
 
     /// Verify thin VRF signature 
     /// 
@@ -139,10 +138,10 @@ impl<C: AffineRepr> ThinVrf<C> {
     pub fn verify_thin_vrf<'a,T,B>(
         &self,
         mut t: B,
-        public: &PublicKey<C>,
-        ios: &'a [VrfInOut<C>],
-        signature: &Signature<ThinVrf<C>>,
-    ) -> SignatureResult<&'a [VrfInOut<C>]>
+        public: &PublicKey<K>,
+        ios: &'a [VrfInOut<K>],
+        signature: &Signature<ThinVrf<K>>,
+    ) -> SignatureResult<&'a [VrfInOut<K>]>
     where T: SigningTranscript+Clone, B: BorrowMut<T>
     {
         let t = t.borrow_mut();
@@ -154,7 +153,7 @@ impl<C: AffineRepr> ThinVrf<C> {
 
         // verify_final
         t.append(b"Witness", &signature.r);
-        let c: <C as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge");
+        let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge");
 
         let lhs = io.input.0.mul(signature.s);
         let rhs = signature.r.into_group() + io.preoutput.0.mul(c);

@@ -182,7 +182,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     where T: SigningTranscript, R: RngCore+CryptoRng
     {
         let flavor = self;
-        debug_assert_eq!(flavor.keying_base(), secret.flavor.keying_base());
+        debug_assert_eq!(flavor.keying_base(), secret.thin.keying_base());
 
         // We'll need two calls here until const generics lands 
          let keying: [K::ScalarField; 1]

@@ -36,9 +36,14 @@ pub const NONCE_SEED_LENGTH: usize = 32;
 /// Seceret key consisting of a scalar and a secret nonce seed.
 #[derive(Clone)] // Debug
 pub struct SecretKey<K: AffineRepr> {
-    /// VRF signature flavor which specifies base points
-    /// TODO: Can we make this be &'static F somehow?
-    pub(crate) flavor: ThinVrf<K>,
+    /// Specify keying base point by a Thin VRF flavor
+    /// 
+    /// Remark:  We'd have slightly nicer flow in the signing methods
+    /// of `PedersenVrf` if we made this a polymorphic `F: Flavor`.
+    /// We cannot easily be polymorphic over borrowing inside
+    /// structs though, so doing this breaks signing `ThinVrf`s
+    /// and `PedersenVrf`s using the same secret key.
+    pub(crate) thin: ThinVrf<K>,
 
     /// Secret key represented as a scalar.
     pub(crate) key: <K as AffineRepr>::ScalarField,
@@ -98,27 +103,27 @@ impl<K: AffineRepr> SecretKey<K> {
     /// Generate an "unbiased" `SecretKey` directly from a user
     /// suplied `csprng` uniformly, bypassing the `MiniSecretKey`
     /// layer.
-    pub fn from_rng<R>(flavor: ThinVrf<K>, rng: &mut R) -> Self
+    pub fn from_rng<R>(thin: ThinVrf<K>, rng: &mut R) -> Self
     where R: CryptoRng + RngCore,
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
         rng.fill_bytes(&mut nonce_seed);
         let key = <<K as AffineRepr>::ScalarField as UniformRand>::rand(rng);
-        let public = flavor.make_public(&key);
-        SecretKey { flavor, key, nonce_seed, public, }
+        let public = thin.make_public(&key);
+        SecretKey { thin, key, nonce_seed, public, }
     }
 
     /// Generate a `SecretKey` from a 32 byte seed.
-    pub fn from_seed(flavor: ThinVrf<K>, seed: [u8; 32]) -> Self {
+    pub fn from_seed(thin: ThinVrf<K>, seed: [u8; 32]) -> Self {
         use rand_core::SeedableRng;
         let mut rng = ::rand_chacha::ChaChaRng::from_seed(seed);
-        SecretKey::from_rng(flavor, &mut rng)
+        SecretKey::from_rng(thin, &mut rng)
     }
 
     /// Generate a `SecretKey` with the default randomness source.
     #[cfg(feature = "getrandom")]
-    pub fn new(flavor: ThinVrf<K>) -> Self {
-        SecretKey::from_rng(flavor, &mut ::rand_core::OsRng)
+    pub fn new(thin: ThinVrf<K>) -> Self {
+        SecretKey::from_rng(thin, &mut ::rand_core::OsRng)
     }
 
     /// Reference the `PublicKey` corresponding to this `SecretKey`.
@@ -139,12 +144,12 @@ impl<K: AffineRepr> SecretKey<K> {
     }
 
     #[inline]
-    pub fn deserialize<R: Read>(flavor: ThinVrf<K>, mut reader: R) -> Result<Self, SerializationError> {
+    pub fn deserialize<R: Read>(thin: ThinVrf<K>, mut reader: R) -> Result<Self, SerializationError> {
         let key = <K as AffineRepr>::ScalarField::deserialize_compressed(&mut reader) ?;
         let mut nonce_seed = [0u8; 32];
         reader.read_exact(&mut nonce_seed) ?;
-        let public = flavor.make_public(&key);
-        Ok(SecretKey { flavor, key, nonce_seed, public, })
+        let public = thin.make_public(&key);
+        Ok(SecretKey { thin, key, nonce_seed, public, })
     }
 }
 // TODO:  Convert to/from zcash_primitives::redjubjub::PrivateKey
