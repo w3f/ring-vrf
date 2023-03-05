@@ -20,7 +20,6 @@ use rand_core::{RngCore,CryptoRng,SeedableRng}; // OsRng
 
 use crate::{
     SigningTranscript, SecretKey,
-    flavor::{Flavor},
 };  // use super::*;
 
 
@@ -63,19 +62,18 @@ impl<C: AffineRepr> VrfInput<C> {
     }
 }
 
-impl<F: Flavor> SecretKey<F> {
+impl<K: AffineRepr> SecretKey<K> {
     /// Compute VRF pre-output from secret key and input.
-    pub fn vrf_preout(
-        &self, input: &VrfInput<<F as Flavor>::PreOutAffine>
-    ) -> VrfPreOut<<F as Flavor>::PreOutAffine> {
-        let p: <<F as Flavor>::PreOutAffine as AffineRepr>::Group = input.0 * self.key;
+    pub fn vrf_preout<H>(&self, input: &VrfInput<H>) -> VrfPreOut<H> 
+    where H: AffineRepr<ScalarField = K::ScalarField>,
+    {
+        let p: <H as AffineRepr>::Group = input.0 * self.key;
         VrfPreOut( p.into_affine() )
     }
 
     /// Compute VRF pre-output paired with input from secret key and input point.
-    pub fn vrf_inout(
-        &self, input: VrfInput<<F as Flavor>::PreOutAffine>
-    ) -> VrfInOut<<F as Flavor>::PreOutAffine>
+    pub fn vrf_inout<H>(&self, input: VrfInput<H>) -> VrfInOut<H>
+    where H: AffineRepr<ScalarField = K::ScalarField>,
     {
         let preoutput = self.vrf_preout(&input);
         VrfInOut { input, preoutput }
@@ -87,10 +85,10 @@ impl<F: Flavor> SecretKey<F> {
     /// we employ arkworks' simpler `UniformRand` here, which uses
     /// shitty try and increment.  We strongly recommend you use a
     /// better hash-to-curve manually.
-    pub fn vrf_inout_from_transcript<T>(&self, t: T) -> VrfInOut<<F as Flavor>::PreOutAffine>
-    where T: SigningTranscript,
+    pub fn vrf_inout_from_transcript<T,H>(&self, t: T) -> VrfInOut<H>
+    where T: SigningTranscript, H: AffineRepr<ScalarField = K::ScalarField>,
     {
-        let input = VrfInput::from_transcript(t);
+        let input: VrfInput<H> = VrfInput::from_transcript(t);
         self.vrf_inout(input)
     }
 }

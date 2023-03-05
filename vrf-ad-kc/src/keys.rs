@@ -5,7 +5,7 @@
 // use core::fmt::{Debug};
 
 use ark_std::{UniformRand, io::{Read, Write}};
-use ark_ec::{AffineRepr, CurveGroup};
+use ark_ec::{AffineRepr}; // CurveGroup
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 
 // use subtle::{Choice,ConstantTimeEq};
@@ -13,20 +13,12 @@ use rand_core::{RngCore,CryptoRng};
 
 use zeroize::Zeroize;
 
-use crate::flavor::{Flavor};
+use crate::{ThinVrf};
 
 
 /// Public key
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, CanonicalSerialize,CanonicalDeserialize
 pub struct PublicKey<C: AffineRepr>(pub(crate) C);
- 
-fn new_public<F: Flavor>(
-    flavor: &F,
-    secret: <<F as Flavor>::KeyAffine as AffineRepr>::ScalarField
-) -> PublicKey<<F as Flavor>::KeyAffine>
-{
-    PublicKey( (*flavor.keying_base() * secret).into_affine() )
-}
 
 impl<C: AffineRepr> PartialEq for PublicKey<C> {
     fn eq(&self, other: &PublicKey<C>) -> bool {
@@ -43,13 +35,13 @@ pub const NONCE_SEED_LENGTH: usize = 32;
 
 /// Seceret key consisting of a scalar and a secret nonce seed.
 #[derive(Clone)] // Debug
-pub struct SecretKey<F: Flavor> {
+pub struct SecretKey<K: AffineRepr> {
     /// VRF signature flavor which specifies base points
     /// TODO: Can we make this be &'static F somehow?
-    pub(crate) flavor: F,
+    pub(crate) flavor: ThinVrf<K>,
 
     /// Secret key represented as a scalar.
-    pub(crate) key: <<F as Flavor>::KeyAffine as AffineRepr>::ScalarField,
+    pub(crate) key: <K as AffineRepr>::ScalarField,
 
     /// Seed for deriving the nonces used in Schnorr proofs.
     ///
@@ -64,37 +56,37 @@ pub struct SecretKey<F: Flavor> {
     ///
     /// TODO: Replace this with serialized byte representation like [u8; 32]
     /// TODO: Compjute lazilty using usafe code and std::sync::Once
-    public: PublicKey<<F as Flavor>::KeyAffine>,
+    public: PublicKey<K>,
 }
 
 // <F as Flavor>::KeyAffine as AffineRepr
 
 // serde_boilerplate!(SecretKey);
 
-impl<F: Flavor> Zeroize for SecretKey<F> {
+impl<K: AffineRepr> Zeroize for SecretKey<K> {
     fn zeroize(&mut self) {
         self.key.zeroize();
         self.nonce_seed.zeroize();
     }
 }
-impl<F: Flavor> Drop for SecretKey<F> {
+impl<K: AffineRepr> Drop for SecretKey<K> {
     fn drop(&mut self) { self.zeroize() }
 }
 
 /*
-impl<F: Flavor> Debug for SecretKey<F> {
+impl<K: AffineRepr> Debug for SecretKey<K> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         write!(f, "SecretKey {{ key: {:?} nonce: {:?} }}", &self.key, &self.nonce)
     }
 }
 
-impl<F: Flavor> Eq for SecretKey<F> {}
-impl<F: Flavor> PartialEq for SecretKey<F> {
+impl<K: AffineRepr> Eq for SecretKey<K> {}
+impl<K: AffineRepr> PartialEq for SecretKey<K> {
     fn eq(&self, other: &Self) -> bool {
         self.ct_eq(other).unwrap_u8() == 1u8
     }
 }
-impl<F: Flavor> ConstantTimeEq for SecretKey<F> {
+impl<K: AffineRepr> ConstantTimeEq for SecretKey<K> {
     fn ct_eq(&self, other: &Self) -> Choice {
         self.key.ct_eq(&other.key)
     }
@@ -102,22 +94,22 @@ impl<F: Flavor> ConstantTimeEq for SecretKey<F> {
 */
 
 
-impl<F: Flavor> SecretKey<F> {
+impl<K: AffineRepr> SecretKey<K> {
     /// Generate an "unbiased" `SecretKey` directly from a user
     /// suplied `csprng` uniformly, bypassing the `MiniSecretKey`
     /// layer.
-    pub fn from_rng<R>(flavor: F, rng: &mut R) -> Self
+    pub fn from_rng<R>(flavor: ThinVrf<K>, rng: &mut R) -> Self
     where R: CryptoRng + RngCore,
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
         rng.fill_bytes(&mut nonce_seed);
-        let key = <<<F as Flavor>::KeyAffine as AffineRepr>::ScalarField as UniformRand>::rand(rng);
-        let public = new_public(&flavor,key);
+        let key = <<K as AffineRepr>::ScalarField as UniformRand>::rand(rng);
+        let public = flavor.make_public(&key);
         SecretKey { flavor, key, nonce_seed, public, }
     }
 
     /// Generate a `SecretKey` from a 32 byte seed.
-    pub fn from_seed(flavor: F, seed: [u8; 32]) -> Self {
+    pub fn from_seed(flavor: ThinVrf<K>, seed: [u8; 32]) -> Self {
         use rand_core::SeedableRng;
         let mut rng = ::rand_chacha::ChaChaRng::from_seed(seed);
         SecretKey::from_rng(flavor, &mut rng)
@@ -125,15 +117,15 @@ impl<F: Flavor> SecretKey<F> {
 
     /// Generate a `SecretKey` with the default randomness source.
     #[cfg(feature = "getrandom")]
-    pub fn new(flavor: F) -> Self {
+    pub fn new(flavor: ThinVrf<K>) -> Self {
         SecretKey::from_rng(flavor, &mut ::rand_core::OsRng)
     }
 
     /// Reference the `PublicKey` corresponding to this `SecretKey`.
-    pub fn as_publickey(&self) -> &PublicKey<<F as Flavor>::KeyAffine> { &self.public }
+    pub fn as_publickey(&self) -> &PublicKey<K> { &self.public }
 
     /// Clone the `PublicKey` corresponding to this `SecretKey`.
-    pub fn to_public(&self) -> PublicKey<<F as Flavor>::KeyAffine> { self.public.clone() }
+    pub fn to_public(&self) -> PublicKey<K> { self.public.clone() }
 
     #[inline]
     pub fn serialize<W: Write>(&self, mut writer: W) -> Result<(), SerializationError> {
@@ -147,11 +139,11 @@ impl<F: Flavor> SecretKey<F> {
     }
 
     #[inline]
-    pub fn deserialize<R: Read>(flavor: F, mut reader: R) -> Result<Self, SerializationError> {
-        let key = <<F as Flavor>::KeyAffine as AffineRepr>::ScalarField::deserialize_compressed(&mut reader) ?;
+    pub fn deserialize<R: Read>(flavor: ThinVrf<K>, mut reader: R) -> Result<Self, SerializationError> {
+        let key = <K as AffineRepr>::ScalarField::deserialize_compressed(&mut reader) ?;
         let mut nonce_seed = [0u8; 32];
         reader.read_exact(&mut nonce_seed) ?;
-        let public = new_public(&flavor,key);
+        let public = flavor.make_public(&key);
         Ok(SecretKey { flavor, key, nonce_seed, public, })
     }
 }

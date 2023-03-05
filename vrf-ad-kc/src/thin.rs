@@ -68,7 +68,7 @@ impl<C: AffineRepr> ThinVrf<C> {
 
 // --- Sign --- //
 
-impl<C: AffineRepr> SecretKey<ThinVrf<C>> {
+impl<C: AffineRepr> SecretKey<C> {
     pub(crate) fn new_thin_witness<T,R>(
         &self, t: &T, input: &VrfInput<C>, rng: &mut R
     ) -> Witness<ThinVrf<C>>
@@ -96,16 +96,16 @@ impl<C: AffineRepr> SecretKey<ThinVrf<C>> {
     }
 }
 
-impl<C: AffineRepr> Witness<ThinVrf<C>> {
+impl<K: AffineRepr> Witness<ThinVrf<K>> {
     /// Complete Schnorr-like signature.
     /// 
     /// Assumes we already hashed public key, `VrfInOut`s, etc.
     pub(crate) fn sign_final<T: SigningTranscript>(
-        self, t: &mut T, secret: &SecretKey<ThinVrf<C>>
-    ) -> Signature<ThinVrf<C>> {
+        self, t: &mut T, secret: &SecretKey<K>
+    ) -> Signature<ThinVrf<K>> {
         let Witness { r, k } = self;
         t.append(b"Witness", &r);
-        let c: <C as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge");
+        let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge");
         let s = k + c * secret.key;
         // k.zeroize();
         Signature { compk: (), r, s }
@@ -128,6 +128,11 @@ impl<C: AffineRepr> Valid for Signature<ThinVrf<C>> {
 // --- Verify --- //
 
 impl<C: AffineRepr> ThinVrf<C> {
+    pub(crate) fn make_public(&self, secret: &<C as AffineRepr>::ScalarField) -> PublicKey<C> {
+        PublicKey( (*self.keying_base() * secret).into_affine() )
+    }
+    
+
     /// Verify thin VRF signature 
     /// 
     /// If `ios = &[]` this reduces to a Schnorr signature.
