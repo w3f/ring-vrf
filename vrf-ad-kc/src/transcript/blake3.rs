@@ -109,6 +109,7 @@ impl super::SigningTranscript for Hasher {
         br.update(&randbytes);
 
         ::core::iter::repeat_with(|| <T as UniformRand>::rand(&mut br))
-        .collect::<ArrayVec<T,{N}>>().into_inner().map_err(|_| ()).unwrap()
+        .take(N).collect::<ArrayVec<T,{N}>>()
+        .into_inner().map_err(|_| ()).unwrap()
     }
 }

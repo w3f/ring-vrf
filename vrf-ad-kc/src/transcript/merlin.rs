@@ -71,7 +71,8 @@ impl super::SigningTranscript for Transcript {
         let mut rng = br.finalize(&mut rng);
 
         ::core::iter::repeat_with(|| <T as UniformRand>::rand(&mut rng))
-        .collect::<ArrayVec<T,{N}>>().into_inner().map_err(|_| ()).unwrap()
+        .take(N).collect::<ArrayVec<T,{N}>>()
+        .into_inner().map_err(|_| ()).unwrap()
     }
 }
 

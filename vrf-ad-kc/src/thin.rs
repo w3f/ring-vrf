@@ -138,8 +138,8 @@ impl<K: AffineRepr> ThinVrf<K> {
     pub fn verify_thin_vrf<'a,T,B>(
         &self,
         mut t: B,
-        public: &PublicKey<K>,
         ios: &'a [VrfInOut<K>],
+        public: &PublicKey<K>,
         signature: &Signature<ThinVrf<K>>,
     ) -> SignatureResult<&'a [VrfInOut<K>]>
     where T: SigningTranscript+Clone, B: BorrowMut<T>
