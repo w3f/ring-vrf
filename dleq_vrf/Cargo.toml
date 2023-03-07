@@ -1,9 +1,9 @@
 [package]
-name = "vrf-ad-kc"
-description = "VRF-AC-KC implementations required for Ring VRFs"
+name = "dleq_vrf"
+description = "VRFs from Chaum-Pedersen DLEQ proofs, usable in Ring VRFs"
 authors = ["Sergey Vasilyev <swasilyev@gmail.com>", "Jeff Burdges <jeff@web3.foundation>", "Syed Hosseini <syed@riseup.net>"]
 version = "0.0.1"
-repository = "https://github.com/w3f/ring-vrf/tree/master/vrf-ad-kc"
+repository = "https://github.com/w3f/ring-vrf/tree/master/dleq_vrf"
 edition = "2021"
 license = "MIT/Apache-2.0"
 

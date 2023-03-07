@@ -1,0 +1,9 @@
+[workspace]
+
+members = [
+    "dleq_vrfs",
+    "nugget_bls",
+]
+# "web3sum_ring_vrf",
+
+
