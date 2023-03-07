@@ -51,7 +51,9 @@
 
 use ark_ff::{PrimeField};
 use ark_ec::{AffineRepr};
-use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
+
+use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
+use ark_std::io::{Read,Write};
 
 /// VRF flavors based upon DLEQ proofs: Thin/Schnorr vs Pedersen vs something else.
 /// 
@@ -101,6 +103,20 @@ impl<P: Flavor> Valid for Signature<F> {
 }
 */
 
+impl<F: Flavor> Signature<F> {
+    pub fn size_of_serialized(&self) -> usize {
+        self.compressed_size()
+    }
+
+    pub fn serialize<W: Write>(&self, writer: W) -> Result<(), SerializationError> {
+        self.serialize_compressed(writer)
+    }
+
+    pub fn deserialize<R: Read>(reader: R) -> Result<Self, SerializationError> {
+        Self::deserialize_compressed(reader)
+    }
+}
+
 /// Non-batchable signature, resembling EC VRF
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct NonBatchableSignature<F: Flavor> 
@@ -111,3 +127,16 @@ pub struct NonBatchableSignature<F: Flavor>
     pub(crate) c: <F as Flavor>::ScalarField,
 }
 
+impl<F: Flavor> NonBatchableSignature<F> {
+    pub fn size_of_serialized(&self) -> usize {
+        self.compressed_size()
+    }
+
+    pub fn serialize<W: Write>(&self, writer: W) -> Result<(), SerializationError> {
+        self.serialize_compressed(writer)
+    }
+
+    pub fn deserialize<R: Read>(reader: R) -> Result<Self, SerializationError> {
+        Self::deserialize_compressed(reader)
+    }
+}

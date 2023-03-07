@@ -120,7 +120,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     }
 }
 
-#[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
+#[derive(Clone,CanonicalSerialize,CanonicalDeserialize,PartialEq,Eq)]
 pub struct KeyCommitment<C: AffineRepr>(pub(crate) C);
 
 impl<C: AffineRepr> Zeroize for KeyCommitment<C> {
@@ -182,7 +182,8 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     where T: SigningTranscript, R: RngCore+CryptoRng
     {
         let flavor = self;
-        debug_assert_eq!(flavor.keying_base(), secret.thin.keying_base());
+        assert_eq!(flavor.keying_base(), secret.thin.keying_base(), 
+            "Internal error, incompatable keying basepoints used.");
 
         // We'll need two calls here until const generics lands 
          let keying: [K::ScalarField; 1]
@@ -242,7 +243,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     /// `H != K` but `B=1`.
     /// 
     /// We create the secret blinding unless the user supplies one.
-    pub fn sign_non_batchable_vrf<T,BT,R>(
+    pub fn sign_non_batchable_pedersen_vrf<T,BT,R>(
         &self,
         mut t: BT,
         ios: &[VrfInOut<H>],
