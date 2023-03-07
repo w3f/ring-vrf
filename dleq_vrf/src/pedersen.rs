@@ -10,6 +10,7 @@
 use ark_ff::{PrimeField};
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
+use ark_std::{vec::Vec};
 
 use rand_core::{RngCore,CryptoRng};
 

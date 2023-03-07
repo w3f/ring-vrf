@@ -4,7 +4,7 @@
 
 // use core::fmt::{Debug};
 
-use ark_std::{UniformRand, io::{Read, Write}};
+use ark_std::{UniformRand, vec::Vec, io::{Read, Write}};
 use ark_ec::{AffineRepr}; // CurveGroup
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 

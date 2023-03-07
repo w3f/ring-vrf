@@ -15,6 +15,7 @@
 
 use ark_ec::{AffineRepr,CurveGroup};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
+use ark_std::{vec::Vec};
 
 use rand_core::{RngCore,CryptoRng,SeedableRng}; // OsRng
 
@@ -23,7 +24,7 @@ use crate::{
 };  // use super::*;
 
 
-use std::borrow::{Borrow}; // BorrowMut
+use core::borrow::{Borrow}; // BorrowMut
 
 
 /// VRF input, consisting of an elliptic curve point.  

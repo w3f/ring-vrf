@@ -15,7 +15,7 @@ use merlin::Transcript;
 
 use rand_core::{RngCore,CryptoRng};
 
-use std::borrow::{BorrowMut}; // Borrow
+use core::borrow::{BorrowMut}; // Borrow
 
 
 include!("inc_io.rs");

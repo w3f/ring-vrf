@@ -53,7 +53,8 @@ use ark_ff::{PrimeField};
 use ark_ec::{AffineRepr};
 
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
-use ark_std::io::{Read,Write};
+use ark_std::{vec::Vec, io::{Read,Write}};
+
 
 /// VRF flavors based upon DLEQ proofs: Thin/Schnorr vs Pedersen vs something else.
 /// 

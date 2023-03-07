@@ -1,22 +1,22 @@
 // Copyright (c) 2019-2020 Web 3 Foundation
 
-//! # VRF-AD-KC
-//! 
-//! Implements two elliptic curve Verifiable random functions with
-//! associated data called thin VRF aka `ThinVrf` and the Pedersen VRF
-//! `PedersenVRF`, the second of which supports Pedersen key commitments
-//! for usage in anonymized ring VRFs or group VRFs.
+#![cfg_attr(not(feature = "std"), no_std)]
+#![warn(
+    unused,
+    future_incompatible,
+    nonstandard_style,
+    rust_2018_idioms,
+    rust_2021_compatibility
+)]
+#![allow(clippy::op_ref, clippy::suspicious_op_assign_impl)]
+#![deny(unsafe_code)]
+#![doc = include_str!("../README.md")]
 
 
 // #![feature(associated_type_defaults)]
 // #![feature(array_methods)]
 
 use ark_ec::{AffineRepr, CurveGroup, models::CurveConfig};
-
-extern crate arrayref;
-
-// #[cfg(feature = "serde")]
-// extern crate serde;
 
 
 pub mod error;
@@ -39,7 +39,7 @@ pub use transcript::{SigningTranscript}; // signing_context
 // use merlin::Transcript;
 
 pub mod vrf;
-pub use vrf::{VrfPreOut, VrfInOut}; // signing_context
+pub use vrf::{VrfInput, VrfPreOut, VrfInOut};
 
 mod thin;
 pub use thin::{ThinVrf};

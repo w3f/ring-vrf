@@ -1,7 +1,7 @@
 [workspace]
 
 members = [
-    "dleq_vrfs",
+    "dleq_vrf",
     "nugget_bls",
 ]
 # "web3sum_ring_vrf",
