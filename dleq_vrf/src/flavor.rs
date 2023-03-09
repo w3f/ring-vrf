@@ -88,10 +88,6 @@ pub struct Signature<F: Flavor> {
     pub(crate) r: <F as InnerFlavor>::Affines,
 }
 
-impl<F: Flavor> Signature<F> {
-    pub fn as_key_commitment(&self) -> &<F as InnerFlavor>::KeyCommitment { &self.compk }
-}
-
 /*
 impl<P: Flavor> Valid for Signature<F> {
     fn check(&self) -> Result<(), SerializationError> {
@@ -105,6 +101,8 @@ impl<P: Flavor> Valid for Signature<F> {
 */
 
 impl<F: Flavor> Signature<F> {
+    pub fn as_key_commitment(&self) -> &<F as InnerFlavor>::KeyCommitment { &self.compk }
+
     pub fn size_of_serialized(&self) -> usize {
         self.compressed_size()
     }
@@ -129,6 +127,8 @@ pub struct NonBatchableSignature<F: Flavor>
 }
 
 impl<F: Flavor> NonBatchableSignature<F> {
+    pub fn as_key_commitment(&self) -> &<F as InnerFlavor>::KeyCommitment { &self.compk }
+
     pub fn size_of_serialized(&self) -> usize {
         self.compressed_size()
     }

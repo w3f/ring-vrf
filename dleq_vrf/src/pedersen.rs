@@ -141,6 +141,14 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     }
 }
 
+impl<K,H> NonBatchableSignature<PedersenVrf<K,H,0>>
+where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
+{
+    pub fn to_publickey(&self) -> PublicKey<K> {
+        PublicKey( self.compk.0.clone() )
+    }
+}
+
 
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct Scalars<SF: PrimeField,const B: usize> {

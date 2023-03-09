@@ -16,7 +16,7 @@ pub use error::{SignatureResult, SignatureError};
 
 // InnerFlavor is a sealed trait, so no pub here.
 mod flavor;
-pub use flavor::{Flavor, Signature};
+pub use flavor::{Flavor, Signature, NonBatchableSignature};
 
 pub mod keys; // PublicKeyUnblinding
 pub use keys::{PublicKey, SecretKey};
