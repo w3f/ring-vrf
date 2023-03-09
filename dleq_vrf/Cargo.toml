@@ -15,7 +15,7 @@ arrayref = { version = "0.3", default-features = false }
 rand_core = { version = "0.6", default-features = false }
 rand_chacha = { version = "0.3", default-features = false }
 blake3 = { version = "1.3", default-features = false, optional = true }
-merlin = { version = "3.0", default-features = false, optional = true }
+merlin = { version = "3.0", default-features = false }
 
 ark-std = { version = "0.4", default-features = false }
 ark-ff = { version = "0.4", default-features = false }
@@ -34,8 +34,7 @@ ark-bls12-377 = { version = "0.4", default-features = false, features = [ "curve
 
 
 [features]
-default = ["merlin", "getrandom"] # "std", "rand"
-merlin = ["dep:merlin"]
+default = ["getrandom"] # "std", "rand"
 blake3 = ["dep:blake3"]  # blake3 is much faster than merlin, but our transcript scheme seems suboptimal
 getrandom = ["rand_core/getrandom"]
 

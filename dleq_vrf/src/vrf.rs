@@ -148,6 +148,7 @@ impl<C: AffineRepr> VrfInOut<C> {
     /// construction from Theorem 2 on page 32 in appendex C of
     /// ["Ouroboros Praos: An adaptively-secure, semi-synchronous proof-of-stake blockchain"](https://eprint.iacr.org/2017/573.pdf)
     /// by Bernardo David, Peter Gazi, Aggelos Kiayias, and Alexander Russell.
+    // #[cfg(feature = "merlin")]
     pub fn vrf_output_bytes<B: Default + AsMut<[u8]>>(&self, context: &[u8]) -> B {
         let mut t = ::merlin::Transcript::new(b"VrfOutput");
         t.append(b"context",context);
@@ -162,6 +163,7 @@ impl<C: AffineRepr> VrfInOut<C> {
     /// If you are not the signer then you must verify the VRF before calling this method.
     ///
     /// We expect most users would prefer the less generic `VrfInOut::vrf_output_chacharng` method.
+    // #[cfg(feature = "merlin")]
     pub fn vrf_output_rng<R: SeedableRng>(&self, context: &[u8]) -> R {
         R::from_seed(self.vrf_output_bytes::<R::Seed>(context))
     }
@@ -177,7 +179,7 @@ impl<C: AffineRepr> VrfInOut<C> {
     /// construction from Theorem 2 on page 32 in appendex C of
     /// ["Ouroboros Praos: An adaptively-secure, semi-synchronous proof-of-stake blockchain"](https://eprint.iacr.org/2017/573.pdf)
     /// by Bernardo David, Peter Gazi, Aggelos Kiayias, and Alexander Russell.
-    #[cfg(feature = "rand_chacha")]
+    #[cfg(feature = "rand_chacha")]   // #[cfg(feature = "merlin")]
     pub fn vrf_output_chacharng(&self, context: &[u8]) -> ::rand_chacha::ChaChaRng {
         self.vrf_output_rng::<::rand_chacha::ChaChaRng>(context)
     }

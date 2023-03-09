@@ -28,7 +28,7 @@ use core::borrow::{BorrowMut};
 
 
 /// Pedersen VRF flavor
-#[derive(Clone)]
+#[derive(Debug,Clone)]
 pub struct PedersenVrf<K, H=K, const B: usize=1> 
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
@@ -121,8 +121,8 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     }
 }
 
-#[derive(Clone,CanonicalSerialize,CanonicalDeserialize,PartialEq,Eq)]
-pub struct KeyCommitment<C: AffineRepr>(pub(crate) C);
+#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize,PartialEq,Eq)]
+pub struct KeyCommitment<C: AffineRepr>(pub C);
 
 impl<C: AffineRepr> Zeroize for KeyCommitment<C> {
     fn zeroize(&mut self) {
@@ -133,8 +133,16 @@ impl<C: AffineRepr> Zeroize for KeyCommitment<C> {
 //     fn drop(&mut self) { self.zeroize() }
 // }
 
+impl<K,H> Signature<PedersenVrf<K,H,0>>
+where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
+{
+    pub fn to_publickey(&self) -> PublicKey<K> {
+        PublicKey( self.compk.0.clone() )
+    }
+}
 
-#[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
+
+#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct Scalars<SF: PrimeField,const B: usize> {
     pub(crate) keying:   SF,
     pub(crate) blindings: [SF; B],
@@ -149,7 +157,7 @@ impl<SF: PrimeField,const B: usize> Zeroize for Scalars<SF,B> {
     }
 }
  
-#[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
+#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct Affines<K,H> 
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {

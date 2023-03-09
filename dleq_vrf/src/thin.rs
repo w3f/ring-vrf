@@ -21,7 +21,7 @@ use core::borrow::{Borrow,BorrowMut};
 
 
 /// Thin VRF flavor
-#[derive(Clone)]
+#[derive(Debug,Clone)]
 pub struct ThinVrf<C: AffineRepr> {
     pub keying_base: C,
 }

@@ -19,7 +19,7 @@ use rand_core::{RngCore,CryptoRng};
 #[cfg(feature = "blake3")]
 pub mod blake3;
 
-#[cfg(feature = "merlin")]
+// #[cfg(feature = "merlin")]
 pub mod merlin;
 
 

@@ -68,9 +68,9 @@ pub trait Flavor : InnerFlavor {
 }
 
 pub trait InnerFlavor {
-    type KeyCommitment: Clone + CanonicalSerialize + CanonicalDeserialize;
-    type Scalars: Clone + CanonicalSerialize + CanonicalDeserialize + zeroize::Zeroize;
-    type Affines: Clone + CanonicalSerialize + CanonicalDeserialize;
+    type KeyCommitment: ark_std::fmt::Debug + Clone + CanonicalSerialize + CanonicalDeserialize;
+    type Scalars: ark_std::fmt::Debug + Clone + CanonicalSerialize + CanonicalDeserialize + zeroize::Zeroize;
+    type Affines: ark_std::fmt::Debug + Clone + CanonicalSerialize + CanonicalDeserialize;
 }
 
 /// Secret and public nonce/witness for doing one signature,
@@ -81,7 +81,7 @@ pub(crate) struct Witness<F: Flavor> {
 }
 
 /// Signature
-#[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
+#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct Signature<F: Flavor> {
     pub(crate) compk: <F as InnerFlavor>::KeyCommitment,
     pub(crate) s: <F as InnerFlavor>::Scalars,
@@ -119,7 +119,7 @@ impl<F: Flavor> Signature<F> {
 }
 
 /// Non-batchable signature, resembling EC VRF
-#[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
+#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct NonBatchableSignature<F: Flavor> 
 // where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
