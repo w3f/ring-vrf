@@ -34,7 +34,7 @@ pub const NONCE_SEED_LENGTH: usize = 32;
 
 
 /// Seceret key consisting of a scalar and a secret nonce seed.
-#[derive(Clone)] // Debug
+#[derive(Clone)]
 pub struct SecretKey<K: AffineRepr> {
     /// Specify keying base point by a Thin VRF flavor
     /// 
@@ -63,10 +63,6 @@ pub struct SecretKey<K: AffineRepr> {
     /// TODO: Compjute lazilty using usafe code and std::sync::Once
     public: PublicKey<K>,
 }
-
-// <F as Flavor>::KeyAffine as AffineRepr
-
-// serde_boilerplate!(SecretKey);
 
 impl<K: AffineRepr> Zeroize for SecretKey<K> {
     fn zeroize(&mut self) {
