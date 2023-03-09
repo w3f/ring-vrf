@@ -2,6 +2,8 @@ use merlin::Transcript;
 
 use crate::{SigningTranscript, vrf, Signature};
 
+use ark_std::vec::Vec;
+
 
 type K = ark_bls12_377::G1Affine;
 // type H = ark_bls12_377::G1Affine;

@@ -1,14 +1,6 @@
-// Copyright (c) 2019-2020 Web 3 Foundation
+// Copyright (c) 2022-2023 Web 3 Foundation
 
 #![cfg_attr(not(feature = "std"), no_std)]
-#![warn(
-    unused,
-    future_incompatible,
-    nonstandard_style,
-    rust_2018_idioms,
-    rust_2021_compatibility
-)]
-#![allow(clippy::op_ref, clippy::suspicious_op_assign_impl)]
 #![deny(unsafe_code)]
 #![doc = include_str!("../README.md")]
 
@@ -46,6 +38,9 @@ pub use thin::{ThinVrf};
 
 mod pedersen;
 pub use pedersen::{PedersenVrf};
+
+// #[cfg(feature = "getrandom")]
+// mod musig
 
 #[cfg(test)]
 mod tests;

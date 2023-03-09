@@ -27,9 +27,11 @@ zeroize = { version = "1.0", default-features = false, features = [ "zeroize_der
 # serde = { version = "1.0", default-features = false, optional = true }
 # thiserror = "1.0"
 
+
 [dev-dependencies]
 ark-bls12-377 = { version = "0.4", default-features = false, features = [ "curve" ] }
 # ark-bls12-381 = { version = "0.4", default-features = false, features = [ "curve" ] }
+
 
 [features]
 default = ["merlin", "getrandom"] # "std", "rand"

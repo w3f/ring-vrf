@@ -17,8 +17,8 @@ use crate::{ThinVrf};
 
 
 /// Public key
-#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, CanonicalSerialize,CanonicalDeserialize
-pub struct PublicKey<C: AffineRepr>(pub(crate) C);
+#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, PartialEq, Eq, PartialOrd, Ord, Hash, 
+pub struct PublicKey<C: AffineRepr>(pub C);
 
 impl<C: AffineRepr> PartialEq for PublicKey<C> {
     fn eq(&self, other: &PublicKey<C>) -> bool {

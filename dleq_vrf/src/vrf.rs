@@ -45,7 +45,7 @@ use core::borrow::{Borrow}; // BorrowMut
 /// public, given some broken applications might do soft derivations
 /// anyways.
 #[derive(Debug,Clone,CanonicalSerialize)] // CanonicalDeserialize, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct VrfInput<C: AffineRepr>(pub(crate) C);
+pub struct VrfInput<C: AffineRepr>(pub C);
 
 impl<C: AffineRepr> VrfInput<C> {
     /// Create a new VRF input from a `Transcript`.
@@ -97,7 +97,7 @@ impl<K: AffineRepr> SecretKey<K> {
 
 /// VRF pre-output, possibly unverified.
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
-pub struct VrfPreOut<C: AffineRepr>(pub(crate) C);
+pub struct VrfPreOut<C: AffineRepr>(pub C);
 
 impl<C: AffineRepr> VrfPreOut<C> {
     /// Create `VrfInOut` by attaching to our pre-output the VRF input
