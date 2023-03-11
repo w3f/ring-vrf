@@ -37,6 +37,11 @@ pub trait IntoVrfInput<C: AffineRepr> {
     fn into_vrf_input(self) -> VrfInput<C>;
 }
 
+impl<C: AffineRepr> IntoVrfInput<C> for VrfInput<C> {
+    #[inline(always)]
+    fn into_vrf_input(self) -> VrfInput<C> { self }
+}
+
 impl<'a,T: SigningTranscript,C: AffineRepr> IntoVrfInput<C> for &'a mut T {
     /// Create a new VRF input from a `Transcript`.
     /// 
@@ -82,15 +87,8 @@ impl<K: AffineRepr> SecretKey<K> {
         VrfPreOut( p.into_affine() )
     }
 
-    /// Compute VRF pre-output paired with input from secret key and input point.
-    pub fn vrf_inout_from_point<H>(&self, input: VrfInput<H>) -> VrfInOut<H>
-    where H: AffineRepr<ScalarField = K::ScalarField>,
-    {
-        let preoutput = self.vrf_preout(&input);
-        VrfInOut { input, preoutput }
-    }
-
-    /// Compute VRF pre-output paired with input from secret key and input transcript.
+    /// Compute VRF pre-output paired with input from secret key and
+    /// some VRF input, like a `SigningTranscript` or a `VrfInput`.
     /// 
     /// As the arkworks hash-to-curve infrastructure looks complex,
     /// we employ arkworks' simpler `UniformRand` here, which uses
@@ -99,7 +97,9 @@ impl<K: AffineRepr> SecretKey<K> {
     pub fn vrf_inout<I,H>(&self, input: I) -> VrfInOut<H>
     where I: IntoVrfInput<H>, H: AffineRepr<ScalarField = K::ScalarField>,
     {
-        self.vrf_inout_from_point(input.into_vrf_input())
+        let input = input.into_vrf_input();
+        let preoutput = self.vrf_preout(&input);
+        VrfInOut { input, preoutput }
     }
 }
 
