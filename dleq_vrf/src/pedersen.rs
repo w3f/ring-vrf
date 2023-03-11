@@ -121,7 +121,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     }
 }
 
-#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize,PartialEq,Eq)]
+#[derive(Debug,Clone,PartialEq,Eq,Hash,CanonicalSerialize,CanonicalDeserialize)]
 pub struct KeyCommitment<C: AffineRepr>(pub C);
 
 impl<C: AffineRepr> Zeroize for KeyCommitment<C> {

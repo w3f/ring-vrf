@@ -105,7 +105,7 @@ impl<K: AffineRepr> SecretKey<K> {
 
 
 /// VRF pre-output, possibly unverified.
-#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
+#[derive(Debug,Clone,PartialEq,Eq,CanonicalSerialize,CanonicalDeserialize)] // Copy, Default, PartialOrd, Ord, Hash
 pub struct VrfPreOut<C: AffineRepr>(pub C);
 
 impl<C: AffineRepr> VrfPreOut<C> {
@@ -126,7 +126,7 @@ impl<C: AffineRepr> VrfPreOut<C> {
 ///
 /// Internally, we keep both `RistrettoPoint` and `CompressedRistretto`
 /// forms using `RistrettoBoth`.
-#[derive(Debug,Clone,CanonicalSerialize)] // CanonicalDeserialize, PartialEq, Eq, PartialOrd, Ord, Hash
+#[derive(Debug,Clone,CanonicalSerialize)] // CanonicalDeserialize, PartialEq,Eq, PartialOrd, Ord, Hash
 pub struct VrfInOut<C: AffineRepr> {
     /// VRF input point
     pub input: VrfInput<C>,
