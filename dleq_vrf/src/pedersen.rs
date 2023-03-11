@@ -204,9 +204,9 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 
         // We'll need two calls here until const generics lands 
          let keying: [K::ScalarField; 1]
-         = t.witnesses(b"MakeWitness0", &[&secret.nonce_seed], &mut *rng);
+         = t.witnesses(b"WitnessH", &[&secret.nonce_seed], &mut *rng);
          let blindings: [K::ScalarField; B]
-         = t.witnesses(b"MakeWitness0", &[&secret.nonce_seed], rng);
+         = t.witnesses(b"WitnessB", &[&secret.nonce_seed], rng);
         let k = Scalars { keying: keying[0], blindings, };
 
         let mut keyish: <K as AffineRepr>::Group = flavor.keying_base * k.keying;
