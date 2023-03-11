@@ -43,6 +43,10 @@ fn pk_in<P: Pairing>() -> VrfInput<<P as Pairing>::G2Affine> {
 }
 
 impl<P: Pairing> SecretKey<P> {
+    pub fn as_g1_publickey(&self) -> &PublicKeyG1<P> {
+        self.0.as_publickey()
+    }
+    
     /// Generate an "unbiased" `SecretKey` directly from a user
     /// suplied `csprng` uniformly, bypassing the `MiniSecretKey`
     /// layer.
@@ -65,7 +69,7 @@ impl<P: Pairing> SecretKey<P> {
 
     pub fn create_public_cert<T: SigningTranscript+Clone>(&self, t: T) -> PublicKey<P> {
         let pedersen = pedersen_vrf::<P>();
-        let g2_io = self.0.vrf_inout_from_point(pk_in::<P>());
+        let g2_io = self.0.vrf_inout(pk_in::<P>());
         let g2 = g2_io.preoutput.clone();
         let sig = pedersen.sign_non_batchable_pedersen_vrf(t, &[g2_io], None, &self.0, &mut rand_core::OsRng ).0;
         PublicKey { g2, sig, } // g1: self.as_publickey().clone(),
@@ -130,7 +134,7 @@ impl<P: Pairing> PublicKey<P> {
         &self.sig.as_key_commitment().0
     }
 
-    pub fn to_g1_publickey(&self) -> dleq_vrf::PublicKey<<P as Pairing>::G1Affine> {
+    pub fn to_g1_publickey(&self) -> PublicKeyG1<P> {
         self.sig.to_publickey()
     }
 
@@ -198,14 +202,15 @@ impl<P: Pairing> AggregateSignature<P> {
 
         // e(msg + r * g1_gen, agg_pk_g2) == e(agg_sig + r * agg_pk_g1, -g2_gen)
         let g1s: [_; 2] = [
+            msg.into_vrf_input().0 + thin_vrf::<P>().keying_base * r,
             self.agg_sig + agg_pk_g1 * r,
-            msg.into_vrf_input().0 + thin_vrf::<P>().keying_base * r
         ];
         let g2s: [_;2] = [
             prepare_g2::<P>(self.agg_pk_g2),
             g2_minus_generator::<P>(),
         ];
         let r: _ = P::final_exponentiation( P::multi_miller_loop(g1s,g2s) );
+        debug_assert_eq!(r, Some(PairingOutput::<P>::zero()));
         if r == Some(PairingOutput::<P>::zero()) { //zero is the target_field::one !!
             Ok(())
         } else {
@@ -213,11 +218,14 @@ impl<P: Pairing> AggregateSignature<P> {
         }
     }
 
-    pub fn verify_by_pks<'a,M,I>(&self, msg: M, publickeys: I) -> SignatureResult<()>
-    where M: IntoVrfInput<<P as Pairing>::G1Affine>, I: IntoIterator<Item=&'a PublicKeyG1<P>>
+    pub fn verify_by_pks<M,B,I>(&self, msg: M, publickeys: I) -> SignatureResult<()>
+    where
+        M: IntoVrfInput<<P as Pairing>::G1Affine>,
+        B: Borrow<PublicKeyG1<P>>,
+        I: IntoIterator<Item=B>
     {
         let mut agg_pk_g1 = <<P as Pairing>::G1Affine as AffineRepr>::zero().into_group();
-        for pk in publickeys { agg_pk_g1 += pk.0; }
+        for pk in publickeys { agg_pk_g1 += pk.borrow().0; }
         self.verify_by_aggregated(msg, agg_pk_g1.into_affine())
     }
 
