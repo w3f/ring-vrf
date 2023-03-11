@@ -27,6 +27,16 @@ mod tests;
 type ThinVrf<P> = dleq_vrf::ThinVrf<<P as Pairing>::G1Affine>;
 type PedersenVrf<P> = dleq_vrf::PedersenVrf<<P as Pairing>::G1Affine,<P as Pairing>::G2Affine,0>;
 
+
+// TODO:  All of thin_vrf, pedersen_vrf, pk_in, g2_minus_generator and
+// other fns should all become const fn once const traits lands, but
+// right now they hit errors like:
+//  the trait `~const Neg` is not implemented for `<P as Pairing>::G2`
+// 
+// https://github.com/rust-lang/rust/issues/60551 https://github.com/arkworks-rs/algebra/issues/480
+// https://github.com/rust-lang/rust/issues/67792 https://github.com/arkworks-rs/algebra/issues/481
+// https://github.com/arkworks-rs/algebra/issues/485
+
 pub fn thin_vrf<P: Pairing>() -> ThinVrf<P> {
     dleq_vrf::ThinVrf { keying_base: <P as Pairing>::G1Affine::generator(), }
 }
@@ -35,12 +45,14 @@ pub fn pedersen_vrf<P: Pairing>() -> PedersenVrf<P> {
     dleq_vrf::PedersenVrf::new( <P as Pairing>::G1Affine::generator(), [] )
 }
 
-#[derive(Clone)]  // Zeroize
-pub struct SecretKey<P: Pairing>(dleq_vrf::SecretKey<<P as Pairing>::G1Affine>);
-
 fn pk_in<P: Pairing>() -> VrfInput<<P as Pairing>::G2Affine> {
     VrfInput( <P as Pairing>::G2Affine::generator() )
 }
+
+
+#[derive(Clone)]  // Zeroize
+pub struct SecretKey<P: Pairing>(dleq_vrf::SecretKey<<P as Pairing>::G1Affine>);
+
 
 impl<P: Pairing> SecretKey<P> {
     pub fn as_g1_publickey(&self) -> &PublicKeyG1<P> {
@@ -167,10 +179,8 @@ pub struct AggregateSignature<P: Pairing> {
     agg_pk_g2: <P as Pairing>::G2Affine,
 }
 
-// Ideally we'd make this const fn but we've this error right now:
-// the trait `~const Neg` is not implemented for `<P as Pairing>::G2`
 fn g2_minus_generator<P: Pairing>() -> <P as Pairing>::G2Prepared {
-    prepare_g2::<P>(- <P as Pairing>::G2Affine::generator().into_group())
+    prepare_g2::<P>(- pk_in::<P>().0.into_group())
 }
 
 impl<P: Pairing> AggregateSignature<P> {
