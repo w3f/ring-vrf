@@ -33,7 +33,7 @@ fn master() {
     let mk_io = |n| {
         let mut t = Transcript::new(b"VrfIO");
         t.append_u64(b"n",n);
-        sk.vrf_inout_from_transcript(t)
+        sk.vrf_inout(&mut t)
     };
     let ios: [vrf::VrfInOut<K>; 4] = [mk_io(0), mk_io(1), mk_io(2), mk_io(3)];
 

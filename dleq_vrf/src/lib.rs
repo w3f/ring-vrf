@@ -31,7 +31,7 @@ pub use transcript::{SigningTranscript}; // signing_context
 // use merlin::Transcript;
 
 pub mod vrf;
-pub use vrf::{VrfInput, VrfPreOut, VrfInOut};
+pub use vrf::{IntoVrfInput, VrfInput, VrfPreOut, VrfInOut};
 
 mod thin;
 pub use thin::{ThinVrf};

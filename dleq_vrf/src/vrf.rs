@@ -26,8 +26,34 @@ use crate::{
 
 use core::borrow::{Borrow}; // BorrowMut
 
+/// Create VRF input points
+///
+/// You select your own hash-to-curve by implementing this trait
+/// upon your own wrapper type.
+/// 
+/// Instead our method being polymorphic, we impose the type parameter
+/// in the trait because doing so simplifies the type annotations.
+pub trait IntoVrfInput<C: AffineRepr> {
+    fn into_vrf_input(self) -> VrfInput<C>;
+}
 
-/// VRF input, consisting of an elliptic curve point.  
+impl<'a,T: SigningTranscript,C: AffineRepr> IntoVrfInput<C> for &'a mut T {
+    /// Create a new VRF input from a `Transcript`.
+    /// 
+    /// As the arkworks hash-to-curve infrastructure looks complex,
+    /// we support arkworks' simpler `UniformRand` here, which uses
+    /// shitty try and increment.  We strongly recommend you construct
+    /// `VrfInput`s directly using a better hash-to-curve though.
+    /// 
+    /// TODO: Ask Syed to use the correct hash-to-curve
+    #[inline(always)]
+    fn into_vrf_input(self) -> VrfInput<C> {
+        let p: <C as AffineRepr>::Group = self.challenge(b"vrf-input");
+        VrfInput( p.into_affine() )
+    }
+}
+
+/// Actual VRF input, consisting of an elliptic curve point.  
 ///
 /// Always created locally, either by hash-to-cuve or ocasionally
 /// some base point, never sent over the wire nor deserialized.
@@ -47,22 +73,6 @@ use core::borrow::{Borrow}; // BorrowMut
 #[derive(Debug,Clone,CanonicalSerialize)] // CanonicalDeserialize, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
 pub struct VrfInput<C: AffineRepr>(pub C);
 
-impl<C: AffineRepr> VrfInput<C> {
-    /// Create a new VRF input from a `Transcript`.
-    /// 
-    /// As the arkworks hash-to-curve infrastructure looks complex,
-    /// we support arkworks' simpler `UniformRand` here, which uses
-    /// shitty try and increment.  We strongly recommend you construct
-    /// `VrfInput`s directly using a better hash-to-curve though.
-    /// 
-    /// TODO: Ask Syed to use the correct hash-to-curve
-    #[inline(always)]
-    pub fn from_transcript<T: SigningTranscript>(mut t: T) -> Self {
-        let p: <C as AffineRepr>::Group = t.challenge(b"vrf-input");
-        VrfInput( p.into_affine() )
-    }
-}
-
 impl<K: AffineRepr> SecretKey<K> {
     /// Compute VRF pre-output from secret key and input.
     pub fn vrf_preout<H>(&self, input: &VrfInput<H>) -> VrfPreOut<H> 
@@ -73,7 +83,7 @@ impl<K: AffineRepr> SecretKey<K> {
     }
 
     /// Compute VRF pre-output paired with input from secret key and input point.
-    pub fn vrf_inout<H>(&self, input: VrfInput<H>) -> VrfInOut<H>
+    pub fn vrf_inout_from_point<H>(&self, input: VrfInput<H>) -> VrfInOut<H>
     where H: AffineRepr<ScalarField = K::ScalarField>,
     {
         let preoutput = self.vrf_preout(&input);
@@ -86,11 +96,10 @@ impl<K: AffineRepr> SecretKey<K> {
     /// we employ arkworks' simpler `UniformRand` here, which uses
     /// shitty try and increment.  We strongly recommend you use a
     /// better hash-to-curve manually.
-    pub fn vrf_inout_from_transcript<T,H>(&self, t: T) -> VrfInOut<H>
-    where T: SigningTranscript, H: AffineRepr<ScalarField = K::ScalarField>,
+    pub fn vrf_inout<I,H>(&self, input: I) -> VrfInOut<H>
+    where I: IntoVrfInput<H>, H: AffineRepr<ScalarField = K::ScalarField>,
     {
-        let input: VrfInput<H> = VrfInput::from_transcript(t);
-        self.vrf_inout(input)
+        self.vrf_inout_from_point(input.into_vrf_input())
     }
 }
 
@@ -107,9 +116,8 @@ impl<C: AffineRepr> VrfPreOut<C> {
     /// we employ arkworks' simpler `UniformRand` here, which uses
     /// shitty try and increment.  We strongly recommend you use a
     /// better hash-to-curve manually.
-    pub fn attach_input<T: SigningTranscript>(&self, t: T) -> VrfInOut<C> {
-        let input = VrfInput::from_transcript(t);
-        VrfInOut { input, preoutput: self.clone() }
+    pub fn attach_input<I: IntoVrfInput<C>>(&self, input: I) -> VrfInOut<C> {
+        VrfInOut { input: input.into_vrf_input(), preoutput: self.clone() }
     }
 }
 
