@@ -17,7 +17,7 @@ use crate::{ThinVrf};
 
 
 /// Public key
-#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, PartialEq, Eq, PartialOrd, Ord, Hash, 
+#[derive(Debug,Clone,Eq,Hash,CanonicalSerialize,CanonicalDeserialize)] // Copy, PartialOrd, Ord, Hash, 
 pub struct PublicKey<C: AffineRepr>(pub C);
 
 impl<C: AffineRepr> PartialEq for PublicKey<C> {
@@ -25,7 +25,6 @@ impl<C: AffineRepr> PartialEq for PublicKey<C> {
         crate::eq_mod_small_cofactor_affine(&self.0, &other.0)
     }
 }
-impl<C: AffineRepr> Eq for PublicKey<C> {}
 
 /// Arkworks' own serialization traits should be preferred over these.
 impl<C: AffineRepr> PublicKey<C> {
