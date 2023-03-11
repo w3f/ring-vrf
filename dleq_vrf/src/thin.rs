@@ -75,7 +75,7 @@ impl<K: AffineRepr> SecretKey<K> {
     where T: SigningTranscript, R: RngCore+CryptoRng
     {
         let k: [<K as AffineRepr>::ScalarField; 1]
-         = t.witnesses(b"MakeWitness", &[&self.nonce_seed], rng);
+         = t.witnesses(b"WitnessK", &[&self.nonce_seed], rng);
         let k = k[0];
         let r = input.0.mul(k).into_affine();
         Witness { r, k }
