@@ -31,7 +31,7 @@ use core::borrow::{Borrow}; // BorrowMut
 /// You select your own hash-to-curve by implementing this trait
 /// upon your own wrapper type.
 /// 
-/// Instead our method being polymorphic, we impose the type parameter
+/// Instead of our method being polymorphic, we impose the type parameter
 /// in the trait because doing so simplifies the type annotations.
 pub trait IntoVrfInput<C: AffineRepr> {
     fn into_vrf_input(self) -> VrfInput<C>;
