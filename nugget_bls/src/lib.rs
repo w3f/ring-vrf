@@ -4,11 +4,19 @@
 #![deny(unsafe_code)]
 #![doc = include_str!("../README.md")]
 
+use core::borrow::Borrow;
+
+use rand_core::{CryptoRng, RngCore};
+
 use ark_ec::{ AffineRepr, CurveGroup, pairing::{Pairing, prepare_g2, PairingOutput}, };
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};  // SerializationError
 use ark_std::{ Zero, vec::Vec, };   // io::{Read, Write}
 
-pub use dleq_vrf::{SigningTranscript, Flavor, vrf::{VrfInput, VrfPreOut, VrfInOut}};
+pub use dleq_vrf::{
+    SigningTranscript, Flavor,
+    error::{SignatureResult, SignatureError},
+    vrf::{VrfInput, VrfPreOut, VrfInOut},
+};
 
 
 #[cfg(test)]
@@ -42,16 +50,41 @@ fn pk_in<P: Pairing>() -> VrfInput<<P as Pairing>::G2Affine> {
 }
 
 impl<P: Pairing> SecretKey<P> {
-    pub fn create_nugget_public(&self) -> PublicKey<P> {
+    /// Generate an "unbiased" `SecretKey` directly from a user
+    /// suplied `csprng` uniformly, bypassing the `MiniSecretKey`
+    /// layer.
+    pub fn from_rng<R>(rng: &mut R) -> Self
+    where R: CryptoRng + RngCore,
+    {
+        SecretKey( dleq_vrf::SecretKey::from_rng( thin_vrf::<P>(), rng ))
+    }
+
+    /// Generate a `SecretKey` from a 32 byte seed.
+    pub fn from_seed(seed: [u8; 32]) -> Self {
+        SecretKey( dleq_vrf::SecretKey::from_seed( thin_vrf::<P>(), seed ))
+    }
+
+    /// Generate an ephemeral `SecretKey` with system randomness.
+    #[cfg(feature = "getrandom")]
+    pub fn ephemeral() -> Self {
+        SecretKey::from_rng(&mut ::rand_core::OsRng)
+    }
+
+    pub fn create_public_cert<T: SigningTranscript+Clone>(&self, t: T) -> PublicKey<P> {
         let pedersen = pedersen_vrf::<P>();
         let g2_io = self.0.vrf_inout(pk_in::<P>());
         let g2 = g2_io.preoutput.clone();
-        let t = ::merlin::Transcript::new(b"NuggetPublic");
         let sig = pedersen.sign_non_batchable_pedersen_vrf(t, &[g2_io], None, &self.0, &mut rand_core::OsRng ).0;
         PublicKey { g2, sig, } // g1: self.as_publickey().clone(),
     }
 
-    pub fn sign_nugget_bls<T: SigningTranscript+Clone>(&self, t: T, msg: impl Into<BlsMessage<P>>) -> Signature<P> {
+    pub fn create_nugget_public(&self) -> PublicKey<P> {
+        self.create_public_cert(::merlin::Transcript::new(b"NuggetPublic"))
+    }
+
+    pub fn sign_nugget_bls<T,M>(&self, t: T, msg: M) -> Signature<P> 
+    where T: SigningTranscript+Clone, M: Into<BlsMessage<P>>,
+    {
         let msg: BlsMessage<P> = msg.into();
         let io = self.0.vrf_inout(VrfInput( msg.0 ));
         let preoutput = io.preoutput.clone();
@@ -80,29 +113,43 @@ pub struct Signature<P: Pairing> {
     signature: dleq_vrf::Signature<ThinVrf<P>>,
 }    
 
+/// Incomplete public key living only on G1, not useful for aggregation
+/// but useful for end verifiers. 
+pub type PublicKeyG1<P> = dleq_vrf::PublicKey<<P as Pairing>::G1Affine>;
+
 impl<P: Pairing> PublicKey<P> {
     pub fn as_g1_point(&self) -> &<P as Pairing>::G1Affine {
         &self.sig.as_key_commitment().0
     }
 
-    fn to_vrf_publickey(&self) -> dleq_vrf::PublicKey<<P as Pairing>::G1Affine> {
+    pub fn to_g1_publickey(&self) -> dleq_vrf::PublicKey<<P as Pairing>::G1Affine> {
         self.sig.to_publickey()
     }
 
-    pub fn validate_nugget_public(&self) -> bool {
-        let pedersen = pedersen_vrf::<P>();
+    pub fn validate_public_cert<T>(&self, t: T) -> SignatureResult<()> 
+    where T: SigningTranscript+Clone
+    {
         let g2_io = VrfInOut { input: pk_in::<P>(), preoutput: self.g2.clone(), };
-        let t = ::merlin::Transcript::new(b"NuggetPublic");
-        pedersen.verify_non_batchable_pedersen_vrf(t, &[g2_io], &self.sig ).is_ok()
+        pedersen_vrf::<P>()
+        .verify_non_batchable_pedersen_vrf(t, &[g2_io], &self.sig )
+        .map(|_| ())
     }
 
-    pub fn verify_nugget_bls<T: SigningTranscript+Clone>(&self, t: T, msg: impl Into<BlsMessage<P>>, signature: &Signature<P>) -> bool {
+    pub fn validate_nugget_public<T>(&self) -> SignatureResult<()> {
+        self.validate_public_cert(::merlin::Transcript::new(b"NuggetPublic"))
+    }
+
+    pub fn verify_nugget_bls<T,M>(&self, t: T, msg: M, signature: &Signature<P>) -> SignatureResult<()>
+    where T: SigningTranscript+Clone, M: Into<BlsMessage<P>>,
+    {
         let msg: BlsMessage<P> = msg.into();
         let io = VrfInOut {
             input: VrfInput( msg.0 ),
             preoutput: signature.preoutput.clone(),
         };
-        thin_vrf::<P>().verify_thin_vrf(t, &[io], &self.to_vrf_publickey(), &signature.signature ).is_ok()
+        thin_vrf::<P>()
+        .verify_thin_vrf(t, &[io], &self.to_g1_publickey(), &signature.signature )
+        .map(|_| ())
     }
 }
 
@@ -121,19 +168,25 @@ fn g2_minus_generator<P: Pairing>() -> <P as Pairing>::G2Prepared {
 impl<P: Pairing> AggregateSignature<P> {
     /// Aggregate single nugget BLS signatures and their public keys
     /// into one aggregate nugget BLS signature.
-    pub fn create(publickeys: &[PublicKey<P>], signatures: &[Signature<P>]) -> AggregateSignature<P> {
+    pub fn create<BP,BS>(publickeys: &[BP], signatures: &[BS]) -> AggregateSignature<P> 
+    where BP: Borrow<PublicKey<P>>, BS: Borrow<Signature<P>>,
+    {
         assert_eq!( publickeys.len(), signatures.len() );
         let mut agg_sig = <<P as Pairing>::G1Affine as AffineRepr>::zero().into_group();
-        for sig in signatures { agg_sig += sig.preoutput.0; }
+        for sig in signatures { agg_sig += sig.borrow().preoutput.0; }
         let mut agg_pk_g2 = <<P as Pairing>::G2Affine as AffineRepr>::zero().into_group();
-        for pk in publickeys { agg_pk_g2 += pk.g2.0; }
+        for pk in publickeys { agg_pk_g2 += pk.borrow().g2.0; }
         AggregateSignature {
             agg_sig: agg_sig.into_affine(),
             agg_pk_g2: agg_pk_g2.into_affine(),
         }
     }
 
-    pub fn verify(&self, msg: impl Into<BlsMessage<P>>, agg_pk_g1: <P as Pairing>::G1Affine) -> bool {
+    pub fn verify_by_aggregated(
+        &self,
+        msg: impl Into<BlsMessage<P>>,
+        agg_pk_g1: <P as Pairing>::G1Affine
+    ) -> SignatureResult<()> {
         let msg: BlsMessage<P> = msg.into();
         let mut t = ::merlin::Transcript::new(b"NuggetAggregate");
         t.append(b"g2+sig",self);
@@ -149,11 +202,22 @@ impl<P: Pairing> AggregateSignature<P> {
             prepare_g2::<P>(self.agg_pk_g2),
             g2_minus_generator::<P>(),
         ];
-        P::final_exponentiation( P::multi_miller_loop(g1s,g2s) )
-         == Some(PairingOutput::<P>::zero()) //zero is the target_field::one !!
+        let r: _ = P::final_exponentiation( P::multi_miller_loop(g1s,g2s) );
+        if r == Some(PairingOutput::<P>::zero()) { //zero is the target_field::one !!
+            Ok(())
+        } else {
+            Err(SignatureError::Invalid)
+        }
     }
+
+    pub fn verify_by_pks<'a,M,I>(&self, msg: M, publickeys: I) -> SignatureResult<()>
+    where M: Into<BlsMessage<P>>, I: IntoIterator<Item=&'a PublicKeyG1<P>>
+    {
+        let mut agg_pk_g1 = <<P as Pairing>::G1Affine as AffineRepr>::zero().into_group();
+        for pk in publickeys { agg_pk_g1 += pk.0; }
+        self.verify_by_aggregated(msg, agg_pk_g1.into_affine())
+    }
+
+    
 }
 
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
