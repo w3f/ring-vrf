@@ -37,14 +37,17 @@ type PedersenVrf<P> = dleq_vrf::PedersenVrf<<P as Pairing>::G1Affine,<P as Pairi
 // https://github.com/rust-lang/rust/issues/67792 https://github.com/arkworks-rs/algebra/issues/481
 // https://github.com/arkworks-rs/algebra/issues/485
 
+/// Then VRF configured by the G1 generator for signatures.
 pub fn thin_vrf<P: Pairing>() -> ThinVrf<P> {
     dleq_vrf::ThinVrf { keying_base: <P as Pairing>::G1Affine::generator(), }
 }
 
+/// Pedersen VRF configured by the G1 generator for public key certs.
 pub fn pedersen_vrf<P: Pairing>() -> PedersenVrf<P> {
     dleq_vrf::PedersenVrf::new( <P as Pairing>::G1Affine::generator(), [] )
 }
 
+/// VrfInput from the G2 generator for public key certs.
 fn pk_in<P: Pairing>() -> VrfInput<<P as Pairing>::G2Affine> {
     VrfInput( <P as Pairing>::G2Affine::generator() )
 }
@@ -52,7 +55,6 @@ fn pk_in<P: Pairing>() -> VrfInput<<P as Pairing>::G2Affine> {
 
 #[derive(Clone)]  // Zeroize
 pub struct SecretKey<P: Pairing>(dleq_vrf::SecretKey<<P as Pairing>::G1Affine>);
-
 
 impl<P: Pairing> SecretKey<P> {
     pub fn as_g1_publickey(&self) -> &PublicKeyG1<P> {
