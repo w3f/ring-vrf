@@ -27,6 +27,21 @@ impl<C: AffineRepr> PartialEq for PublicKey<C> {
 }
 impl<C: AffineRepr> Eq for PublicKey<C> {}
 
+/// Arkworks' own serialization traits should be preferred over these.
+impl<C: AffineRepr> PublicKey<C> {
+    pub fn size_of_serialized(&self) -> usize {
+        self.compressed_size()
+    }
+
+    pub fn serialize<W: Write>(&self, writer: W) -> Result<(), SerializationError> {
+        self.serialize_compressed(writer)
+    }
+
+    pub fn deserialize<R: Read>(reader: R) -> Result<Self, SerializationError> {
+        Self::deserialize_compressed(reader)
+    }
+}
+
 
 
 /// Length of the nonce seed accompanying the secret key.
@@ -116,9 +131,9 @@ impl<K: AffineRepr> SecretKey<K> {
         SecretKey::from_rng(thin, &mut rng)
     }
 
-    /// Generate a `SecretKey` with the default randomness source.
+    /// Generate an ephemeral `SecretKey` with system randomness.
     #[cfg(feature = "getrandom")]
-    pub fn new(thin: ThinVrf<K>) -> Self {
+    pub fn ephemeral(thin: ThinVrf<K>) -> Self {
         SecretKey::from_rng(thin, &mut ::rand_core::OsRng)
     }
 

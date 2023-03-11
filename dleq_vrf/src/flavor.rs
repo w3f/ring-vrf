@@ -100,6 +100,7 @@ impl<P: Flavor> Valid for Signature<F> {
 }
 */
 
+/// Arkworks' own serialization traits should be preferred over these.
 impl<F: Flavor> Signature<F> {
     pub fn as_key_commitment(&self) -> &<F as InnerFlavor>::KeyCommitment { &self.compk }
 
@@ -126,6 +127,7 @@ pub struct NonBatchableSignature<F: Flavor>
     pub(crate) c: <F as Flavor>::ScalarField,
 }
 
+/// Arkworks' own serialization traits should be preferred over these.
 impl<F: Flavor> NonBatchableSignature<F> {
     pub fn as_key_commitment(&self) -> &<F as InnerFlavor>::KeyCommitment { &self.compk }
 
