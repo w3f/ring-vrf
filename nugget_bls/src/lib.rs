@@ -181,6 +181,10 @@ pub struct AggregateSignature<P: Pairing> {
     agg_pk_g2: <P as Pairing>::G2Affine,
 }
 
+// TODO:  We could precomute g2_minus_generator using lazy_static and
+// the AnyLinkedList trick in nugget_bls/any_tools/src, but const fn
+// should work eventually, so likely overkill now.
+
 fn g2_minus_generator<P: Pairing>() -> <P as Pairing>::G2Prepared {
     prepare_g2::<P>(- pk_in::<P>().0.into_group())
 }
