@@ -15,8 +15,6 @@ type Signature = crate::Signature<P>;
 
 #[test]
 fn single() {
-    let mut rng = &mut rand_core::OsRng;
-
     let sk = SecretKey::ephemeral();
 
     let mut buf = Vec::new();
@@ -42,8 +40,6 @@ fn single() {
 
 #[test]
 fn aggregation() {
-    let mut rng = &mut rand_core::OsRng;
-
     let sks: Vec<SecretKey> = (0..2).map(|_| SecretKey::ephemeral()).collect();
     let pks: Vec<PublicKey> = sks.iter().map(|sk| sk.create_nugget_public()).collect();
     let mut g1pks0 = Vec::new();

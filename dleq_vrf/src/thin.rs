@@ -7,8 +7,6 @@
 
 use ark_ec::{AffineRepr, CurveGroup};
 
-use rand_core::{RngCore,CryptoRng};
-
 use crate::{
     SigningTranscript, 
     flavor::{Flavor, InnerFlavor, Witness, Signature},
@@ -69,13 +67,11 @@ impl<C: AffineRepr> ThinVrf<C> {
 // --- Sign --- //
 
 impl<K: AffineRepr> SecretKey<K> {
-    pub(crate) fn new_thin_witness<T,R>(
-        &self, t: &T, input: &VrfInput<K>, rng: &mut R
-    ) -> Witness<ThinVrf<K>>
-    where T: SigningTranscript, R: RngCore+CryptoRng
+    pub(crate) fn new_thin_witness<T>(&self, t: &T, input: &VrfInput<K>) -> Witness<ThinVrf<K>>
+    where T: SigningTranscript
     {
         let k: [<K as AffineRepr>::ScalarField; 1]
-         = t.witnesses(b"WitnessK", &[&self.nonce_seed], rng);
+         = t.witnesses(b"WitnessK", &[&self.nonce_seed]);
         let k = k[0];
         let r = input.0.mul(k).into_affine();
         Witness { r, k }
@@ -84,15 +80,13 @@ impl<K: AffineRepr> SecretKey<K> {
     /// Sign thin VRF signature
     /// 
     /// If `ios = &[]` this reduces to a Schnorr signature.
-    pub fn sign_thin_vrf<T,B,R>(
-        &self, mut t: B, ios: &[VrfInOut<K>], rng: &mut R
-    ) -> Signature<ThinVrf<K>>
-    where T: SigningTranscript+Clone, B: BorrowMut<T>, R: RngCore+CryptoRng
+    pub fn sign_thin_vrf<T,B>(&self, mut t: B, ios: &[VrfInOut<K>]) -> Signature<ThinVrf<K>>
+    where T: SigningTranscript+Clone, B: BorrowMut<T>
     {
         let t = t.borrow_mut();
         let io = self.thin.thin_vrf_merge(t, self.as_publickey(), ios);
         // Allow derandomization by constructing witness late.
-        self.new_thin_witness(t,&io.input,rng).sign_final(t,self)
+        self.new_thin_witness(t,&io.input).sign_final(t,self)
     }
 }
 

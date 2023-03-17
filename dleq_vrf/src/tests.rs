@@ -26,7 +26,6 @@ pub(crate) fn pedersen_vrf_test_flavor() -> PedersenVrf {
 
 #[test]
 fn master() {
-    let rng = &mut rand_core::OsRng;
     let flavor = pedersen_vrf_test_flavor();
     let sk = SecretKey::ephemeral((*flavor).clone());
 
@@ -38,16 +37,16 @@ fn master() {
     let ios: [vrf::VrfInOut<K>; 4] = [mk_io(0), mk_io(1), mk_io(2), mk_io(3)];
 
     let t = Transcript::new(b"AD1");
-    let sig_thin = sk.sign_thin_vrf(t, &ios[0..2], rng);
+    let sig_thin = sk.sign_thin_vrf(t, &ios[0..2]);
 
     let t = Transcript::new(b"AD2");
     let (sig_pedersen, secret_blinding)
-     = flavor.sign_pedersen_vrf(t, &ios[1..], None, &sk, rng);
+     = flavor.sign_pedersen_vrf(t, &ios[1..], None, &sk);
      assert!( *sig_pedersen.as_key_commitment() == flavor.compute_blinded_publickey(sk.as_publickey(),&secret_blinding) );
 
     let t = Transcript::new(b"AD3");
     let sig_non_batchable
-     = flavor.sign_non_batchable_pedersen_vrf(t, &ios[2..], None, &sk, rng).0;
+     = flavor.sign_non_batchable_pedersen_vrf(t, &ios[2..], None, &sk).0;
     
     let mut buf = Vec::new();
     sig_pedersen.serialize_compressed(&mut buf).unwrap();

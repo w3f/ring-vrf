@@ -85,7 +85,7 @@ impl<P: Pairing> SecretKey<P> {
         let pedersen = pedersen_vrf::<P>();
         let g2_io = self.0.vrf_inout(pk_in::<P>());
         let g2 = g2_io.preoutput.clone();
-        let sig = pedersen.sign_non_batchable_pedersen_vrf(t, &[g2_io], None, &self.0, &mut rand_core::OsRng ).0;
+        let sig = pedersen.sign_non_batchable_pedersen_vrf(t, &[g2_io], None, &self.0).0;
         PublicKey { g2, sig, } // g1: self.as_publickey().clone(),
     }
 
@@ -98,7 +98,7 @@ impl<P: Pairing> SecretKey<P> {
     {
         let io = self.0.vrf_inout(input);
         let preoutput = io.preoutput.clone();
-        let signature = self.0.sign_thin_vrf(t, &[io], &mut rand_core::OsRng);
+        let signature = self.0.sign_thin_vrf(t, &[io]);
         Signature { preoutput, signature }
     }
 }

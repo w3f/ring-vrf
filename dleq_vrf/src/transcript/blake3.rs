@@ -93,7 +93,7 @@ impl super::SigningTranscript for Hasher {
         <T as UniformRand>::rand(&mut t)
     }
 
-    fn witnesses<T, R, const N: usize>(&self, label: &'static [u8], nonce_seeds: &[&[u8]], mut rng: R) -> [T; N]
+    fn witnesses_rng<T, R, const N: usize>(&self, label: &'static [u8], nonce_seeds: &[&[u8]], mut rng: R) -> [T; N]
     where  R: RngCore+CryptoRng, T: UniformRand
     {
         use arrayvec::ArrayVec;

@@ -12,8 +12,6 @@ use ark_ec::{AffineRepr, CurveGroup};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
 use ark_std::{vec::Vec};
 
-use rand_core::{RngCore,CryptoRng};
-
 use zeroize::Zeroize;
 
 use crate::{
@@ -177,11 +175,13 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 // --- Sign --- //
 
 impl<K: AffineRepr> SecretKey<K> {
-    pub fn new_secret_blinding<T,R, const B: usize>(&self, t: &T, rng: &mut R) -> SecretBlinding<K,B>
-    where T: SigningTranscript+Clone, R: RngCore+CryptoRng
+    pub fn new_secret_blinding<T, const B: usize>(&self, t: &T) -> SecretBlinding<K,B>
+    where T: SigningTranscript+Clone
     {
+        // Accessed system randomness using rand_hack(), which helps test vectors,
+        // but clearly insecure otherwise. 
         let secret_blinding: [<K as AffineRepr>::ScalarField; B]
-         = t.witnesses(b"MakeSecretBlinding", &[&self.nonce_seed], rng);
+         = t.witnesses(b"MakeSecretBlinding", &[&self.nonce_seed]);
         SecretBlinding(secret_blinding)
     }
 }
@@ -189,14 +189,13 @@ impl<K: AffineRepr> SecretKey<K> {
 impl<K,H,const B: usize> PedersenVrf<K,H,B>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
-    pub(crate) fn new_pedersen_witness<T,R>(
+    pub(crate) fn new_pedersen_witness<T>(
         &self,
         t: &T,
         input: &VrfInput<H>,
         secret: &SecretKey<K>,
-        rng: &mut R
     ) -> Witness<PedersenVrf<K,H,B>>
-    where T: SigningTranscript, R: RngCore+CryptoRng
+    where T: SigningTranscript,
     {
         let flavor = self;
         assert_eq!(flavor.keying_base(), secret.thin.keying_base(), 
@@ -204,9 +203,9 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 
         // We'll need two calls here until const generics lands 
          let keying: [K::ScalarField; 1]
-         = t.witnesses(b"WitnessH", &[&secret.nonce_seed], &mut *rng);
+         = t.witnesses(b"WitnessH", &[&secret.nonce_seed]);
          let blindings: [K::ScalarField; B]
-         = t.witnesses(b"WitnessB", &[&secret.nonce_seed], rng);
+         = t.witnesses(b"WitnessB", &[&secret.nonce_seed]);
         let k = Scalars { keying: keying[0], blindings, };
 
         let mut keyish: <K as AffineRepr>::Group = flavor.keying_base * k.keying;
@@ -224,26 +223,25 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     /// Sign Pedersen VRF signature
     /// 
     /// We create the secret blinding unless the user supplies one.
-    pub fn sign_pedersen_vrf<T,BT,R>(
+    pub fn sign_pedersen_vrf<T,BT>(
         &self,
         mut t: BT,
         ios: &[VrfInOut<H>],
         secret_blinding: Option<SecretBlinding<K,B>>,
         secret: &SecretKey<K>,
-        rng: &mut R
     ) -> (Signature<PedersenVrf<K,H,B>>, SecretBlinding<K,B>)
-    where T: SigningTranscript+Clone, BT: BorrowMut<T>, R: RngCore+CryptoRng
+    where T: SigningTranscript+Clone, BT: BorrowMut<T>
     {
         let flavor = self;
         let t = t.borrow_mut();
         let io = vrf::vrfs_merge(t, ios);
 
         // Allow derandomization by constructing secret_blinding and witness as late as possible.
-        let secret_blinding = secret_blinding.unwrap_or_else( || secret.new_secret_blinding(t,rng) );
+        let secret_blinding = secret_blinding.unwrap_or_else( || secret.new_secret_blinding(t) );
         let compk = flavor.compute_blinded_publickey(secret.as_publickey(), &secret_blinding);
         t.append(b"KeyCommitment",&compk);
 
-        let w = flavor.new_pedersen_witness(t,&io.input,secret,rng);
+        let w = flavor.new_pedersen_witness(t,&io.input,secret);
         let signature = w.sign_final(t,&secret_blinding,secret,compk).0;
         ( signature, secret_blinding )
     }
@@ -260,26 +258,25 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     /// `H != K` but `B=1`.
     /// 
     /// We create the secret blinding unless the user supplies one.
-    pub fn sign_non_batchable_pedersen_vrf<T,BT,R>(
+    pub fn sign_non_batchable_pedersen_vrf<T,BT>(
         &self,
         mut t: BT,
         ios: &[VrfInOut<H>],
         secret_blinding: Option<SecretBlinding<K,B>>,
         secret: &SecretKey<K>,
-        rng: &mut R
     ) -> (NonBatchableSignature<PedersenVrf<K,H,B>>, SecretBlinding<K,B>)
-    where T: SigningTranscript+Clone, BT: BorrowMut<T>, R: RngCore+CryptoRng
+    where T: SigningTranscript+Clone, BT: BorrowMut<T>
     {
         let flavor = self;
         let t = t.borrow_mut();
         let io = vrf::vrfs_merge(t, ios);
 
         // Allow derandomization by constructing secret_blinding and witness as late as possible.
-        let secret_blinding = secret_blinding.unwrap_or_else( || secret.new_secret_blinding(t,rng) );
+        let secret_blinding = secret_blinding.unwrap_or_else( || secret.new_secret_blinding(t) );
         let compk = flavor.compute_blinded_publickey(secret.as_publickey(), &secret_blinding);
         t.append(b"KeyCommitment",&compk);
 
-        let w = flavor.new_pedersen_witness(t,&io.input,secret,rng);
+        let w = flavor.new_pedersen_witness(t,&io.input,secret);
         let signature = w.sign_final(t,&secret_blinding,secret,compk).1;
         ( signature, secret_blinding )
     }
