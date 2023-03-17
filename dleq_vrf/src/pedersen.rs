@@ -236,11 +236,14 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         let t = t.borrow_mut();
         let io = vrf::vrfs_merge(t, ios);
 
-        // Allow derandomization by constructing secret_blinding and witness as late as possible.
+        // Allow derandomization by constructing secret_blinding and
+        // witness as late as possible.
         let secret_blinding = secret_blinding.unwrap_or_else( || secret.new_secret_blinding(t) );
         let compk = flavor.compute_blinded_publickey(secret.as_publickey(), &secret_blinding);
         t.append(b"KeyCommitment",&compk);
 
+        // In principle our new secret blinding should be derandomizable
+        // if the user supplied none. 
         let w = flavor.new_pedersen_witness(t,&io.input,secret);
         let signature = w.sign_final(t,&secret_blinding,secret,compk).0;
         ( signature, secret_blinding )

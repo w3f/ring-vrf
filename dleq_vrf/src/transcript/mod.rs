@@ -54,50 +54,110 @@ pub trait SigningTranscript {
 
     /// Extract witnesses samplable by Arkworks
     fn witnesses<T: UniformRand, const N: usize>(&self, label: &'static [u8], nonce_seeds: &[&[u8]]) -> [T; N] {
-        self.witnesses_rng(label, nonce_seeds, crate::rand_hack())
+        self.witnesses_rng(label, nonce_seeds, getrandom_or_panic())
     }
 }
 
-// Insecure transcript with zeros replacing system randomness,
-// useful only for test vectors.
-#[cfg(test)]
-pub struct TestVectorTranscript<ST: SigningTranscript>(pub ST);
 
-#[cfg(test)]
-impl<ST: SigningTranscript> SigningTranscript for TestVectorTranscript<ST>
+/// Returns `OsRng` with `getrandom`, or a `CryptoRng` which panics without `getrandom`.
+#[cfg(feature = "getrandom")] 
+pub fn getrandom_or_panic() -> impl RngCore+CryptoRng {
+    rand_core::OsRng
+}
+
+/// Returns `OsRng` with `getrandom`, or a `CryptoRng` which panics without `getrandom`.
+#[cfg(not(feature = "getrandom"))]
+pub fn getrandom_or_panic() -> impl RngCore+CryptoRng {
+    const PRM: &'static str = "Attempted to use functionality that requires system randomness!!";
+
+    // Should we panic when invoked or when used?
+
+    struct PanicRng;
+    impl rand_core::RngCore for PanicRng {
+        fn next_u32(&mut self) -> u32 {  panic!("{}", PRM)  }
+        fn next_u64(&mut self) -> u64 {  panic!("{}", PRM)  }
+        fn fill_bytes(&mut self, _dest: &mut [u8]) {  panic!("{}", PRM)  }
+        fn try_fill_bytes(&mut self, _dest: &mut [u8]) -> Result<(), rand_core::Error> {
+            Err(core::num::NonZeroU32::new(core::u32::MAX).unwrap().into())
+        }
+    }
+    impl rand_core::CryptoRng for PanicRng {}
+
+    PanicRng
+}
+
+
+/// Schnorr signing transcript with the default `OsRng` replaced
+/// by an arbitrary `CryptoRng`.
+/// 
+/// We employ this primarily for test vectors via `attach_test_vector_rng`.
+/// It's also helpful if your platform lacks `getrandom`.  Yet, we cannot
+/// derandomize either user supplied blinding factors in `PedersenVrf` or
+/// multi-signatures, so in production this should always use system randomness.
+pub struct SigningTranscriptWithRng<T,R>
+where T: SigningTranscript, R: RngCore+CryptoRng
+{
+    t: T,
+    rng: core::cell::RefCell<R>,
+}
+
+impl<ST,RNG> SigningTranscript for SigningTranscriptWithRng<ST,RNG>
+where ST: SigningTranscript, RNG: RngCore+CryptoRng
 {
      fn proto_name(&mut self, label: &'static [u8])
-      { self.0.proto_name(label) }
+      { self.t.proto_name(label) }
 
     fn append<T: CanonicalSerialize+?Sized>(&mut self, label: &'static [u8], itm: &T)
-      { self.0.append(label,itm) }
+      { self.t.append(label,itm) }
 
     // Assumes default impl for append_u64 and append_slice so might
     // not work with all user supplied SigningTranscripts
 
     fn challenge<T: UniformRand>(&mut self, label: &'static [u8]) -> T
-      { self.0.challenge(label) }
+      { self.t.challenge(label) }
 
     fn witnesses_rng<T, R, const N: usize>(&self, label: &'static [u8], nonce_seeds: &[&[u8]], rng: R) -> [T; N]
-    where  R: RngCore+CryptoRng, T: UniformRand
-      { self.0.witnesses_rng(label,nonce_seeds,rng) }
+    where R: RngCore+CryptoRng, T: UniformRand
+      { self.t.witnesses_rng(label,nonce_seeds,rng) }
 
     fn witnesses<T: UniformRand, const N: usize>(&self, label: &'static [u8], nonce_seeds: &[&[u8]]) -> [T; N] {
-        // Very insecure hack except for our commit_witness_bytes below
-        struct ZeroFakeRng;
-        impl RngCore for ZeroFakeRng {
-            fn next_u32(&mut self) -> u32 {  panic!()  }
-            fn next_u64(&mut self) -> u64 {  panic!()  }
-            fn fill_bytes(&mut self, dest: &mut [u8]) {
-                for i in dest.iter_mut() {  *i = 0;  }
-            }
-            fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), ::rand_core::Error> {
-                self.fill_bytes(dest);
-                Ok(())
-            }
-        }
-        impl CryptoRng for ZeroFakeRng {}
-
-        self.witnesses_rng(label, nonce_seeds, ZeroFakeRng)
+        self.witnesses_rng(label, nonce_seeds, &mut *self.rng.borrow_mut())
     }
 }
+
+
+/// Attach a `CryptoRng` to a `SigningTranscript` to replace the default `OsRng`.
+///
+/// We employ this primarily for test vectors via `attach_test_vector_rng`.
+/// It's also helpful if your platform lacks `getrandom`.  Yet, we cannot
+/// derandomize either user supplied blinding factors in `PedersenVrf` or
+/// multi-signatures, so in production this should always use system randomness.
+pub fn attach_rng<T,R>(t: T, rng: R) -> SigningTranscriptWithRng<T,R>
+where T: SigningTranscript, R: RngCore+CryptoRng
+{
+    SigningTranscriptWithRng { t, rng: core::cell::RefCell::new(rng) }
+}
+
+
+/// Insecure in production but provides test vectors.
+#[cfg(test)]
+pub fn attach_test_vector_rng<T>(t: T) -> SigningTranscriptWithRng<T,impl RngCore+CryptoRng>
+where T: SigningTranscript
+{     
+    // Very insecure hack but fine for test vectors.
+    struct ZeroFakeRng;
+    impl RngCore for ZeroFakeRng {
+        fn next_u32(&mut self) -> u32 {  panic!()  }
+        fn next_u64(&mut self) -> u64 {  panic!()  }
+        fn fill_bytes(&mut self, dest: &mut [u8]) {
+            for i in dest.iter_mut() {  *i = 0;  }
+        }
+        fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), ::rand_core::Error> {
+            self.fill_bytes(dest);
+            Ok(())
+        }
+    }
+    impl CryptoRng for ZeroFakeRng {}
+    attach_rng(t, ZeroFakeRng)
+}
+

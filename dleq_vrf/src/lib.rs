@@ -10,8 +10,6 @@
 
 use ark_ec::{AffineRepr, CurveGroup, models::CurveConfig};
 
-use rand_core::{RngCore,CryptoRng};
-
 
 pub mod error;
 pub use error::{SignatureResult, SignatureError};
@@ -30,7 +28,7 @@ pub mod transcript;
 pub use transcript::{SigningTranscript}; // signing_context
 
 // #[cfg(feature = "merlin")]
-// use merlin::Transcript;
+pub use merlin::Transcript;
 
 pub mod vrf;
 pub use vrf::{IntoVrfInput, VrfInput, VrfPreOut, VrfInOut};
@@ -46,32 +44,6 @@ pub use pedersen::{PedersenVrf};
 
 #[cfg(test)]
 mod tests;
-
-
-#[cfg(feature = "getrandom")] 
-fn rand_hack() -> impl RngCore+CryptoRng {
-    rand_core::OsRng
-}
-
-#[cfg(not(feature = "getrandom"))]
-fn rand_hack() -> impl RngCore+CryptoRng {
-    const PRM: &'static str = "Attempted to use functionality that requires system randomness!!";
-
-    // Should we panic when invoked or when used?
-
-    struct PanicRng;
-    impl rand_core::RngCore for PanicRng {
-        fn next_u32(&mut self) -> u32 {  panic!("{}", PRM)  }
-        fn next_u64(&mut self) -> u64 {  panic!("{}", PRM)  }
-        fn fill_bytes(&mut self, _dest: &mut [u8]) {  panic!("{}", PRM)  }
-        fn try_fill_bytes(&mut self, _dest: &mut [u8]) -> Result<(), rand_core::Error> {
-            Err(core::num::NonZeroU32::new(core::u32::MAX).unwrap().into())
-        }
-    }
-    impl rand_core::CryptoRng for PanicRng {}
-
-    PanicRng
-}
 
 
 /// Any cofactor of this size or smaller gets treated as small,
