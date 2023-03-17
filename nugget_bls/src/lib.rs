@@ -208,7 +208,7 @@ impl<P: Pairing> AggregateSignature<P> {
 
     pub fn verify_by_aggregated(
         &self,
-        msg: impl IntoVrfInput<<P as Pairing>::G1Affine>,
+        input: impl IntoVrfInput<<P as Pairing>::G1Affine>,
         agg_pk_g1: <P as Pairing>::G1Affine
     ) -> SignatureResult<()> {
         let mut t = ::merlin::Transcript::new(b"NuggetAggregate");
@@ -218,7 +218,7 @@ impl<P: Pairing> AggregateSignature<P> {
 
         // e(msg + r * g1_gen, agg_pk_g2) == e(agg_sig + r * agg_pk_g1, -g2_gen)
         let g1s: [_; 2] = [
-            msg.into_vrf_input().0 + thin_vrf::<P>().keying_base * r,
+            input.into_vrf_input().0 + thin_vrf::<P>().keying_base * r,
             self.agg_sig + agg_pk_g1 * r,
         ];
         let g2s: [_;2] = [
@@ -234,7 +234,7 @@ impl<P: Pairing> AggregateSignature<P> {
         }
     }
 
-    pub fn verify_by_pks<M,B,I>(&self, msg: M, publickeys: I) -> SignatureResult<()>
+    pub fn verify_by_pks<M,B,I>(&self, input: M, publickeys: I) -> SignatureResult<()>
     where
         M: IntoVrfInput<<P as Pairing>::G1Affine>,
         B: Borrow<PublicKeyG1<P>>,
@@ -242,7 +242,7 @@ impl<P: Pairing> AggregateSignature<P> {
     {
         let mut agg_pk_g1 = <<P as Pairing>::G1Affine as AffineRepr>::zero().into_group();
         for pk in publickeys { agg_pk_g1 += pk.borrow().0; }
-        self.verify_by_aggregated(msg, agg_pk_g1.into_affine())
+        self.verify_by_aggregated(input, agg_pk_g1.into_affine())
     }
 
     

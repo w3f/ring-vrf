@@ -28,8 +28,8 @@ fn single() {
     assert_eq!(sk.as_g1_publickey(), &pk.to_g1_publickey());
 
     let t = Transcript::new(b"AD1");
-    let msg = &mut Transcript::new(b"MSG1");
-    let signature = sk.sign_nugget_bls(t,msg); 
+    let input = &mut Transcript::new(b"MSG1");
+    let signature = sk.sign_nugget_bls(t,input); 
 
     buf.clear();
     signature.serialize_compressed(&mut buf).unwrap();
@@ -51,12 +51,12 @@ fn aggregation() {
         g1pks0.push(sk.as_g1_publickey().clone());
         let mut t = Transcript::new(b"AD");
         t.append(b"", sk.as_g1_publickey());
-        let msg = &mut Transcript::new(b"MSG");
-        sk.sign_nugget_bls(t,msg)
+        let input = &mut Transcript::new(b"MSG");
+        sk.sign_nugget_bls(t,input)
     }).collect();
     let agg = crate::AggregateSignature::create(&pks, &sigs);
-    let msg = &mut Transcript::new(b"MSG");
+    let input = &mut Transcript::new(b"MSG");
     let g1pks: Vec<_> = pks.iter().map(|pk| pk.to_g1_publickey()).collect();
     assert_eq!(g1pks0, g1pks);
-    agg.verify_by_pks(msg,g1pks.iter()).unwrap();
+    agg.verify_by_pks(input,g1pks.iter()).unwrap();
 }
