@@ -10,7 +10,7 @@ use ark_ec::{AffineRepr, CurveGroup};
 use crate::{
     SigningTranscript, 
     flavor::{Flavor, InnerFlavor, Witness, Signature},
-    keys::{PublicKey, SecretKey},
+    keys::{PublicKey, SecretKey, SecretPair},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut},
 };
@@ -100,7 +100,7 @@ impl<K: AffineRepr> Witness<ThinVrf<K>> {
         let Witness { r, k } = self;
         t.append(b"Witness", &r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge");
-        let s = k + c * secret.key;
+        let s = k + secret.key.mul_by_challenge(&c);
         // k.zeroize();
         Signature { compk: (), r, s }
     }
@@ -122,8 +122,8 @@ impl<C: AffineRepr> Valid for Signature<ThinVrf<C>> {
 // --- Verify --- //
 
 impl<K: AffineRepr> ThinVrf<K> {
-    pub(crate) fn make_public(&self, secret: &<K as AffineRepr>::ScalarField) -> PublicKey<K> {
-        PublicKey( (*self.keying_base() * secret).into_affine() )
+    pub(crate) fn make_public(&self, secret: &SecretPair<<K as AffineRepr>::ScalarField>) -> PublicKey<K> {
+        PublicKey( (secret * self.keying_base()).into_affine() )
     }
 
     /// Verify thin VRF signature 

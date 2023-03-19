@@ -83,8 +83,7 @@ impl<K: AffineRepr> SecretKey<K> {
     pub fn vrf_preout<H>(&self, input: &VrfInput<H>) -> VrfPreOut<H> 
     where H: AffineRepr<ScalarField = K::ScalarField>,
     {
-        let p: <H as AffineRepr>::Group = input.0 * self.key;
-        VrfPreOut( p.into_affine() )
+        VrfPreOut( (&self.key * &input.0).into_affine() )
     }
 
     /// Compute VRF pre-output paired with input from secret key and

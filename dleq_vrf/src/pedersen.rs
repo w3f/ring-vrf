@@ -307,7 +307,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
             blindings.push( k.blindings[i] + c * secret_blindings.0[i] );
         }
         let s = Scalars {
-            keying: k.keying + c * secret.key,
+            keying: k.keying + secret.key.mul_by_challenge(&c),
             blindings: blindings.into_inner().unwrap(),
         };
         // k.zeroize();

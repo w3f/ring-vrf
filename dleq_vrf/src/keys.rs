@@ -136,7 +136,8 @@ impl<C: AffineRepr> Mul<&C> for &SecretPair<<C as AffineRepr>::ScalarField> {
     /// but ark_ec being our dependency requires left multiplication here.
     fn mul(self, rhs: &C) -> Self::Output {
         let o = rhs.mul(self.0[0]) + rhs.mul(self.0[1]);
-        debug_assert_eq!(o, { let mut t = o; self.mul_action(&mut t); t } );
+        use ark_ec::CurveGroup;
+        debug_assert_eq!(o.into_affine(), { let mut t = rhs.into_group(); self.mul_action(&mut t); t }.into_affine() );
         o
     }
 }
@@ -159,7 +160,7 @@ pub struct SecretKey<K: AffineRepr> {
     pub(crate) thin: ThinVrf<K>,
 
     /// Secret key represented as a scalar.
-    pub(crate) key: <K as AffineRepr>::ScalarField,
+    pub(crate) key: SecretPair<<K as AffineRepr>::ScalarField>,
 
     /// Seed for deriving the nonces used in Schnorr proofs.
     ///
@@ -216,7 +217,7 @@ impl<K: AffineRepr> SecretKey<K> {
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
         rng.fill_bytes(&mut nonce_seed);
-        let key = <<K as AffineRepr>::ScalarField as UniformRand>::rand(rng);
+        let key = SecretPair::from_rng(rng);
         let public = thin.make_public(&key);
         SecretKey { thin, key, nonce_seed, public, }
     }
@@ -240,25 +241,33 @@ impl<K: AffineRepr> SecretKey<K> {
     /// Clone the `PublicKey` corresponding to this `SecretKey`.
     pub fn to_public(&self) -> PublicKey<K> { self.public.clone() }
 
+/*
     #[inline]
     pub fn serialize<W: Write>(&self, mut writer: W) -> Result<(), SerializationError> {
         writer.write_all(&self.nonce_seed) ?;
-        self.key.serialize_compressed(writer)
+        self.key.0[0].serialize_compressed(writer)
+        self.key.0[1].serialize_compressed(writer)
     }
 
     #[inline]
     pub fn serialized_size(&self) -> usize {
-        self.key.compressed_size() + NONCE_SEED_LENGTH
+        NONCE_SEED_LENGTH + 2 * self.key.compressed_size()
     }
 
     #[inline]
     pub fn deserialize<R: Read>(thin: ThinVrf<K>, mut reader: R) -> Result<Self, SerializationError> {
-        let key = <K as AffineRepr>::ScalarField::deserialize_compressed(&mut reader) ?;
         let mut nonce_seed = [0u8; 32];
         reader.read_exact(&mut nonce_seed) ?;
+        let key = SecretPair([
+            <K as AffineRepr>::ScalarField::deserialize_compressed(&mut reader) ?,
+            <K as AffineRepr>::ScalarField::deserialize_compressed(&mut reader) ?
+        ])
         let public = thin.make_public(&key);
         Ok(SecretKey { thin, key, nonce_seed, public, })
-    }
+ 
+   }
+*/
+
 }
 // TODO:  Convert to/from zcash_primitives::redjubjub::PrivateKey
 
