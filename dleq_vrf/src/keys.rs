@@ -4,8 +4,11 @@
 
 // use core::fmt::{Debug};
 
+use core::ops::{Add,AddAssign,Mul,MulAssign};
+
+use ark_ff::fields::{PrimeField}; // Field
 use ark_std::{UniformRand, vec::Vec, io::{Read, Write}};
-use ark_ec::{AffineRepr}; // CurveGroup
+use ark_ec::{AffineRepr, Group}; // CurveGroup
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 
 // use subtle::{Choice,ConstantTimeEq};
@@ -41,6 +44,102 @@ impl<C: AffineRepr> PublicKey<C> {
     }
 }
 
+
+/*
+pub(crate) fn fake_secret_pair_from_rng<F: PrimeField> (rng: impl RngCore+CryptoRng) -> F {
+    <F as UniformRand>::rand(&mut rng) + <F as UniformRand>::rand(&mut rng)
+}
+*/
+
+/// Secret scalar split into two scalars.  Incurs 2x penalty in scalar multiplications. 
+#[derive(Clone,PartialEq,Eq)] // Copy, CanonicalSerialize,CanonicalDeserialize, Hash, 
+pub(crate) struct SecretPair<F: PrimeField>(pub(crate) [F ;2]);
+
+impl<F: PrimeField> Zeroize for SecretPair<F> { 
+    fn zeroize(&mut self) { self.0.zeroize(); }
+}
+impl<F: PrimeField> Drop for SecretPair<F> {
+    fn drop(&mut self) { self.zeroize() }
+}
+
+impl<F: PrimeField> SecretPair<F> {
+    /// Initialize and unbiased `SecretPair` from a `CryptoRng`,
+    /// deterministic assuming `CryptoRng` is.
+    pub fn from_rng<R: RngCore+CryptoRng>(rng: &mut R) -> Self {
+        // It's frankly obnoxious that arkworks uses rand here, not just rand_core.
+        SecretPair([
+            <F as UniformRand>::rand(rng), 
+            <F as UniformRand>::rand(rng)
+        ])
+    }
+
+    pub fn resplit(&mut self) {
+        let x = <F as UniformRand>::rand( &mut crate::transcript::getrandom_or_panic() );
+        self.0[0] += &x;
+        self.0[1] -= &x;
+    }
+
+    /// Multiply by a scalar.
+    pub fn mul_by_scalar(&self, rhs: &F) -> SecretPair<F> {
+        let mut lhs = self.clone();
+        lhs *= rhs;
+        lhs
+    }
+
+    /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
+    /// but ark_ec being our dependency requires left multiplication here.
+    fn mul_action<G: Group<ScalarField=F>>(&self, x: &mut G) {
+        let mut y = x.clone();
+        *x *= self.0[0];
+        y *= self.0[1];
+        *x += y;
+    }
+}
+
+impl<F: PrimeField> MulAssign<&F> for SecretPair<F> {
+    /// Multiply by a scalar, like `mul_by_scalar`.
+    fn mul_assign(&mut self, rhs: &F) {
+        self.0[0] *= rhs;
+        self.0[1] *= rhs;
+    }
+}
+
+impl<F: PrimeField> AddAssign<&SecretPair<F>> for SecretPair<F> {
+    fn add_assign(&mut self, rhs: &SecretPair<F>) {
+        self.0[0] += rhs.0[0];
+        self.0[1] += rhs.0[1];
+    }
+}
+impl<F: PrimeField> Add<&SecretPair<F>> for &SecretPair<F> {
+    type Output = SecretPair<F>;
+    fn add(self, rhs: &SecretPair<F>) -> SecretPair<F> {
+        let mut lhs = self.clone();
+        lhs += rhs;
+        lhs
+    }
+}
+/*
+impl<G: Group> Mul<&G> for &SecretPair<<G as Group>::ScalarField> {
+    type Output = G;
+    /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
+    /// but ark_ec being our dependency requires left multiplication here.
+    fn mul(self, rhs: &G) -> G {
+        let mut rhs = rhs.clone();
+        self.mul_action(&mut rhs);
+        rhs
+    }
+}
+*/
+impl<C: AffineRepr> Mul<&C> for &SecretPair<<C as AffineRepr>::ScalarField> {
+    type Output = <C as AffineRepr>::Group;
+    /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
+    /// but ark_ec being our dependency requires left multiplication here.
+    fn mul(self, rhs: &C) -> Self::Output {
+        let o = rhs.mul(self.0[0]) + rhs.mul(self.0[1]);
+        debug_assert_eq!(o, { let mut t = o; self.mul_action(&mut t); t } );
+        o
+    }
+}
 
 
 /// Length of the nonce seed accompanying the secret key.
@@ -110,9 +209,8 @@ impl<K: AffineRepr> ConstantTimeEq for SecretKey<K> {
 
 
 impl<K: AffineRepr> SecretKey<K> {
-    /// Generate an "unbiased" `SecretKey` directly from a user
-    /// suplied `csprng` uniformly, bypassing the `MiniSecretKey`
-    /// layer.
+    /// Generate an "unbiased" `SecretKey` from a user supplied
+    /// `CryptoRng`, deterministic assuming the `CryptoRng` is.
     pub fn from_rng<R>(thin: ThinVrf<K>, rng: &mut R) -> Self
     where R: CryptoRng + RngCore,
     {
