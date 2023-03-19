@@ -80,10 +80,10 @@ impl<F: PrimeField> SecretPair<F> {
     }
 
     /// Multiply by a scalar.
-    pub fn mul_by_scalar(&self, rhs: &F) -> SecretPair<F> {
+    pub fn mul_by_challenge(&self, rhs: &F) -> F {
         let mut lhs = self.clone();
         lhs *= rhs;
-        lhs
+        lhs.0[0] + lhs.0[1]
     }
 
     /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
