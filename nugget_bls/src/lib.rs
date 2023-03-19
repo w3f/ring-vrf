@@ -81,19 +81,19 @@ impl<P: Pairing> SecretKey<P> {
         SecretKey::from_rng(&mut ::rand_core::OsRng)
     }
 
-    pub fn create_public_cert<T: SigningTranscript+Clone>(&self, t: T) -> PublicKey<P> {
+    pub fn create_public_cert<T: SigningTranscript+Clone>(&mut self, t: T) -> PublicKey<P> {
         let pedersen = pedersen_vrf::<P>();
         let g2_io = self.0.vrf_inout(pk_in::<P>());
         let g2 = g2_io.preoutput.clone();
-        let sig = pedersen.sign_non_batchable_pedersen_vrf(t, &[g2_io], None, &self.0).0;
+        let sig = pedersen.sign_non_batchable_pedersen_vrf(t, &[g2_io], None, &mut self.0).0;
         PublicKey { g2, sig, } // g1: self.as_publickey().clone(),
     }
 
-    pub fn create_nugget_public(&self) -> PublicKey<P> {
+    pub fn create_nugget_public(&mut self) -> PublicKey<P> {
         self.create_public_cert(::merlin::Transcript::new(b"NuggetPublic"))
     }
 
-    pub fn sign_nugget_bls<T,M>(&self, t: T, input: M) -> Signature<P> 
+    pub fn sign_nugget_bls<T,M>(&mut self, t: T, input: M) -> Signature<P> 
     where T: SigningTranscript+Clone, M: IntoVrfInput<<P as Pairing>::G1Affine>,
     {
         let io = self.0.vrf_inout(input);

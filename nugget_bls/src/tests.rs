@@ -15,7 +15,7 @@ type Signature = crate::Signature<P>;
 
 #[test]
 fn single() {
-    let sk = SecretKey::ephemeral();
+    let mut sk = SecretKey::ephemeral();
 
     let mut buf = Vec::new();
     let pk0 = sk.create_nugget_public();
@@ -40,10 +40,10 @@ fn single() {
 
 #[test]
 fn aggregation() {
-    let sks: Vec<SecretKey> = (0..2).map(|_| SecretKey::ephemeral()).collect();
-    let pks: Vec<PublicKey> = sks.iter().map(|sk| sk.create_nugget_public()).collect();
+    let mut sks: Vec<SecretKey> = (0..2).map(|_| SecretKey::ephemeral()).collect();
+    let pks: Vec<PublicKey> = sks.iter_mut().map(|sk| sk.create_nugget_public()).collect();
     let mut g1pks0 = Vec::new();
-    let sigs: Vec<Signature> = sks.iter().map(|sk| {
+    let sigs: Vec<Signature> = sks.iter_mut().map(|sk| {
         g1pks0.push(sk.as_g1_publickey().clone());
         let mut t = Transcript::new(b"AD");
         t.append(b"", sk.as_g1_publickey());
