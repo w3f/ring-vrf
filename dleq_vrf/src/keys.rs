@@ -53,7 +53,7 @@ pub(crate) fn fake_secret_pair_from_rng<F: PrimeField> (rng: impl RngCore+Crypto
 
 /// Secret scalar split into two scalars.  Incurs 2x penalty in scalar multiplications. 
 #[derive(Clone,PartialEq,Eq)] // Copy, CanonicalSerialize,CanonicalDeserialize, Hash, 
-pub(crate) struct SecretPair<F: PrimeField>(pub(crate) [F ;2]);
+pub(crate) struct SecretPair<F: PrimeField>(pub(crate) [F; 2]);
 
 impl<F: PrimeField> Zeroize for SecretPair<F> { 
     fn zeroize(&mut self) { self.0.zeroize(); }
@@ -82,7 +82,6 @@ impl<F: PrimeField> SecretPair<F> {
     /// Multiply by a scalar.
     pub fn mul_by_challenge(&mut self, rhs: &F) -> F {
         let mut lhs = self.clone();
-        self.resplit();
         lhs *= rhs;
         lhs.0[0] + lhs.0[1]
     }
@@ -98,10 +97,12 @@ impl<F: PrimeField> SecretPair<F> {
 }
 
 impl<F: PrimeField> MulAssign<&F> for SecretPair<F> {
-    /// Multiply by a scalar, like `mul_by_scalar`.
+    /// Multiply by a scalar, guts of `mul_by_challenge`.
+    /// Invokes `replit` so do manually for witnesses.
     fn mul_assign(&mut self, rhs: &F) {
         self.0[0] *= rhs;
         self.0[1] *= rhs;
+        self.resplit();
     }
 }
 
