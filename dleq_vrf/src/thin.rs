@@ -122,7 +122,7 @@ impl<C: AffineRepr> Valid for Signature<ThinVrf<C>> {
 // --- Verify --- //
 
 impl<K: AffineRepr> ThinVrf<K> {
-    pub(crate) fn make_public(&self, secret: &SecretPair<<K as AffineRepr>::ScalarField>) -> PublicKey<K> {
+    pub(crate) fn make_public(&self, secret: &mut SecretPair<<K as AffineRepr>::ScalarField>) -> PublicKey<K> {
         PublicKey( (secret * self.keying_base()).into_affine() )
     }
 

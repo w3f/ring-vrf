@@ -130,7 +130,7 @@ impl<G: Group> Mul<&G> for &SecretPair<<G as Group>::ScalarField> {
     }
 }
 */
-impl<C: AffineRepr> Mul<&C> for &SecretPair<<C as AffineRepr>::ScalarField> {
+impl<C: AffineRepr> Mul<&C> for &mut SecretPair<<C as AffineRepr>::ScalarField> {
     type Output = <C as AffineRepr>::Group;
     /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
     /// but ark_ec being our dependency requires left multiplication here.
@@ -138,6 +138,7 @@ impl<C: AffineRepr> Mul<&C> for &SecretPair<<C as AffineRepr>::ScalarField> {
         let o = rhs.mul(self.0[0]) + rhs.mul(self.0[1]);
         use ark_ec::CurveGroup;
         debug_assert_eq!(o.into_affine(), { let mut t = rhs.into_group(); self.mul_action(&mut t); t }.into_affine() );
+        self.resplit();
         o
     }
 }
@@ -217,8 +218,8 @@ impl<K: AffineRepr> SecretKey<K> {
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
         rng.fill_bytes(&mut nonce_seed);
-        let key = SecretPair::from_rng(rng);
-        let public = thin.make_public(&key);
+        let mut key = SecretPair::from_rng(rng);
+        let public = thin.make_public(&mut key);
         SecretKey { thin, key, nonce_seed, public, }
     }
 
