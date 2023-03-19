@@ -228,7 +228,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         mut t: BT,
         ios: &[VrfInOut<H>],
         secret_blinding: Option<SecretBlinding<K,B>>,
-        secret: &SecretKey<K>,
+        secret: &mut SecretKey<K>,
     ) -> (Signature<PedersenVrf<K,H,B>>, SecretBlinding<K,B>)
     where T: SigningTranscript+Clone, BT: BorrowMut<T>
     {
@@ -266,7 +266,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         mut t: BT,
         ios: &[VrfInOut<H>],
         secret_blinding: Option<SecretBlinding<K,B>>,
-        secret: &SecretKey<K>,
+        secret: &mut SecretKey<K>,
     ) -> (NonBatchableSignature<PedersenVrf<K,H,B>>, SecretBlinding<K,B>)
     where T: SigningTranscript+Clone, BT: BorrowMut<T>
     {
@@ -296,7 +296,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         self,
         t: &mut T,
         secret_blindings: &SecretBlinding<K,B>,
-        secret: &SecretKey<K>,
+        secret: &mut SecretKey<K>,
         compk: KeyCommitment<K>,
     ) -> (Signature<PedersenVrf<K,H,B>>,NonBatchableSignature<PedersenVrf<K,H,B>>) {
         let Witness { r, k } = self;

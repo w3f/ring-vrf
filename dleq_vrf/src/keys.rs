@@ -80,8 +80,9 @@ impl<F: PrimeField> SecretPair<F> {
     }
 
     /// Multiply by a scalar.
-    pub fn mul_by_challenge(&self, rhs: &F) -> F {
+    pub fn mul_by_challenge(&mut self, rhs: &F) -> F {
         let mut lhs = self.clone();
+        self.resplit();
         lhs *= rhs;
         lhs.0[0] + lhs.0[1]
     }

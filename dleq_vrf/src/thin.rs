@@ -80,7 +80,7 @@ impl<K: AffineRepr> SecretKey<K> {
     /// Sign thin VRF signature
     /// 
     /// If `ios = &[]` this reduces to a Schnorr signature.
-    pub fn sign_thin_vrf<T,B>(&self, mut t: B, ios: &[VrfInOut<K>]) -> Signature<ThinVrf<K>>
+    pub fn sign_thin_vrf<T,B>(&mut self, mut t: B, ios: &[VrfInOut<K>]) -> Signature<ThinVrf<K>>
     where T: SigningTranscript+Clone, B: BorrowMut<T>
     {
         let t = t.borrow_mut();
@@ -95,7 +95,7 @@ impl<K: AffineRepr> Witness<ThinVrf<K>> {
     /// 
     /// Assumes we already hashed public key, `VrfInOut`s, etc.
     pub(crate) fn sign_final<T: SigningTranscript>(
-        self, t: &mut T, secret: &SecretKey<K>
+        self, t: &mut T, secret: &mut SecretKey<K>
     ) -> Signature<ThinVrf<K>> {
         let Witness { r, k } = self;
         t.append(b"Witness", &r);
