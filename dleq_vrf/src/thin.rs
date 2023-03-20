@@ -105,6 +105,11 @@ impl<K: AffineRepr> Witness<ThinVrf<K>> {
         let s = k + secret.key.mul_by_challenge(&c);
         // k.zeroize();
         Signature { compk: (), r, s }
+        // TODO: Add some verify_final for additional rowhammer defenses?
+        // We already hash the public key though, so no issues like Ed25519.
+        // Against secret key corruption verify_final might still help, or
+        // maybe our key splitting already handles this, or some new one?
+        // Adjust Witness<PedersenVrf>::sign_final too if required.
     }
 }
 

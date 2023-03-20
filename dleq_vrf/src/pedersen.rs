@@ -315,6 +315,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         };
         // k.zeroize();
         (Signature { compk: compk.clone(), r, s: s.clone() }, NonBatchableSignature { compk, c, s })
+        // See additional rowhammer defenses thoughts in Witness<ThinVrf>::sign_final
     }
 }
 

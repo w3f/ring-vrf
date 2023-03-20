@@ -51,7 +51,11 @@ pub(crate) fn fake_secret_pair_from_rng<F: PrimeField> (rng: impl RngCore+Crypto
 }
 */
 
-/// Secret scalar split into two scalars.  Incurs 2x penalty in scalar multiplications. 
+/// Secret scalar split into the sum of two scalars, which randomly mutate.
+/// Incurs 2x penalty in scalar multiplications, but provides side channel defenses.
+/// 
+/// We split additively right now, but would a multiplicative splitting help
+/// against rowhammer attacks on the secret key?
 #[derive(Clone,PartialEq,Eq)] // Copy, CanonicalSerialize,CanonicalDeserialize, Hash, 
 pub(crate) struct SecretPair<F: PrimeField>(pub(crate) [F; 2]);
 
@@ -74,7 +78,7 @@ impl<F: PrimeField> SecretPair<F> {
     }
 
     pub fn resplit(&mut self) {
-        let x = <F as UniformRand>::rand( &mut crate::transcript::getrandom_or_panic() );
+        let mut x = <F as UniformRand>::rand( &mut crate::transcript::getrandom_or_panic() );
         self.0[0] += &x;
         self.0[1] -= &x;
     }
