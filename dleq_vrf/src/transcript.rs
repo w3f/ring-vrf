@@ -16,10 +16,6 @@ use ark_serialize::{CanonicalSerialize};
 use rand_core::{RngCore,CryptoRng};
 
 
-#[cfg(feature = "blake3")]
-pub mod blake3;
-
-
 /// Arkworks friendly transcripts for Chaum-Pederson DLEQ proofs
 pub trait SigningTranscript: Sized {
     /// Append `u64` conveniently
