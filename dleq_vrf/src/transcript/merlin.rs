@@ -8,55 +8,24 @@
 //! ### Arkworks friendly Merlin transcripts
 
 // use ark_ff::{Field};
-use ark_std::{UniformRand, io::{self, Read, Write}};  // Result
-use ark_serialize::{CanonicalSerialize};
+use ark_std::{UniformRand, };  // Result
 
 use merlin::Transcript;
 
 use rand_core::{RngCore,CryptoRng};
 
-use core::borrow::{BorrowMut}; // Borrow
 
-
-include!("inc_io.rs");
-
-
-impl<T: BorrowMut<Transcript>> Write for TranscriptIO<T> {
-    /// We treat a `TranscriptIO` as a Writer by appending the messages
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        let b: &mut Transcript = self.t.borrow_mut();
-        b.append_message(self.label, buf);
-        Ok(buf.len())
-    }
-
-    /// We inherently flush in write, so this does nothing.
-    fn flush(&mut self) -> io::Result<()> { Ok(()) }
-}
-
-impl<T: BorrowMut<Transcript>> Read for TranscriptIO<T> {
-    /// We treat a `TranscriptIO` as a Reader by requesting challenges
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        let b: &mut Transcript = self.t.borrow_mut();
-        b.challenge_bytes(self.label, buf);
-        Ok(buf.len())
-    }
-}
 
 /// Arkworks compatable Merlin Transcripts for Chaum-Pederson DLEQ proofs 
 impl super::SigningTranscript for Transcript {
-    fn proto_name(&mut self, label: &'static [u8]) {
-        self.append_message(b"proto-name", label);
+    fn append_bytes(&mut self, label: &'static [u8], message: &[u8]) {
+        self.append_message(label,message)
     }
 
-    fn append<T: CanonicalSerialize+?Sized>(&mut self, label: &'static [u8], itm: &T) {
-        let mut t = TranscriptIO { label, t: self };
-        itm.serialize_uncompressed(&mut t)
-            .expect("merlin::Transcript infaillibly flushes");
-    }
+    /// Extract challenges samplable by Arkworks
+    fn challenge_bytes(&mut self, label: &'static [u8], dest: &mut [u8]) {
+        self.challenge_bytes(label, dest)
 
-    fn challenge<T: UniformRand>(&mut self, label: &'static [u8]) -> T {
-        let mut t = TranscriptIO { label, t: self };
-        <T as UniformRand>::rand(&mut t)
     }
 
     fn witnesses_rng<T, R, const N: usize>(&self, label: &'static [u8], nonce_seeds: &[&[u8]], mut rng: R) -> [T; N]
