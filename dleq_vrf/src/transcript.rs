@@ -17,6 +17,10 @@ use rand_core::{RngCore,CryptoRng};
 
 
 /// Arkworks friendly transcripts for Chaum-Pederson DLEQ proofs
+/// 
+/// We produce challenges in Chaum-Pederson DLEQ proofs using transcripts,
+/// for which [merlin](https://merlin.cool/) provides a convenient tool.
+/// In this, we translate to Arkworks from a transcript interface like merlin.
 pub trait SigningTranscript: Sized {
     /// Append `u64` conveniently
     fn append_u64(&mut self, label: &'static [u8], v: u64) {
@@ -60,13 +64,39 @@ pub trait SigningTranscript: Sized {
 }
 
 
-/// Arkworks Reader & Writer used by SigningTranscript
+/// Returns `OsRng` with `getrandom`, or a `CryptoRng` which panics without `getrandom`.
+#[cfg(feature = "getrandom")] 
+pub fn getrandom_or_panic() -> impl RngCore+CryptoRng {
+    rand_core::OsRng
+}
+
+/// Returns `OsRng` with `getrandom`, or a `CryptoRng` which panics without `getrandom`.
+#[cfg(not(feature = "getrandom"))]
+pub fn getrandom_or_panic() -> impl RngCore+CryptoRng {
+    const PRM: &'static str = "Attempted to use functionality that requires system randomness!!";
+
+    // Should we panic when invoked or when used?
+
+    struct PanicRng;
+    impl rand_core::RngCore for PanicRng {
+        fn next_u32(&mut self) -> u32 {  panic!("{}", PRM)  }
+        fn next_u64(&mut self) -> u64 {  panic!("{}", PRM)  }
+        fn fill_bytes(&mut self, _dest: &mut [u8]) {  panic!("{}", PRM)  }
+        fn try_fill_bytes(&mut self, _dest: &mut [u8]) -> Result<(), rand_core::Error> {
+            Err(core::num::NonZeroU32::new(core::u32::MAX).unwrap().into())
+        }
+    }
+    impl rand_core::CryptoRng for PanicRng {}
+
+    PanicRng
+}
+
+
+/// Arkworks Reader and Writer used by `SigningTranscript`
 ///
-/// We produce challenges in Chaum-Pederson DLEQ proofs using transcripts,
-/// for which [merlin](https://merlin.cool/) provides a convenient tool.
-/// Arkworks de/serializes conveniently but with compile-time length
-/// information existing only locally, via its `io::{Read,Write}` traits.
-/// `TranscriptIO` attaches the `label` required by merlin.
+/// Arkworks favors byte streams, ala `io::Read`, `io::Write`, and
+/// `RngCore`.  In this, we avoid the orphan rules and attach the labels
+/// required by [`merlin`](https://merlin.cool/) or similar transcripts.
 pub struct TranscriptIO<'a,T: ?Sized> {
     pub label: &'static [u8],
     pub t: &'a mut T,
@@ -111,36 +141,7 @@ impl<'a,T> RngCore for TranscriptIO<'a,T> where TranscriptIO<'a,T>: Read {
         Ok(())
     }
 }
-
 // impl<T: BorrowMut<Transcript>> CryptoRng for TranscriptIO<T> { }
-
-
-/// Returns `OsRng` with `getrandom`, or a `CryptoRng` which panics without `getrandom`.
-#[cfg(feature = "getrandom")] 
-pub fn getrandom_or_panic() -> impl RngCore+CryptoRng {
-    rand_core::OsRng
-}
-
-/// Returns `OsRng` with `getrandom`, or a `CryptoRng` which panics without `getrandom`.
-#[cfg(not(feature = "getrandom"))]
-pub fn getrandom_or_panic() -> impl RngCore+CryptoRng {
-    const PRM: &'static str = "Attempted to use functionality that requires system randomness!!";
-
-    // Should we panic when invoked or when used?
-
-    struct PanicRng;
-    impl rand_core::RngCore for PanicRng {
-        fn next_u32(&mut self) -> u32 {  panic!("{}", PRM)  }
-        fn next_u64(&mut self) -> u64 {  panic!("{}", PRM)  }
-        fn fill_bytes(&mut self, _dest: &mut [u8]) {  panic!("{}", PRM)  }
-        fn try_fill_bytes(&mut self, _dest: &mut [u8]) -> Result<(), rand_core::Error> {
-            Err(core::num::NonZeroU32::new(core::u32::MAX).unwrap().into())
-        }
-    }
-    impl rand_core::CryptoRng for PanicRng {}
-
-    PanicRng
-}
 
 
 /// Arkworks compatable Merlin Transcripts for Chaum-Pederson DLEQ proofs 
