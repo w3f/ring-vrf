@@ -122,8 +122,7 @@ impl<C: AffineRepr> VrfPreOut<C> {
 
 /// VRF input and pre-output paired together, possibly unverified.
 ///
-/// Internally, we keep both `RistrettoPoint` and `CompressedRistretto`
-/// forms using `RistrettoBoth`.
+/// 
 #[derive(Debug,Clone,CanonicalSerialize)] // CanonicalDeserialize, PartialEq,Eq, PartialOrd, Ord, Hash
 pub struct VrfInOut<C: AffineRepr> {
     /// VRF input point
@@ -133,8 +132,18 @@ pub struct VrfInOut<C: AffineRepr> {
 }
 
 impl<C: AffineRepr> VrfInOut<C> {
-    /// Append to transcript, 
-    pub fn append<T: SigningTranscript>(&self, label: &'static [u8], t: &mut T) {
+    /// Append to VRF output transcript, suitable for producing VRF output.
+    /// 
+    /// We incorporate both the input and output to provide the 2Hash-DH
+    /// construction from Theorem 2 on page 32 in appendex C of
+    /// ["Ouroboros Praos: An adaptively-secure, semi-synchronous proof-of-stake blockchain"](https://eprint.iacr.org/2017/573.pdf)
+    /// by Bernardo David, Peter Gazi, Aggelos Kiayias, and Alexander Russell.
+    /// 
+    /// We employ this method instead of `SigningTranscript::append`
+    /// for output, becuase this multiplies the preoutput by the cofactor.
+    pub fn vrf_output_append<T>(&self, label: &'static [u8], t: &mut T)
+    where T: SigningTranscript,
+    {
         if crate::small_cofactor::<C>() {
             let mut io = self.clone();
             io.preoutput.0 = io.preoutput.0.mul_by_cofactor();
@@ -144,81 +153,36 @@ impl<C: AffineRepr> VrfInOut<C> {
         }
     }
 
-    /// Raw bytes output from the VRF.
-    ///
-    /// If you are not the signer then you must verify the VRF before calling this method.
-    ///
-    /// If called with distinct contexts then outputs should be independent.
-    ///
-    /// We incorporate both the input and output to provide the 2Hash-DH
-    /// construction from Theorem 2 on page 32 in appendex C of
-    /// ["Ouroboros Praos: An adaptively-secure, semi-synchronous proof-of-stake blockchain"](https://eprint.iacr.org/2017/573.pdf)
-    /// by Bernardo David, Peter Gazi, Aggelos Kiayias, and Alexander Russell.
-    // #[cfg(feature = "merlin")]
-    pub fn vrf_output_bytes<B: Default + AsMut<[u8]>>(&self, context: &[u8]) -> B {
-        let mut t = ::merlin::Transcript::new(b"VrfOutput");
-        t.append(b"context",context);
-        self.append(b"VrfInOut",&mut t);
+    /// VRF output bytes via the supplied transcript.
+    /// 
+    /// You should domain seperate outputs using the transcript.
+    pub fn vrf_output_bytes<T,B>(&self, mut t: T) -> B 
+    where T: SigningTranscript, B: Default + AsMut<[u8]>
+    {
+        self.vrf_output_append(b"VrfInOut",&mut t);
         let mut seed = B::default();
         t.challenge_bytes(b"", seed.as_mut());
         seed
     }
 
-    /// VRF output converted into any `SeedableRng`.
+    /// VRF output bytes via merlin.
+    ///
+    /// If called with distinct contexts then outputs should be independent.
+    // #[cfg(feature = "merlin")]
+    pub fn vrf_output_merlin<B: Default + AsMut<[u8]>>(&self, context: &[u8]) -> B {
+        let mut t = ::merlin::Transcript::new(b"VrfOutput");
+        t.append(b"context",context);
+        self.vrf_output_bytes(t)
+    }
+
+    /// VRF output converted into any `SeedableRng`, like `rand_chacha::ChaChaRng`.
     ///
     /// If you are not the signer then you must verify the VRF before calling this method.
     ///
     /// We expect most users would prefer the less generic `VrfInOut::vrf_output_chacharng` method.
     // #[cfg(feature = "merlin")]
     pub fn vrf_output_rng<R: SeedableRng>(&self, context: &[u8]) -> R {
-        R::from_seed(self.vrf_output_bytes::<R::Seed>(context))
-    }
-
-    /// VRF output converted into a `ChaChaRng`.
-    ///
-    /// If you are not the signer then you must verify the VRF before calling this method.
-    ///
-    /// If called with distinct contexts then outputs should be independent.
-    /// Independent output streams are available via `ChaChaRng::set_stream` too.
-    ///
-    /// We incorporate both the input and output to provide the 2Hash-DH
-    /// construction from Theorem 2 on page 32 in appendex C of
-    /// ["Ouroboros Praos: An adaptively-secure, semi-synchronous proof-of-stake blockchain"](https://eprint.iacr.org/2017/573.pdf)
-    /// by Bernardo David, Peter Gazi, Aggelos Kiayias, and Alexander Russell.
-    #[cfg(feature = "rand_chacha")]   // #[cfg(feature = "merlin")]
-    pub fn vrf_output_chacharng(&self, context: &[u8]) -> ::rand_chacha::ChaChaRng {
-        self.vrf_output_rng::<::rand_chacha::ChaChaRng>(context)
-    }
-
-    /// VRF output converted into Merlin's Keccek based `Rng`.
-    ///
-    /// If you are not the signer then you must verify the VRF before calling this method.
-    ///
-    /// We think this might be marginally slower than `ChaChaRng`
-    /// when considerable output is required, but it should reduce
-    /// the final linked binary size slightly, and improves domain
-    /// separation.
-    #[inline(always)]
-    pub fn vrf_output_merlin_rng(&self, context: &[u8]) -> ::merlin::TranscriptRng {
-        // Very insecure hack except for our commit_witness_bytes below
-        struct ZeroFakeRng;
-        impl RngCore for ZeroFakeRng {
-            fn next_u32(&mut self) -> u32 {  panic!()  }
-            fn next_u64(&mut self) -> u64 {  panic!()  }
-            fn fill_bytes(&mut self, dest: &mut [u8]) {
-                for i in dest.iter_mut() {  *i = 0;  }
-            }
-            fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), ::rand_core::Error> {
-                self.fill_bytes(dest);
-                Ok(())
-            }
-        }
-        impl CryptoRng for ZeroFakeRng {}
-
-        let mut t = ::merlin::Transcript::new(b"VRFResult");
-        t.append(b"ctx",context);
-        self.append(b"VrfInOut",&mut t);
-        t.build_rng().finalize(&mut ZeroFakeRng)
+        R::from_seed(self.vrf_output_merlin::<R::Seed>(context))
     }
 }
 
