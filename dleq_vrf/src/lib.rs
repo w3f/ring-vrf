@@ -61,9 +61,7 @@ pub const SMALL_COFACTOR_BOUND: u64 = 8;
 /// but invoke `mul_by_cofactor` in hashing and equality checks. 
 pub const fn small_cofactor_projective<C: CurveGroup>() -> bool {
     let cofactor: &'static [u64] = <<C as CurveGroup>::Config as CurveConfig>::COFACTOR;
-    if cofactor.len() == 0 { true }
-    else if cofactor.len() == 1 && cofactor[0] <= SMALL_COFACTOR_BOUND { true }
-    else { false }
+    cofactor.len() == 0 || ( cofactor.len() == 1 && cofactor[0] <= SMALL_COFACTOR_BOUND )
 }
 
 /// Report if an elliptic curve has a small cofactor
