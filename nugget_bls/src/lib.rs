@@ -53,9 +53,11 @@ fn pk_in<P: Pairing>() -> VrfInput<<P as Pairing>::G2Affine> {
 }
 
 
+#[cfg(feature = "getrandom")]
 #[derive(Clone)]  // Zeroize
 pub struct SecretKey<P: Pairing>(dleq_vrf::SecretKey<<P as Pairing>::G1Affine>);
 
+#[cfg(feature = "getrandom")]
 impl<P: Pairing> SecretKey<P> {
     pub fn as_g1_publickey(&self) -> &PublicKeyG1<P> {
         self.0.as_publickey()

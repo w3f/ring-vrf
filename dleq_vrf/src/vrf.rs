@@ -19,9 +19,7 @@ use ark_std::{vec::Vec};
 
 use rand_core::{RngCore,CryptoRng,SeedableRng}; // OsRng
 
-use crate::{
-    SigningTranscript, SecretKey,
-};  // use super::*;
+use crate::{SigningTranscript, SecretKey};
 
 
 use core::borrow::{Borrow}; // BorrowMut
