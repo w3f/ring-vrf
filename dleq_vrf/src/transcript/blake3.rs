@@ -26,19 +26,19 @@ use core::borrow::{BorrowMut}; // Borrow
 include!("inc_io.rs");
 
 
-fn blake3_update_with_len(h: &mut Hasher, s: &[u8]) -> &mut Hasher {
-    let l = s.len();
+fn blake3_update_with_len<'a>(h: &'a mut Hasher, s: &[u8]) -> &'a mut Hasher {
+    let l = s.len() as u64;
     if l == 0 {
         return h.update(&[0xFFu8]);
     }
     if l < 128 {
         h.update(&[s.len() as u8]);
-    } else if l <= u8::MAX {
+    } else if l <= u8::MAX as u64 {
         h.update(&[0x80u8, l as u8]);
-    } else if l <= u16::MAX {
+    } else if l <= u16::MAX as u64 {
         let l = u16::to_le_bytes(l as u16);
         h.update(&[0x80u8, l[0], l[1]]);
-    } else if l <= u32::MAX {
+    } else if l <= u32::MAX as u64 {
         let l = u32::to_le_bytes(l as u32);
         h.update(&[0x81u8, l[0], l[1], l[2], l[3]]);
     } else { // if l <= u64::MAX {
@@ -48,8 +48,8 @@ fn blake3_update_with_len(h: &mut Hasher, s: &[u8]) -> &mut Hasher {
     h.update(s)
 }
 
-fn blake3_update_labeled(h: &mut Hasher, label: &[u8], s: &[u8]) -> &mut Hasher {
-    blake3_update_with_len(h, label)
+fn blake3_update_labeled<'a>(h: &mut Hasher, label: &[u8], s: &[u8]) -> &'a mut Hasher {
+    blake3_update_with_len(h, label);
     blake3_update_with_len(h, s)
 }
 
