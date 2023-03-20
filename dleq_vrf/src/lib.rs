@@ -20,7 +20,6 @@ pub use flavor::{Flavor, Signature, NonBatchableSignature};
 
 pub mod keys; // PublicKeyUnblinding
 pub use keys::{PublicKey, SecretKey};
-pub(crate) use keys::SecretPair;
 
 // #[cfg(not(feature = "transcript_io"))]
 // mod transcript;
