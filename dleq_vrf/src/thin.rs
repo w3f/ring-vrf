@@ -106,6 +106,9 @@ impl<K: AffineRepr> Witness<ThinVrf<K>> {
     }
 }
 
+
+// --- Verify --- //
+
 /*
 impl<C: AffineRepr> Valid for Signature<ThinVrf<C>> {
     fn check(&self) -> Result<(), SerializationError> {
@@ -117,9 +120,6 @@ impl<C: AffineRepr> Valid for Signature<ThinVrf<C>> {
     }
 }
 */
-
-
-// --- Verify --- //
 
 impl<K: AffineRepr> ThinVrf<K> {
     pub(crate) fn make_public(&self, secret: &mut SecretPair<<K as AffineRepr>::ScalarField>) -> PublicKey<K> {
