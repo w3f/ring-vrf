@@ -25,11 +25,6 @@ pub mod merlin;
 
 /// Arkworks friendly transcripts for Chaum-Pederson DLEQ proofs
 pub trait SigningTranscript: Sized {
-    /// Extend transcript with a protocol name
-    fn proto_name(&mut self, label: &[u8]) {
-        self.append_bytes(b"proto-name", label);
-    }
-
     /// Append `u64` conveniently
     fn append_u64(&mut self, label: &'static [u8], v: u64) {
         self.append_bytes(label, &v.to_le_bytes())
@@ -172,9 +167,6 @@ where T: SigningTranscript, R: RngCore+CryptoRng
 impl<ST,RNG> SigningTranscript for SigningTranscriptWithRng<ST,RNG>
 where ST: SigningTranscript, RNG: RngCore+CryptoRng
 {
-    fn proto_name(&mut self, label: &'static [u8])
-      { self.t.proto_name(label) }
-
     fn append_u64(&mut self, label: &'static [u8], v: u64)
       { self.append_u64(label,v) }
 
