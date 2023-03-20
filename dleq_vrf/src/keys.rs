@@ -78,7 +78,7 @@ impl<F: PrimeField> SecretPair<F> {
     }
 
     pub fn resplit(&mut self) {
-        let mut x = <F as UniformRand>::rand( &mut crate::transcript::getrandom_or_panic() );
+        let x = <F as UniformRand>::rand( &mut crate::transcript::getrandom_or_panic() );
         self.0[0] += &x;
         self.0[1] -= &x;
     }
