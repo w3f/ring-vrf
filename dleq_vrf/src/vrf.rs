@@ -19,7 +19,7 @@ use ark_std::{vec::Vec};
 
 use rand_core::{RngCore,CryptoRng,SeedableRng}; // OsRng
 
-use crate::{SigningTranscript, SecretKey};
+use crate::{SigningTranscript,SecretKey};
 
 
 use core::borrow::{Borrow}; // BorrowMut
@@ -76,6 +76,7 @@ impl<'a,T: SigningTranscript,C: AffineRepr> IntoVrfInput<C> for &'a mut T {
 #[derive(Debug,Clone,CanonicalSerialize)] // CanonicalDeserialize, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
 pub struct VrfInput<C: AffineRepr>(pub C);
 
+#[cfg(feature = "getrandom")]
 impl<K: AffineRepr> SecretKey<K> {
     /// Compute VRF pre-output from secret key and input.
     pub fn vrf_preout<H>(&mut self, input: &VrfInput<H>) -> VrfPreOut<H> 
