@@ -1,0 +1,10 @@
+
+A PR to ark_ec::hashing::curve_maps::swu::SWUConfig saying
+
+impl SWUConfig for BandersnatchConfig {
+    const ZETA: Self::BaseField = MontFp!("10");
+}
+
+or ideally maybe an elligator PR
+
+
