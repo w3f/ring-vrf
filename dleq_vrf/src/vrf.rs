@@ -17,7 +17,7 @@ use ark_ec::{AffineRepr, CurveGroup, hashing::{HashToCurve,HashToCurveError}};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
 use ark_std::{vec::Vec};
 
-use rand_core::{RngCore,CryptoRng,SeedableRng}; // OsRng
+use rand_core::{SeedableRng}; // RngCore,CryptoRng,OsRng
 
 use crate::{SigningTranscript,SecretKey};
 
@@ -57,7 +57,7 @@ impl<'a,T: SigningTranscript,C: AffineRepr> IntoVrfInput<C> for &'a mut T {
 }
 
 pub fn ark_hash_to_curve<C,H2C>(domain: &[u8],message: &[u8]) -> Result<VrfInput<C>,HashToCurveError>
-where C: AffineRepr,H2C: HashToCurve<<C as AffineRepr>::Group>,
+where C: AffineRepr, H2C: HashToCurve<<C as AffineRepr>::Group>,
 {
     Ok(VrfInput( H2C::new(domain)?.hash(message)? ))
 }

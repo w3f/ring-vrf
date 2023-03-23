@@ -193,7 +193,7 @@ impl<ST,RNG> SigningTranscript for SigningTranscriptWithRng<ST,RNG>
 where ST: SigningTranscript, RNG: RngCore+CryptoRng
 {
     fn append_u64(&mut self, label: &'static [u8], v: u64)
-      { self.append_u64(label,v) }
+      { self.t.append_u64(label,v) }
 
   fn append_bytes(&mut self, label: &'static [u8], bytes: &[u8])
       { self.t.append_bytes(label,bytes) }
