@@ -13,7 +13,7 @@
 //! We suggest using either non-malleable VRFs or using implicit
 //! certificates instead of HDKD when using VRFs.
 
-use ark_ec::{AffineRepr,CurveGroup};
+use ark_ec::{AffineRepr, CurveGroup, hashing::{HashToCurve,HashToCurveError}};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
 use ark_std::{vec::Vec};
 
@@ -55,6 +55,13 @@ impl<'a,T: SigningTranscript,C: AffineRepr> IntoVrfInput<C> for &'a mut T {
         VrfInput( p.into_affine() )
     }
 }
+
+pub fn ark_hash_to_curve<C,H2C>(domain: &[u8],message: &[u8]) -> Result<VrfInput<C>,HashToCurveError>
+where C: AffineRepr,H2C: HashToCurve<<C as AffineRepr>::Group>,
+{
+    Ok(VrfInput( H2C::new(domain)?.hash(message)? ))
+}
+
 
 /// Actual VRF input, consisting of an elliptic curve point.  
 ///

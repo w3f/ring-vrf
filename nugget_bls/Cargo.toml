@@ -24,12 +24,16 @@ ark-serialize-derive = { version = "0.4", default-features = false }
 
 # zeroize = { version = "1.0", default-features = false, features = [ "zeroize_derive" ] }
 
+# ark-bls12-377 = { version = "0.4", default-features = false, features = [ "curve" ], optional = true }
+ark-bls12-381 = { version = "0.4", default-features = false, features = [ "curve" ] } # optional = true
+sha2 = { version = "0.10", default-features = false } # optional = true
+
 
 [dev-dependencies]
-# ark-bls12-377 = { version = "0.4", default-features = false, features = [ "curve" ] }
-ark-bls12-381 = { version = "0.4", default-features = false, features = [ "curve" ] }
 
 
 [features]
-default = ["getrandom"] # "std", "rand"
+default = ["getrandom","bls12_381"] # "std", "rand"
+# bls12_377 = ["dep:ark_bls12_377"]
+bls12_381 = [] # ["dep:ark_bls12_381"]
 getrandom = ["dleq_vrf/getrandom"]

@@ -8,7 +8,10 @@ use core::borrow::Borrow;
 
 use rand_core::{CryptoRng, RngCore};
 
-use ark_ec::{ AffineRepr, CurveGroup, pairing::{Pairing, prepare_g2, PairingOutput}, };
+use ark_ec::{
+    AffineRepr, CurveGroup,
+    pairing::{Pairing, prepare_g2, PairingOutput},
+};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};  // SerializationError
 use ark_std::{ Zero, vec::Vec, };   // io::{Read, Write}
 
@@ -19,6 +22,9 @@ pub use dleq_vrf::{
 };
 use dleq_vrf::vrf::{VrfInput, VrfInOut}; // VrfPreOut
 
+
+// #[cfg(bls12_381)]
+mod bls12_381;
 
 #[cfg(test)]
 mod tests;
