@@ -23,11 +23,28 @@ pub use dleq_vrf::{
 use dleq_vrf::vrf::{VrfInput, VrfInOut}; // VrfPreOut
 
 
-// #[cfg(bls12_381)]
-mod bls12_381;
-
 #[cfg(test)]
 mod tests;
+
+
+#[cfg(feature = "bls12_381")]
+pub mod bls12_381 {
+    pub use ark_bls12_381::{self as curve, Bls12_381};
+    pub type P = Bls12_381;
+    include!("inc_bls12.rs");
+}
+
+#[cfg(feature = "bls12_377")]
+pub mod bls12_377 {
+    pub use ark_bls12_377::{self as curve, Bls12_377};
+    pub type P = Bls12_377;
+    include!("inc_bls12.rs");
+}
+
+pub struct Message<'a> {
+    pub domain: &'a [u8],
+    pub message: &'a [u8],
+}
 
 
 type ThinVrf<P> = dleq_vrf::ThinVrf<<P as Pairing>::G1Affine>;
