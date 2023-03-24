@@ -251,7 +251,6 @@ impl<P: Pairing> AggregateSignature<P> {
             g2_minus_generator::<P>(),
         ];
         let r: _ = P::final_exponentiation( P::multi_miller_loop(g1s,g2s) );
-        debug_assert_eq!(r, Some(PairingOutput::<P>::zero()));
         if r == Some(PairingOutput::<P>::zero()) { //zero is the target_field::one !!
             Ok(())
         } else {
@@ -269,7 +268,5 @@ impl<P: Pairing> AggregateSignature<P> {
         for pk in publickeys { agg_pk_g1 += pk.borrow().0; }
         self.verify_by_aggregated(input, agg_pk_g1.into_affine())
     }
-
-    
 }
 
