@@ -80,7 +80,7 @@ pub(crate) struct Witness<F: Flavor> {
     pub(crate) r: <F as InnerFlavor>::Affines,
 }
 
-/// Signature
+/// VRF signature detached from VRF inputs and outpus
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct Signature<F: Flavor> {
     pub(crate) compk: <F as InnerFlavor>::KeyCommitment,
@@ -117,7 +117,7 @@ impl<F: Flavor> Signature<F> {
     }
 }
 
-/// Non-batchable signature, resembling EC VRF
+/// Non-batchable VRF signature detached from VRF inputs and outpus,resembles EC VRF.
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct NonBatchableSignature<F: Flavor> 
 // where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,

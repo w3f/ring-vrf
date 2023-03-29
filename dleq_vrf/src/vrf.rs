@@ -15,7 +15,7 @@
 
 use ark_ec::{AffineRepr, CurveGroup, hashing::{HashToCurve,HashToCurveError}};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
-use ark_std::{vec::Vec};
+use ark_std::{iter::IntoIterator, vec::Vec};
 
 use rand_core::{SeedableRng}; // RngCore,CryptoRng,OsRng
 
@@ -124,6 +124,27 @@ impl<C: AffineRepr> VrfPreOut<C> {
     pub fn attach_input<I: IntoVrfInput<C>>(&self, input: I) -> VrfInOut<C> {
         VrfInOut { input: input.into_vrf_input(), preoutput: self.clone() }
     }
+}
+
+pub fn attach_inputs_array<const N:usize,C,I,II>(preouts: &[VrfPreOut<C>; N], inputs: II) -> [VrfInOut<C>; N]
+where C: AffineRepr, I: IntoVrfInput<C>, II: IntoIterator<Item=I>,
+{
+    preouts.iter().zip(inputs).map(
+        |(preout,input)| preout.attach_input(input)
+    ).collect::<arrayvec::ArrayVec<VrfInOut<C>,{N}>>().into_inner().unwrap()
+}
+
+pub fn attach_inputs_vec<C,I,O,II,IO>(preouts: IO, inputs: II) -> Vec<VrfInOut<C>>
+where
+    C: AffineRepr,
+    I: IntoVrfInput<C>,
+    O: Borrow<VrfPreOut<C>>,
+    II: IntoIterator<Item=I>,
+    IO: IntoIterator<Item=O>,
+{
+    preouts.into_iter().zip(inputs).map(
+        |(preout,input)| preout.borrow().attach_input(input)
+    ).collect::<Vec<VrfInOut<C>>>()
 }
 
 
