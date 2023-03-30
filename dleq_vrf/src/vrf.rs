@@ -126,15 +126,22 @@ impl<C: AffineRepr> VrfPreOut<C> {
     }
 }
 
-pub fn attach_inputs_array<const N:usize,C,I,II>(preouts: &[VrfPreOut<C>; N], inputs: II) -> [VrfInOut<C>; N]
+pub fn attach_inputs_array<const N:usize,C,I,II>(preoutputs: &[VrfPreOut<C>; N], inputs: II) -> [VrfInOut<C>; N]
 where C: AffineRepr, I: IntoVrfInput<C>, II: IntoIterator<Item=I>,
 {
-    preouts.iter().zip(inputs).map(
-        |(preout,input)| preout.attach_input(input)
+    preoutputs.iter().zip(inputs).map(
+        |(preoutput,input)| preoutput.attach_input(input)
     ).collect::<arrayvec::ArrayVec<VrfInOut<C>,{N}>>().into_inner().unwrap()
 }
 
-pub fn attach_inputs_vec<C,I,O,II,IO>(preouts: IO, inputs: II) -> Vec<VrfInOut<C>>
+pub fn collect_preoutputs_array<const N:usize,C: AffineRepr>(ios: &[VrfInOut<C>]) -> [VrfPreOut<C>; N]
+{
+    ios.iter().map(
+        |io| io.preoutput.clone()
+    ).collect::<arrayvec::ArrayVec<VrfPreOut<C>,{N}>>().into_inner().unwrap()
+}
+
+pub fn attach_inputs_vec<C,I,O,II,IO>(preoutputs: IO, inputs: II) -> Vec<VrfInOut<C>>
 where
     C: AffineRepr,
     I: IntoVrfInput<C>,
@@ -142,9 +149,16 @@ where
     II: IntoIterator<Item=I>,
     IO: IntoIterator<Item=O>,
 {
-    preouts.into_iter().zip(inputs).map(
+    preoutputs.into_iter().zip(inputs).map(
         |(preout,input)| preout.borrow().attach_input(input)
     ).collect::<Vec<VrfInOut<C>>>()
+}
+
+pub fn collect_preoutputs_vec<const N:usize,C: AffineRepr>(ios: &[VrfInOut<C>]) -> Vec<VrfPreOut<C>>
+{
+    ios.iter().map(
+        |io| io.preoutput.clone()
+    ).collect::<Vec<VrfPreOut<C>>>()
 }
 
 
