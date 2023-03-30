@@ -3,6 +3,7 @@
 members = [
     "dleq_vrf",
     "nugget_bls",
+    "bandersnatch_vrfs",
 ]
 # "web3sum_ring_vrf",
 

@@ -1,0 +1,41 @@
+[package]
+name = "bandersnatch_vrfs"
+description = "Ring VRFs and thin VRF on bandersnatch"
+authors = ["Jeff Burdges <jeff@web3.foundation>"]
+version = "0.0.1"
+repository = "https://github.com/w3f/ring-vrf/tree/master/bandersnatch_vrfs"
+edition = "2021"
+license = "MIT/Apache-2.0"
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dleq_vrf = { version = "0.0.1", default-features = false, path = "../dleq_vrf" }
+
+rand_core = { version = "0.6", default-features = false }
+merlin = { version = "3.0", default-features = false }
+
+ark-std = { version = "0.4", default-features = false }
+ark-ff = { version = "0.4", default-features = false }
+ark-ec = { version = "0.4", default-features = false }
+ark-serialize = { version = "0.4", default-features = false, features = [ "derive" ] }
+ark-serialize-derive = { version = "0.4", default-features = false }
+
+# zeroize = { version = "1.0", default-features = false, features = [ "zeroize_derive" ] }
+
+# In these three, add optional = true ere if we create some related curves trait.
+ark-ed-on-bls12-381-bandersnatch = { version = "0.4", default-features = false }
+ark-bls12-381 = { version = "0.4", default-features = false, features = [ "curve" ] } # implies scalar_field
+sha2 = { version = "0.10", default-features = false }
+
+
+[dev-dependencies]
+
+
+[features]
+default = ["getrandom"] # "bandersnatch", "std", "rand"
+# bandersnatch = ["dep:ark-ed-on-bls12-381-bandersnatch", "dep:ark-bls12-381", "dep:sha2"]
+getrandom = ["dleq_vrf/getrandom"]
+
+
