@@ -25,7 +25,7 @@ pub struct PublicKey<C: AffineRepr>(pub C);
 
 impl<C: AffineRepr> PartialEq for PublicKey<C> {
     fn eq(&self, other: &PublicKey<C>) -> bool {
-        crate::eq_mod_small_cofactor_affine(&self.0, &other.0)
+        crate::zero_mod_small_cofactor(self.0.into_group() - other.0.into_group())
     }
 }
 

@@ -162,7 +162,7 @@ impl<K: AffineRepr> ThinVrf<K> {
 
         let lhs = io.input.0.mul(signature.s);
         let rhs = signature.r.into_group() + io.preoutput.0.mul(c);
-        if crate::eq_mod_small_cofactor_projective(&lhs, &rhs) {
+        if crate::zero_mod_small_cofactor(lhs - rhs) {
             Ok(ios)
         } else {
             Err(SignatureError::Invalid)

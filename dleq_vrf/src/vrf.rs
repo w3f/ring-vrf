@@ -186,7 +186,7 @@ impl<C: AffineRepr> VrfInOut<C> {
     pub fn vrf_output_append<T>(&self, label: &'static [u8], t: &mut T)
     where T: SigningTranscript,
     {
-        if crate::small_cofactor::<C>() {
+        if crate::small_cofactor_affine::<C>() {
             let mut io = self.clone();
             io.preoutput.0 = io.preoutput.0.mul_by_cofactor();
             t.append(label,&io);

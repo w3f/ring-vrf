@@ -69,22 +69,29 @@ pub const fn small_cofactor_projective<C: CurveGroup>() -> bool {
 /// If false then perform full subgroups checks in deserialization
 /// If true then only perform on-curve checks in deserialization,
 /// but invoke `mul_by_cofactor` in hashing and equality checks. 
-pub const fn small_cofactor<C: AffineRepr>() -> bool {
+pub fn small_cofactor_affine<C: AffineRepr>() -> bool {
     small_cofactor_projective::<<C as AffineRepr>::Group>()
 }
 
-pub fn eq_mod_small_cofactor_projective<C: CurveGroup>(lhs: &C, rhs: &C) -> bool {
+pub fn mul_by_small_cofactor<C: CurveGroup>(z: C) -> C {
     if crate::small_cofactor_projective::<C>() {
-        lhs.mul_bigint(<<C as CurveGroup>::Config as CurveConfig>::COFACTOR)
-         == rhs.mul_bigint(<<C as CurveGroup>::Config as CurveConfig>::COFACTOR)
-    } else { lhs == rhs }
+        z.mul_bigint(<<C as CurveGroup>::Config as CurveConfig>::COFACTOR)
+    } else { z }
 }
 
-pub fn eq_mod_small_cofactor_affine<C: AffineRepr>(lhs: &C, rhs: &C) -> bool {
-    if crate::small_cofactor::<C>() {
-        lhs.clear_cofactor() == rhs.clear_cofactor() // mul_by_cofactor is fine here though
-    } else { lhs == rhs }
+pub fn zero_mod_small_cofactor<C: CurveGroup>(z: C) -> bool {
+    // use ark_ff::Zero;
+    mul_by_small_cofactor(z).is_zero()
 }
+
+/*
+pub fn zero_mod_small_cofactor_affine<C: AffineRepr>(z: C) -> bool {
+    use ark_ff::Zero;
+    if crate::small_cofactor::<C>() {
+        z.clear_cofactor().is_zero() // mul_by_cofactor is fine here though
+    } else { z.is_zero() }
+}
+*/
 
 
 // #[cfg(test)]

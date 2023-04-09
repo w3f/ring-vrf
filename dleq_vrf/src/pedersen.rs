@@ -93,7 +93,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         TODO: loop
         let mut b = self.blinding_base.mul(self.0);  // FIX !!
         b.add_assign_mixed(& unblinded.0);
-        crate::eq_mod_small_cofactor_projective(b, blinded.into_group())
+        crate::zero_mod_small_cofactor(b - blinded.into_group())
     }
 }
 */
@@ -344,7 +344,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 
         let lhs = io.input.0 * signature.s.keying;
         let rhs = signature.r.preoutish.into_group() + io.preoutput.0 * c;
-        if ! crate::eq_mod_small_cofactor_projective(&lhs, &rhs) {
+        if ! crate::zero_mod_small_cofactor(lhs - rhs) {
             return Err(SignatureError::Invalid);
         }
         // TODO: Use an MSM here
@@ -354,7 +354,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         }
         // TODO: Try an MSM here
         let rhs = signature.r.keyish.into_group() + signature.compk.0 * c;
-        if ! crate::eq_mod_small_cofactor_projective(&lhs, &rhs) {
+        if ! crate::zero_mod_small_cofactor(lhs - rhs) {
             return Err(SignatureError::Invalid);
         }
         Ok(ios)
