@@ -28,8 +28,15 @@ pub mod tests;
 /// 
 /// We prefer if labels are `&'static [u8]` but of course
 /// users might require labels provided by another langauge.
-pub trait IntoLabel : Borrow<[u8]> {}
-impl IntoLabel for &'static [u8] {}
+pub trait AsLabel {
+    fn as_label(&self) -> &[u8];
+}
+impl AsLabel for &'static [u8] {
+    fn as_label(&self) -> &[u8] { &self[..] }
+}
+impl<const N: usize> AsLabel for &'static [u8; N] {
+    fn as_label(&self) -> &[u8] { &self[..] }
+}
 
 /// Identify a byte slice as a label, which requires this not be
 /// user controlled data.
@@ -39,11 +46,9 @@ impl IntoLabel for &'static [u8] {}
 /// `IsLabel<str>`, which maybe non-cannonical and cause breakage.
 #[derive(Clone,Debug)]
 pub struct IsLabel<T>(pub T);
-
-impl<T: Borrow<[u8]>> Borrow<[u8]> for IsLabel<T> {
-    fn borrow(&self) -> &[u8] { self.0.borrow() }
+impl<T: Borrow<[u8]>> AsLabel for IsLabel<T> {
+    fn as_label(&self) -> &[u8] { self.0.borrow() }
 }
-impl<T: Borrow<[u8]>> IntoLabel for IsLabel<T> {}
 
 
 /// Shake128 transcript style hasher.
@@ -178,9 +183,9 @@ impl Transcript {
 
     /// Write domain separation label into the hasher,
     /// after first ending the previous write phase.
-    pub fn label(&mut self, label: impl IntoLabel) {
+    pub fn label(&mut self, label: impl AsLabel) {
         self.seperate();
-        self.write_bytes(label.borrow());
+        self.write_bytes(label.as_label());
         self.seperate();
     }
 
@@ -188,7 +193,7 @@ impl Transcript {
     /// 
     /// We implicitly have an initial zero length user data write
     /// preceeding this first label.
-    pub fn new(label: impl IntoLabel) -> Transcript {
+    pub fn new(label: impl AsLabel) -> Transcript {
         let mut t = Transcript::default();
         t.label(label);
         t
@@ -205,11 +210,11 @@ impl Transcript {
     /// 
     /// Invoking `self.label(label)` has the same effect upon `self`,
     /// but the reader returnned cannot be obtained by any combinataion of other methods.
-    pub fn challenge(&mut self, label: impl IntoLabel) -> Reader {
+    pub fn challenge(&mut self, label: impl AsLabel) -> Reader {
         #[cfg(feature = "debug-transcript")]
         println!("Shake128 {}transcript challenge",self.debug_name);
         self.seperate();
-        self.write_bytes(label.borrow());
+        self.write_bytes(label.as_label());
         let reader = self.clone().raw_reader();
         self.seperate();
         reader
@@ -221,7 +226,7 @@ impl Transcript {
     /// touch the original.  After forking, you should write any
     /// secret seeds into the transcript, and then invoke `witness`
     /// with system randomness.
-    pub fn fork(&self, label: impl IntoLabel) -> Transcript {
+    pub fn fork(&self, label: impl AsLabel) -> Transcript {
         let mut fork = self.clone();
         #[cfg(feature = "debug-transcript")]
         {
