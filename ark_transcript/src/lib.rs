@@ -10,16 +10,18 @@
 #![doc = include_str!("../README.md")]
 
 
-use ark_std::borrow::{Borrow};
-
-use ark_ff::{Field};
-use ark_std::{UniformRand, io::{self, Read, Write}};  // Result
+use ark_std::{UniformRand, borrow::{Borrow}, io::{self, Read, Write}};  // Result
 use ark_serialize::{CanonicalSerialize};
+use ark_ff::{Field};
 
 use rand_core::{RngCore,CryptoRng};
 
 pub use sha3::{Shake128, digest::Update};
 use sha3::digest::{XofReader, ExtendableOutput};
+
+
+#[cfg(test)]
+pub mod tests;
 
 
 /// Trascript labels.
@@ -48,7 +50,7 @@ impl<T: Borrow<[u8]>> IntoLabel for IsLabel<T> {}
 #[derive(Clone)]
 pub struct Transcript {
     /// Length writen between `seperate()` calls.  Always less than 2^31.
-    len: u32,
+    length: u32,
     /// Is this a witness transcript?
     #[cfg(feature = "debug-transcript")]
     debug_name: &'static str,
@@ -62,7 +64,7 @@ impl Default for Transcript {
         #[cfg(feature = "debug-transcript")]
         println!("Initial Shake128 transcript..");
         Transcript {
-            len: 0,
+            length: 0,
             #[cfg(feature = "debug-transcript")]
             debug_name: "",
             h: Shake128::default(),
@@ -98,9 +100,9 @@ impl Transcript {
     /// from [rfc8017](https://www.rfc-editor.org/rfc/rfc8017.txt).
     pub fn seperate(&mut self) {
         #[cfg(feature = "debug-transcript")]
-        println!("Shake128 {}transcript seperator",self.debug_name);
-        self.h.update( & self.len.to_be_bytes() );
-        self.len = 0;
+        println!("Shake128 {}transcript seperator: {}",self.debug_name, self.length);
+        self.h.update( & self.length.to_be_bytes() );
+        self.length = 0;
     }
 
     /// Write a basic unlabeled domain seperator, but only if we have
@@ -112,7 +114,7 @@ impl Transcript {
     /// `user_data.len==0`.  You could trigger this case only if
     /// you have multiple code paths whose hashing converges.
     pub fn ensure_seperated(&mut self) {
-        if self.len > 0 { self.seperate(); }
+        if self.length > 0 { self.seperate(); }
     }
 
     /// Write bytes into the hasher, increasing doain separator counter.
@@ -122,7 +124,7 @@ impl Transcript {
     pub fn write_bytes(&mut self, mut bytes: &[u8]) {
         const HIGH: u32 = 0x80000000;
         loop {
-            let l = ark_std::cmp::min( (HIGH - 1 - self.len) as usize, bytes.len() );
+            let l = ark_std::cmp::min( (HIGH - 1 - self.length) as usize, bytes.len() );
             #[cfg(feature = "debug-transcript")]
             match ark_std::str::from_utf8(bytes) {
                 Ok(s) => {
@@ -135,10 +137,10 @@ impl Transcript {
             self.h.update( &bytes[0..l] );
             bytes = &bytes[l..];
             if bytes.len() == 0 {
-                self.len += u32::try_from(l).unwrap();
+                self.length += u32::try_from(l).unwrap();
                 return;
             }
-            self.len |= HIGH;
+            self.length |= HIGH;
             self.seperate();
         }
     }
@@ -175,7 +177,8 @@ impl Transcript {
         }
     }
 
-    /// Write domain separation label into the hasher.
+    /// Write domain separation label into the hasher,
+    /// after first ending the previous write phase.
     pub fn label(&mut self, label: impl IntoLabel) {
         self.seperate();
         self.write_bytes(label.borrow());
@@ -250,7 +253,7 @@ impl Transcript {
     /// as otherwise you incur risks from any weaknesses elsewhere.
     /// 
     /// You'll need a deterministic randomness for test vectors of ourse, 
-    /// ala `&mut ark_transcript::test_vectors::TestVectorFakeRng`.
+    /// ala `&mut ark_transcript::tests::TestVectorFakeRng`.
     /// We suggest implementing this choice inside your secret key type,
     /// along side whatever supplies secret seeds.
     pub fn witness(mut self, rng: &mut (impl RngCore+CryptoRng)) -> Reader {
@@ -260,24 +263,6 @@ impl Transcript {
         self.write_bytes(&rand);
         self.raw_reader()
     }
-}
-
-#[cfg(test)]
-pub mod test_vectors {
-    /// We need a constant `RngCore` for providing test vectors.
-    pub struct TestVectorFakeRng;
-    impl rand_core::RngCore for TestVectorFakeRng {
-        fn next_u32(&mut self) -> u32 {  0  }
-        fn next_u64(&mut self) -> u64 {  0  }
-        fn fill_bytes(&mut self, dest: &mut [u8]) {
-            for i in dest.iter_mut() {  *i = 0;  }
-        }
-        fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), ::rand_core::Error> {
-            self.fill_bytes(dest);
-            Ok(())
-        }
-    }
-    impl rand_core::CryptoRng for TestVectorFakeRng {}
 }
 
 
@@ -309,6 +294,12 @@ impl Reader {
     /// Sample a field element using reduction mod the order.
     pub fn read_reduce<F: Field>(&mut self) -> F {
         self.read_uniform() // TODO: Use reduction mod ...
+    }
+}
+
+impl XofReader for Reader {
+    fn read(&mut self, dest: &mut [u8]) {
+        self.read_bytes(dest);
     }
 }
 
