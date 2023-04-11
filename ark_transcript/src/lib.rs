@@ -50,7 +50,9 @@ impl<T: Borrow<[u8]>> IntoLabel for IsLabel<T> {}
 #[derive(Clone)]
 pub struct Transcript {
     /// Length writen between `seperate()` calls.  Always less than 2^31.
-    length: u32,
+    /// `None` means `write` was not yet invoked, so seperate() does nothing.
+    /// We need this to distinguish zero length write calls.
+    length: Option<u32>,
     /// Is this a witness transcript?
     #[cfg(feature = "debug-transcript")]
     debug_name: &'static str,
@@ -64,7 +66,7 @@ impl Default for Transcript {
         #[cfg(feature = "debug-transcript")]
         println!("Initial Shake128 transcript..");
         Transcript {
-            length: 0,
+            length: None,
             #[cfg(feature = "debug-transcript")]
             debug_name: "",
             h: Shake128::default(),
@@ -96,25 +98,21 @@ impl Transcript {
     /// Write basic unlabeled domain seperator into the hasher.
     /// 
     /// Implemented by writing in big endian the number of bytes
-    /// written since the previous `t.seperate()` call, aka I2OSP(len,4)
+    /// written since the previous `seperate` call, aka I2OSP(len,4)
     /// from [rfc8017](https://www.rfc-editor.org/rfc/rfc8017.txt).
+    /// 
+    /// We do nothing unless `write_bytes` was called previously, aka
+    /// after the previous `seperate` call.  Invoking `write_bytes(b"")`
+    /// before `seperate` forces seperation, aka aligns multiple code
+    /// paths with convergent hashing, but in which users supply zero
+    /// length inputs.
     pub fn seperate(&mut self) {
         #[cfg(feature = "debug-transcript")]
         println!("Shake128 {}transcript seperator: {}",self.debug_name, self.length);
-        self.h.update( & self.length.to_be_bytes() );
-        self.length = 0;
-    }
-
-    /// Write a basic unlabeled domain seperator, but only if we have
-    /// written but unseperated data now, so it does nothing when
-    /// invoked right after `seperate`, `new`, or `label`.
-    /// 
-    /// We caution that `t.write(user_data); t.maybe_seperate();`
-    /// differs from `t.write(user_data); t.seperate();` whenever
-    /// `user_data.len==0`.  You could trigger this case only if
-    /// you have multiple code paths whose hashing converges.
-    pub fn ensure_seperated(&mut self) {
-        if self.length > 0 { self.seperate(); }
+        if let Some(l) = self.length {
+            self.h.update( & l.to_be_bytes() ); 
+        }
+        self.length = None;
     }
 
     /// Write bytes into the hasher, increasing doain separator counter.
@@ -124,7 +122,8 @@ impl Transcript {
     pub fn write_bytes(&mut self, mut bytes: &[u8]) {
         const HIGH: u32 = 0x80000000;
         loop {
-            let l = ark_std::cmp::min( (HIGH - 1 - self.length) as usize, bytes.len() );
+            let length = self.length.get_or_insert(0);
+            let l = ark_std::cmp::min( (HIGH - 1 - *length) as usize, bytes.len() );
             #[cfg(feature = "debug-transcript")]
             match ark_std::str::from_utf8(bytes) {
                 Ok(s) => {
@@ -137,10 +136,10 @@ impl Transcript {
             self.h.update( &bytes[0..l] );
             bytes = &bytes[l..];
             if bytes.len() == 0 {
-                self.length += u32::try_from(l).unwrap();
+                *length += u32::try_from(l).unwrap();
                 return;
             }
-            self.length |= HIGH;
+            *length |= HIGH;
             self.seperate();
         }
     }
@@ -154,7 +153,7 @@ impl Transcript {
     /// 
     /// We use uncompressed serialization here for performance. 
     pub fn append<O: CanonicalSerialize+?Sized>(&mut self, itm: &O) {
-        self.ensure_seperated();
+        self.seperate();
         itm.serialize_uncompressed(&mut *self)
         .expect("ArkTranscript should infaillibly flushed"); 
         self.seperate();
@@ -168,7 +167,7 @@ impl Transcript {
     pub fn append_slice<O,B>(&mut self, itms: &[B])
     where O: CanonicalSerialize+?Sized, B: Borrow<O>, 
     {
-        self.ensure_seperated();
+        self.seperate();
         for itm in itms.iter() {
             itm.borrow()
             .serialize_uncompressed(&mut *self)
