@@ -1,5 +1,5 @@
 [package]
-name = "ark_transcript"
+name = "ark-transcript"
 description = "Arkworks friendly transcripts for proofs using Fiat-Shamir"
 authors = ["Jeff Burdges <jeff@web3.foundation>"]
 version = "0.0.1"

@@ -1,7 +1,7 @@
 [workspace]
 
 members = [
-    "ark_transcript",
+    "ark-transcript",
     "dleq_vrf",
     "nugget_bls",
     "bandersnatch_vrfs",

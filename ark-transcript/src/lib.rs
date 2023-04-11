@@ -10,7 +10,11 @@
 #![doc = include_str!("../README.md")]
 
 
-use ark_std::{UniformRand, borrow::{Borrow}, io::{self, Read, Write}};  // Result
+use ark_std::{
+    UniformRand,
+    borrow::{Borrow,BorrowMut},
+    io::{self, Read, Write}, // Result
+};
 use ark_serialize::{CanonicalSerialize};
 use ark_ff::{Field};
 
@@ -50,6 +54,45 @@ impl<T: Borrow<[u8]>> AsLabel for IsLabel<T> {
     fn as_label(&self) -> &[u8] { self.0.borrow() }
 }
 
+
+/// All types interpretable as `Transcript`s, including primarily
+/// `impl BorrowMut<Traanscript>` types like `Transcript` and
+/// `&mut Transcript`.
+/// 
+/// We permit `&[u8]` and `AsLabel<T>` here too, but caution that
+/// `&[u8]` needs internal applicaiton domain seperation. 
+pub trait IntoTranscript {
+    type Taken: BorrowMut<Transcript>;
+    fn into_transcript(self) -> Self::Taken;
+}
+impl<B: BorrowMut<Transcript>> IntoTranscript for B {
+    type Taken = B;
+    fn into_transcript(self) -> B { self }
+}
+impl<T: Borrow<[u8]>> IntoTranscript for IsLabel<T> {
+    type Taken = Transcript;
+    fn into_transcript(self) -> Transcript {
+        Transcript::new(self)
+    }
+}
+impl<'a> IntoTranscript for &'a [u8] {
+    type Taken = Transcript;
+    fn into_transcript(self) -> Transcript {
+        let mut t = Transcript::default();
+        t.write_bytes(self);
+        t.seperate();
+        t
+    }
+}
+impl<'a, const N: usize> IntoTranscript for &'a [u8; N] {
+    type Taken = Transcript;
+    fn into_transcript(self) -> Transcript {
+        let mut t = Transcript::default();
+        t.write_bytes(self);
+        t.seperate();
+        t
+    }
+}
 
 /// Shake128 transcript style hasher.
 #[derive(Clone)]
