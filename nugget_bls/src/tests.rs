@@ -1,10 +1,8 @@
 
-use merlin::Transcript;
+use dleq_vrf::Transcript;
 
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
 use ark_std::vec::Vec;
-
-use crate::{SigningTranscript}; // {SecretKey, PublicKey, Signature,};
 
 type P = ark_bls12_381::Bls12_381;
 type SecretKey = crate::SecretKey<P>;
@@ -46,7 +44,7 @@ fn aggregation() {
     let sigs: Vec<Signature> = sks.iter_mut().map(|sk| {
         g1pks0.push(sk.as_g1_publickey().clone());
         let mut t = Transcript::new(b"AD");
-        t.append(b"", sk.as_g1_publickey());
+        t.append(sk.as_g1_publickey());
         let input = &mut Transcript::new(b"MSG");
         sk.sign_nugget_bls(t,input)
     }).collect();

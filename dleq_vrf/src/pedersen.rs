@@ -10,19 +10,17 @@
 use ark_ff::{PrimeField};
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
-use ark_std::{vec::Vec};
+use ark_std::{borrow::BorrowMut, vec::Vec};
 
 use zeroize::Zeroize;
 
 use crate::{
-    SigningTranscript,
+    Transcript, IntoTranscript,
     flavor::{Flavor, InnerFlavor, Witness, Signature, NonBatchableSignature},
     keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut},
 };
-
-use core::borrow::{BorrowMut};
 
 
 /// Pedersen VRF flavor
@@ -176,13 +174,13 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 
 // #[cfg(feature = "getrandom")]
 impl<K: AffineRepr> SecretKey<K> {
-    pub fn new_secret_blinding<T, const B: usize>(&self, t: &T) -> SecretBlinding<K,B>
-    where T: SigningTranscript+Clone
+    pub fn new_secret_blinding<const B: usize>(&self, t: &Transcript) -> SecretBlinding<K,B>
     {
         // Accessed system randomness using rand_hack(), which helps test vectors,
         // but clearly insecure otherwise. 
+        let mut reader = self.witness(t,b"MakeSecretBlinding");
         let secret_blinding: [<K as AffineRepr>::ScalarField; B]
-         = t.witnesses(b"MakeSecretBlinding", &[&self.nonce_seed]);
+         = ark_std::array::from_fn(|_| reader.read_uniform());
         SecretBlinding(secret_blinding)
     }
 }
@@ -191,24 +189,23 @@ impl<K: AffineRepr> SecretKey<K> {
 impl<K,H,const B: usize> PedersenVrf<K,H,B>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
-    pub(crate) fn new_pedersen_witness<T>(
+    pub(crate) fn new_pedersen_witness(
         &self,
-        t: &T,
+        t: &Transcript,
         input: &VrfInput<H>,
         secret: &SecretKey<K>,
     ) -> Witness<PedersenVrf<K,H,B>>
-    where T: SigningTranscript,
     {
         let flavor = self;
         assert_eq!(flavor.keying_base(), secret.thin.keying_base(), 
             "Internal error, incompatable keying basepoints used.");
 
         // We'll need two calls here until const generics lands 
-         let keying: [K::ScalarField; 1]
-         = t.witnesses(b"WitnessH", &[&secret.nonce_seed]);
-         let blindings: [K::ScalarField; B]
-         = t.witnesses(b"WitnessB", &[&secret.nonce_seed]);
-        let k = Scalars { keying: keying[0], blindings, };
+        let mut reader = secret.witness(t,b"Witness");
+        let keying: K::ScalarField = reader.read_uniform();
+        let blindings: [K::ScalarField; B]
+         = ark_std::array::from_fn(|_| reader.read_uniform());
+        let k = Scalars { keying, blindings, };
 
         let mut keyish: <K as AffineRepr>::Group = flavor.keying_base * k.keying;
         for i in 0..B {
@@ -225,16 +222,16 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     /// Sign Pedersen VRF signature
     /// 
     /// We create the secret blinding unless the user supplies one.
-    pub fn sign_pedersen_vrf<T,BT>(
+    pub fn sign_pedersen_vrf(
         &self,
-        mut t: BT,
+        t: impl IntoTranscript,
         ios: &[VrfInOut<H>],
         secret_blinding: Option<SecretBlinding<K,B>>,
         secret: &mut SecretKey<K>,
     ) -> (Signature<PedersenVrf<K,H,B>>, SecretBlinding<K,B>)
-    where T: SigningTranscript+Clone, BT: BorrowMut<T>
     {
         let flavor = self;
+        let mut t = t.into_transcript();
         let t = t.borrow_mut();
         let io = vrf::vrfs_merge(t, ios);
 
@@ -242,7 +239,8 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         // witness as late as possible.
         let secret_blinding = secret_blinding.unwrap_or_else( || secret.new_secret_blinding(t) );
         let compk = flavor.compute_blinded_publickey(secret.as_publickey(), &secret_blinding);
-        t.append(b"KeyCommitment",&compk);
+        t.label(b"KeyCommitment");
+        t.append(&compk);
 
         // In principle our new secret blinding should be derandomizable
         // if the user supplied none. 
@@ -263,23 +261,24 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     /// `H != K` but `B=1`.
     /// 
     /// We create the secret blinding unless the user supplies one.
-    pub fn sign_non_batchable_pedersen_vrf<T,BT>(
+    pub fn sign_non_batchable_pedersen_vrf(
         &self,
-        mut t: BT,
+        t: impl IntoTranscript,
         ios: &[VrfInOut<H>],
         secret_blinding: Option<SecretBlinding<K,B>>,
         secret: &mut SecretKey<K>,
     ) -> (NonBatchableSignature<PedersenVrf<K,H,B>>, SecretBlinding<K,B>)
-    where T: SigningTranscript+Clone, BT: BorrowMut<T>
     {
         let flavor = self;
+        let mut t = t.into_transcript();
         let t = t.borrow_mut();
         let io = vrf::vrfs_merge(t, ios);
 
         // Allow derandomization by constructing secret_blinding and witness as late as possible.
         let secret_blinding = secret_blinding.unwrap_or_else( || secret.new_secret_blinding(t) );
         let compk = flavor.compute_blinded_publickey(secret.as_publickey(), &secret_blinding);
-        t.append(b"KeyCommitment",&compk);
+        t.label(b"KeyCommitment");
+        t.append(&compk);
 
         let w = flavor.new_pedersen_witness(t,&io.input,secret);
         let signature = w.sign_final(t,&secret_blinding,secret,compk).1;
@@ -295,16 +294,17 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     /// 
     /// Assumes we already hashed public key, `VrfInOut`s, etc.
     /// and passes the key commitment unchanged.
-    pub(crate) fn sign_final<T: SigningTranscript>(
+    pub(crate) fn sign_final(
         self,
-        t: &mut T,
+        t: &mut Transcript,
         secret_blindings: &SecretBlinding<K,B>,
         secret: &mut SecretKey<K>,
         compk: KeyCommitment<K>,
     ) -> (Signature<PedersenVrf<K,H,B>>,NonBatchableSignature<PedersenVrf<K,H,B>>) {
         let Witness { r, k } = self;
-        t.append(b"Witness", &r);
-        let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge");
+        t.label(b"Witness");
+        t.append(&r);
+        let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge").read_uniform();
         let mut blindings = arrayvec::ArrayVec::<K::ScalarField,B>::new();
         for i in 0..B {
             blindings.push( k.blindings[i] + c * secret_blindings.0[i] );
@@ -326,21 +326,23 @@ impl<K,H,const B: usize> PedersenVrf<K,H,B>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     /// Verify Pedersen VRF signature 
-    pub fn verify_pedersen_vrf<'a,T,BT>(
+    pub fn verify_pedersen_vrf<'a>(
         &self,
-        mut t: BT,
+        t: impl IntoTranscript,
         ios: &'a [VrfInOut<H>],
         signature: &Signature<PedersenVrf<K,H,B>>,
     ) -> SignatureResult<&'a [VrfInOut<H>]>
-    where T: SigningTranscript+Clone, BT: BorrowMut<T>
     {
+        let mut t = t.into_transcript();
         let t = t.borrow_mut();
         let io = vrf::vrfs_merge(t, ios);
-        t.append(b"KeyCommitment",&signature.compk);
+        t.label(b"KeyCommitment");
+        t.append(&signature.compk);
 
         // verify_final
-        t.append(b"Witness", &signature.r);
-        let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge");
+        t.label(b"Witness");
+        t.append(&signature.r);
+        let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge").read_uniform();
 
         let lhs = io.input.0 * signature.s.keying;
         let rhs = signature.r.preoutish.into_group() + io.preoutput.0 * c;
@@ -361,17 +363,18 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     }
 
     /// Verify Pedersen VRF signature 
-    pub fn verify_non_batchable_pedersen_vrf<'a,T,BT>(
+    pub fn verify_non_batchable_pedersen_vrf<'a>(
         &self,
-        mut t: BT,
+        t: impl IntoTranscript,
         ios: &'a [VrfInOut<H>],
         signature: &NonBatchableSignature<PedersenVrf<K,H,B>>,
     ) -> SignatureResult<&'a [VrfInOut<H>]>
-    where T: SigningTranscript+Clone, BT: BorrowMut<T>
     {
+        let mut t = t.into_transcript();
         let t = t.borrow_mut();
         let io = vrf::vrfs_merge(t, ios);
-        t.append(b"KeyCommitment",&signature.compk);
+        t.label(b"KeyCommitment");
+        t.append(&signature.compk);
 
         // Recompute Witness, but cofactors not a concern this way..
         // TODO: Use an MSM here
@@ -387,8 +390,9 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
             preoutish: preoutish.into_affine(),
         };
 
-        t.append(b"Witness", &r);
-        let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge");
+        t.label(b"Witness");
+        t.append(&r);
+        let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge").read_uniform();
         if c == signature.c {
             Ok(ios)
         } else {

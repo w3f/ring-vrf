@@ -20,7 +20,7 @@ pub use ark_ed_on_bls12_381_bandersnatch::{
 };
 
 pub use dleq_vrf::{
-    SigningTranscript, 
+    Transcript, IntoTranscript,
     error::{SignatureResult, SignatureError},
     vrf::{self, IntoVrfInput},
 };
@@ -61,11 +61,12 @@ impl<'a> IntoVrfInput<E> for Message<'a> {
         // .expect("Hash-to-curve error, IRTF spec forbids messages longer than 2^16!")
         use ark_std::UniformRand;
         let label = b"TemporaryDoNotDeploy".as_ref();
-        let mut t = merlin::Transcript::new(label);
-        t.append_bytes(b"domain",self.domain);
-        t.append_bytes(b"message",self.message);
-        let mut t = dleq_vrf::transcript::TranscriptIO { label, t: &mut t };
-        dleq_vrf::VrfInput( <E as UniformRand>::rand(&mut t) )
+        let mut t = Transcript::new(label);
+        t.label(b"domain");
+        t.append(self.domain);
+        t.label(b"message");
+        t.append(self.message);
+        t.into_vrf_input()
     }
 }
 
@@ -100,8 +101,11 @@ impl SecretKey {
         PublicKey( self.0.to_public() )
     }
 
-    pub fn sign_thin_vrf<const N: usize,T,B>(&mut self, mut t: B, ios: &[VrfInOut]) -> ThinVrfSignature<N>
-    where T: SigningTranscript+Clone, B: BorrowMut<T>
+    pub fn sign_thin_vrf<const N: usize>(
+        &mut self,
+        t: impl IntoTranscript,
+        ios: &[VrfInOut]
+    ) -> ThinVrfSignature<N>
     {
         assert_eq!(ios.len(), N);
         let signature = self.0.sign_thin_vrf(t,ios);
@@ -109,8 +113,11 @@ impl SecretKey {
         ThinVrfSignature { preoutputs, signature, }
     }
 
-    pub fn sign_ring_vrf<const N: usize,T,B>(&mut self, mut t: B, ios: &[VrfInOut]) -> RingVrfSignature<N>
-    where T: SigningTranscript+Clone, B: BorrowMut<T>
+    pub fn sign_ring_vrf<const N: usize>(
+        &mut self,
+        t: impl IntoTranscript,
+        ios: &[VrfInOut]
+    ) -> RingVrfSignature<N>
     {
         assert_eq!(ios.len(), N);
         let (signature,secret_blinding) = pedersen_vrf().sign_pedersen_vrf(t, ios, None, &mut self.0);
@@ -133,15 +140,13 @@ pub struct ThinVrfSignature<const N: usize> {
 
 impl<const N: usize> ThinVrfSignature<N>
 {
-    pub fn verify_thin_vrf<T,B,I,II>(
+    pub fn verify_thin_vrf<I,II>(
         &self,
-        mut t: B,
+        t: impl IntoTranscript,
         inputs: II,
         public: &PublicKey,
     ) -> SignatureResult<[VrfInOut; N]>
     where
-        T: SigningTranscript+Clone,
-        B: BorrowMut<T>,
         I: IntoVrfInput<E>,
         II: IntoIterator<Item=I>,
     {
@@ -161,14 +166,12 @@ pub struct RingVrfSignature<const N: usize> {
 
 impl<const N: usize> RingVrfSignature<N>
 {
-    pub fn verify_ring_vrf<T,B,I,II>(
+    pub fn verify_ring_vrf<I,II>(
         &self,
-        mut t: B,
+        t: impl IntoTranscript,
         inputs: II,
     ) -> SignatureResult<[VrfInOut; N]>
     where
-        T: SigningTranscript+Clone,
-        B: BorrowMut<T>,
         I: IntoVrfInput<E>,
         II: IntoIterator<Item=I>,
     {

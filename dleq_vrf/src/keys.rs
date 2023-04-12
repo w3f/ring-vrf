@@ -6,8 +6,11 @@
 
 use core::ops::{Add,AddAssign,Mul,MulAssign};
 
-use ark_ff::fields::{PrimeField}; // Field
 use ark_std::{UniformRand, vec::Vec, io::{Read, Write}};
+// #[cfg(debug_assertions)]
+// use ark_std::{boxed::Box, sync::Mutex};
+
+use ark_ff::fields::{PrimeField}; // Field
 use ark_ec::{AffineRepr, Group}; // CurveGroup
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 
@@ -78,7 +81,7 @@ impl<F: PrimeField> SecretPair<F> {
     }
 
     pub fn resplit(&mut self) {
-        let x = <F as UniformRand>::rand( &mut crate::transcript::getrandom_or_panic() );
+        let x = <F as UniformRand>::rand( &mut getrandom_or_panic() );
         self.0[0] += &x;
         self.0[1] -= &x;
     }
@@ -183,6 +186,12 @@ pub struct SecretKey<K: AffineRepr> {
     /// TODO: Replace this with serialized byte representation like [u8; 32]
     /// TODO: Compjute lazilty using usafe code and std::sync::Once
     public: PublicKey<K>,
+
+    #[cfg(debug_assertions)]
+    test_vector_fake_rng: bool,
+
+    // #[cfg(debug_assertions)]
+    // rng: Option<Mutex<Box<dyn RngCore+CryptoRng+Send>>>,
 }
 
 impl<K: AffineRepr> Zeroize for SecretKey<K> {
@@ -226,7 +235,10 @@ impl<K: AffineRepr> SecretKey<K> {
         rng.fill_bytes(&mut nonce_seed);
         let mut key = SecretPair::from_rng(rng);
         let public = thin.make_public(&mut key);
-        SecretKey { thin, key, nonce_seed, public, }
+        SecretKey { thin, key, nonce_seed, public, 
+            #[cfg(debug_assertions)]
+            test_vector_fake_rng: false,
+        }
     }
 
     /// Generate a `SecretKey` from a 32 byte seed.
@@ -247,6 +259,34 @@ impl<K: AffineRepr> SecretKey<K> {
 
     /// Clone the `PublicKey` corresponding to this `SecretKey`.
     pub fn to_public(&self) -> PublicKey<K> { self.public.clone() }
+
+    // #[cfg(debug_assertions)]
+    // pub fn set_rng(&mut self, rng: &Box<dyn RngCore+CryptoRng>) {
+    //     self.rng = Some(Mutex::new(rng));
+    // }
+
+    #[cfg(debug_assertions)]
+    pub fn set_rng_for_test_vectors(&mut self) {
+        self.test_vector_fake_rng = true;
+        // transcript::tests::TestVectorFakeRng
+    }
+
+    pub fn witness(&self, t: &crate::Transcript, label: impl ark_transcript::AsLabel) -> ark_transcript::Reader {
+        let mut t = t.fork(label);
+        t.append(&self.nonce_seed[..]);
+        #[cfg(debug_assertions)]
+        if self.test_vector_fake_rng {
+            return t.witness(&mut ark_transcript::debug::TestVectorFakeRng);
+
+        }
+        // #[cfg(debug_assertions)]
+        // if let Some(rng) = self.rng {
+        //     if let Ok(rng) = rng.lock() {
+        //         return t.witness(rng.deref_mut());
+        //     }
+        // }
+        t.witness(&mut getrandom_or_panic())
+    }
 
 /*
     #[inline]
@@ -274,7 +314,32 @@ impl<K: AffineRepr> SecretKey<K> {
  
    }
 */
-
 }
-// TODO:  Convert to/from zcash_primitives::redjubjub::PrivateKey
 
+
+/// Returns `OsRng` with `getrandom`, or a `CryptoRng` which panics without `getrandom`.
+#[cfg(feature = "getrandom")] 
+pub fn getrandom_or_panic() -> impl RngCore+CryptoRng {
+    rand_core::OsRng
+}
+
+/// Returns `OsRng` with `getrandom`, or a `CryptoRng` which panics without `getrandom`.
+#[cfg(not(feature = "getrandom"))]
+pub fn getrandom_or_panic() -> impl RngCore+CryptoRng {
+    const PRM: &'static str = "Attempted to use functionality that requires system randomness!!";
+
+    // Should we panic when invoked or when used?
+
+    struct PanicRng;
+    impl rand_core::RngCore for PanicRng {
+        fn next_u32(&mut self) -> u32 {  panic!("{}", PRM)  }
+        fn next_u64(&mut self) -> u64 {  panic!("{}", PRM)  }
+        fn fill_bytes(&mut self, _dest: &mut [u8]) {  panic!("{}", PRM)  }
+        fn try_fill_bytes(&mut self, _dest: &mut [u8]) -> Result<(), rand_core::Error> {
+            Err(core::num::NonZeroU32::new(core::u32::MAX).unwrap().into())
+        }
+    }
+    impl rand_core::CryptoRng for PanicRng {}
+
+    PanicRng
+}

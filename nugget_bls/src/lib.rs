@@ -16,7 +16,7 @@ use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};  // SerializationE
 use ark_std::{ Zero, vec::Vec, };   // io::{Read, Write}
 
 pub use dleq_vrf::{
-    SigningTranscript, 
+    Transcript, IntoTranscript,
     error::{SignatureResult, SignatureError},
     vrf::{IntoVrfInput},
 };
@@ -106,7 +106,7 @@ impl<P: Pairing> SecretKey<P> {
         SecretKey::from_rng(&mut ::rand_core::OsRng)
     }
 
-    pub fn create_public_cert<T: SigningTranscript+Clone>(&mut self, t: T) -> PublicKey<P> {
+    pub fn create_public_cert(&mut self, t: impl IntoTranscript) -> PublicKey<P> {
         let pedersen = pedersen_vrf::<P>();
         let g2_io = self.0.vrf_inout(pk_in::<P>());
         let g2 = g2_io.preoutput.clone();
@@ -115,11 +115,11 @@ impl<P: Pairing> SecretKey<P> {
     }
 
     pub fn create_nugget_public(&mut self) -> PublicKey<P> {
-        self.create_public_cert(::merlin::Transcript::new(b"NuggetPublic"))
+        self.create_public_cert(b"NuggetPublic")
     }
 
-    pub fn sign_nugget_bls<T,M>(&mut self, t: T, input: M) -> Signature<P> 
-    where T: SigningTranscript+Clone, M: IntoVrfInput<<P as Pairing>::G1Affine>,
+    pub fn sign_nugget_bls<M>(&mut self, t: impl IntoTranscript, input: M) -> Signature<P> 
+    where M: IntoVrfInput<<P as Pairing>::G1Affine>,
     {
         let io = self.0.vrf_inout(input);
         let preoutput = io.preoutput.clone();
@@ -177,8 +177,7 @@ impl<P: Pairing> PublicKey<P> {
         self.sig.to_publickey()
     }
 
-    pub fn validate_public_cert<T>(&self, t: T) -> SignatureResult<()> 
-    where T: SigningTranscript+Clone
+    pub fn validate_public_cert(&self, t: impl IntoTranscript) -> SignatureResult<()> 
     {
         let g2_io = VrfInOut { input: pk_in::<P>(), preoutput: self.g2.clone(), };
         pedersen_vrf::<P>()
@@ -187,11 +186,11 @@ impl<P: Pairing> PublicKey<P> {
     }
 
     pub fn validate_nugget_public(&self) -> SignatureResult<()> {
-        self.validate_public_cert(::merlin::Transcript::new(b"NuggetPublic"))
+        self.validate_public_cert(b"NuggetPublic")
     }
 
-    pub fn verify_nugget_bls<T,M>(&self, t: T, input: M, signature: &Signature<P>) -> SignatureResult<()>
-    where T: SigningTranscript+Clone, M: IntoVrfInput<<P as Pairing>::G1Affine>,
+    pub fn verify_nugget_bls<M>(&self, t: impl IntoTranscript, input: M, signature: &Signature<P>) -> SignatureResult<()>
+    where M: IntoVrfInput<<P as Pairing>::G1Affine>,
     {
         let io = signature.preoutput.attach_input(input);
         thin_vrf::<P>()
@@ -236,10 +235,12 @@ impl<P: Pairing> AggregateSignature<P> {
         input: impl IntoVrfInput<<P as Pairing>::G1Affine>,
         agg_pk_g1: <P as Pairing>::G1Affine
     ) -> SignatureResult<()> {
-        let mut t = ::merlin::Transcript::new(b"NuggetAggregate");
-        t.append(b"g2+sig",self);
-        t.append(b"g1",&agg_pk_g1);
-        let r: <P as Pairing>::ScalarField = t.challenge(b"r");
+        let mut t = Transcript::new(b"NuggetAggregate");
+        t.label(b"g2+sig");
+        t.append(self);
+        t.label(b"g1");
+        t.append(&agg_pk_g1);
+        let r: <P as Pairing>::ScalarField = t.challenge(b"r").read_uniform();
 
         // e(msg + r * g1_gen, agg_pk_g2) == e(agg_sig + r * agg_pk_g1, -g2_gen)
         let g1s: [_; 2] = [
@@ -250,8 +251,8 @@ impl<P: Pairing> AggregateSignature<P> {
             prepare_g2::<P>(self.agg_pk_g2),
             g2_minus_generator::<P>(),
         ];
-        let r: _ = P::final_exponentiation( P::multi_miller_loop(g1s,g2s) );
-        if r == Some(PairingOutput::<P>::zero()) { //zero is the target_field::one !!
+        let z: _ = P::final_exponentiation( P::multi_miller_loop(g1s,g2s) );
+        if z == Some(PairingOutput::<P>::zero()) { //zero is the target_field::one !!
             Ok(())
         } else {
             Err(SignatureError::Invalid)

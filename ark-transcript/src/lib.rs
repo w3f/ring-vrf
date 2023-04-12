@@ -25,8 +25,10 @@ use sha3::digest::{XofReader, ExtendableOutput};
 
 
 #[cfg(test)]
-pub mod tests;
+mod tests;
 
+#[cfg(debug_assertions)]
+pub mod debug;
 
 /// Trascript labels.
 /// 
@@ -192,6 +194,24 @@ impl Transcript {
         }
     }
 
+    /*
+    /// I2OSP(len,4) from [rfc8017](https://www.rfc-editor.org/rfc/rfc8017.txt)
+    /// with our own domain seperation 
+    fn append_u32(&mut self, v: u32) {
+        self.seperate();
+        self.write_bytes(&v.to_be_bytes());
+        self.seperate();
+    }
+    */
+
+    /// I2OSP(len,8) from [rfc8017](https://www.rfc-editor.org/rfc/rfc8017.txt)
+    /// with our own domain seperation 
+    pub fn append_u64(&mut self, v: u64) {
+        self.seperate();
+        self.write_bytes(&v.to_be_bytes());
+        self.seperate();
+    }
+
     /// Write into the hasher items seralizable by Arkworks.
     /// 
     /// We `ensure_seperated` from any previously supplied user data,
@@ -300,7 +320,7 @@ impl Transcript {
     /// as otherwise you incur risks from any weaknesses elsewhere.
     /// 
     /// You'll need a deterministic randomness for test vectors of ourse, 
-    /// ala `&mut ark_transcript::tests::TestVectorFakeRng`.
+    /// ala `&mut ark_transcript::debug::TestVectorFakeRng`.
     /// We suggest implementing this choice inside your secret key type,
     /// along side whatever supplies secret seeds.
     pub fn witness(mut self, rng: &mut (impl RngCore+CryptoRng)) -> Reader {

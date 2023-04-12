@@ -10,6 +10,7 @@
 
 use ark_ec::{AffineRepr, CurveGroup, models::CurveConfig};
 
+pub use ark_transcript::{self as transcript, Transcript, IntoTranscript};
 
 pub mod error;
 pub use error::{SignatureResult, SignatureError};
@@ -20,15 +21,6 @@ pub use flavor::{Flavor, Signature, NonBatchableSignature};
 
 pub mod keys; // PublicKeyUnblinding
 pub use keys::{PublicKey, SecretKey};
-
-// #[cfg(not(feature = "transcript_io"))]
-// mod transcript;
-// #[cfg(feature = "transcript_io")]
-pub mod transcript;
-pub use transcript::{SigningTranscript}; // signing_context
-
-// #[cfg(feature = "merlin")]
-pub use merlin::Transcript;
 
 pub mod vrf;
 pub use vrf::{IntoVrfInput, VrfInput, VrfPreOut, VrfInOut};

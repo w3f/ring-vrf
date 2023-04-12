@@ -5,17 +5,16 @@
 
 //! ### Thin VRF routines
 
+use ark_std::borrow::{Borrow,BorrowMut};
 use ark_ec::{AffineRepr, CurveGroup};
 
 use crate::{
-    SigningTranscript, 
+    Transcript, IntoTranscript,
     flavor::{Flavor, InnerFlavor, Witness, Signature},
     keys::{PublicKey, SecretKey, SecretPair},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut},
 };
-
-use core::borrow::{Borrow,BorrowMut};
 
 
 /// Thin VRF flavor
@@ -50,15 +49,17 @@ impl<C: AffineRepr> ThinVrf<C> {
     }
 
     /// Merge VRF operation which incorporates the public key.
-    fn thin_vrf_merge<T,B>(&self, t: &mut T, public: &PublicKey<C>, ios: &[B]) -> VrfInOut<C> 
-    where T: SigningTranscript+Clone, B: Borrow<VrfInOut<C>>,
+    fn thin_vrf_merge<B>(&self, t: &mut Transcript, public: &PublicKey<C>, ios: &[B]) -> VrfInOut<C> 
+    where B: Borrow<VrfInOut<C>>,
     {
         let io = self.schnorr_io(public);
         // Append base too since we're being so polymorphic.
-        t.append(b"PublicKey",&io);
+        t.label(b"PublicKey");
+        t.append(&io);
         if ios.len() == 0 { return io }
-        t.append_u64(b"IOs",ios.len() as u64); 
-        t.append_slice(b"VrfInOut", ios);
+        t.label(b"VrfInOuts");
+        t.append_u64(ios.len() as u64); 
+        t.append_slice(ios);
         vrf::vrfs_delinearize( t, ios.iter().map(|io| io.borrow()).chain([ &io ]) )
     }
 }
@@ -68,12 +69,10 @@ impl<C: AffineRepr> ThinVrf<C> {
 
 #[cfg(feature = "getrandom")]
 impl<K: AffineRepr> SecretKey<K> {
-    pub(crate) fn new_thin_witness<T>(&self, t: &T, input: &VrfInput<K>) -> Witness<ThinVrf<K>>
-    where T: SigningTranscript
+    pub(crate) fn new_thin_witness(&self, t: &Transcript, input: &VrfInput<K>) -> Witness<ThinVrf<K>>
     {
-        let k: [<K as AffineRepr>::ScalarField; 1]
-         = t.witnesses(b"WitnessK", &[&self.nonce_seed]);
-        let k = k[0];
+        let mut reader = self.witness(t,b"Witness");
+        let k: <K as AffineRepr>::ScalarField = reader.read_uniform();
         let r = input.0.mul(k).into_affine();
         Witness { r, k }
     }
@@ -81,9 +80,9 @@ impl<K: AffineRepr> SecretKey<K> {
     /// Sign thin VRF signature
     /// 
     /// If `ios = &[]` this reduces to a Schnorr signature.
-    pub fn sign_thin_vrf<T,B>(&mut self, mut t: B, ios: &[VrfInOut<K>]) -> Signature<ThinVrf<K>>
-    where T: SigningTranscript+Clone, B: BorrowMut<T>
+    pub fn sign_thin_vrf(&mut self, t: impl IntoTranscript, ios: &[VrfInOut<K>]) -> Signature<ThinVrf<K>>
     {
+        let mut t = t.into_transcript();
         let t = t.borrow_mut();
         let io = self.thin.thin_vrf_merge(t, self.as_publickey(), ios);
         // Allow derandomization by constructing witness late.
@@ -96,12 +95,13 @@ impl<K: AffineRepr> Witness<ThinVrf<K>> {
     /// Complete Schnorr-like signature.
     /// 
     /// Assumes we already hashed public key, `VrfInOut`s, etc.
-    pub(crate) fn sign_final<T: SigningTranscript>(
-        self, t: &mut T, secret: &mut SecretKey<K>
+    pub(crate) fn sign_final(
+        self, t: &mut Transcript, secret: &mut SecretKey<K>
     ) -> Signature<ThinVrf<K>> {
         let Witness { r, k } = self;
-        t.append(b"Witness", &r);
-        let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge");
+        t.label(b"Witness");
+        t.append(&r);
+        let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge").read_uniform();
         let s = k + secret.key.mul_by_challenge(&c);
         // k.zeroize();
         Signature { compk: (), r, s }
@@ -140,15 +140,15 @@ impl<K: AffineRepr> ThinVrf<K> {
     /// Verify thin VRF signature 
     /// 
     /// If `ios = &[]` this reduces to a Schnorr signature.
-    pub fn verify_thin_vrf<'a,T,B>(
+    pub fn verify_thin_vrf<'a>(
         &self,
-        mut t: B,
+        t: impl IntoTranscript,
         ios: &'a [VrfInOut<K>],
         public: &PublicKey<K>,
         signature: &Signature<ThinVrf<K>>,
     ) -> SignatureResult<&'a [VrfInOut<K>]>
-    where T: SigningTranscript+Clone, B: BorrowMut<T>
     {
+        let mut t = t.into_transcript();
         let t = t.borrow_mut();
         // A priori, one expects thin_vrf_merge's msm could be merged
         // into the multiplication by c below, except thin_vrf_merge
@@ -157,8 +157,9 @@ impl<K: AffineRepr> ThinVrf<K> {
         let io = self.thin_vrf_merge(t, public, ios);
 
         // verify_final
-        t.append(b"Witness", &signature.r);
-        let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge");
+        t.label(b"Witness");
+        t.append(&signature.r);
+        let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge").read_uniform();
 
         let lhs = io.input.0.mul(signature.s);
         let rhs = signature.r.into_group() + io.preoutput.0.mul(c);

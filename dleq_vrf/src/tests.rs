@@ -1,9 +1,8 @@
-use merlin::Transcript;
 
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
 use ark_std::vec::Vec;
 
-use crate::{SigningTranscript, vrf, Signature};
+use crate::{Transcript, vrf, Signature};
 
 
 type K = ark_bls12_377::G1Affine;
@@ -18,9 +17,10 @@ type SecretKey = crate::SecretKey<K>;
 
 pub(crate) fn pedersen_vrf_test_flavor() -> PedersenVrf {
     let mut t = Transcript::new(b"TestFlavor");
+    let mut reader = t.challenge(b"Keying&Blinding");
     PedersenVrf::new(
-        t.challenge(b"Keying"),
-        [t.challenge(b"Blinding")],
+        reader.read_uniform(),
+        [reader.read_uniform()],
     )
 }
 
@@ -31,7 +31,7 @@ fn master() {
 
     let mut mk_io = |n| {
         let mut t = Transcript::new(b"VrfIO");
-        t.append_u64(b"n",n);
+        t.append_u64(n);
         sk.vrf_inout(&mut t)
     };
     let ios: [vrf::VrfInOut<K>; 4] = [mk_io(0), mk_io(1), mk_io(2), mk_io(3)];

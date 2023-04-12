@@ -24,10 +24,10 @@ zeroize = { version = "1.0", default-features = false, features = [ "zeroize_der
 ark-ed25519 = { version = "0.4", default-features = false }
 
 [features]
-default = ["getrandom"] # "std", "rand"
-getrandom = ["rand_core/getrandom"]
-std = ["getrandom"]
+default = [] # "getrandom", "std", "rand"
+std = [] # "getrandom"
 debug-transcript = ["std"]
+# getrandom = ["rand_core/getrandom"]
 
 
 

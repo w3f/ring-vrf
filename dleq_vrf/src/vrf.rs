@@ -15,11 +15,9 @@
 
 use ark_ec::{AffineRepr, CurveGroup, hashing::{HashToCurve,HashToCurveError}};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
-use ark_std::{iter::IntoIterator, vec::Vec};
+use ark_std::{borrow::BorrowMut, iter::IntoIterator, vec::Vec};
 
-use rand_core::{SeedableRng}; // RngCore,CryptoRng,OsRng
-
-use crate::{SigningTranscript,SecretKey};
+use crate::{Transcript,IntoTranscript,SecretKey};
 
 
 use core::borrow::{Borrow}; // BorrowMut
@@ -40,7 +38,7 @@ impl<C: AffineRepr> IntoVrfInput<C> for VrfInput<C> {
     fn into_vrf_input(self) -> VrfInput<C> { self }
 }
 
-impl<'a,T: SigningTranscript,C: AffineRepr> IntoVrfInput<C> for &'a mut T {
+impl<T: IntoTranscript,C: AffineRepr> IntoVrfInput<C> for T {
     /// Create a new VRF input from a `Transcript`.
     /// 
     /// As the arkworks hash-to-curve infrastructure looks complex,
@@ -51,7 +49,9 @@ impl<'a,T: SigningTranscript,C: AffineRepr> IntoVrfInput<C> for &'a mut T {
     /// TODO: Ask Syed to use the correct hash-to-curve
     #[inline(always)]
     fn into_vrf_input(self) -> VrfInput<C> {
-        let p: <C as AffineRepr>::Group = self.challenge(b"vrf-input");
+        let mut t = self.into_transcript();
+        let t = t.borrow_mut();
+        let p: <C as AffineRepr>::Group = t.challenge(b"vrf-input").read_uniform();
         VrfInput( p.into_affine() )
     }
 }
@@ -93,7 +93,7 @@ impl<K: AffineRepr> SecretKey<K> {
     }
 
     /// Compute VRF pre-output paired with input from secret key and
-    /// some VRF input, like a `SigningTranscript` or a `VrfInput`.
+    /// some VRF input, like a `Transcript` or a `VrfInput`.
     /// 
     /// As the arkworks hash-to-curve infrastructure looks complex,
     /// we employ arkworks' simpler `UniformRand` here, which uses
@@ -181,50 +181,37 @@ impl<C: AffineRepr> VrfInOut<C> {
     /// ["Ouroboros Praos: An adaptively-secure, semi-synchronous proof-of-stake blockchain"](https://eprint.iacr.org/2017/573.pdf)
     /// by Bernardo David, Peter Gazi, Aggelos Kiayias, and Alexander Russell.
     /// 
-    /// We employ this method instead of `SigningTranscript::append`
-    /// for output, becuase this multiplies the preoutput by the cofactor.
-    pub fn vrf_output_append<T>(&self, label: &'static [u8], t: &mut T)
-    where T: SigningTranscript,
+    /// We employ this method instead of `Transcript::append` for
+    /// output, becuase this multiplies the preoutput by the cofactor.
+    pub fn vrf_output_append(&self, t: &mut Transcript)
     {
         if crate::small_cofactor_affine::<C>() {
             let mut io = self.clone();
             io.preoutput.0 = io.preoutput.0.mul_by_cofactor();
-            t.append(label,&io);
+            t.append(&io);
         } else {
-            t.append(label,self);
+            t.append(self);
         }
+    }
+
+    /// VRF output reader via the supplied transcript.
+    /// 
+    /// You should domain seperate outputs using the transcript.
+    pub fn vrf_output(&self, t: impl IntoTranscript) -> crate::transcript::Reader
+    {
+        let mut t = t.into_transcript();
+        let t = t.borrow_mut();
+        t.label(b"VrfOutput");
+        self.vrf_output_append(&mut *t);
+        t.challenge(b"")        
     }
 
     /// VRF output bytes via the supplied transcript.
     /// 
     /// You should domain seperate outputs using the transcript.
-    pub fn vrf_output_bytes<T,B>(&self, mut t: T) -> B 
-    where T: SigningTranscript, B: Default + AsMut<[u8]>
+    pub fn vrf_output_bytes<const N: usize>(&self, t: impl IntoTranscript) -> [u8; N] 
     {
-        self.vrf_output_append(b"VrfInOut",&mut t);
-        let mut seed = B::default();
-        t.challenge_bytes(b"", seed.as_mut());
-        seed
-    }
-
-    /// VRF output bytes via merlin.
-    ///
-    /// If called with distinct contexts then outputs should be independent.
-    // #[cfg(feature = "merlin")]
-    pub fn vrf_output_merlin<B: Default + AsMut<[u8]>>(&self, context: &[u8]) -> B {
-        let mut t = ::merlin::Transcript::new(b"VrfOutput");
-        t.append(b"context",context);
-        self.vrf_output_bytes(t)
-    }
-
-    /// VRF output converted into any `SeedableRng`, like `rand_chacha::ChaChaRng`.
-    ///
-    /// If you are not the signer then you must verify the VRF before calling this method.
-    ///
-    /// We expect most users would prefer the less generic `VrfInOut::vrf_output_chacharng` method.
-    // #[cfg(feature = "merlin")]
-    pub fn vrf_output_rng<R: SeedableRng>(&self, context: &[u8]) -> R {
-        R::from_seed(self.vrf_output_merlin::<R::Seed>(context))
+        self.vrf_output(t).read_byte_array()
     }
 }
 
@@ -264,13 +251,13 @@ impl<C: AffineRepr> VrfInOut<C> {
 /// hashed to the curve.  TODO: Cite Wagner.
 /// We also note no such requirement when the values being hashed are
 /// BLS public keys as in https://crypto.stanford.edu/~dabo/pubs/papers/BLSmultisig.html
-pub fn vrfs_merge<T,C,B>(t: &mut T, ps: &[B]) -> VrfInOut<C>
+pub fn vrfs_merge<C,B>(t: &mut Transcript, ps: &[B]) -> VrfInOut<C>
 where
-    T: SigningTranscript+Clone,
     C: AffineRepr,
     B: Borrow<VrfInOut<C>>,
 {
-    t.append_slice(b"VrfInOut", ps);
+    t.label(b"VrfInOut");
+    t.append_slice(ps);
     vrfs_delinearize( t, ps.iter().map(|io| io.borrow()) )
 }
 
@@ -279,9 +266,8 @@ where
 /// All pairs must be hashed into the transcript `t` before invoking,
 /// as otherwise malicious signers could validate invalid pairs like
 /// `[(x, (sk*a)*x, (x,(sk/a)*x)]`, breaking VRF & VUF security.
-pub(crate) fn vrfs_delinearize<'a,T,C,I>(t: &T, ps: I) -> VrfInOut<C>
+pub(crate) fn vrfs_delinearize<'a,C,I>(t: &Transcript, ps: I) -> VrfInOut<C>
 where
-    T: SigningTranscript+Clone,
     C: AffineRepr,
     I: Iterator<Item=&'a VrfInOut<C>>
 {
@@ -291,10 +277,10 @@ where
     let mut input = <C as AffineRepr>::Group::zero();
     let mut preoutput = <C as AffineRepr>::Group::zero();
     for p in ps {
-        let mut t0 = t.clone();               // Keep t clean, but
-        t0.append_u64(b"delinearize:i",i);    // distinguish the different outputs.
-        let z: [u64; 2] = t0.challenge(b"");  // Sample a 128bit scalar.
-
+        let mut t0 = t.fork(b"delinearize");    // Keep t clean, but
+        t0.append_u64(i);                               // distinguish the different outputs.
+        let z: [u64; 2] = t0.challenge(b"").read_uniform();  // Sample a 128bit scalar.
+        
         input += p.input.0.mul_bigint(z);
         preoutput += p.preoutput.0.mul_bigint(z);
         i += 1;
