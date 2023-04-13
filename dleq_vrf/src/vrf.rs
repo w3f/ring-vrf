@@ -38,6 +38,7 @@ impl<C: AffineRepr> IntoVrfInput<C> for VrfInput<C> {
     fn into_vrf_input(self) -> VrfInput<C> { self }
 }
 
+/*
 impl<T: IntoTranscript,C: AffineRepr> IntoVrfInput<C> for T {
     /// Create a new VRF input from a `Transcript`.
     /// 
@@ -55,6 +56,7 @@ impl<T: IntoTranscript,C: AffineRepr> IntoVrfInput<C> for T {
         VrfInput( p.into_affine() )
     }
 }
+*/
 
 pub fn ark_hash_to_curve<C,H2C>(domain: &[u8],message: &[u8]) -> Result<VrfInput<C>,HashToCurveError>
 where C: AffineRepr, H2C: HashToCurve<<C as AffineRepr>::Group>,

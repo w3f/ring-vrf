@@ -8,6 +8,7 @@ type P = ark_bls12_381::Bls12_381;
 type SecretKey = crate::SecretKey<P>;
 type PublicKey = crate::PublicKey<P>;
 type Signature = crate::Signature<P>;
+type Message<'a> = crate::bls12_381::Message<'a>;
 
 
 
@@ -23,8 +24,10 @@ fn single() {
     pk.validate_nugget_public().unwrap();
     assert_eq!(sk.as_g1_publickey(), &pk.to_g1_publickey());
 
+    let domain = b"";
+    let message = b"MSG1";
     let t = Transcript::new(b"AD1");
-    let input = &mut Transcript::new(b"MSG1");
+    let input = Message { domain, message };
     let signature = sk.sign_nugget_bls(t,input); 
 
     buf.clear();
@@ -32,12 +35,14 @@ fn single() {
     let signature = Signature::deserialize_compressed(buf.as_ref()).unwrap();
 
     let t = Transcript::new(b"AD1");
-    let msg = &mut Transcript::new(b"MSG1");
+    let msg = Message { domain, message };
     pk.verify_nugget_bls(t,msg,&signature).unwrap();
 }
 
 #[test]
 fn aggregation() {
+    let domain = b"";
+    let message = b"MSG";
     let mut sks: Vec<SecretKey> = (0..2).map(|_| SecretKey::ephemeral()).collect();
     let pks: Vec<PublicKey> = sks.iter_mut().map(|sk| sk.create_nugget_public()).collect();
     let mut g1pks0 = Vec::new();
@@ -45,11 +50,11 @@ fn aggregation() {
         g1pks0.push(sk.as_g1_publickey().clone());
         let mut t = Transcript::new(b"AD");
         t.append(sk.as_g1_publickey());
-        let input = &mut Transcript::new(b"MSG");
+        let input = Message { domain, message };
         sk.sign_nugget_bls(t,input)
     }).collect();
     let agg = crate::AggregateSignature::create(&pks, &sigs);
-    let input = &mut Transcript::new(b"MSG");
+    let input = Message { domain, message };
     let g1pks: Vec<_> = pks.iter().map(|pk| pk.to_g1_publickey()).collect();
     assert_eq!(g1pks0, g1pks);
     agg.verify_by_pks(input,g1pks.iter()).unwrap();
