@@ -6,6 +6,7 @@ version = "0.0.1"
 repository = "https://github.com/w3f/ring-vrf/tree/master/nugget_bls"
 edition = "2021"
 license = "MIT/Apache-2.0"
+keywords = ["crypto", "cryptography", "bls", "signature"]
 
 
 [dependencies]
