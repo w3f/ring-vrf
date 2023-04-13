@@ -8,7 +8,7 @@ We achieve this by doing basic domain seperation using postfix writes
 of the length of written data, as opposed to the prefix writes done
 by merlin, which break arkworks.
 
-## Why not merlin?
+### Why not merlin?
 
 A trascript flavored hash like [merlin](https://merlin.cool/)
 ([docs](https://docs.rs/merlin/latest/merlin/)) simplifies protocol
@@ -41,9 +41,9 @@ As a minor cost for us, any users whose hashing involves multiple
 code paths should ensure they invoke label between arkworks types
 and user data with possibly zero length.
 
-Aside postfix lengths..
+Aside from postfix lengths..
 
-there do exist people who feel STROBE maybe overkill, unfamiliar,
+There do exist people who feel STROBE maybe overkill, unfamiliar,
 or not widely available.  Almost all sha3 implementations provide
 shake128, making this transcript simple, portable, etc.
 
@@ -51,3 +51,17 @@ We also "correct" merlin's excessively opinionated requirement of
 `&'static [u8]`s for labels, which complicates some key management
 practices.
  
+### Accumulation
+
+We support accumulating hashed data in a `Vec<u8>`, which users could
+then transport to a remote signer for actual signing or proving.
+Although possible in principle, we do not reparse this accumulated data,
+but regardless the accumulation should not break any domain seperation
+that occurs inside the remore signer.
+
+Ideally, accumulations should've applications specific labels both
+prefixed inside the accumulations and postfixed by the remote signer.
+A remote signer could check this prefix of course, but applying a
+postfix label should suffice given we use Shake128.
+
+We have a `debug-transcript` feature similar to merlin as well.

@@ -9,7 +9,7 @@ fn transcript_v_witnesses() {
     // transcripts that diverge at different points and checking
     // that they produce different challenges.
 
-    let protocol_label = b"test TranscriptRng collisions";
+    let protocol_label = b"test collisions";
     let commitment1 = b"commitment data 1";
     let commitment2 = b"commitment data 2";
     let witness1 = b"witness data 1";
@@ -52,4 +52,31 @@ fn transcript_v_witnesses() {
     // presence of a bad RNG checks that the different challenges
     // above aren't because the RNG is accidentally different.
     assert_eq!(s3, s4);
+}
+
+
+#[test]
+fn accumulation() {
+    let protocol_label = b"test collisions";
+
+    let mut t1 = Transcript::new(protocol_label);
+    let mut t2 = Transcript::new_blank_accumulator();
+    t2.label(protocol_label);
+
+    let commitment1 = b"commitment data 1";
+    let commitment2 = b"commitment data 2";
+
+    t1.write_bytes(commitment1);
+    t2.write_bytes(commitment1);
+
+    t1.seperate();
+    let v = t2.accumulator_finalize();
+    let mut t3 = Transcript::from_accumulation(v);
+
+    t1.write_bytes(commitment2);
+    t3.write_bytes(commitment2);
+
+    let c1: [u8; 32] = t1.challenge(b"challenge").read_byte_array();
+    let c2: [u8; 32] = t3.challenge(b"challenge").read_byte_array();
+    assert_eq!(c1,c2);
 }

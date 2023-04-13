@@ -14,6 +14,7 @@ use ark_std::{
     UniformRand,
     borrow::{Borrow,BorrowMut},
     io::{self, Read, Write}, // Result
+    vec::Vec,
 };
 use ark_serialize::{CanonicalSerialize};
 use ark_ff::{Field};
@@ -96,6 +97,40 @@ impl<'a, const N: usize> IntoTranscript for &'a [u8; N] {
     }
 }
 
+/// Inner hasher or accumulator object.
+/// 
+/// We make this distinction at runtime instead of at compile-time
+/// for simplicity elsewhere.
+#[derive(Clone)]
+enum Mode {
+    /// Actual Shake128 hasher being written to.
+    Hash(Shake128),
+    /// Accumulate bytes instead of hashing them.
+    Accumulate(Vec<u8>),
+}
+
+impl Mode {
+    /// Abstracts over the writing modes
+    fn raw_write(&mut self, bytes: &[u8]) {
+        match self {
+            Mode::Hash(hasher) => hasher.update(bytes),
+            Mode::Accumulate(acc) => acc.extend_from_slice(bytes),
+        }
+    }
+
+    /// Switch from writing to reading
+    /// 
+    /// Panics if called in accumulation mode
+    fn raw_reader(self) -> Reader {
+        #[cfg(feature = "debug-transcript")]
+        println!("Shake128 {}transcript XoF reader",self.debug_name);
+        match self {
+            Mode::Hash(hasher) => Reader(hasher.clone().finalize_xof()),
+            Mode::Accumulate(_) => panic!("Attempt to read from accumulating Transcript"),
+        }
+    }
+}
+
 /// Shake128 transcript style hasher.
 #[derive(Clone)]
 pub struct Transcript {
@@ -103,24 +138,17 @@ pub struct Transcript {
     /// `None` means `write` was not yet invoked, so seperate() does nothing.
     /// We need this to distinguish zero length write calls.
     length: Option<u32>,
+    /// Actual Shake128 hasher being written to, or maybe an accumulator
+    mode: Mode,
     /// Is this a witness transcript?
     #[cfg(feature = "debug-transcript")]
     debug_name: &'static str,
-    /// Actual Shake128 hasher being written to.
-    h: Shake128,
 }
 
 impl Default for Transcript {
     /// Create a fresh empty `Transcript`.
     fn default() -> Transcript {
-        #[cfg(feature = "debug-transcript")]
-        println!("Initial Shake128 transcript..");
-        Transcript {
-            length: None,
-            #[cfg(feature = "debug-transcript")]
-            debug_name: "",
-            h: Shake128::default(),
-        } 
+        Transcript::new_blank()
     }
 }
 
@@ -145,6 +173,78 @@ impl Write for Transcript {
 
 
 impl Transcript {
+    /// Create a `Transcript` from `Shake128`.
+    pub fn from_shake128(hasher: Shake128) -> Transcript {
+        Transcript {
+            length: None,
+            mode: Mode::Hash(hasher),
+            #[cfg(feature = "debug-transcript")]
+            debug_name: "",
+        } 
+    }
+
+    /// Create a `Transcript` from previously accumulated bytes.
+    /// 
+    /// We do not domain seperate these initial bytes, but we domain
+    /// seperate everything after this, making this safe.
+    pub fn from_accumulation(acc: impl AsRef<[u8]>) -> Transcript {
+        let mut hasher = Shake128::default();
+        hasher.update(acc.as_ref());
+        Transcript::from_shake128(hasher)
+    }
+
+    /// Create an empty `Transcript`.
+    pub fn new_blank() -> Transcript {
+        #[cfg(feature = "debug-transcript")]
+        println!("Initial Shake128 transcript..");
+        Transcript::from_accumulation(&[])
+    }
+
+    /// Create a fresh `Transcript` with an initial domain label.
+    /// 
+    /// We implicitly have an initial zero length user data write
+    /// preceeding this first label.
+    pub fn new(label: impl AsLabel) -> Transcript {
+        let mut t = Transcript::new_blank();
+        t.label(label);
+        t
+    }
+
+    /// Create an empty `Transcript` in bytes accumulation mode.
+    /// 
+    /// You cannot create `Reader`s in accumulation mode, but 
+    /// `accumulator_finalize` exports the accumulated `Vec<u8>`.
+    /// You could then transport this elsewhere and start a
+    /// real hasher using `from_accumulation`.
+    pub fn new_blank_accumulator() -> Transcript {
+        #[cfg(feature = "debug-transcript")]
+        println!("Initial Shake128 transcript..");
+        Transcript {
+            length: None,
+            mode: Mode::Accumulate(Vec::new()),
+            #[cfg(feature = "debug-transcript")]
+            debug_name: "",
+        }
+    }
+
+    /// Avoid repeated allocations by reserving additional space when in accumulation mode.
+    pub fn accumulator_reserve(&mut self, additional: usize) {
+        match &mut self.mode {
+            Mode::Accumulate(acc) => acc.reserve(additional),
+            _ => {},
+        }
+    }
+
+    /// Invokes `seperate` and exports the accumulated transcript bytes,
+    /// which you later pass into `Transcript::from_accumulation`.
+    pub fn accumulator_finalize(mut self) -> Vec<u8> {
+        self.seperate();
+        match self.mode {
+            Mode::Hash(_) => panic!("Attempte to accumulator_finalize a hashing Transcript"),
+            Mode::Accumulate(acc) => acc,
+        }
+    }
+
     /// Write basic unlabeled domain seperator into the hasher.
     /// 
     /// Implemented by writing in big endian the number of bytes
@@ -160,7 +260,7 @@ impl Transcript {
         #[cfg(feature = "debug-transcript")]
         println!("Shake128 {}transcript seperator: {}",self.debug_name, self.length);
         if let Some(l) = self.length {
-            self.h.update( & l.to_be_bytes() ); 
+            self.mode.raw_write( & l.to_be_bytes() ); 
         }
         self.length = None;
     }
@@ -183,7 +283,7 @@ impl Transcript {
                     println!("Shake128 {}transcript write of {} bytes out of {}", self.debug_name, l, bytes.len());
                 }
             }
-            self.h.update( &bytes[0..l] );
+            self.mode.raw_write( &bytes[0..l] );
             bytes = &bytes[l..];
             if bytes.len() == 0 {
                 *length += u32::try_from(l).unwrap();
@@ -252,23 +352,6 @@ impl Transcript {
         self.seperate();
     }
 
-    /// Create a fresh `Transcript` with an initial domain label.
-    /// 
-    /// We implicitly have an initial zero length user data write
-    /// preceeding this first label.
-    pub fn new(label: impl AsLabel) -> Transcript {
-        let mut t = Transcript::default();
-        t.label(label);
-        t
-    }
-
-    /// Switch from writing to reading
-    fn raw_reader(self) -> Reader {
-        #[cfg(feature = "debug-transcript")]
-        println!("Shake128 {}transcript XoF reader",self.debug_name);
-        Reader(self.h.clone().finalize_xof())
-    }
-
     /// Create a challenge reader.
     /// 
     /// Invoking `self.label(label)` has the same effect upon `self`,
@@ -278,7 +361,7 @@ impl Transcript {
         println!("Shake128 {}transcript challenge",self.debug_name);
         self.seperate();
         self.write_bytes(label.as_label());
-        let reader = self.clone().raw_reader();
+        let reader = self.mode.clone().raw_reader();
         self.seperate();
         reader
     }
@@ -328,7 +411,7 @@ impl Transcript {
         let mut rand = [0u8; 32];
         rng.fill_bytes(&mut rand);
         self.write_bytes(&rand);
-        self.raw_reader()
+        self.mode.raw_reader()
     }
 }
 
