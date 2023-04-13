@@ -1,3 +1,14 @@
+// -*- mode: rust; -*-
+//
+// Copyright (c) 2019 Web 3 Foundation
+//
+// Authors:
+// - Jeffrey Burdges <jeff@web3.foundation>
+
+#![cfg_attr(not(feature = "std"), no_std)]
+#![deny(unsafe_code)]
+#![doc = include_str!("../README.md")]
+
 
 use ark_std::{io::{self, Read, Write}, fmt, borrow::Borrow};
 type ArkResult<T> = Result<T,io::Error>;
