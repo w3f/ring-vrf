@@ -2,7 +2,6 @@
 
 //! ### VRF keys
 
-// use core::fmt::{Debug};
 
 use core::ops::{Add,AddAssign,Mul,MulAssign};
 

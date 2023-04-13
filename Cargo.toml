@@ -1,7 +1,6 @@
 [workspace]
 
 members = [
-    "ark-scale",
     "ark-transcript",
     "dleq_vrf",
     "nugget_bls",
