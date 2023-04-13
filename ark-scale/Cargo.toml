@@ -1,6 +1,6 @@
 [package]
 name = "ark-scale"
-description = "Arkworks serialization in SCALE"
+description = "Arkworks serialization wrapped in Parity SCALE codec"
 authors = ["Jeff Burdges <jeff@web3.foundation>"]
 version = "0.0.1"
 repository = ""
