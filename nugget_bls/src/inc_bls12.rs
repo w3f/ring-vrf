@@ -11,7 +11,7 @@ use dleq_vrf::vrf::{VrfInput, IntoVrfInput};
 pub use curve::{G1Affine, G1Projective};
 
 type H2C = MapToCurveBasedHasher::<
-G1Projective,
+    G1Projective,
     DefaultFieldHasher<sha2::Sha256>,
     curve_maps::wb::WBMap<curve::g1::Config>,
 >;
