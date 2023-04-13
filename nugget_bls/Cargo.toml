@@ -20,7 +20,7 @@ ark-ff.workspace = true
 ark-ec.workspace = true
 ark-serialize.workspace = true
 
-# ark-bls12-377 = { version = "0.4", default-features = false, features = [ "curve" ], optional = true }
+ark-bls12-377 = { version = "0.4", default-features = false, features = [ "curve" ], optional = true }
 ark-bls12-381 = { version = "0.4", default-features = false, features = [ "curve" ], optional = true }
 sha2 = { version = "0.10", default-features = false, optional = true }
 
@@ -29,7 +29,7 @@ sha2 = { version = "0.10", default-features = false, optional = true }
 
 
 [features]
-default = ["getrandom", "bls12_381"] # "std", "rand"
-# bls12_377 = ["dep:ark_bls12_377"]
+default = ["getrandom", "bls12_381", "bls12_377"] # "std", "rand"
+bls12_377 = ["dep:ark-bls12-377"]
 bls12_381 = ["dep:ark-bls12-381", "dep:sha2"]
 getrandom = ["dleq_vrf/getrandom"]

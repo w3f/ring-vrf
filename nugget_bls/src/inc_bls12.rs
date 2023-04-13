@@ -8,8 +8,7 @@ use ark_ec::{
 
 use dleq_vrf::vrf::{VrfInput, IntoVrfInput};
 
-use curve::{G1Affine, G1Projective};
-
+pub use curve::{G1Affine, G1Projective};
 
 type H2C = MapToCurveBasedHasher::<
 G1Projective,
@@ -21,7 +20,15 @@ pub fn hash_to_curve(domain: &[u8],message: &[u8]) -> Result<dleq_vrf::vrf::VrfI
     dleq_vrf::vrf::ark_hash_to_curve::<G1Affine,H2C>(domain,message)
 }
 
-pub type Message<'a> = crate::Message<'a>;
+/// We'd ideally define `Message` once for both curves.  Annoyingly, 
+/// we've some rustc bug here in that rustc cannot distinguish between
+/// the traits `IntoVrfInput<curve::G1Affine>` for different curves.
+pub struct Message<'a> {
+    pub domain: &'a [u8],
+    pub message: &'a [u8],
+}
+
+// pub type Message<'a> = crate::Message<'a>;
 impl<'a> IntoVrfInput<G1Affine> for Message<'a> {
     fn into_vrf_input(self) -> VrfInput<G1Affine> {
         hash_to_curve(self.domain,self.message)
