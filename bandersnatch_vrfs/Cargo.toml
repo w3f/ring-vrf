@@ -7,22 +7,16 @@ repository = "https://github.com/w3f/ring-vrf/tree/master/bandersnatch_vrfs"
 edition = "2021"
 license = "MIT/Apache-2.0"
 
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 dleq_vrf = { version = "0.0.1", default-features = false, path = "../dleq_vrf" }
 
-rand_core = { version = "0.6", default-features = false }
-merlin = { version = "3.0", default-features = false }
+rand_core.workspace = true
+# zeroize.workspace = true
 
-ark-std = { version = "0.4", default-features = false }
-ark-ff = { version = "0.4", default-features = false }
-ark-ec = { version = "0.4", default-features = false }
-ark-serialize = { version = "0.4", default-features = false, features = [ "derive" ] }
-ark-serialize-derive = { version = "0.4", default-features = false }
-
-# zeroize = { version = "1.0", default-features = false, features = [ "zeroize_derive" ] }
+ark-std.workspace = true
+ark-ff.workspace = true
+ark-ec.workspace = true
+ark-serialize.workspace = true
 
 # In these three, add optional = true ere if we create some related curves trait.
 ark-ed-on-bls12-381-bandersnatch = { version = "0.4", default-features = false }
