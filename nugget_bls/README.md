@@ -13,8 +13,8 @@ verifiers only sub the G1 public keys.  We now have two verification
 equations, but they could easily be merged after two scalar multiplications
 on G1, so verifiers need only the G2 subgroup check and point preperation.
 
-In principle, one always checks signle BLS signatures before creating
+In principle, one always checks single BLS signatures before creating
 aggregate BLS signatures.  Individual BLS signatures already create DoS risks,
-which we aleviate by having so individual nugget BLS' signatures by DLEQ proofs,
+which we aleviate by individual nugget BLS' signatures being DLEQ proofs,
 that employ only G1 arithmetic. 
 

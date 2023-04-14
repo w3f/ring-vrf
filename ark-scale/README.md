@@ -1,4 +1,4 @@
-ark-scale has moved to https://github.com/paritytech/ark-substrate/tree/master/ark-scale
+ark-scale has moved to https://github.com/w3f/ark-scale
 
 ref. https://github.com/paritytech/ark-substrate/pull/4
 
