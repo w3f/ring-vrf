@@ -1,12 +1,14 @@
 ### Arkworks friendly transcripts for proofs using Fiat-Shamir
 
-A simple wrapper around shake128 which provides transcript style
-hashing for simple safe domain seperation, but compatible with an
-`io::Write` interface for simple idomatic integration into arkworks.
+A simple wrapper around shake128 which provides transcript aka
+tuple-hash style hashing for simple safe domain seperation, but
+compatible with an `io::Write` interface for simple idomatic
+integration into arkworks.
 
-We achieve this by doing basic domain seperation using postfix writes
-of the length of written data, as opposed to the prefix writes done
-by merlin, which break arkworks.
+We do basic domain seperation using postfix writes of the lengths
+of written data, as opposed to the prefix writes done by merlin, 
+TupleHash from [SP 800-185](https://csrc.nist.gov/publications/detail/sp/800-185/final),
+since postfix writes simplify polymorphic code.
 
 ### Why not merlin?
 
