@@ -66,7 +66,8 @@ impl<'a> IntoVrfInput<E> for Message<'a> {
         t.append(self.domain);
         t.label(b"message");
         t.append(self.message);
-        t.into_vrf_input()
+        let p: <E as AffineRepr>::Group = t.challenge(b"vrf-input").read_uniform();
+        vrf::VrfInput( p.into_affine() )
     }
 }
 

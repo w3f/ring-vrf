@@ -6,7 +6,7 @@ use ark_ec::{
     // bls12::Bls12Config,
 };
 
-use dleq_vrf::vrf::{VrfInput, IntoVrfInput};
+use dleq_vrf::{vrf::{VrfInput, IntoVrfInput},transcript::{AsLabel,IsLabel}};
 
 pub use curve::{G1Affine, G1Projective};
 
@@ -16,7 +16,7 @@ type H2C = MapToCurveBasedHasher::<
     curve_maps::wb::WBMap<curve::g1::Config>,
 >;
 
-pub fn hash_to_curve(domain: &[u8],message: &[u8]) -> Result<dleq_vrf::vrf::VrfInput<G1Affine>,HashToCurveError> {
+pub fn hash_to_curve(domain: impl AsLabel,message: &[u8]) -> Result<dleq_vrf::vrf::VrfInput<G1Affine>,HashToCurveError> {
     dleq_vrf::vrf::ark_hash_to_curve::<G1Affine,H2C>(domain,message)
 }
 
@@ -31,7 +31,7 @@ pub struct Message<'a> {
 // pub type Message<'a> = crate::Message<'a>;
 impl<'a> IntoVrfInput<G1Affine> for Message<'a> {
     fn into_vrf_input(self) -> VrfInput<G1Affine> {
-        hash_to_curve(self.domain,self.message)
+        hash_to_curve(IsLabel(self.domain),self.message)
         .expect("Hash-to-curve error, IRTF spec forbids messages longer than 2^16!")
     }
 }
