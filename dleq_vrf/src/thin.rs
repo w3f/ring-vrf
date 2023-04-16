@@ -67,7 +67,6 @@ impl<C: AffineRepr> ThinVrf<C> {
 
 // --- Sign --- //
 
-#[cfg(feature = "getrandom")]
 impl<K: AffineRepr> SecretKey<K> {
     pub(crate) fn new_thin_witness(&self, t: &Transcript, input: &VrfInput<K>) -> Witness<ThinVrf<K>>
     {
@@ -90,7 +89,6 @@ impl<K: AffineRepr> SecretKey<K> {
     }
 }
 
-#[cfg(feature = "getrandom")]
 impl<K: AffineRepr> Witness<ThinVrf<K>> {
     /// Complete Schnorr-like signature.
     /// 
@@ -130,10 +128,10 @@ impl<C: AffineRepr> Valid for Signature<ThinVrf<C>> {
 
 impl<K: AffineRepr> ThinVrf<K> {
     pub(crate) fn make_public(&self, secret: &mut SecretPair<<K as AffineRepr>::ScalarField>) -> PublicKey<K> {
-        #[cfg(feature = "getrandom")]
+        // #[cfg(feature = "getrandom")]
         let p = secret * self.keying_base();
-        #[cfg(not(feature = "getrandom"))]
-        let p = self.keying_base().mul(secret.0[0]) + self.keying_base().mul(secret.0[1]) ;
+        // #[cfg(not(feature = "getrandom"))]
+        // let p = self.keying_base().mul(secret.0[0]) + self.keying_base().mul(secret.0[1]) ;
         PublicKey(p.into_affine())
     }
 

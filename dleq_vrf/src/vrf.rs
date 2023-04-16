@@ -85,7 +85,6 @@ where C: AffineRepr, H2C: HashToCurve<<C as AffineRepr>::Group>,
 #[derive(Debug,Clone,CanonicalSerialize)] // CanonicalDeserialize, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
 pub struct VrfInput<C: AffineRepr>(pub C);
 
-#[cfg(feature = "getrandom")]
 impl<K: AffineRepr> SecretKey<K> {
     /// Compute VRF pre-output from secret key and input.
     pub fn vrf_preout<H>(&mut self, input: &VrfInput<H>) -> VrfPreOut<H> 

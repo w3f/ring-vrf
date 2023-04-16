@@ -172,7 +172,6 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 
 // --- Sign --- //
 
-// #[cfg(feature = "getrandom")]
 impl<K: AffineRepr> SecretKey<K> {
     pub fn new_secret_blinding<const B: usize>(&self, t: &Transcript) -> SecretBlinding<K,B>
     {
@@ -185,7 +184,6 @@ impl<K: AffineRepr> SecretKey<K> {
     }
 }
 
-#[cfg(feature = "getrandom")]
 impl<K,H,const B: usize> PedersenVrf<K,H,B>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
@@ -286,7 +284,6 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     }
 }
 
-#[cfg(feature = "getrandom")]
 impl<K,H,const B: usize> Witness<PedersenVrf<K,H,B>>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
