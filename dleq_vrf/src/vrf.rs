@@ -17,7 +17,7 @@ use ark_ec::{AffineRepr, CurveGroup, hashing::{HashToCurve,HashToCurveError}};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
 use ark_std::{borrow::BorrowMut, iter::IntoIterator, vec::Vec};
 
-use crate::{Transcript,IntoTranscript,SecretKey};
+use crate::{Transcript,IntoTranscript,transcript::AsLabel,SecretKey};
 
 
 use core::borrow::{Borrow}; // BorrowMut
@@ -58,10 +58,10 @@ impl<T: IntoTranscript,C: AffineRepr> IntoVrfInput<C> for T {
 }
 */
 
-pub fn ark_hash_to_curve<C,H2C>(domain: &[u8],message: &[u8]) -> Result<VrfInput<C>,HashToCurveError>
+pub fn ark_hash_to_curve<C,H2C>(domain: impl AsLabel, message: &[u8]) -> Result<VrfInput<C>,HashToCurveError>
 where C: AffineRepr, H2C: HashToCurve<<C as AffineRepr>::Group>,
 {
-    Ok(VrfInput( H2C::new(domain)?.hash(message)? ))
+    Ok(VrfInput( H2C::new(domain.as_label())?.hash(message)? ))
 }
 
 

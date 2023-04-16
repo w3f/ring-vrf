@@ -4,11 +4,16 @@ use ark_std::vec::Vec;
 
 use crate::{Transcript, vrf, Signature};
 
+use ark_bls12_377 as curve;
 
-type K = ark_bls12_377::G1Affine;
-// type H = ark_bls12_377::G1Affine;
+type K = curve::G1Affine;
+// type H = curve::G1Affine;
 
-// ark_ed_on_bls12_377::G1Affine
+type H2C = ark_ec::hashing::map_to_curve_hasher::MapToCurveBasedHasher::<
+    <K as ark_ec::AffineRepr>::Group,
+    ark_ff::fields::field_hashers::DefaultFieldHasher<sha2::Sha256>,
+    ark_ec::hashing::curve_maps::wb::WBMap<curve::g1::Config>,
+>;
 
 // type ThinVrf = crate::ThinVrf<K>;
 type PedersenVrf = crate::PedersenVrf<K>;
@@ -29,10 +34,9 @@ fn master() {
     let flavor = pedersen_vrf_test_flavor();
     let mut sk = SecretKey::ephemeral((*flavor).clone());
 
-    let mut mk_io = |n| {
-        let mut t = Transcript::new(b"VrfIO");
-        t.append_u64(n);
-        sk.vrf_inout(&mut t)
+    let mut mk_io = |n: u32| {
+        let input = vrf::ark_hash_to_curve::<K,H2C>(b"VrfIO",&n.to_le_bytes()[..]).unwrap();
+        sk.vrf_inout(input)
     };
     let ios: [vrf::VrfInOut<K>; 4] = [mk_io(0), mk_io(1), mk_io(2), mk_io(3)];
 
