@@ -11,7 +11,7 @@ use ark_ec::{AffineRepr, CurveGroup};
 use crate::{
     Transcript, IntoTranscript,
     flavor::{Flavor, InnerFlavor, Witness, Signature},
-    keys::{PublicKey, SecretKey, SecretPair},
+    keys::{PublicKey, SecretKey, SecretScalar},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut},
 };
@@ -128,7 +128,7 @@ impl<C: AffineRepr> Valid for Signature<ThinVrf<C>> {
 */
 
 impl<K: AffineRepr> ThinVrf<K> {
-    pub(crate) fn make_public(&self, secret: &mut SecretPair<<K as AffineRepr>::ScalarField>) -> PublicKey<K> {
+    pub(crate) fn make_public(&self, secret: &mut SecretScalar<<K as AffineRepr>::ScalarField>) -> PublicKey<K> {
         // #[cfg(feature = "getrandom")]
         let p = secret * self.keying_base();
         // #[cfg(not(feature = "getrandom"))]

@@ -47,33 +47,28 @@ impl<C: AffineRepr> PublicKey<C> {
 }
 
 
-/*
-pub(crate) fn fake_secret_pair_from_rng<F: PrimeField> (rng: impl RngCore+CryptoRng) -> F {
-    <F as UniformRand>::rand(&mut rng) + <F as UniformRand>::rand(&mut rng)
-}
-*/
-
 /// Secret scalar split into the sum of two scalars, which randomly mutate.
 /// Incurs 2x penalty in scalar multiplications, but provides side channel defenses.
 /// 
 /// We split additively right now, but would a multiplicative splitting help
 /// against rowhammer attacks on the secret key?
 #[derive(Clone,PartialEq,Eq)] // Copy, CanonicalSerialize,CanonicalDeserialize, Hash, 
-pub(crate) struct SecretPair<F: PrimeField>([F; 2]);
+#[repr(transparent)]
+pub struct SecretScalar<F: PrimeField>([F; 2]);
 
-impl<F: PrimeField> Zeroize for SecretPair<F> { 
+impl<F: PrimeField> Zeroize for SecretScalar<F> { 
     fn zeroize(&mut self) { self.0.zeroize(); }
 }
-impl<F: PrimeField> Drop for SecretPair<F> {
+impl<F: PrimeField> Drop for SecretScalar<F> {
     fn drop(&mut self) { self.zeroize() }
 }
 
-impl<F: PrimeField> SecretPair<F> {
-    /// Initialize and unbiased `SecretPair` from a `CryptoRng`,
+impl<F: PrimeField> SecretScalar<F> {
+    /// Initialize and unbiased `SecretScalar` from a `CryptoRng`,
     /// deterministic assuming `CryptoRng` is.
     pub fn from_rng<R: RngCore+CryptoRng>(rng: &mut R) -> Self {
-        // It's frankly obnoxious that arkworks uses rand here, not just rand_core.
-        SecretPair([
+        // It's kinda obnoxious that arkworks uses rand here, not just rand_core.
+        SecretScalar([
             <F as UniformRand>::rand(rng), 
             <F as UniformRand>::rand(rng)
         ])
@@ -102,7 +97,7 @@ impl<F: PrimeField> SecretPair<F> {
     }
 }
 
-impl<F: PrimeField> MulAssign<&F> for SecretPair<F> {
+impl<F: PrimeField> MulAssign<&F> for SecretScalar<F> {
     /// Multiply by a scalar, guts of `mul_by_challenge`.
     /// Invokes `replit` so do manually for witnesses.
     fn mul_assign(&mut self, rhs: &F) {
@@ -112,22 +107,22 @@ impl<F: PrimeField> MulAssign<&F> for SecretPair<F> {
     }
 }
 
-impl<F: PrimeField> AddAssign<&SecretPair<F>> for SecretPair<F> {
-    fn add_assign(&mut self, rhs: &SecretPair<F>) {
+impl<F: PrimeField> AddAssign<&SecretScalar<F>> for SecretScalar<F> {
+    fn add_assign(&mut self, rhs: &SecretScalar<F>) {
         self.0[0] += rhs.0[0];
         self.0[1] += rhs.0[1];
     }
 }
-impl<F: PrimeField> Add<&SecretPair<F>> for &SecretPair<F> {
-    type Output = SecretPair<F>;
-    fn add(self, rhs: &SecretPair<F>) -> SecretPair<F> {
+impl<F: PrimeField> Add<&SecretScalar<F>> for &SecretScalar<F> {
+    type Output = SecretScalar<F>;
+    fn add(self, rhs: &SecretScalar<F>) -> SecretScalar<F> {
         let mut lhs = self.clone();
         lhs += rhs;
         lhs
     }
 }
 /*
-impl<G: Group> Mul<&G> for &SecretPair<<G as Group>::ScalarField> {
+impl<G: Group> Mul<&G> for &SecretScalar<<G as Group>::ScalarField> {
     type Output = G;
     /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
     /// but ark_ec being our dependency requires left multiplication here.
@@ -138,7 +133,7 @@ impl<G: Group> Mul<&G> for &SecretPair<<G as Group>::ScalarField> {
     }
 }
 */
-impl<C: AffineRepr> Mul<&C> for &mut SecretPair<<C as AffineRepr>::ScalarField> {
+impl<C: AffineRepr> Mul<&C> for &mut SecretScalar<<C as AffineRepr>::ScalarField> {
     type Output = <C as AffineRepr>::Group;
     /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
     /// but ark_ec being our dependency requires left multiplication here.
@@ -169,7 +164,7 @@ pub struct SecretKey<K: AffineRepr> {
     pub(crate) thin: ThinVrf<K>,
 
     /// Secret key represented as a scalar.
-    pub(crate) key: SecretPair<<K as AffineRepr>::ScalarField>,
+    pub(crate) key: SecretScalar<<K as AffineRepr>::ScalarField>,
 
     /// Seed for deriving the nonces used in Schnorr proofs.
     ///
@@ -232,7 +227,7 @@ impl<K: AffineRepr> SecretKey<K> {
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
         rng.fill_bytes(&mut nonce_seed);
-        let mut key = SecretPair::from_rng(rng);
+        let mut key = SecretScalar::from_rng(rng);
         let public = thin.make_public(&mut key);
         SecretKey { thin, key, nonce_seed, public, 
             #[cfg(debug_assertions)]
@@ -305,7 +300,7 @@ impl<K: AffineRepr> SecretKey<K> {
     pub fn deserialize<R: Read>(thin: ThinVrf<K>, mut reader: R) -> Result<Self, SerializationError> {
         let mut nonce_seed = [0u8; 32];
         reader.read_exact(&mut nonce_seed) ?;
-        let key = SecretPair([
+        let key = SecretScalar([
             <K as AffineRepr>::ScalarField::deserialize_compressed(&mut reader) ?,
             <K as AffineRepr>::ScalarField::deserialize_compressed(&mut reader) ?
         ])
