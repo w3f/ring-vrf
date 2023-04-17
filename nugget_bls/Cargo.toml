@@ -30,6 +30,6 @@ sha2 = { version = "0.10", default-features = false, optional = true }
 
 [features]
 default = ["getrandom", "bls12_381", "bls12_377"] # "std", "rand"
-bls12_377 = ["dep:ark-bls12-377"]
+bls12_377 = ["dep:ark-bls12-377", "dep:sha2"]
 bls12_381 = ["dep:ark-bls12-381", "dep:sha2"]
 getrandom = ["dleq_vrf/getrandom"]
