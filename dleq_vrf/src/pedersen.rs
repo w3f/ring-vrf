@@ -231,9 +231,9 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         let flavor = self;
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
+        t.label(b"PedersenVRF");
         let io = vrf::vrfs_merge(t, ios);
 
-        t.label(b"PedersenVRF");
         // Allow derandomization by constructing secret_blinding and
         // witness as late as possible.
         let secret_blinding = secret_blinding.unwrap_or_else( || secret.new_secret_blinding(t) );
@@ -271,9 +271,9 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         let flavor = self;
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
+        t.label(b"PedersenVRF");
         let io = vrf::vrfs_merge(t, ios);
 
-        t.label(b"PedersenVRF");
         // Allow derandomization by constructing secret_blinding and witness as late as possible.
         let secret_blinding = secret_blinding.unwrap_or_else( || secret.new_secret_blinding(t) );
         let compk = flavor.compute_blinded_publickey(secret.as_publickey(), &secret_blinding);
@@ -334,8 +334,8 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     {
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
-        let io = vrf::vrfs_merge(t, ios);
         t.label(b"PedersenVRF");
+        let io = vrf::vrfs_merge(t, ios);
         t.label(b"KeyCommitment");
         t.append(&signature.compk);
 
@@ -372,8 +372,8 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     {
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
-        let io = vrf::vrfs_merge(t, ios);
         t.label(b"PedersenVRF");
+        let io = vrf::vrfs_merge(t, ios);
         t.label(b"KeyCommitment");
         t.append(&signature.compk);
 

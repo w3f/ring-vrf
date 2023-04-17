@@ -4,16 +4,15 @@
 #![deny(unsafe_code)]
 #![doc = include_str!("../README.md")]
 
-use core::borrow::Borrow;
-
-use rand_core::{CryptoRng, RngCore};
+use ark_std::{borrow::{Borrow,BorrowMut}, Zero, vec::Vec, };   // io::{Read, Write}
+use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};  // SerializationError
 
 use ark_ec::{
     AffineRepr, CurveGroup,
     pairing::{Pairing, prepare_g2, PairingOutput},
 };
-use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};  // SerializationError
-use ark_std::{ Zero, vec::Vec, };   // io::{Read, Write}
+
+use rand_core::{CryptoRng, RngCore};
 
 pub use dleq_vrf::{
     Transcript, IntoTranscript,
@@ -102,6 +101,9 @@ impl<P: Pairing> SecretKey<P> {
     }
 
     pub fn create_public_cert(&mut self, t: impl IntoTranscript) -> PublicKey<P> {
+        let mut t = t.into_transcript();
+        let t = t.borrow_mut();
+        t.label(b"NuggetPublic");
         let pedersen = pedersen_vrf::<P>();
         let g2_io = self.0.vrf_inout(pk_in::<P>());
         let g2 = g2_io.preoutput.clone();
@@ -110,12 +112,15 @@ impl<P: Pairing> SecretKey<P> {
     }
 
     pub fn create_nugget_public(&mut self) -> PublicKey<P> {
-        self.create_public_cert(b"NuggetPublic")
+        self.create_public_cert(b"")
     }
 
     pub fn sign_nugget_bls<M>(&mut self, t: impl IntoTranscript, input: M) -> Signature<P> 
     where M: IntoVrfInput<<P as Pairing>::G1Affine>,
     {
+        let mut t = t.into_transcript();
+        let t = t.borrow_mut();
+        t.label(b"NuggetBLS");
         let io = self.0.vrf_inout(input);
         let preoutput = io.preoutput.clone();
         let signature = self.0.sign_thin_vrf(t, &[io]);
@@ -174,6 +179,9 @@ impl<P: Pairing> PublicKey<P> {
 
     pub fn validate_public_cert(&self, t: impl IntoTranscript) -> SignatureResult<()> 
     {
+        let mut t = t.into_transcript();
+        let t = t.borrow_mut();
+        t.label(b"NuggetPublic");
         let g2_io = VrfInOut { input: pk_in::<P>(), preoutput: self.g2.clone(), };
         pedersen_vrf::<P>()
         .verify_non_batchable_pedersen_vrf(t, &[g2_io], &self.sig )
@@ -181,12 +189,15 @@ impl<P: Pairing> PublicKey<P> {
     }
 
     pub fn validate_nugget_public(&self) -> SignatureResult<()> {
-        self.validate_public_cert(b"NuggetPublic")
+        self.validate_public_cert(b"")
     }
 
     pub fn verify_nugget_bls<M>(&self, t: impl IntoTranscript, input: M, signature: &Signature<P>) -> SignatureResult<()>
     where M: IntoVrfInput<<P as Pairing>::G1Affine>,
     {
+        let mut t = t.into_transcript();
+        let t = t.borrow_mut();
+        t.label(b"NuggetBLS");
         let io = signature.preoutput.attach_input(input);
         thin_vrf::<P>()
         .verify_thin_vrf(t, &[io], &self.to_g1_publickey(), &signature.signature )

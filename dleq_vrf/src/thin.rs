@@ -83,6 +83,7 @@ impl<K: AffineRepr> SecretKey<K> {
     {
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
+        t.label(b"ThinVRF");
         let io = self.thin.thin_vrf_merge(t, self.as_publickey(), ios);
         // Allow derandomization by constructing witness late.
         self.new_thin_witness(t,&io.input).sign_final(t,self)
@@ -97,7 +98,7 @@ impl<K: AffineRepr> Witness<ThinVrf<K>> {
         self, t: &mut Transcript, secret: &mut SecretKey<K>
     ) -> Signature<ThinVrf<K>> {
         let Witness { r, k } = self;
-        t.label(b"ThinVRF R");
+        t.label(b"Thin R");
         t.append(&r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge").read_uniform();
         let s = k + secret.key.mul_by_challenge(&c);
@@ -148,6 +149,7 @@ impl<K: AffineRepr> ThinVrf<K> {
     {
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
+        t.label(b"ThinVRF");
         // A priori, one expects thin_vrf_merge's msm could be merged
         // into the multiplication by c below, except thin_vrf_merge
         // only needs 128 bit scalar multiplications, so doing this
@@ -155,7 +157,7 @@ impl<K: AffineRepr> ThinVrf<K> {
         let io = self.thin_vrf_merge(t, public, ios);
 
         // verify_final
-        t.label(b"ThinVRF R");
+        t.label(b"Thin R");
         t.append(&signature.r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge").read_uniform();
 
