@@ -177,7 +177,7 @@ impl<K: AffineRepr> SecretKey<K> {
     {
         // Accessed system randomness using rand_hack(), which helps test vectors,
         // but clearly insecure otherwise. 
-        let mut reader = self.witness(t,b"MakeSecretBlinding");
+        let mut reader = self.witness(t,b"PedersenVrf:MakeSecretBlinding");
         let secret_blinding: [<K as AffineRepr>::ScalarField; B]
          = ark_std::array::from_fn(|_| reader.read_uniform());
         SecretBlinding(secret_blinding)
@@ -199,7 +199,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
             "Internal error, incompatable keying basepoints used.");
 
         // We'll need two calls here until const generics lands 
-        let mut reader = secret.witness(t,b"Witness");
+        let mut reader = secret.witness(t,b"keying n blinding");
         let keying: K::ScalarField = reader.read_uniform();
         let blindings: [K::ScalarField; B]
          = ark_std::array::from_fn(|_| reader.read_uniform());
@@ -233,6 +233,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         let t = t.borrow_mut();
         let io = vrf::vrfs_merge(t, ios);
 
+        t.label(b"PedersenVRF");
         // Allow derandomization by constructing secret_blinding and
         // witness as late as possible.
         let secret_blinding = secret_blinding.unwrap_or_else( || secret.new_secret_blinding(t) );
@@ -272,6 +273,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         let t = t.borrow_mut();
         let io = vrf::vrfs_merge(t, ios);
 
+        t.label(b"PedersenVRF");
         // Allow derandomization by constructing secret_blinding and witness as late as possible.
         let secret_blinding = secret_blinding.unwrap_or_else( || secret.new_secret_blinding(t) );
         let compk = flavor.compute_blinded_publickey(secret.as_publickey(), &secret_blinding);
@@ -299,7 +301,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         compk: KeyCommitment<K>,
     ) -> (Signature<PedersenVrf<K,H,B>>,NonBatchableSignature<PedersenVrf<K,H,B>>) {
         let Witness { r, k } = self;
-        t.label(b"Witness");
+        t.label(b"Pedersen R");
         t.append(&r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge").read_uniform();
         let mut blindings = arrayvec::ArrayVec::<K::ScalarField,B>::new();
@@ -333,11 +335,12 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
         let io = vrf::vrfs_merge(t, ios);
+        t.label(b"PedersenVRF");
         t.label(b"KeyCommitment");
         t.append(&signature.compk);
 
         // verify_final
-        t.label(b"Witness");
+        t.label(b"Pedersen R");
         t.append(&signature.r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge").read_uniform();
 
@@ -370,6 +373,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
         let io = vrf::vrfs_merge(t, ios);
+        t.label(b"PedersenVRF");
         t.label(b"KeyCommitment");
         t.append(&signature.compk);
 
@@ -387,7 +391,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
             preoutish: preoutish.into_affine(),
         };
 
-        t.label(b"Witness");
+        t.label(b"Pedersen R");
         t.append(&r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge").read_uniform();
         if c == signature.c {

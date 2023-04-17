@@ -359,8 +359,8 @@ impl Transcript {
     pub fn challenge(&mut self, label: impl AsLabel) -> Reader {
         #[cfg(feature = "debug-transcript")]
         println!("Shake128 {}transcript challenge",self.debug_name);
-        self.seperate();
-        self.write_bytes(label.as_label());
+        self.label(label);
+        self.write_bytes(b"challenge");
         let reader = self.mode.clone().raw_reader();
         self.seperate();
         reader

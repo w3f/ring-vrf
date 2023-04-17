@@ -2,7 +2,7 @@
 name = "nugget_bls"
 description = "VRFs from Chaum-Pedersen DLEQ proofs, usable in Ring VRFs"
 authors = ["Sergey Vasilyev <swasilyev@gmail.com>", "Jeff Burdges <jeff@web3.foundation>", "Syed Hosseini <syed@riseup.net>"]
-version = "0.0.1"
+version = "0.0.2"
 repository = "https://github.com/w3f/ring-vrf/tree/master/nugget_bls"
 edition = "2021"
 license = "MIT/Apache-2.0"
@@ -10,7 +10,7 @@ keywords = ["crypto", "cryptography", "bls", "signature"]
 
 
 [dependencies]
-dleq_vrf = { version = "0.0.1", default-features = false, path = "../dleq_vrf" }
+dleq_vrf = { version = "0.0.2", default-features = false, path = "../dleq_vrf" }
 
 rand_core.workspace = true
 # zeroize.workspace = true

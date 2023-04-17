@@ -278,9 +278,9 @@ where
     let mut input = <C as AffineRepr>::Group::zero();
     let mut preoutput = <C as AffineRepr>::Group::zero();
     for p in ps {
-        let mut t0 = t.fork(b"delinearize");    // Keep t clean, but
-        t0.append_u64(i);                               // distinguish the different outputs.
-        let z: [u64; 2] = t0.challenge(b"").read_uniform();  // Sample a 128bit scalar.
+        let mut t0 = t.fork(b"delinearize");   // Keep t clean, but
+        t0.append_u64(i);                        // distinguish the different outputs.
+        let z: [u64; 2] = t0.challenge(b"128 bits").read_uniform();  // Sample a 128bit scalar.
         
         input += p.input.0.mul_bigint(z);
         preoutput += p.preoutput.0.mul_bigint(z);

@@ -70,7 +70,7 @@ impl<C: AffineRepr> ThinVrf<C> {
 impl<K: AffineRepr> SecretKey<K> {
     pub(crate) fn new_thin_witness(&self, t: &Transcript, input: &VrfInput<K>) -> Witness<ThinVrf<K>>
     {
-        let mut reader = self.witness(t,b"Witness");
+        let mut reader = self.witness(t,b"thin keying only");
         let k: <K as AffineRepr>::ScalarField = reader.read_uniform();
         let r = input.0.mul(k).into_affine();
         Witness { r, k }
@@ -97,7 +97,7 @@ impl<K: AffineRepr> Witness<ThinVrf<K>> {
         self, t: &mut Transcript, secret: &mut SecretKey<K>
     ) -> Signature<ThinVrf<K>> {
         let Witness { r, k } = self;
-        t.label(b"Witness");
+        t.label(b"ThinVRF R");
         t.append(&r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge").read_uniform();
         let s = k + secret.key.mul_by_challenge(&c);
@@ -155,7 +155,7 @@ impl<K: AffineRepr> ThinVrf<K> {
         let io = self.thin_vrf_merge(t, public, ios);
 
         // verify_final
-        t.label(b"Witness");
+        t.label(b"ThinVRF R");
         t.append(&signature.r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge").read_uniform();
 

@@ -59,7 +59,7 @@ pub(crate) fn fake_secret_pair_from_rng<F: PrimeField> (rng: impl RngCore+Crypto
 /// We split additively right now, but would a multiplicative splitting help
 /// against rowhammer attacks on the secret key?
 #[derive(Clone,PartialEq,Eq)] // Copy, CanonicalSerialize,CanonicalDeserialize, Hash, 
-pub(crate) struct SecretPair<F: PrimeField>(pub(crate) [F; 2]);
+pub(crate) struct SecretPair<F: PrimeField>([F; 2]);
 
 impl<F: PrimeField> Zeroize for SecretPair<F> { 
     fn zeroize(&mut self) { self.0.zeroize(); }
@@ -271,7 +271,8 @@ impl<K: AffineRepr> SecretKey<K> {
     }
 
     pub fn witness(&self, t: &crate::Transcript, label: impl ark_transcript::AsLabel) -> ark_transcript::Reader {
-        let mut t = t.fork(label);
+        let mut t = t.fork(b"witness");
+        t.label(label);
         t.append(&self.nonce_seed[..]);
         #[cfg(debug_assertions)]
         if self.test_vector_fake_rng {
