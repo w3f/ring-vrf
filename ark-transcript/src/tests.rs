@@ -52,6 +52,30 @@ fn transcript_v_witnesses() {
     // presence of a bad RNG checks that the different challenges
     // above aren't because the RNG is accidentally different.
     assert_eq!(s3, s4);
+
+    let s1: Fr = r1.read_reduce();
+    let s2: Fr = r2.read_reduce();
+    let s3: Fr = r3.read_reduce();
+    let s4: Fr = r4.read_reduce();
+
+    // Transcript t1 has different commitments than t2, t3, t4, so
+    // it should produce distinct challenges from all of them.
+    assert_ne!(s1, s2);
+    assert_ne!(s1, s3);
+    assert_ne!(s1, s4);
+
+    // Transcript t2 has different witness variables from t3, t4,
+    // so it should produce distinct challenges from all of them.
+    assert_ne!(s2, s3);
+    assert_ne!(s2, s4);
+
+    // Transcripts t3 and t4 have the same commitments and
+    // witnesses, so they should give different challenges only
+    // based on the RNG. Checking that they're equal in the
+    // presence of a bad RNG checks that the different challenges
+    // above aren't because the RNG is accidentally different.
+    assert_eq!(s3, s4);
+
 }
 
 

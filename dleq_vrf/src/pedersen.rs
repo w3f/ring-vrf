@@ -179,7 +179,7 @@ impl<K: AffineRepr> SecretKey<K> {
         // but clearly insecure otherwise. 
         let mut reader = self.witness(t,b"PedersenVrf:MakeSecretBlinding");
         let secret_blinding: [<K as AffineRepr>::ScalarField; B]
-         = ark_std::array::from_fn(|_| reader.read_uniform());
+         = ark_std::array::from_fn(|_| reader.read_reduce());
         SecretBlinding(secret_blinding)
     }
 }
@@ -200,9 +200,9 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 
         // We'll need two calls here until const generics lands 
         let mut reader = secret.witness(t,b"keying n blinding");
-        let keying: K::ScalarField = reader.read_uniform();
+        let keying: K::ScalarField = reader.read_reduce();
         let blindings: [K::ScalarField; B]
-         = ark_std::array::from_fn(|_| reader.read_uniform());
+         = ark_std::array::from_fn(|_| reader.read_reduce());
         let k = Scalars { keying, blindings, };
 
         let mut keyish: <K as AffineRepr>::Group = flavor.keying_base * k.keying;
@@ -303,7 +303,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         let Witness { r, k } = self;
         t.label(b"Pedersen R");
         t.append(&r);
-        let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge").read_uniform();
+        let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge").read_reduce();
         let mut blindings = arrayvec::ArrayVec::<K::ScalarField,B>::new();
         for i in 0..B {
             blindings.push( k.blindings[i] + c * secret_blindings.0[i] );
@@ -342,7 +342,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         // verify_final
         t.label(b"Pedersen R");
         t.append(&signature.r);
-        let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge").read_uniform();
+        let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge").read_reduce();
 
         let lhs = io.input.0 * signature.s.keying;
         let rhs = signature.r.preoutish.into_group() + io.preoutput.0 * c;
@@ -393,7 +393,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 
         t.label(b"Pedersen R");
         t.append(&r);
-        let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge").read_uniform();
+        let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge").read_reduce();
         if c == signature.c {
             Ok(ios)
         } else {

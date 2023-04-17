@@ -71,7 +71,7 @@ impl<K: AffineRepr> SecretKey<K> {
     pub(crate) fn new_thin_witness(&self, t: &Transcript, input: &VrfInput<K>) -> Witness<ThinVrf<K>>
     {
         let mut reader = self.witness(t,b"thin keying only");
-        let k: <K as AffineRepr>::ScalarField = reader.read_uniform();
+        let k: <K as AffineRepr>::ScalarField = reader.read_reduce();
         let r = input.0.mul(k).into_affine();
         Witness { r, k }
     }
@@ -100,7 +100,7 @@ impl<K: AffineRepr> Witness<ThinVrf<K>> {
         let Witness { r, k } = self;
         t.label(b"Thin R");
         t.append(&r);
-        let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge").read_uniform();
+        let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge").read_reduce();
         let s = k + secret.key.mul_by_challenge(&c);
         // k.zeroize();
         Signature { compk: (), r, s }
@@ -159,7 +159,7 @@ impl<K: AffineRepr> ThinVrf<K> {
         // verify_final
         t.label(b"Thin R");
         t.append(&signature.r);
-        let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge").read_uniform();
+        let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge").read_reduce();
 
         let lhs = io.input.0.mul(signature.s);
         let rhs = signature.r.into_group() + io.preoutput.0.mul(c);
