@@ -15,7 +15,7 @@ use ark_ec::{
 use rand_core::{CryptoRng, RngCore};
 
 pub use dleq_vrf::{
-    Transcript, IntoTranscript,
+    Transcript, IntoTranscript, transcript,
     error::{SignatureResult, SignatureError},
     vrf::{IntoVrfInput},
 };
@@ -83,21 +83,21 @@ impl<P: Pairing> SecretKey<P> {
     /// Generate an "unbiased" `SecretKey` directly from a user
     /// suplied `csprng` uniformly, bypassing the `MiniSecretKey`
     /// layer.
-    pub fn from_rng<R>(rng: &mut R) -> Self
-    where R: CryptoRng + RngCore,
-    {
-        SecretKey( dleq_vrf::SecretKey::from_rng( thin_vrf::<P>(), rng ))
+    pub fn from_xof(xof: impl transcript::digest::XofReader) -> Self {
+        SecretKey( dleq_vrf::SecretKey::from_xof( thin_vrf::<P>(), xof ))
     }
 
     /// Generate a `SecretKey` from a 32 byte seed.
-    pub fn from_seed(seed: [u8; 32]) -> Self {
+    pub fn from_seed(seed: &[u8; 32]) -> Self {
         SecretKey( dleq_vrf::SecretKey::from_seed( thin_vrf::<P>(), seed ))
     }
 
     /// Generate an ephemeral `SecretKey` with system randomness.
     #[cfg(feature = "getrandom")]
     pub fn ephemeral() -> Self {
-        SecretKey::from_rng(&mut ::rand_core::OsRng)
+        let mut seed: [u8; 32] = [0u8; 32];
+        rand_core::OsRng.fill_bytes(&mut seed);
+        SecretKey::from_seed(&seed)
     }
 
     pub fn create_public_cert(&mut self, t: impl IntoTranscript) -> PublicKey<P> {

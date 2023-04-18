@@ -14,7 +14,6 @@ keywords = ["crypto", "cryptography", "vrf", "signature", "proof", "zkp", "priva
 arrayvec = { version = "0.7.2", default-features = false }
 
 rand_core.workspace = true
-rand_chacha = { version = "0.3", default-features = false }
 zeroize.workspace = true
 
 ark-std.workspace = true

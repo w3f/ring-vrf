@@ -94,7 +94,7 @@ pub struct SecretKey(pub dleq_vrf::SecretKey<E>);
 
 impl SecretKey {
     /// Generate a `SecretKey` from a 32 byte seed.
-    pub fn from_seed(seed: [u8; 32]) -> Self {
+    pub fn from_seed(seed: &[u8; 32]) -> Self {
         SecretKey( dleq_vrf::SecretKey::from_seed( thin_vrf(), seed ))
     }
 

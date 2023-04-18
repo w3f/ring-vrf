@@ -18,7 +18,7 @@ use rand_core::{RngCore,CryptoRng};
 
 use zeroize::Zeroize;
 
-use crate::{ThinVrf};
+use crate::{ThinVrf, transcript::digest::XofReader};
 
 
 /// Public key
@@ -64,13 +64,12 @@ impl<F: PrimeField> Drop for SecretScalar<F> {
 }
 
 impl<F: PrimeField> SecretScalar<F> {
-    /// Initialize and unbiased `SecretScalar` from a `CryptoRng`,
-    /// deterministic assuming `CryptoRng` is.
-    pub fn from_rng<R: RngCore+CryptoRng>(rng: &mut R) -> Self {
+    /// Initialize and unbiased `SecretScalar` from a `XofReaader`.
+    pub fn from_xof<R: XofReader>(xof: &mut R) -> Self {
         // It's kinda obnoxious that arkworks uses rand here, not just rand_core.
         SecretScalar([
-            <F as UniformRand>::rand(rng), 
-            <F as UniformRand>::rand(rng)
+            crate::transcript::xof_read_reduced(&mut *xof),
+            crate::transcript::xof_read_reduced(&mut *xof),
         ])
     }
 
@@ -220,14 +219,12 @@ impl<K: AffineRepr> ConstantTimeEq for SecretKey<K> {
 
 
 impl<K: AffineRepr> SecretKey<K> {
-    /// Generate an "unbiased" `SecretKey` from a user supplied
-    /// `CryptoRng`, deterministic assuming the `CryptoRng` is.
-    pub fn from_rng<R>(thin: ThinVrf<K>, rng: &mut R) -> Self
-    where R: CryptoRng + RngCore,
+    /// Generate an "unbiased" `SecretKey` from a user supplied `XofReader`.
+    pub fn from_xof(thin: ThinVrf<K>, mut xof: impl XofReader) -> Self
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
-        rng.fill_bytes(&mut nonce_seed);
-        let mut key = SecretScalar::from_rng(rng);
+        xof.read(&mut nonce_seed);
+        let mut key = SecretScalar::from_xof(&mut xof);
         let public = thin.make_public(&mut key);
         SecretKey { thin, key, nonce_seed, public, 
             #[cfg(debug_assertions)]
@@ -236,16 +233,22 @@ impl<K: AffineRepr> SecretKey<K> {
     }
 
     /// Generate a `SecretKey` from a 32 byte seed.
-    pub fn from_seed(thin: ThinVrf<K>, seed: [u8; 32]) -> Self {
-        use rand_core::SeedableRng;
-        let mut rng = ::rand_chacha::ChaChaRng::from_seed(seed);
-        SecretKey::from_rng(thin, &mut rng)
+    pub fn from_seed(thin: ThinVrf<K>, seed: &[u8; 32]) -> Self {
+        use crate::transcript::digest::{Update,ExtendableOutput};
+        let mut xof = crate::transcript::Shake128::default();
+        xof.update(b"VrfSecretSeed");
+        xof.update(seed.as_ref());
+        xof.update(& (32u32).to_be_bytes());
+        xof.update(b"VrfSecretKey");
+        SecretKey::from_xof(thin, xof.finalize_xof())
     }
 
     /// Generate an ephemeral `SecretKey` with system randomness.
     #[cfg(feature = "getrandom")]
     pub fn ephemeral(thin: ThinVrf<K>) -> Self {
-        SecretKey::from_rng(thin, &mut ::rand_core::OsRng)
+        let mut seed: [u8; 32] = [0u8; 32];
+        rand_core::OsRng.fill_bytes(&mut seed);
+        SecretKey::from_seed(thin, &seed)
     }
 
     /// Reference the `PublicKey` corresponding to this `SecretKey`.

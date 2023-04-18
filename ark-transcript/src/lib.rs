@@ -21,9 +21,8 @@ use ark_ff::{Field,PrimeField};
 
 use rand_core::{RngCore,CryptoRng};
 
-pub use sha3::{Shake128, digest::Update};
-use sha3::digest::{XofReader, ExtendableOutput};
-
+pub use sha3::{Shake128, digest};
+use digest::{Update,XofReader,ExtendableOutput};
 
 #[cfg(test)]
 mod tests;
@@ -418,6 +417,7 @@ impl Transcript {
 
 /// Shake128 transcript style XoF reader, used for both 
 /// Fiat-Shamir challenges and witnesses.
+#[repr(transparent)]
 pub struct Reader(sha3::Shake128Reader);
 
 impl Reader {
@@ -448,19 +448,23 @@ impl Reader {
     /// except we only supports prime fields here, making this 
     /// compatable with constant-time implementation.
     pub fn read_reduce<F: PrimeField>(&mut self) -> F {
-        // The final output of `hash_to_field` will be an array of field
-        // elements from F::BaseField, each of size `len_per_elem`.
-        let len_per_base_elem = get_len_per_elem::<F, 128>();
-        if len_per_base_elem > 256 {
-            panic!("PrimeField larger than 1913 bits!");
-        }
-        // Rust *still* lacks alloca, hence this ugly hack.
-        let mut alloca = [0u8; 256];
-        let alloca = &mut alloca[0..len_per_base_elem];
-        self.read_bytes(alloca);
-        alloca.reverse();  // Need BE for IRTF draft but Arkworks' LE is faster
-        F::from_le_bytes_mod_order(&alloca)
+        xof_read_reduced::<F,Self>(self)
     }
+}
+
+pub fn xof_read_reduced<F: PrimeField,R: XofReader>(xof: &mut R) -> F {
+    // The final output of `hash_to_field` will be an array of field
+    // elements from F::BaseField, each of size `len_per_elem`.
+    let len_per_base_elem = get_len_per_elem::<F, 128>();
+    if len_per_base_elem > 256 {
+        panic!("PrimeField larger than 1913 bits!");
+    }
+    // Rust *still* lacks alloca, hence this ugly hack.
+    let mut alloca = [0u8; 256];
+    let alloca = &mut alloca[0..len_per_base_elem];
+    xof.read(alloca);
+    alloca.reverse();  // Need BE for IRTF draft but Arkworks' LE is faster
+    F::from_le_bytes_mod_order(&alloca)
 }
 
 /// This function computes the length in bytes that a hash function should output
