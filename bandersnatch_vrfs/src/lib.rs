@@ -88,11 +88,16 @@ pub fn pedersen_vrf() -> PedersenVrf {
 }
 
 
-#[cfg(feature = "getrandom")]
 #[derive(Clone)]  // Zeroize
 pub struct SecretKey(pub dleq_vrf::SecretKey<E>);
 
 impl SecretKey {
+    /// Generate an ephemeral `SecretKey` with system randomness.
+    #[cfg(feature = "getrandom")]
+    pub fn ephemeral() -> Self {
+        Self(dleq_vrf::SecretKey::ephemeral(thin_vrf()))
+    }
+
     /// Generate a `SecretKey` from a 32 byte seed.
     pub fn from_seed(seed: &[u8; 32]) -> Self {
         SecretKey( dleq_vrf::SecretKey::from_seed( thin_vrf(), seed ))
