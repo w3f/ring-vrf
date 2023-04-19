@@ -103,7 +103,6 @@ impl SecretKey {
         SecretKey( dleq_vrf::SecretKey::from_seed( thin_vrf(), seed ))
     }
 
-
     pub fn to_public(&self) -> PublicKey { 
         PublicKey( self.0.to_public() )
     }
