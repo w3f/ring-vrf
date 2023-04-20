@@ -13,7 +13,7 @@ keywords = ["crypto", "cryptography", "bls", "signature"]
 dleq_vrf = { version = "0.0.2", default-features = false, path = "../dleq_vrf" }
 
 rand_core.workspace = true
-# zeroize.workspace = true
+zeroize.workspace = true
 
 ark-std.workspace = true
 ark-ff.workspace = true

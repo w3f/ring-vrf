@@ -32,8 +32,8 @@ ark-bls12-377 = { version = "0.4", default-features = false, features = [ "curve
 
 
 [features]
-default = ["getrandom"] # "std", "rand"
-getrandom = ["rand_core/getrandom"] #  "ark_transcript/getrandom"
+default = ["getrandom"]  #  "std", "rand"
+getrandom = ["rand_core/getrandom"]  #  "ark_transcript/getrandom"
 
 
 

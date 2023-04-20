@@ -6,6 +6,7 @@
 
 
 use rand_core::{CryptoRng, RngCore};
+use zeroize::Zeroize;
 
 use ark_ec::{
     AffineRepr, CurveGroup,
@@ -20,7 +21,7 @@ pub use ark_ed_on_bls12_381_bandersnatch::{
 };
 
 pub use dleq_vrf::{
-    Transcript, IntoTranscript,
+    Transcript, IntoTranscript, transcript,
     error::{SignatureResult, SignatureError},
     vrf::{self, IntoVrfInput},
 };
@@ -88,14 +89,26 @@ pub fn pedersen_vrf() -> PedersenVrf {
 }
 
 
-#[cfg(feature = "getrandom")]
-#[derive(Clone)]  // Zeroize
+#[derive(Clone,Zeroize)]
 pub struct SecretKey(pub dleq_vrf::SecretKey<E>);
 
 impl SecretKey {
+    /// Generate an "unbiased" `SecretKey` from a user supplied `XofReader`.
+    pub fn from_xof(xof: impl transcript::digest::XofReader) -> Self {
+        SecretKey( dleq_vrf::SecretKey::from_xof( thin_vrf(), xof ))
+    }
+
     /// Generate a `SecretKey` from a 32 byte seed.
     pub fn from_seed(seed: &[u8; 32]) -> Self {
         SecretKey( dleq_vrf::SecretKey::from_seed( thin_vrf(), seed ))
+    }
+
+    /// Generate an ephemeral `SecretKey` with system randomness.
+    #[cfg(feature = "getrandom")]
+    pub fn ephemeral() -> Self {
+        let mut seed: [u8; 32] = [0u8; 32];
+        rand_core::OsRng.fill_bytes(&mut seed);
+        SecretKey::from_seed(&seed)
     }
 
     pub fn to_public(&self) -> PublicKey { 

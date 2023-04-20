@@ -4,6 +4,9 @@
 #![deny(unsafe_code)]
 #![doc = include_str!("../README.md")]
 
+use rand_core::{CryptoRng, RngCore};
+use zeroize::Zeroize;
+
 use ark_std::{borrow::{Borrow,BorrowMut}, Zero, vec::Vec, };   // io::{Read, Write}
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};  // SerializationError
 
@@ -11,8 +14,6 @@ use ark_ec::{
     AffineRepr, CurveGroup,
     pairing::{Pairing, prepare_g2, PairingOutput},
 };
-
-use rand_core::{CryptoRng, RngCore};
 
 pub use dleq_vrf::{
     Transcript, IntoTranscript, transcript,
@@ -70,19 +71,15 @@ fn pk_in<P: Pairing>() -> VrfInput<<P as Pairing>::G2Affine> {
 }
 
 
-#[cfg(feature = "getrandom")]
-#[derive(Clone)]  // Zeroize
+#[derive(Clone,Zeroize)]
 pub struct SecretKey<P: Pairing>(dleq_vrf::SecretKey<<P as Pairing>::G1Affine>);
 
-#[cfg(feature = "getrandom")]
 impl<P: Pairing> SecretKey<P> {
     pub fn as_g1_publickey(&self) -> &PublicKeyG1<P> {
         self.0.as_publickey()
     }
     
-    /// Generate an "unbiased" `SecretKey` directly from a user
-    /// suplied `csprng` uniformly, bypassing the `MiniSecretKey`
-    /// layer.
+    /// Generate an "unbiased" `SecretKey` from a user supplied `XofReader`.
     pub fn from_xof(xof: impl transcript::digest::XofReader) -> Self {
         SecretKey( dleq_vrf::SecretKey::from_xof( thin_vrf::<P>(), xof ))
     }

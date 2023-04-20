@@ -12,14 +12,14 @@ keywords = ["crypto", "cryptography", "vrf", "signature", "privacy"]
 dleq_vrf = { version = "0.0.2", default-features = false, path = "../dleq_vrf" }
 
 rand_core.workspace = true
-# zeroize.workspace = true
+zeroize.workspace = true
 
 ark-std.workspace = true
 ark-ff.workspace = true
 ark-ec.workspace = true
 ark-serialize.workspace = true
 
-# In these three, add optional = true ere if we create some related curves trait.
+# In these three, add optional = true here only if we create some related curves trait.
 ark-ed-on-bls12-381-bandersnatch = { version = "0.4", default-features = false }
 ark-bls12-381 = { version = "0.4", default-features = false, features = [ "curve" ] } # implies scalar_field
 sha2 = { version = "0.10", default-features = false }
@@ -29,8 +29,9 @@ sha2 = { version = "0.10", default-features = false }
 
 
 [features]
-default = ["getrandom"] # "bandersnatch", "std", "rand"
-# bandersnatch = ["dep:ark-ed-on-bls12-381-bandersnatch", "dep:ark-bls12-381", "dep:sha2"]
+default = ["getrandom"]  #  "std",
 getrandom = ["dleq_vrf/getrandom"]
-
+# std = ["getrandom", "ring/std"]  #  ["ark-std/std", "ark-ff/std", "ark-ec/std", "ark-poly/std", "ark-serialize/std"]
+# parallel = ["std", "ring/parallel"]  #  ["std", "rayon", "ark-std/parallel", "ark-ff/parallel", "ark-ec/parallel", "ark-poly/parallel"]
+print-trace = ["ark-std/print-trace"]
 
