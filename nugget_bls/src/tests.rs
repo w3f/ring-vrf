@@ -5,10 +5,7 @@ use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
 use ark_std::vec::Vec;
 
 type P = ark_bls12_381::Bls12_381;
-type SecretKey = crate::SecretKey<P>;
-type PublicKey = crate::PublicKey<P>;
-type Signature = crate::Signature<P>;
-type Message<'a> = crate::bls12_381::Message<'a>;
+use crate::bls12_381::*;
 
 
 
@@ -19,10 +16,10 @@ fn single() {
     let mut buf = Vec::new();
     let pk0 = sk.create_nugget_public();
     pk0.serialize_compressed(&mut buf).unwrap();
-    let pk = PublicKey::deserialize_compressed(buf.as_ref()).unwrap();
+    let pk = AggregationKey::deserialize_compressed(buf.as_ref()).unwrap();
     assert_eq!(pk0,pk);
     pk.validate_nugget_public().unwrap();
-    assert_eq!(sk.as_g1_publickey(), &pk.to_g1_publickey());
+    assert_eq!(sk.to_g1_publickey(), pk.to_g1_publickey());
 
     let domain = b"";
     let message = b"MSG1";
@@ -44,12 +41,12 @@ fn aggregation() {
     let domain = b"";
     let message = b"MSG";
     let mut sks: Vec<SecretKey> = (0..2).map(|_| SecretKey::ephemeral()).collect();
-    let pks: Vec<PublicKey> = sks.iter_mut().map(|sk| sk.create_nugget_public()).collect();
+    let pks: Vec<AggregationKey> = sks.iter_mut().map(|sk| sk.create_nugget_public()).collect();
     let mut g1pks0 = Vec::new();
     let sigs: Vec<Signature> = sks.iter_mut().map(|sk| {
-        g1pks0.push(sk.as_g1_publickey().clone());
+        g1pks0.push(sk.to_g1_publickey());
         let mut t = Transcript::new(b"AD");
-        t.append(sk.as_g1_publickey());
+        t.append(&sk.to_g1_publickey());
         let input = Message { domain, message };
         sk.sign_nugget_bls(t,input)
     }).collect();

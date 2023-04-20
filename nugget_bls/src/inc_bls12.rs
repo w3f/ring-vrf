@@ -37,6 +37,7 @@ impl<'a> IntoVrfInput<G1Affine> for Message<'a> {
 }
 
 pub type SecretKey = crate::SecretKey<P>;
-pub type PublicKey = crate::PublicKey<P>;
+pub type PublicKeyG1 = crate::PublicKeyG1<P>;
 pub type Signature = crate::Signature<P>;
+pub type AggregationKey = crate::AggregationKey<P>;
 pub type AggregateSignature = crate::AggregateSignature<P>;

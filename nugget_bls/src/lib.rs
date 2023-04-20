@@ -7,7 +7,11 @@
 use rand_core::{CryptoRng, RngCore};
 use zeroize::Zeroize;
 
-use ark_std::{borrow::{Borrow,BorrowMut}, Zero, vec::Vec, };   // io::{Read, Write}
+use ark_std::{
+    borrow::{Borrow,BorrowMut}, 
+    io::{Read, Write},
+    hash::Hasher, vec::Vec, Zero,
+};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};  // SerializationError
 
 use ark_ec::{
@@ -21,7 +25,7 @@ pub use dleq_vrf::{
     vrf::{IntoVrfInput},
 };
 use dleq_vrf::vrf::{VrfInput, VrfInOut}; // VrfPreOut
-
+use transcript::digest::Update;
 
 #[cfg(test)]
 mod tests;
@@ -75,8 +79,8 @@ fn pk_in<P: Pairing>() -> VrfInput<<P as Pairing>::G2Affine> {
 pub struct SecretKey<P: Pairing>(dleq_vrf::SecretKey<<P as Pairing>::G1Affine>);
 
 impl<P: Pairing> SecretKey<P> {
-    pub fn as_g1_publickey(&self) -> &PublicKeyG1<P> {
-        self.0.as_publickey()
+    pub fn to_g1_publickey(&self) -> PublicKeyG1<P> {
+        PublicKeyG1( self.0.as_publickey().0 )
     }
     
     /// Generate an "unbiased" `SecretKey` from a user supplied `XofReader`.
@@ -97,7 +101,7 @@ impl<P: Pairing> SecretKey<P> {
         SecretKey::from_seed(&seed)
     }
 
-    pub fn create_public_cert(&mut self, t: impl IntoTranscript) -> PublicKey<P> {
+    pub fn create_public_cert(&mut self, t: impl IntoTranscript) -> AggregationKey<P> {
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
         t.label(b"NuggetPublic");
@@ -105,10 +109,10 @@ impl<P: Pairing> SecretKey<P> {
         let g2_io = self.0.vrf_inout(pk_in::<P>());
         let g2 = g2_io.preoutput.clone();
         let sig = pedersen.sign_non_batchable_pedersen_vrf(t, &[g2_io], None, &mut self.0).0;
-        PublicKey { g2, sig, } // g1: self.as_publickey().clone(),
+        AggregationKey { g2, sig, } // g1: self.as_publickey().clone(),
     }
 
-    pub fn create_nugget_public(&mut self) -> PublicKey<P> {
+    pub fn create_nugget_public(&mut self) -> AggregationKey<P> {
         self.create_public_cert(b"")
     }
 
@@ -125,8 +129,43 @@ impl<P: Pairing> SecretKey<P> {
     }
 }
 
+/// Incomplete public key living only on G1, not useful for either 
+/// aggregation or classical stand alone BLS verificatoin, but useful
+/// for end verifiers of nugget BLS' `AggregateSignature`s. 
+#[derive(Debug,Clone,PartialEq,Eq,CanonicalSerialize,CanonicalDeserialize,Zeroize)]
+#[repr(transparent)]
+pub struct PublicKeyG1<P: ark_ec::pairing::Pairing>(<P as Pairing>::G1Affine);
+
+impl<P: Pairing> PublicKeyG1<P> {
+    pub fn as_g1_point(&self) -> &<P as Pairing>::G1Affine {
+        &self.0
+    }
+
+    pub fn verify_nugget_bls<M>(&self, t: impl IntoTranscript, input: M, signature: &Signature<P>) -> SignatureResult<()>
+    where M: IntoVrfInput<<P as Pairing>::G1Affine>,
+    {
+        let mut t = t.into_transcript();
+        let t = t.borrow_mut();
+        t.label(b"NuggetBLS");
+        let io = signature.preoutput.attach_input(input);
+        let public = dleq_vrf::PublicKey(self.0);
+        thin_vrf::<P>()
+        .verify_thin_vrf(t, &[io], &public, &signature.signature )
+        .map(|_| ())
+    }
+}
+
+/// Actual nugget BLS signature including faster correctness proof
+#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, PartialEq, Eq, PartialOrd, Ord, Hash, 
+pub struct Signature<P: Pairing> {
+    /// Actual BLS signature
+    preoutput: dleq_vrf::VrfPreOut<<P as Pairing>::G1Affine>,
+    /// DLEQ proof of correctness for BLS signature
+    signature: dleq_vrf::Signature<ThinVrf<P>>,
+}
+
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, PartialOrd, Ord, 
-pub struct PublicKey<P: Pairing> {
+pub struct AggregationKey<P: Pairing> {
     /// Our public key on G2
     g2: dleq_vrf::VrfPreOut<<P as Pairing>::G2Affine>,
     /// Both our public key on G1 as well as a DLEQ proof for g2.
@@ -136,42 +175,45 @@ pub struct PublicKey<P: Pairing> {
     sig: dleq_vrf::NonBatchableSignature<PedersenVrf<P>>,
 }
 
-impl<P: Pairing> core::cmp::PartialEq<Self> for PublicKey<P> {
+impl<P: Pairing> core::cmp::PartialEq<Self> for AggregationKey<P> {
     fn eq(&self, other: &Self) -> bool {
         self.g2 == other.g2 && self.sig.as_key_commitment() == other.sig.as_key_commitment()
     }
 }
-impl<P: Pairing> core::cmp::Eq for PublicKey<P> {}
+impl<P: Pairing> core::cmp::Eq for AggregationKey<P> {}
 
-use core::hash::Hasher;
-impl<P: Pairing> core::hash::Hash for PublicKey<P> {
+impl<P: Pairing> core::hash::Hash for AggregationKey<P> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.g2.0.hash(state);
+        // self.g2.0.hash(state); // removed to hash exactly like PublicKeyG1
         self.sig.as_key_commitment().0.hash(state);
     }
 }
 
-
-/// Actual nugget BLS signature including faster correctness proof
-#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, PartialEq, Eq, PartialOrd, Ord, Hash, 
-pub struct Signature<P: Pairing> {
-    /// Actual BLS signature
-    preoutput: dleq_vrf::VrfPreOut<<P as Pairing>::G1Affine>,
-    /// DLEQ proof of correctness for BLS signature
-    signature: dleq_vrf::Signature<ThinVrf<P>>,
-}    
-
-/// Incomplete public key living only on G1, not useful for aggregation
-/// but useful for end verifiers. 
-pub type PublicKeyG1<P> = dleq_vrf::PublicKey<<P as Pairing>::G1Affine>;
-
-impl<P: Pairing> PublicKey<P> {
+impl<P: Pairing> AggregationKey<P> {
     pub fn as_g1_point(&self) -> &<P as Pairing>::G1Affine {
         &self.sig.as_key_commitment().0
     }
 
     pub fn to_g1_publickey(&self) -> PublicKeyG1<P> {
-        self.sig.to_publickey()
+        PublicKeyG1( self.sig.to_publickey().0 )
+    }
+
+    pub fn hash_as_g1(&self, h: &mut impl Update) {
+        // This private struct works around Serialize taking the pre-existing
+        // std::io::Write instance of most digest::Digest implementations by value
+        struct HashMarshaller<'a, H: Update>(&'a mut H);
+        impl<'a, H: Update> ark_std::io::Write for HashMarshaller<'a, H> {
+            #[inline]
+            fn write(&mut self, buf: &[u8]) -> ark_std::io::Result<usize> {
+                Update::update(self.0, buf);
+                Ok(buf.len())
+            }
+            #[inline]
+            fn flush(&mut self) -> ark_std::io::Result<()> {
+                Ok(())
+            }
+        }
+        self.as_g1_point().serialize_compressed(HashMarshaller(h)).unwrap();
     }
 
     pub fn validate_public_cert(&self, t: impl IntoTranscript) -> SignatureResult<()> 
@@ -192,13 +234,7 @@ impl<P: Pairing> PublicKey<P> {
     pub fn verify_nugget_bls<M>(&self, t: impl IntoTranscript, input: M, signature: &Signature<P>) -> SignatureResult<()>
     where M: IntoVrfInput<<P as Pairing>::G1Affine>,
     {
-        let mut t = t.into_transcript();
-        let t = t.borrow_mut();
-        t.label(b"NuggetBLS");
-        let io = signature.preoutput.attach_input(input);
-        thin_vrf::<P>()
-        .verify_thin_vrf(t, &[io], &self.to_g1_publickey(), &signature.signature )
-        .map(|_| ())
+        self.to_g1_publickey().verify_nugget_bls(t,input,signature)
     }
 }
 
@@ -220,7 +256,7 @@ impl<P: Pairing> AggregateSignature<P> {
     /// Aggregate single nugget BLS signatures and their public keys
     /// into one aggregate nugget BLS signature.
     pub fn create<BP,BS>(publickeys: &[BP], signatures: &[BS]) -> AggregateSignature<P> 
-    where BP: Borrow<PublicKey<P>>, BS: Borrow<Signature<P>>,
+    where BP: Borrow<AggregationKey<P>>, BS: Borrow<Signature<P>>,
     {
         assert_eq!( publickeys.len(), signatures.len() );
         let mut agg_sig = <<P as Pairing>::G1Affine as AffineRepr>::zero().into_group();

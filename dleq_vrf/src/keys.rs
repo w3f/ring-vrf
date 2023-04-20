@@ -23,6 +23,7 @@ use crate::{ThinVrf, transcript::digest::XofReader};
 
 /// Public key
 #[derive(Debug,Clone,Eq,Hash,CanonicalSerialize,CanonicalDeserialize)] // Copy, PartialOrd, Ord, Hash, 
+#[repr(transparent)]
 pub struct PublicKey<C: AffineRepr>(pub C);
 
 impl<C: AffineRepr> PartialEq for PublicKey<C> {
