@@ -124,12 +124,3 @@ pub fn ring_verify(ring_verifier: &RingVerifier, ring_proof: &RingProof, apk: &K
     if res { Ok(()) } else { Err(()) }
 }
 
-impl RingProver {
-    pub fn new(domain_size: usize) -> RingProver {
-        let setup_degree = 3 * ;
-        RingProver {
-            
-        }
-    }
-}
-
