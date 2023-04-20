@@ -19,6 +19,7 @@ pub use ark_ed_on_bls12_381_bandersnatch::{
     self as bandersnatch,
     EdwardsAffine,
 };
+// Conversion discussed in https://github.com/arkworks-rs/curves/pull/76#issuecomment-929121470
 
 pub use dleq_vrf::{
     Transcript, IntoTranscript, transcript,
@@ -130,13 +131,14 @@ impl SecretKey {
     pub fn sign_ring_vrf<const N: usize>(
         &mut self,
         t: impl IntoTranscript,
-        ios: &[VrfInOut]
+        ios: &[VrfInOut],
+        // ring_prover: &RingProver
     ) -> RingVrfSignature<N>
     {
         assert_eq!(ios.len(), N);
         let (signature,secret_blinding) = pedersen_vrf().sign_pedersen_vrf(t, ios, None, &mut self.0);
         let preoutputs = vrf::collect_preoutputs_array(ios);
-        let ring_proof = (); // uses secret_blinding
+        let ring_proof = (); // ring_prove(ring_prover,secret_blinding);
         RingVrfSignature { preoutputs, signature, ring_proof, }
     }
 }
@@ -175,7 +177,7 @@ impl<const N: usize> ThinVrfSignature<N>
 pub struct RingVrfSignature<const N: usize> {
     signature: dleq_vrf::Signature<PedersenVrf>,
     preoutputs: [VrfPreOut; N],
-    ring_proof: (),
+    ring_proof: (), // RingProof
 }
 
 impl<const N: usize> RingVrfSignature<N>
@@ -184,6 +186,7 @@ impl<const N: usize> RingVrfSignature<N>
         &self,
         t: impl IntoTranscript,
         inputs: II,
+        // ring_verifier: &RingVerifier,
     ) -> SignatureResult<[VrfInOut; N]>
     where
         I: IntoVrfInput<E>,
@@ -191,7 +194,7 @@ impl<const N: usize> RingVrfSignature<N>
     {
         let ios = vrf::attach_inputs_array(&self.preoutputs,inputs);
         pedersen_vrf().verify_pedersen_vrf(t,ios.as_ref(),&self.signature) ?;
-        // self.ring_proof // uses self.signature.as_key_commitment()
+        // ring::ring_verify(ring_verifier, &self.ring_proof) ?;
         Ok(ios)
     }
 }
