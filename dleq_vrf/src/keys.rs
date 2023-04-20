@@ -18,7 +18,7 @@ use rand_core::{RngCore,CryptoRng};
 
 use zeroize::Zeroize;
 
-use crate::{ThinVrf, transcript::digest::XofReader};
+use crate::{ThinVrf, transcript::digest::{Update,XofReader}};
 
 
 /// Public key
@@ -34,6 +34,24 @@ impl<C: AffineRepr> PartialEq for PublicKey<C> {
 
 /// Arkworks' own serialization traits should be preferred over these.
 impl<C: AffineRepr> PublicKey<C> {
+    pub fn update_digest(&self, h: &mut impl Update) {
+        // This private struct works around Serialize taking the pre-existing
+        // std::io::Write instance of most digest::Digest implementations by value
+        struct HashMarshaller<'a, H: Update>(&'a mut H);
+        impl<'a, H: Update> ark_std::io::Write for HashMarshaller<'a, H> {
+            #[inline]
+            fn write(&mut self, buf: &[u8]) -> ark_std::io::Result<usize> {
+                Update::update(self.0, buf);
+                Ok(buf.len())
+            }
+            #[inline]
+            fn flush(&mut self) -> ark_std::io::Result<()> {
+                Ok(())
+            }
+        }
+        self.0.serialize_compressed(HashMarshaller(h)).unwrap();
+    }
+
     pub fn size_of_serialized(&self) -> usize {
         self.compressed_size()
     }

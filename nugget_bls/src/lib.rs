@@ -132,7 +132,7 @@ impl<P: Pairing> SecretKey<P> {
 /// Incomplete public key living only on G1, not useful for either 
 /// aggregation or classical stand alone BLS verificatoin, but useful
 /// for end verifiers of nugget BLS' `AggregateSignature`s. 
-#[derive(Debug,Clone,PartialEq,Eq,CanonicalSerialize,CanonicalDeserialize,Zeroize)]
+#[derive(Debug,Clone,Hash,PartialEq,Eq,CanonicalSerialize,CanonicalDeserialize,Zeroize)]
 #[repr(transparent)]
 pub struct PublicKeyG1<P: ark_ec::pairing::Pairing>(<P as Pairing>::G1Affine);
 
@@ -152,6 +152,10 @@ impl<P: Pairing> PublicKeyG1<P> {
         thin_vrf::<P>()
         .verify_thin_vrf(t, &[io], &public, &signature.signature )
         .map(|_| ())
+    }
+
+    pub fn update_digest(&self, h: &mut impl Update) {
+        dleq_vrf::PublicKey(self.0).update_digest(h)
     }
 }
 
@@ -198,22 +202,8 @@ impl<P: Pairing> AggregationKey<P> {
         PublicKeyG1( self.sig.to_publickey().0 )
     }
 
-    pub fn hash_as_g1(&self, h: &mut impl Update) {
-        // This private struct works around Serialize taking the pre-existing
-        // std::io::Write instance of most digest::Digest implementations by value
-        struct HashMarshaller<'a, H: Update>(&'a mut H);
-        impl<'a, H: Update> ark_std::io::Write for HashMarshaller<'a, H> {
-            #[inline]
-            fn write(&mut self, buf: &[u8]) -> ark_std::io::Result<usize> {
-                Update::update(self.0, buf);
-                Ok(buf.len())
-            }
-            #[inline]
-            fn flush(&mut self) -> ark_std::io::Result<()> {
-                Ok(())
-            }
-        }
-        self.as_g1_point().serialize_compressed(HashMarshaller(h)).unwrap();
+    pub fn update_digest(&self, h: &mut impl Update) {
+        self.to_g1_publickey().update_digest(h);
     }
 
     pub fn validate_public_cert(&self, t: impl IntoTranscript) -> SignatureResult<()> 
