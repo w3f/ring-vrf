@@ -116,7 +116,7 @@ impl SecretKey {
     }
 
     pub fn sign_thin_vrf<const N: usize>(
-        &mut self,
+        &self,
         t: impl IntoTranscript,
         ios: &[VrfInOut]
     ) -> ThinVrfSignature<N>
@@ -128,13 +128,13 @@ impl SecretKey {
     }
 
     pub fn sign_ring_vrf<const N: usize>(
-        &mut self,
+        &self,
         t: impl IntoTranscript,
         ios: &[VrfInOut]
     ) -> RingVrfSignature<N>
     {
         assert_eq!(ios.len(), N);
-        let (signature,secret_blinding) = pedersen_vrf().sign_pedersen_vrf(t, ios, None, &mut self.0);
+        let (signature,secret_blinding) = pedersen_vrf().sign_pedersen_vrf(t, ios, None, &self.0);
         let preoutputs = vrf::collect_preoutputs_array(ios);
         let ring_proof = (); // uses secret_blinding
         RingVrfSignature { preoutputs, signature, ring_proof, }
