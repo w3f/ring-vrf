@@ -287,9 +287,13 @@ where
         preoutput += p.preoutput.0.mul_bigint(z);
         i += 1;
     }
+    // TODO: Benchmark
+    // let v = <C as AffineRepr>::Group::normalize_batch(&[input,preouput]);
     VrfInOut {
         input: VrfInput(input.into_affine()),
-        preoutput: VrfPreOut(preoutput.into_affine())
+        // input: VrfInput(v[0]),
+        preoutput: VrfPreOut(preoutput.into_affine()),
+        // preoutput: VrfPreOut(v[1]),
     }
 }
 

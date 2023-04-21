@@ -161,9 +161,13 @@ impl<K: AffineRepr> ThinVrf<K> {
         t.append(&signature.r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge").read_reduce();
 
-        let lhs = io.input.0.mul(signature.s);
-        let rhs = signature.r.into_group() + io.preoutput.0.mul(c);
-        if crate::zero_mod_small_cofactor(lhs - rhs) {
+        // TODO: Benchmark
+        // let z = ark_ec::scalar_mul::variable_base::VariableBaseMSM::msm_bigint(
+        //     &[io.input, io.preoutput],
+        //     &[-signature.s, c],
+        // ) + signature.r.into_group();
+        let z = signature.r.into_group() + io.preoutput.0.mul(c) - io.input.0.mul(signature.s);
+        if crate::zero_mod_small_cofactor(z) {
             Ok(ios)
         } else {
             Err(SignatureError::Invalid)

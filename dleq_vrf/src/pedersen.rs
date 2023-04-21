@@ -344,19 +344,22 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         t.append(&signature.r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge").read_reduce();
 
-        let lhs = io.input.0 * signature.s.keying;
-        let rhs = signature.r.preoutish.into_group() + io.preoutput.0 * c;
-        if ! crate::zero_mod_small_cofactor(lhs - rhs) {
+        // TODO: Benchmark
+        // let z = ark_ec::scalar_mul::variable_base::VariableBaseMSM::msm_bigint(
+        //     &[io.input, io.preoutput],
+        //     &[-signature.s, c],
+        // ) + signature.r.into_group();
+        let z1 = signature.r.preoutish.into_group() + io.preoutput.0 * c - io.input.0 * signature.s.keying;
+        if ! crate::zero_mod_small_cofactor(z1) {
             return Err(SignatureError::Invalid);
         }
         // TODO: Use an MSM here
-        let mut lhs = self.keying_base.mul(signature.s.keying);
+        let mut z2 = signature.r.keyish.into_group() + signature.compk.0 * c;
+        z2 -= self.keying_base.mul(signature.s.keying);
         for i in 0..B {
-            lhs += self.blinding_bases[i].mul(signature.s.blindings[i]);
+            z2 -= self.blinding_bases[i].mul(signature.s.blindings[i]);
         }
-        // TODO: Try an MSM here
-        let rhs = signature.r.keyish.into_group() + signature.compk.0 * c;
-        if ! crate::zero_mod_small_cofactor(lhs - rhs) {
+        if ! crate::zero_mod_small_cofactor(z2) {
             return Err(SignatureError::Invalid);
         }
         Ok(ios)
