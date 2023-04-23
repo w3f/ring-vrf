@@ -3,9 +3,9 @@
 //! ### VRF keys
 
 
-use core::ops::{Add,AddAssign,Mul,MulAssign};
+use core::ops::{Add,AddAssign,Mul};
 
-use ark_std::{UniformRand, vec::Vec, io::{Read, Write}};
+use ark_std::{vec::Vec, io::{Read, Write}};
 // #[cfg(debug_assertions)]
 // use ark_std::{boxed::Box, sync::Mutex};
 
@@ -18,7 +18,7 @@ use rand_core::{RngCore,CryptoRng};
 
 use zeroize::Zeroize;
 
-use crate::{ThinVrf, transcript::digest::{Update,XofReader}};
+use crate::{ThinVrf, transcript::{self, digest::{Update,XofReader}}};
 
 
 /// Public key
@@ -66,14 +66,29 @@ impl<C: AffineRepr> PublicKey<C> {
 }
 
 
+struct Rng2Xof<R: RngCore+CryptoRng>(R);
+impl<R: RngCore+CryptoRng> XofReader for Rng2Xof<R> {
+    fn read(&mut self, dest: &mut [u8]) {
+        self.0.fill_bytes(dest);
+    }
+}
+
 /// Secret scalar split into the sum of two scalars, which randomly mutate.
 /// Incurs 2x penalty in scalar multiplications, but provides side channel defenses.
 /// 
 /// We split additively right now, but would a multiplicative splitting help
 /// against rowhammer attacks on the secret key?
-#[derive(Clone,PartialEq,Eq)] // Copy, CanonicalSerialize,CanonicalDeserialize, Hash, 
+#[derive(PartialEq,Eq)] // Copy, CanonicalSerialize,CanonicalDeserialize, Hash, 
 #[repr(transparent)]
 pub struct SecretScalar<F: PrimeField>([F; 2]);
+
+impl<F: PrimeField> Clone for SecretScalar<F> {
+    fn clone(&self) -> SecretScalar<F> {
+        let mut n = SecretScalar(self.0.clone());
+        n.resplit();
+        n
+    }
+}
 
 impl<F: PrimeField> Zeroize for SecretScalar<F> { 
     fn zeroize(&mut self) { self.0.zeroize(); }
@@ -87,22 +102,23 @@ impl<F: PrimeField> SecretScalar<F> {
     pub fn from_xof<R: XofReader>(xof: &mut R) -> Self {
         // It's kinda obnoxious that arkworks uses rand here, not just rand_core.
         SecretScalar([
-            crate::transcript::xof_read_reduced(&mut *xof),
-            crate::transcript::xof_read_reduced(&mut *xof),
+            transcript::xof_read_reduced(&mut *xof),
+            transcript::xof_read_reduced(&mut *xof),
         ])
     }
 
     pub fn resplit(&mut self) {
-        let x = <F as UniformRand>::rand( &mut getrandom_or_panic() );
+        let mut xof = Rng2Xof(getrandom_or_panic());
+        let x = transcript::xof_read_reduced(&mut xof);
         self.0[0] += &x;
         self.0[1] -= &x;
     }
 
     /// Multiply by a scalar.
     pub fn mul_by_challenge(&mut self, rhs: &F) -> F {
-        let mut lhs = self.clone();
-        lhs *= rhs;
-        lhs.0[0] + lhs.0[1]
+        let o = (self.0[0] * rhs) + (self.0[1] * rhs);
+        self.resplit();
+        o
     }
 
     /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
@@ -112,16 +128,6 @@ impl<F: PrimeField> SecretScalar<F> {
         *x *= self.0[0];
         y *= self.0[1];
         *x += y;
-    }
-}
-
-impl<F: PrimeField> MulAssign<&F> for SecretScalar<F> {
-    /// Multiply by a scalar, guts of `mul_by_challenge`.
-    /// Invokes `replit` so do manually for witnesses.
-    fn mul_assign(&mut self, rhs: &F) {
-        self.0[0] *= rhs;
-        self.0[1] *= rhs;
-        self.resplit();
     }
 }
 
@@ -253,7 +259,7 @@ impl<K: AffineRepr> SecretKey<K> {
 
     /// Generate a `SecretKey` from a 32 byte seed.
     pub fn from_seed(thin: ThinVrf<K>, seed: &[u8; 32]) -> Self {
-        use crate::transcript::digest::{Update,ExtendableOutput};
+        use crate::transcript::digest::{ExtendableOutput};
         let mut xof = crate::transcript::Shake128::default();
         xof.update(b"VrfSecretSeed");
         xof.update(seed.as_ref());
