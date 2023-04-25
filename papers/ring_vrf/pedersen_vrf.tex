@@ -6,7 +6,7 @@ we call the Pedersen VRF and denote \PedVRF.
 \PedVRF instantiates the NIZK for the language $\Leval$ defined in \S\ref{sec:overview}.
 We focus here upon the Pedersen VRF and relations describing its SNARK
 for ring membership, but we only discuss the zero-knowledge continuation
-that makes makes the overall ring VRF efficient in the next section.
+that makes the overall ring VRF efficient in the next section.
 
 We refer readers to \S\ref{sec:ec_background} for notation,
  like our curves and hash functions.
@@ -45,7 +45,7 @@ We do not expose a public key from \KeyGen, nor inject the public key in \Eval.
 \end{itemize}
 We do not expose an opening algorithm here because opening occurs inside
 our zero knowledge continuation,
- as described in $\Rring$ and \S\ref{sec:rvrf_cont} blow.
+ as described in $\Rring$ and \S\ref{sec:rvrf_cont} below.
 
 Our \Sign and \Verify algorithms of \PedVRF correspond to
 the \Prove and \Verify algorithms of a Chaum-Pedersen DLEQ proof
