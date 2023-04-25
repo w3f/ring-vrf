@@ -1,9 +1,4 @@
 
-\newcommand{\Gen}{\ensuremath{\mathsf{Gen}}}
-
-\newcommand{\anonymouskeymap}{\ensuremath{\mathtt{anonymous\_key\_map}}}
-\newcommand{\anonymouskeylist}{\mathcal{W}}
-\renewcommand{\sim}{\simulator}
 
 \begin{figure}
 	\eprint{\footnotesize}{\scriptsize} 
@@ -13,7 +8,7 @@
 			
 			
 			\textbf{[Key Generation.]} upon receiving a message $(\oramsg{keygen}, \sid)$ from a party $\user_i$, send $(\oramsg{keygen}, \sid, \user_i)$ to the simulator $\simulator$.
-			Upon receiving a message $(\oramsg{verificationkey}, \sid, x,\pk)$ from $\simulator$, verify that $x,\pk$ has not been recorded before for $ \sid $ i.e., there exists no $ (x', \pk') $ in $ \vklist $ such that $ x' = X $ or $ \pk' = \pk $. If it is the case, store in the table $\vklist$, under $\user_i$, the value $x,\pk$ and return $(\oramsg{verificationkey}, \sid, \pk)$ to $ \user_i$.
+			Upon receiving a message $(\oramsg{verificationkey}, \sid, x,\pk)$ from $\simulator$, verify that $x,\pk$ has not been recorded before for $ \sid $ i.e., there exists no $ (x', \pk') $ in $ \vklist $ such that $ x' = x $ or $ \pk' = \pk $. If it is the case, store in the table $\vklist$, under $\user_i$, the value $x,\pk$ and return $(\oramsg{verificationkey}, \sid, \pk)$ to $ \user_i$.
 			
 			%\textbf{[Malicious Key Generation.]} upon receiving a message $(\oramsg{keygen}, \sid, \pk)$ from $\simulator$, verify that $\pk$ was not yet recorded, and if so record in the table $\vklist$ the value $\pk$ under $\simulator$. Else, ignore the message.
 			
@@ -27,7 +22,7 @@
 			\textbf{[Corruption:] } 
 			upon receiving $ (\oramsg{corrupt}, \sid, \user_i) $ from $ \simulator $, remove $ \pk_i $ from $ \vklist[\user_i] $ and store $ \pk_i $ to $ \vklist $ under $ \sim $. Return $ (\oramsg{corrupted}, \sid,\user_i) $.
 			
-			\textbf{[Malicious Ring VRF Evaluation.]} upon receiving a message $(\oramsg{eval}, \sid, \pk_i, W, m)$ from $\sim$, if $ \pk_i $ is recorded under an honest party's identity or if there exists $ W'\neq W $ where $ \anonymouskeymap[\msg,W'] = \pk_i $, ignore the request.
+			\textbf{[Malicious Ring VRF Evaluation.]} upon receiving a message $(\oramsg{eval}, \sid, \pk_i, W, \msg)$ from $\sim$, if $ \pk_i $ is recorded under an honest party's identity or if there exists $ W'\neq W $ where $ \anonymouskeymap[\msg,W'] = \pk_i $, ignore the request.
 			Otherwise, record in the table $\vklist$ the value $\pk_i$ under $\simulator$ if $ \pk_i $ is not in $ \vklist $.
 			
 			If  $\anonymouskeymap[\msg,W]  $ is not defined before, set $ \anonymouskeymap[\msg,W] = \pk_i $ and let   $y \leftsample \setsym{S}_{eval}$ and set $ \evaluationslist[\msg, W] = y$.
@@ -53,7 +48,7 @@
 			\textbf{[Ring VRF Verification.]} upon receiving a message $(\oramsg{verify}, \sid, \ring,W, \aux, \msg, \sigma)$ from a party, do the following: 
 			% \begin{list}[label={{C}}{{\arabic*}}, start = 1]
 				% https://texblog.net/help/latex/ltx-260.html
-				\newcounter{FunCond}
+
 				\begin{list}{\hspace*{1pt} C\arabic{FunCond}}{\usecounter{FunCond}\setlength\leftmargin{0.15in}}
 					\item If there exits a record $ [\msg,\aux,W,\ring,\sigma, b'] $, set $ b = b' $. (This condition guarantees the completeness and consistency.)
 					%					\item Else if $ \pk  $ is an honest verification key where $ \anonymouskeymap[W] = (.,., \pk) $ and there exists no record $ [m, \ring, W, \sigma', 1] $ for any $ \sigma' $, then let $ b= 0  $.
