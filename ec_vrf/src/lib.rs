@@ -77,7 +77,7 @@ pub trait VrfSecretKey: Into<Self::PublicKey> {
         ios: &[<Self::PublicKey as VrfPublicKey>::InputOutput; N]
     ) -> Signature<Self::PublicKey,N>;
 
-    fn vrf_sign(
+    fn vrf_sign_vec(
         &self,
         extra: <Self::PublicKey as VrfPublicKey>::AssData,
         ios: &[<Self::PublicKey as VrfPublicKey>::InputOutput; N]
