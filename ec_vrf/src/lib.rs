@@ -14,10 +14,9 @@ pub trait VrfInputOutput: Clone,PartialEq,Eq {
     fn vrf_output_bytes<const LEN: usize>(&self, context: &[u8]) -> [u8; LEN];
 }
 
-pub VrfSignature: Debug,Clone,PartialEq,Eq,Hash,CanonicalSerialize,CanonicalDeserialize { }
-
 /// IRTF hash-to-curve draft specifies hashing for a message
 /// accompanied by applicaiton selected domain seperation tag.
+#[derive(Debug,Clone,PartialEq,Eq,Hash)]
 pub struct VrfInputMessage<'a> {
     domain: &'a [u8],
     message: &'a [u8],
@@ -33,21 +32,34 @@ pub trait VrfPublicKey: Debug,Clone,PartialEq,Eq,Hash,CanonicalSerialize,Canonic
     /// Input to sign.  Returned by verify.
     type InputOutput: VrfInputOutput;
 
-    /// Actual signature of the VRF.  
-    /// 
-    /// In principle, VRFs could take and return `Vec<Self::InOut>`,
-    /// like if used in a card gme where you play a variable number of
-    /// cards in a round.  If so, this `Vec<VrfPreOut>` avoids `Signature`
-    /// being an associated type constructor based on a const generic,
-    /// but writing it this way shows the sizes.
-    type Signature<const N: usize>: VrfSignature;
-
+    type VrfPreOutput: Debug,Clone,PartialEq,Eq,Hash,CanonicalSerialize,CanonicalDeserialize;
+    type VrfProof: Debug,Clone,PartialEq,Eq,Hash,CanonicalSerialize,CanonicalDeserialize;
+    
     fn vrf_verify<const N: usize>(
         &self,
         extra: Self::AssData,
         ios: &[Self::VrfInputMessage; N],
         signature: &Self::Signature,
-    ) -> Result<[Self::InputOutput; N],&'static str>;  // Self::Vector<Self::InputOutput>;
+    ) -> Result<[Self::InputOutput; N],&'static str>;
+
+    fn vrf_verify_vec(
+        &self,
+        extra: Self::AssData,
+        ios: &[Self::VrfInputMessage],
+        signature: &Self::Signature,
+    ) -> Result<Vec<Self::InputOutput>,&'static str>;
+}
+
+#[derive(Debug,Clone,PartialEq,Eq,Hash,CanonicalSerialize,CanonicalDeserialize)]
+pub struct VrfSignature<PK: VrfPublicKey, const N: usize> {
+    pub proof: PK::VrfProof,
+    pub preouts: [PK::VrfPreOutput; N],
+}
+
+#[derive(Debug,Clone,PartialEq,Eq,Hash,CanonicalSerialize,CanonicalDeserialize)]
+pub struct VrfSignatureVec<PK: VrfPublicKey> {
+    pub proof: PK::VrfProof,
+    pub preouts: Vec<PK::VrfPreOutput>,
 }
 
 pub trait VrfSecretKey: Into<Self::PublicKey> {
@@ -63,6 +75,12 @@ pub trait VrfSecretKey: Into<Self::PublicKey> {
         &self,
         extra: <Self::PublicKey as VrfPublicKey>::AssData,
         ios: &[<Self::PublicKey as VrfPublicKey>::InputOutput; N]
-    ) -> <Self::PublicKey as VrfPublicKey>::Signature<N>;
+    ) -> Signature<Self::PublicKey,N>;
+
+    fn vrf_sign(
+        &self,
+        extra: <Self::PublicKey as VrfPublicKey>::AssData,
+        ios: &[<Self::PublicKey as VrfPublicKey>::InputOutput; N]
+    ) -> SignatureVec<Self::PublicKey>;
 }
 
