@@ -1,6 +1,6 @@
 \subsection{Putting Together a NIZK and a $\ZKCont$  for Proving $\rel$}
 %$$\rel = \{(\bary, \barz; \barx, \baromega_1, \baromega_2):  (\bary, \barx; \baromega_1) \in \relone, (\barz, \barx; \baromega_2) \in \reltwo \},$$
-Let $\ZKCont$ and $\nizktwo$ be a zk continuation for $\relone$ (from preamble of Section~\ref{sec:rvrf_cont}) and respectively a NIZK 
+Let $\ZKCont$ be a zk continuation for $\relone$ (from preamble of Section~\ref{sec:rvrf_cont}) and let $\nizktwo$  be a NIZK 
 for $\reltwo'$ defined by:
 $$\reltwo' = \{(X, \barz; \barx, b, \baromega_2): \VerifyCom(X, \barx, b) =1 \ \wedge \ (\barz, \barx; \baromega_2) \in \reltwo \},$$
 \noindent with $\reltwo$ from preamble of Section~\ref{sec:rvrf_cont}. Then we define $\nizkR$ for relation $\mathcal{R}$ as:
