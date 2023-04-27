@@ -53,7 +53,7 @@ such that for implicit security parameter $\lambda$,
 \item $\ZKCont.\Setup: (1^{\lambda}) \mapsto (\crs, \tw)$ a setup algorithm that on input the security parameter 
 outputs a common reference string $\crs$ and a trapdoor $\tw$,
 
-\item $\ZKCont.\Gen: (\crs, \relone) \mapsto (\pp, \crspk, \crsvk)$ \, 
+\item $\ZKCont.\Gen: (\crs, \relone) \mapsto (\crspk, \crsvk, \pp)$ \, 
 outputs a list $\pp$ of public parameters and a pair of proving key $\crspk$ and verification key $\crsvk$, 
 
 \item $\ZKCont.\Preprove: (\crspk, \bar{y}, \bar{x}, \baromega_1, \relone) \mapsto (X', \pi', b')$ \,
@@ -85,7 +85,7 @@ and satisfies perfect completeness for $\Preprove$ and, for $\Reprove$, it satis
 \noindent \textbf{Perfect Completeness for $\Preprove$} For all $\lambda \in \mathbb{N}$, for every $(\bary, \barx; \baromega_1) \in \relone$:
 \begin{align*}
 \mathit{Pr} (& \ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1 \ \wedge \ \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1\  | \ \\ 
-                   & (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
+                   & (\crs, \tw) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
                    & (X, \pi, b) \leftarrow \ZKCont.\Preprove(\crspk, \bar{y}, \bar{x}, \baromega_1, \relone)) = 1
 \end{align*}
 
@@ -93,8 +93,8 @@ and satisfies perfect completeness for $\Preprove$ and, for $\Reprove$, it satis
 \begin{align*}
 \mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X', \pi', \relone) = 1  = >  \ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1)  \ \wedge \  \\
                    & \wedge \ (\ZKCont.\VerifyCom (\pp, X', \barx, b') = 1 => \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1) \ | \\
-                   & (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
-                   & (\bary, \barx, X', \pi', b') \leftarrow A(\crs,\pp, \relone), \\
+                   & (\crs, \tw) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
+                   & (\bary, \barx, X', \pi', b') \leftarrow A(\crs,\relone), \\
                    & (X, \pi, b) \leftarrow \ZKCont.\Reprove(\crspk, X', \pi', b', \relone)) = 1
 \end{align*}
 
@@ -102,7 +102,7 @@ and satisfies perfect completeness for $\Preprove$ and, for $\Reprove$, it satis
 \begin{align*}
 \mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1  = >  \ZKCont.\Verify(\crsvk, \bar{y}, X', \pi', \relone) = 1)  \ \wedge \  \\
                    & \wedge \ (\ZKCont.\VerifyCom (\pp, X, \barx, b) = 1 => \ZKCont.\VerifyCom (\pp, X', \barx, b') = 1) \ | \\
-                   & (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
+                   & (\crs, \tw) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
                    & (\bary, \barx, X, \pi, b) \leftarrow A(\crs,\pp, \relone) \\
                    & (X', \pi', b') \leftarrow \ZKCont.\Reprove(\crspk, X, \pi, b, \relone)) = 1
 \end{align*}
@@ -112,7 +112,8 @@ and satisfies perfect completeness for $\Preprove$ and, for $\Reprove$, it satis
 every non-uniform efficient adversary $A$, there exists efficient non-uniform extractor $E$ such that:
 \begin{align*}
 \mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi, \relone) = 1) \ \wedge \ (\ZKCont.\VerifyCom(\pp, X, \bar{x}, b) = 1) \ \wedge\ \\
-                   & \wedge \ ( (\bary, \barx; \baromega_1) \notin \relone) \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
+                   & \wedge \ ( (\bary, \barx; \baromega_1) \notin \relone) \ | \ (\crs, \tw) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
+                   & (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\
                    & (\bary, \barx, X, \pi, b; \baromega_1 ) \leftarrow A || E (\crs, \realaux, \relone)) = \negl (\lambda),
 \end{align*}
 
@@ -132,12 +133,12 @@ $\mathit{input}$ and $B$ having access to the random coins of $A$. \\
 \noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $\realaux$, 
 for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$, for all $b'$, for every adversary $A$:
 \begin{align*}
-\mathit{Pr}(& A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
-                  & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
+\mathit{Pr}(& A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
+                  & (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
                   &  \ZKCont.\Verify(\crsvk, \bary, X', \pi', \relone) = 1, \\
                   & (\pi, X, \_) \leftarrow \ZKCont.\Reprove (\crspk, X', \pi', b', \relone)) =  \\
-= \mathit{Pr}(& A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
-                     & (\crspk, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone),\\
+= \mathit{Pr}(& A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
+                     & (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone),\\
                      & \ZKCont.\Verify(\crsvk, \bary, X', \pi', \relone) = 1, \\
                      & (\pi, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone))
 \end{align*}
@@ -317,10 +318,10 @@ together with (ii) from Definition 3.4~\cite{LegoSNARK} we obtain that $\barx^* 
 $(\bary, \barx; \baromega^*) \in \relRQ $ with overwhelming probability which contradicts our assumption, so our claim that $\SpecialG$ does not have 
 KS as per Definition~\ref{def:zk_cont} is false. \\
 
-\noindent Finally, regarding zero-knowledge, it is clear that if $\pi' = (O', U', V')$ is part of the output of $\SpecialG.\Reprove$, 
-then $O'$ and $U'$ are uniformly distributed as group elements in their respective groups. This holds, as long as the 
+\noindent Finally, regarding zero-knowledge, it is clear that if $\pi = (O, U, V)$ is part of the output of $\SpecialG.\Reprove$, 
+then $O$ and $U$ are uniformly distributed as group elements in their respective groups. This holds, as long as the 
 input to $\SpecialG.\Reprove$ is a verifying proof, even when the proof was maliciously generated. Hence, it is easy to check  
-that the output $\pi'$ of $\SpecialG.\Sim$ is identically distributed to a proof $\pi'$ output by $\SpecialG.\Reprove$ so the perfect 
+that the output $\pi'$ of $\SpecialG.\Sim$ is identically distributed to a proof $\pi$ output by $\SpecialG.\Reprove$ so the perfect 
 zero-knowledge property holds for $\SpecialG$. 
 \end{proof}
 
