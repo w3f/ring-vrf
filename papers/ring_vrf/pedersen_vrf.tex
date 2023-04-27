@@ -144,8 +144,8 @@ $$ \Rring = \Setst{
 
 where $\rel_{\pk} = \{(\pk, X);(\sk,r): \sk = \mathsf{Com}.\mathsf{Open}(\pk;\sk,r), X = \sk\genG\}$. \\
 
-\noindent The \Sign and \Verify for  our \rVRF are a combination for those of \PedVRF and
- $\NIZK_{\Rring}$ as follows:
+\noindent The \Sign and \Verify for  our \rVRF are a combination of \Sign and \Verify from \PedVRF and
+\Prove and \Verify from $\NIZK_{\Rring}$, as follows:
 \def\tmpaux{\aux \doubleplus \piring \doubleplus \comring}
 \def\tmpeprintaux{\eprint{\aux'}{\tmpaux}}
 \def\tmpindent{\hspace*{5pt}}
@@ -158,9 +158,9 @@ where $\rel_{\pk} = \{(\pk, X);(\sk,r): \sk = \mathsf{Com}.\mathsf{Open}(\pk;\sk
 	where 
 	\tmpindent $\aux' \leftarrow \tmpaux$,  \\
 	\tmpindent $\sigma \leftarrow \PedVRF.\Sign(\sk,\openpk,\msg, \aux')$.
-	
-	
-	We note that if $ \pk = \sk\genG $ then $ \Rring $ does not need $ \sk,r $ since $ \rel_{\pk} $ can be checked without them i.e., check whether $ \compk - \openpk \genB = \rVRF.\OpenRing(\comring,\openring) $.
+		
+	We note that if $ \pk = \sk\genG = X $ then $ \Rring $ does not need $ \sk,r $ since $ \rel_{\pk} $ can be checked without them i.e., the check corresponding to inclusion in the $\rel_{pk}$ relation 
+	is covered by the check $ \compk - \openpk \genB = \rVRF.\OpenRing(\comring,\openring) $.
 	\item $\rVRF.\rVerify : (\comring,\msg,\aux,\rho) \mapsto \Out \,\, \lor \perp$ \,
 	parses $\rho$ as $(\compk,\piring,\sigma)$, next sets $\aux' \leftarrow \tmpaux$,
 	aborts if $\NIZK_{\Rring}.\Verify((\compk,\comring); \piring)$ fails,
