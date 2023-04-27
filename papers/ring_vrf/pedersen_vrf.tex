@@ -3,9 +3,9 @@
 
 We now construct ring VRFs with an efficient evaluation proof, which
 we call the Pedersen VRF and denote \PedVRF.
-\PedVRF instantiates the NIZK for the language $\Leval$ defined in \S\ref{sec:overview}.
-We focus here upon the Pedersen VRF and relations describing its SNARK
-for ring membership, but we only discuss the zero-knowledge continuation
+\PedVRF instantiates the NIZK for the relation $\Reval$ introduced in a general form in \S\ref{sec:overview}.
+In this section we focus upon Pedersen VRF and relations describing its SNARK
+for ring membership and we discuss the zero-knowledge continuation
 that makes the overall ring VRF efficient in the next section.
 
 We refer readers to \S\ref{sec:ec_background} for notation,
@@ -31,7 +31,7 @@ except we replace the public key by a Pedersen commitment
 We do not expose a public key from \KeyGen, nor inject the public key in \Eval.
 \begin{itemize}
     \item $\PedVRF.\KeyGen$ \, returns $\sk \leftsample \F_p$. % and $\pk = \sk \, \genG$.
-    \item $\PedVRF.\Eval : (\sk,\msg) \mapsto H'(\msg, \hsis\,\PreOut)$ where $\PreOut = \sk \, H_{\grEsis}(\msg)$
+    \item $\PedVRF.\Eval : (\sk,\msg) \mapsto H'(\msg, \hsis\,\PreOut)$ where $\PreOut = \sk \, H_{\grEsis}(\msg)$.
 \end{itemize}
 \noindent We instead add an algorithm to obtain a Pedersen commitment to the secret key \sk.
 \begin{itemize}
@@ -53,8 +53,8 @@ the \Prove and \Verify algorithms of a Chaum-Pedersen DLEQ proof
 instantiated by a Fiat-Shamir transform of a sigma protocol.
 $$ \mathcal{R}_{eval} = \Setst{
   \begin{aligned}
-    & (\sk, \openpk); \\ 
-    & \,\, (\compk,\PreOut,\In) 
+    & (\compk,\PreOut,\In) ; \\ 
+    & \,\, (\sk, \openpk) 
   \end{aligned}
 }{
   \begin{aligned}
@@ -102,7 +102,7 @@ but our public key handling in \PedVRF breaks VRF definitions somewhat.
 \paragraph{The Ring VRF Construction:}
 As described in \S\ref{sec:overview},
 we instantiate \rVRF from \PedVRF plus a ring commitment scheme
- $\rVRF.\{ \CommitRing, \OpenRing \}$. $ \rVRF.\CommitKey(\ring,\pk) \rightarrow \comring,\openring$  outputs a Merkle tree root $\comring  $ and the Merkle tree path $ \openring $ that verifies $ \pk \in \ring $.
+ $\rVRF.\{ \CommitRing, \OpenRing \}$. $ \rVRF.\CommitRing(\ring,\pk) \rightarrow (\comring,\openring)$  outputs a Merkle tree root $\comring  $ and the Merkle tree path $ \openring $ that verifies $ \pk \in \ring $.
 We choose the ring commitment scheme so the $\rVRF.\OpenRing$ invocation
 is relatively SNARK friendly in our ring membership relation $ \Rring $. We note that a trivial ring commitment scheme where $ \comring = \ring $ and $ \openring = \pk $ works in our scheme as well.
 % \vspace{-0.1in}
@@ -113,27 +113,27 @@ but exactly what form these public keys take depends upon how our computation
 We therefore define $ \rVRF.\KeyGen $ as follows:
 
 \begin{itemize}
-	\item $\rVRF.\KeyGen$ \, returns as secret key $\sk,r \leftsample \F_p$ and $ \pk $ as public key where $ \pk = \mathsf{Com}.\mathsf{Commit}(\sk,r)  $. We note that $ \pk  $ can be defined as $ \pk = \sk \genG $ according to the SNARK used for $ \Rring $. In this case, we would not have $ r $ as a part of the secret key.
+	\item $\rVRF.\KeyGen$ \, returns as secret key $\sk,r \leftsample \F_p$ and $ \pk $ as public key where $ \pk = \mathsf{Com}.\mathsf{Commit}(\sk,r)  $. We note that $ \pk  $ can be defined as $ \pk = \sk \genG $ according to the SNARK used for $ \Rring $. In this case, we would not have $ r $ as a part of the secret key. We provide one optimal public key design in \S\ref{subsec:rvrf_faster} for our SNARK used for $ \Rring $. 
 \end{itemize}
 
- have a relation $\overset{\sk}{\equiv}$ that proves
- the secret key $\sk$ behind $\pk$ matches $\sk \, \genG = \compk - \openpk \, \genB$.\\
+% have a relation $\overset{\sk}{\equiv}$ that proves the secret key $\sk$ behind $\pk$ matches $\sk \, \genG = \compk - \openpk \, \genB$.\\
  
 
  
-We provide one optimal public key design in \S\ref{subsec:rvrf_faster} for our SNARK used for $ \Rring $. 
+
 
 	% although some further nuances only appear later in \S\ref{subsec:AML_KYC}.
 	%Anyways $\rVRF.\KeyGen$ always generate both a secret key similar to
 	%$\PedVRF.\KeyGen$ as well as some corresponding public key type
 	% compatible with $\rVRF.\CommitRing$.
-
-We define $\rVRF.\Eval = \PedVRF.\Eval$.
-We let  $ \Rring $ be
+\begin{itemize}
+\item $\rVRF.\Eval$ is defined identically to $\PedVRF.\Eval$.
+\end{itemize}
+Next, we instantiate  $ \Rring $ with
 $$ \Rring = \Setst{ 
 	\begin{aligned}
-		& (\openpk, \openring, \pk, \sk, r); \\ 
-		& \,\, (\compk,\comring) 
+		& \,\, (\compk,\comring); \\ 
+		& (\openpk, \openring, \pk, \sk, r) 
 	\end{aligned}
 }{
 	\begin{aligned}
@@ -142,11 +142,10 @@ $$ \Rring = \Setst{
 	\end{aligned}
 } \mathperiod $$
 
-where 
+where $\rel_{\pk} = \{(\pk, X);(\sk,r): \sk = \mathsf{Com}.\mathsf{Open}(\pk;\sk,r), X = \sk\genG\}$. \\
 
- $$\rel_{\pk} = \{(\sk,r);(X, \pk): \sk = \mathsf{Com}.\mathsf{Open}(\pk;\sk,r), X = \sk\genG\}$$
-Our \Sign and \Verify algorithms compose those of \PedVRF and
- $\NIZK_{\Rring}$:
+\noindent The \Sign and \Verify for  our \rVRF are a combination for those of \PedVRF and
+ $\NIZK_{\Rring}$ as follows:
 \def\tmpaux{\aux \doubleplus \piring \doubleplus \comring}
 \def\tmpeprintaux{\eprint{\aux'}{\tmpaux}}
 \def\tmpindent{\hspace*{5pt}}

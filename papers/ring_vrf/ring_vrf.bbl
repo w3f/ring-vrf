@@ -19,14 +19,6 @@ Karim Baghery, Markulf Kohlweiss, Janno Siim, and Mikhail Volkhov.
   Springer Berlin Heidelberg.
 \newblock \url{https://ia.cr/2020/811}.
 
-\bibitem{cryptoeprint:2005:304}
-Adam Bender, Jonathan Katz, and Ruggero Morselli.
-\newblock Ring signatures: Stronger definitions, and constructions without
-  random oracles.
-\newblock In Shai Halevi and Tal Rabin, editors, {\em Theory of Cryptography},
-  pages 60--79, Berlin, Heidelberg, 2006. Springer Berlin Heidelberg.
-\newblock \url{https://ia.cr/2005/304}.
-
 \bibitem{bening_auxiliary}
 Nir Bitansky, Ran Canetti, Omer Paneth, and Alon Rosen.
 \newblock On the existence of extractable one-way functions.
@@ -139,14 +131,6 @@ Jens Groth.
   in Cryptology -- EUROCRYPT 2016}, pages 305--326, Berlin, Heidelberg, 2016.
   Springer Berlin Heidelberg.
 \newblock IACR ePrint Archive 2016/260.
-
-\bibitem{agg_dkg}
-Kobi Gurkan, Philipp Jovanovic, Mary Maller, Sarah Meiklejohn, Gilad Stern, and
-  Alin Tomescu.
-\newblock Aggregatable distributed key generation.
-\newblock In Anne Canteaut and Fran{\c{c}}ois{-}Xavier Standaert, editors, {\em
-  {EUROCRYPT} 2021}, volume 12696 of {\em LNCS}, pages 147--176, 2021.
-\newblock \url{https://ia.cr/2021/005}.
 
 \bibitem{zcash_protocol}
 Daira Hopwood, Sean Bowe, Taylor Hornby, and Nathan Wilcox.
