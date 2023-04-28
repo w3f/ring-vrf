@@ -1,7 +1,9 @@
 \subsection{Ring VRFs based on SpecialG}
 \label{subsec:rvrf_faster}
 
-We can apply the results of the previous subsections to construct a ring VRF using $\SpecialG$ that allows a\eprint{n incredibly }{ }fast amortized ring VRF prover. \PedVRF has a sigma protocol which proves the relation {\color{red} $\reltwo'(\pp)=\mathcal{R}_{eval}$ (for some appropriately chosen public parameters $\pp$)} and we can then use $\SpecialG$ 
+We can apply the results of the previous subsections to construct a ring VRF using $\SpecialG$ that allows a\eprint{n incredibly }{ }fast amortized ring VRF prover. 
+First, \PedVRF has a sigma protocol which proves the relation {\color{red} $\mathcal{R}_{eval}$, 
+where $\mathcal{R}_{eval}$ is the instantiation of relation $\reltwo'(\pp)$ (for some appropriately chosen public parameters $\pp$)}. Second, we can use $\SpecialG$ 
 for a relation $\relone$ similar to $\Rring$. {\color{red} In fact, we will instantiate $\relone$ with $\Rring^{\mathtt{inner}}$.}
 
 For the latter, we need an appropriate choice of $\pk$ to commit to $\sk$. We use a Pedersen commitment using some Jubjub curve $\ecJ$. $\ecJ$ contains a large subgroup $\grJ$ of prime order $p_\grJ$. Typically $p_\grJ$ is smaller than $p$, the order of $\grE$, certainly when $\ecJ$ is an Edwards curve with a cofactor. Since $\sk \in \F_p$, we represent it with two $\F_{p_\grJ}$ elements $\sk_0,\sk_1 \leq 2^{\lambda}$ 
