@@ -27,7 +27,7 @@ In this section, we define formally a ring VRF scheme and model its security in 
 \end{definition}
 
 
-We note that $ \rVRF.\CommitRing $ and $  \rVRF.\OpenRing $ are optional algorithms of a ring VRF scheme. If they are not defined, we should let $ \comring = \ring $ and $ \openring  = \perp$. $ \rVRF.\CommitRing $ and $  \rVRF.\OpenRing $ are functional for a succinct verification process in case of having large set of ring.
+We note that $ \rVRF.\CommitRing $ and $  \rVRF.\OpenRing $ are optional algorithms of a ring VRF scheme. If they are not defined, we should let $ \comring = \ring $ and $ \openring  = \pk$. $ \rVRF.\CommitRing $ and $  \rVRF.\OpenRing $ are functional for a succinct verification process in case of having large set of ring.
 
 The security properties that we want to achieve in a ring VRF scheme are informally as follows: \emph{correctness} meaning that when an honest signer with key $ (\sk_i,\pk_i) $ outputs $ \sigma $ by running $ \rVRF.\Sign(\sk_i, \comring,\openring, \msg, \aux) $, $ \rVRF.\Verify(\comring,\msg,\aux,\sigma)  $ must output $ b =1 $ and $ y $ which is equal to $ \rVRF.\Eval(\sk_i, \msg) $ if and only if $ \rVRF.\OpenRing(\comring,\openring) \rightarrow \pk_i \in \ring$, \emph{randomness} meaning that an evaluation value is random and independent from the message and the public key, \emph{determinism} meaning that $ \rVRF.\Eval $ is deterministic, \emph{anonymity} meaning that $ \rVRF.\Sign $ does not give any information about its signer, \emph{unforgeability} meaning that an adversary should not forge a ring signature and \emph{uniqueness} meaning that number of verified evaluation values should not be more than the number of the keys in the ring.
 
