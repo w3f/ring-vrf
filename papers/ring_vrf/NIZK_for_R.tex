@@ -6,19 +6,19 @@ $$\reltwo'(\pp) = \{(X, \barz, \pp; \barx, b, \baromega_2): \ZKCont.\VerifyCom(\
 \noindent with $\reltwo$ from preamble of Section~\ref{sec:rvrf_cont}. Then we define the system $\nizkR$ for relation $\mathcal{R}$ 
 from the preamble of Section~\ref{sec:rvrf_cont} as:
 \begin{itemize}
-\item $\nizkR.\Setup: (1^{\lambda}) \mapsto (\crsR = (\crs,\crstwo), \twR = (\tw, \twtwo))$ where \\
-$(\crs, \tw) \leftarrow \ZKCont.\Setup(1^{\lambda})$, $(\crstwo, \twtwo) \leftarrow \nizktwo.\Setup: (1^{\lambda})$
+\item $\nizkR.\Setup: (1^{\lambda},\mathcal{R}) \mapsto (\crsR = (\crs,\crstwo), \twR = (\tw, \twtwo), \pp)$ where \\
+$(\crs, \tw, \pp) \leftarrow \ZKCont.\Setup(1^{\lambda}, \relone)$, \\ $(\crstwo, \twtwo) \leftarrow \nizktwo.\Setup: (1^{\lambda}, \reltwo'(\pp))$
 
-\item $\nizkR.\Gen: (\crsR) \mapsto (\ppR = \pp, \crspkR = (\crspk,\crspktwo), \crsvkR = (\crsvk,\crsvktwo))$ where 
-$(\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone)$, \\ $(\crspktwo, \crsvktwo) \leftarrow \nizktwo.\Gen(\crstwo)$ 
+%\item $\nizkR.\Gen: (\crsR) \mapsto (\ppR = \pp, \crspkR = (\crspk,\crspktwo), \crsvkR = (\crsvk,\crsvktwo))$ where 
+%$(\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone)$, \\ $(\crspktwo, \crsvktwo) \leftarrow \nizktwo.\Gen(\crstwo)$ 
 
-\item $\nizkR.\Prove(\crspkR,\bary, \barz; \barx, \baromega_1, \baromega_2 ) \mapsto (\pi_1, \pi_2, X)$ where \\
-$(X', \pi'_1, b')\leftarrow \ZKCont.\Preprove:(\crspk, \bar{y}, \bar{x}, \baromega_1, \relone)$ \\
-$(X, \pi_1, b) \leftarrow \ZKCont.\Reprove: (\crspk, X', \pi_1', b', \relone)$ \\
-$ \pi_2 \leftarrow \nizktwo.\Prove(\crspktwo, X, \barz; \barx, b, \baromega_2)$ 
+\item $\nizkR.\Prove(\crsR,\bary, \barz; \barx, \baromega_1, \baromega_2 ) \mapsto (\pi_1, \pi_2, X)$ where \\
+$(X', \pi'_1, b')\leftarrow \ZKCont.\Preprove:(\crs, \bar{y}, \bar{x}, \baromega_1, \relone)$ \\
+$(X, \pi_1, b) \leftarrow \ZKCont.\Reprove: (\crs, X', \pi_1', b', \relone)$ \\
+$ \pi_2 \leftarrow \nizktwo.\Prove(\crstwo, X, \barz; \barx, b, \baromega_2)$ 
 
-\item $\nizkR.\Verify(\crsvkR,\bary, \barz, \pi_1, \pi_2, X) \mapsto 0/1$ where the output is $1$ iff 
-$$\ZKCont.\Verify(\crsvk, \bar{y}, X, \pi_1, \relone) = 1 \  \wedge \ \nizktwo.\Verify(\crsvktwo, X, \barz, \pi_2) =1$$
+\item $\nizkR.\Verify(\crsR,\bary, \barz, \pi_1, \pi_2, X) \mapsto 0/1$ where the output is $1$ iff 
+$$\ZKCont.\Verify(\crs, \bar{y}, X, \pi_1, \relone) = 1 \  \wedge \ \nizktwo.\Verify(\crstwo, X, \barz, \pi_2) =1$$
 
 \item $\nizkR.\Sim(\twR, \bary, \barz) \mapsto (\pi_1, \pi_2, X)$ where \\
 $(\pi_1, X) \leftarrow \ZKCont.\Sim: (\tw, \bary, \relone)$, $\pi_2 \leftarrow \nizktwo.\Sim: (\twtwo, X, \barz)$ 
@@ -38,13 +38,13 @@ knowledge-soundness.
 \noindent \textbf{Special Perfect Completeness} For all $\lambda \in \mathbb{N}$, for every efficient adversary $A$, for every 
  $(\barz, \barx; \baromega_2) \in \reltwo$ it holds: 
 \begin{align*}
-\mathit{Pr} (& (\ZKCont.\Verify(\crsvk, \bar{y}, X', \pi'_1, \relone) = 1  = >  \ZKCont.\Verify(\crsvk, \bar{y}, X, \pi_1, \relone) = 1)  \ \wedge \  \\
+\mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X', \pi'_1, \relone) = 1  = >  \ZKCont.\Verify(\crs, \bar{y}, X, \pi_1, \relone) = 1)  \ \wedge \  \\
                    & \wedge \ (\ZKCont.\VerifyCom (\pp, X', \barx, b') = 1 => \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1) \ \wedge \\
-                   & \wedge \ \nizktwo.\Verify(\crsvktwo, X, \barz, \pi_2) =1 | \\
-                   & (\crs, \tw) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
-                   & (\crstwo, \twtwo) \leftarrow \nizktwo.\Setup(1^{\lambda}), (\crspktwo, \crsvktwo) \leftarrow \nizktwo.\Gen(\crstwo) \\
-                   & (\bary, X', \pi'_1, b') \leftarrow A(\crs,\relone), (X, \pi_1, b) \leftarrow \ZKCont.\Reprove(\crspk, X', \pi'_1, b', \relone) \\
-                   &\pi_2 \leftarrow \nizktwo.\Prove(\crspktwo, X, \barz, \barx, b, \baromega_2)) = 1
+                   & \wedge \ \nizktwo.\Verify(\crstwo, X, \barz, \pi_2) =1 | \\
+                   & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone),  \\ 
+                   & (\crstwo, \twtwo) \leftarrow \nizktwo.\Setup(1^{\lambda}, \reltwo'(\pp)),  \\
+                   & (\bary, X', \pi'_1, b') \leftarrow A(\crs,\relone), (X, \pi_1, b) \leftarrow \ZKCont.\Reprove(\crs, X', \pi'_1, b', \relone) \\
+                   &\pi_2 \leftarrow \nizktwo.\Prove(\crstwo, X, \barz, \barx, b, \baromega_2)) = 1
 \end{align*}
 
 \begin{lemma}[Special Perfect Completeness] 
@@ -61,14 +61,14 @@ for $\ZKCont.\Reprove$.
 \noindent \textbf{Perfect Zero-knowledge after Reusing a $\ZKCont$ Proof} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $aux$, 
 for all $\bary,\barx,\barz, \baromega_1, \baromega_2$ with $(\bary, \barx; \baromega_1) \in \relone$ and $(\barz, \barx; \baromega_2) \in \reltwo$, for all $X,\pi_1,\pi_2, b$, for every adversary $A$ it holds:
 \begin{align*}
-\mathit{Pr}(& A(\crs, \realaux, \pi'_1,\pi_2, X', \rel) = 1 \ | \ (\crs, \tw) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
-                  & (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi'_1, X', \_) \leftarrow \ZKCont.\Reprove (\crspk, X, \pi, b, \relone), \\
-                  & \pi_2 \leftarrow \nizktwo.\Prove(\crspktwo, X, \barz, \barx, b, \baromega_2), \\
-                  &  \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1 
+\mathit{Pr}(& A(\crs, \realaux, \pi'_1,\pi_2, X', \rel) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
+                  & (\pi'_1, X', \_) \leftarrow \ZKCont.\Reprove (\crs, X, \pi, b, \relone), \\
+                  & \pi_2 \leftarrow \nizktwo.\Prove(\crstwo, X, \barz, \barx, b, \baromega_2), \\
+                  &  \ZKCont.\Verify(\crs, \bary, X, \pi, \relone) = 1 
                   \wedge \VerifyCom(\pp, X, \bar{x}, b) = 1) =  \\
-= \mathit{Pr}(& A(\crs, \realaux, \pi',\pi_2, X', \rel) = 1 \ | \ (\crs, \tw) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
-                     & (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi'_1, X',\pi_2) \leftarrow \nizkR.\Sim(\tw, \bary, \relone) \\ 
-                     &  \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1
+= \mathit{Pr}(& A(\crs, \realaux, \pi',\pi_2, X', \rel) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\ 
+                     & (\pi'_1, X',\pi_2) \leftarrow \nizkR.\Sim(\tw, \bary, \relone) \\ 
+                     &  \ZKCont.\Verify(\crs, \bary, X, \pi, \relone) = 1
                     \wedge \VerifyCom(\pp, X, \bar{x}, b) = 1)
 \end{align*}
 \end{comment} 
@@ -76,16 +76,16 @@ for all $\bary,\barx,\barz, \baromega_1, \baromega_2$ with $(\bary, \barx; \baro
 \noindent \textbf{Zero-knowledge after Reusing a $\ZKCont$ Proof} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $aux$, 
 for all $\bary,\barx,\barz, \baromega_1, \baromega_2$ with $(\bary, \barx; \baromega_1) \in \relone$ and $(\barz, \barx; \baromega_2) \in \reltwo$, for all $X',\pi_1',\pi_2, b'$, for every adversary $A$ it holds:
 \begin{align*}
-| \mathit{Pr}(& A(\crs, \realaux, \pi_1,\pi_2, X, \rel) = 1 \ | \ (\crs, \tw) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
-                  & (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\
-                  &(\pi_1, X, \_) \leftarrow \ZKCont.\Reprove (\crspk, X', \pi_1', b', \relone), \\
-                  & \pi_2 \leftarrow \nizktwo.\Prove(\crspktwo, X, \barz, \barx, b, \baromega_2), \\
-                  &  \ZKCont.\Verify(\crsvk, \bary, X', \pi'_1, \relone) = 1 
+| \mathit{Pr}(& A(\crs, \realaux, \pi_1,\pi_2, X, \rel) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
+                  %& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\
+                  &(\pi_1, X, \_) \leftarrow \ZKCont.\Reprove (\crs, X', \pi_1', b', \relone), \\
+                  & \pi_2 \leftarrow \nizktwo.\Prove(\crstwo, X, \barz, \barx, b, \baromega_2), \\
+                  &  \ZKCont.\Verify(\crs, \bary, X', \pi'_1, \relone) = 1 
                   \wedge \ZKCont.\VerifyCom(\pp, X', \barx', b') = 1)   \\
-- \mathit{Pr}(& A(\crs, \realaux, \pi_1,\pi_2, X, \rel) = 1 \ | \ (\crs, \tw) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
-                     & (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi_1,\pi_2, X) \leftarrow \nizkR.\Sim(\tw, \bary, \relone) \\ 
-                     &  \ZKCont.\Verify(\crsvk, \bary, X', \pi'_1, \relone) = 1
-                    \wedge \ZKCont.\VerifyCom(\pp, X', \barx', b') = 1) | \\
+- \mathit{Pr}(& A(\crs, \realaux, \pi_1,\pi_2, X, \rel) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\ 
+                     %& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), 
+                     & (\pi_1,\pi_2, X) \leftarrow \nizkR.\Sim(\tw, \bary, \relone) \\ 
+                     &  \ZKCont.\Verify(\crs, \bary, X', \pi'_1, \relone) = 1 \wedge \ZKCont.\VerifyCom(\pp, X', \barx', b') = 1) | \\
                     \leq \negl(\lambda)
 \end{align*}
 
