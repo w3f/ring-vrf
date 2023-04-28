@@ -1,21 +1,23 @@
-\subsection{RingVRFs with SpecialG}
+\subsection{Ring VRFs based on SpecialG}
 \label{subsec:rvrf_faster}
 
-We can apply the results of the previous subsections to construct a ringVRF using $\SpecialG$ that allows a\eprint{n incredibly }{ }fast amortized ring VRF prover. \PedVRF has a sigma protocol which proves the relation $\reltwo'=\mathcal{R}_{eval}$ and we can then use SpecialG for a relation $\relone$ similar to $\Rring$.
+We can apply the results of the previous subsections to construct a ring VRF using $\SpecialG$ that allows a\eprint{n incredibly }{ }fast amortized ring VRF prover. \PedVRF has a sigma protocol which proves the relation {\color{red} $\reltwo'(\pp)=\mathcal{R}_{eval}$ (for some appropriately chosen public parameters $\pp$)} and we can then use $\SpecialG$ 
+for a relation $\relone$ similar to $\Rring$. {\color{red} In fact, we will instantiate $\relone$ with $\Rring^{\mathtt{inner}}$.}
 
-For this, we need an appropriate choice of $\pk$ to commit to $\sk$. We use a Pedersen commitment using some Jubjub curve $\ecJ$. $\ecJ$ contains a large subgroup $\grJ$ of prime order $p_\grJ$. Typically $p_\grJ$ is smaller than $p$, the order of $\grE$, certainly when $\ecJ$ is an Edwards curve with a cofactor. Since $\sk \in \F_p$, we represent it with two $\F_{p_\grJ}$ elements $\sk_0,\sk_1 \leq 2^{\lambda}$ 
+For the latter, we need an appropriate choice of $\pk$ to commit to $\sk$. We use a Pedersen commitment using some Jubjub curve $\ecJ$. $\ecJ$ contains a large subgroup $\grJ$ of prime order $p_\grJ$. Typically $p_\grJ$ is smaller than $p$, the order of $\grE$, certainly when $\ecJ$ is an Edwards curve with a cofactor. Since $\sk \in \F_p$, we represent it with two $\F_{p_\grJ}$ elements $\sk_0,\sk_1 \leq 2^{\lambda}$ 
 so that $\sk = \sk_0 + \sk_1 \, 2^{\lambda} \mod p$ for some fixed $(\log_2 p)/2  < \lambda < \log_2 p_\grJ$. $\rVRF.\KeyGen$ now samples $\sk\leftsample \F_{p}$, computes $\sk_1,\sk_2$, samples a blinding factor $d \leftsample \F_{p_\grJ}$ and then returns a blinded Pedersen commitment as the public key $\rVRF.\pk=\sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$ and the secret key $\rVRF.\sk = (\sk_0,\sk_1,d)$. Here $\genJ_0,\genJ_1,\genJ_2 \in \grJ$ are independent generators.
 
-We thus have a fairly efficient instantiation for $\Lring^\inner$ give by
+We thus have a fairly efficient instantiation for {\color{red} \relone} given by
 
-$$ \relone = \Setst{ (\comring, \sk ; \sk_0, \sk_1,\openring) }{
+$$ {\color{red} \Rring^{\inner}} = \Setst{ (\comring, \sk ; \sk_0, \sk_1,\openring) }{
   \sk = \sk_0+ 2^{\lambda} \sk_1 \wedge
  \genfrac{}{}{0pt}{}{ \eprint{\rVRF.}{}\OpenRing(\comring,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
 } \mathperiod $$
 
-In combination, $\SpecialG$ for $\relone$ and $\PedVRF$ give a NIZKs for the following relation, giving a RingVRF:
+Combining $\SpecialG$ for $\relone$ and the sigma protocol which is part of $\PedVRF$ gives a 
+NIZK for relation $\rel_{\mathtt{rvrf}}$ {\color{red} (i.e., an instantiation of $\rel$ from previous subsections)}:
 
-$$ \rel_{rvrf} = \Setst{ \Out, \msg, \comring ; \sk_0,\sk_1,\openring }{
+$$ \rel_{\mathtt{rvrf}} = \Setst{ \Out, \msg, \comring ; \sk_0,\sk_1,\openring }{
     \eprint{
         \eprint{\rVRF.}{}\OpenRing(\comring,\openring)    \textrm{ and }
         \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2, \quad
@@ -29,18 +31,20 @@ $$ \rel_{rvrf} = \Setst{ \Out, \msg, \comring ; \sk_0,\sk_1,\openring }{
     }
 } $$
 
-\paragraph{Efficiency:} If we have a $\SpecialG$ proof for $\relone$ for our $\pk$ in a ring $\comring$, to generate a RingVRF proof for the same ring, we need to run $\SpecialG.\Reprove$ and $\PedVRF.\Sign$. $\PedVRF.\Sign$ requires two scalar multiplications on $\ecE_1$
- and two on the same or faster $\ecE'$,
+\paragraph{Efficiency:} If we have a $\SpecialG$ proof for $\relone$ for our $\pk$ in a ring defined by $\comring$, 
+to generate a ring VRF proof for the same ring, we need to run $\SpecialG.\Reprove$ and $\PedVRF.\Sign$. $\PedVRF.\Sign$ 
+requires two scalar multiplications on $\ecE_1$
+and two on the same or faster $\ecE'$,
 so together with $\SpecialG.\Reprove$ costing four scalar multiplications
-on $\ecE_1$ and two on $\ecE_2$, our amortized prover time
- runs faster than 12 scalar multiplications on typical $\ecE_1$ curves. 
+on $\ecE_1$ and two on $\ecE_2$, our amortised prover time
+runs faster than 12 scalar multiplications on typical $\ecE_1$ curves. 
 We expect the three pairings dominate verifier time, but
- verifiers also need five scalar multiplications on $\ecE_1$.
+verifiers also need five scalar multiplications on $\ecE_1$.
 
-Importantly, our fast ring VRF's amortized prover time now rivals
+Importantly, our fast ring VRF's amortised prover time now rivals
 group signature schemes' performance \cite{group_sig_survey}.
 We hope this ends the temptation to deploy group signature like
- constructions where the deanonymization vectors matter. 
+ constructions where the deanonymisation vectors matter. 
 
 
 \begin{comment}
@@ -51,7 +55,7 @@ We describe a much faster choice \pifast for \piring with
 opaque inputs $x_1 \longeq \sk$ and transparent inputs $y_1 \longeq \comring$
  so that taking
  $\genG \longeq \chi_1$, $\genB \longeq \genB_\gamma$, and $\openpk \longeq b$
-in \PedVRF yields an incredibly fast amortized ring VRF prover.
+in \PedVRF yields an incredibly fast amortised ring VRF prover.
 Also \PedVRF itself proves knowledge of $X' =  \sk\, \chi_1 + b \genB_\gamma $,
  as required by $\SpecialG.\Verify$.
 % $$ X' + Y = \comring\, \Upsilon_1 + \sk\, \chi_1 + b \genB_\gamma $$
@@ -106,7 +110,7 @@ As an aside, one could construct a second faster curve with the same
 group order as $\grE$, which speeds up two scalar multiplications
  in both the prover and verifier. 
 
-Importantly, our fast ring VRF' amortized prover time now rivals
+Importantly, our fast ring VRF's amortised prover time now rivals
 group signature schemes' performance \cite{group_sig_survey,}.
 We hope this ends the temptation to deploy group signature like
  constructions where the deanonymization vectors matter.

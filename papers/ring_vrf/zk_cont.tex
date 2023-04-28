@@ -134,7 +134,8 @@ for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$
 \begin{align*}
 \mathit{Pr}(& A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
                   %& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
-                  &  \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, (\pi, X, \_) \leftarrow \ZKCont.\Reprove (\crs, X', \pi', b', \relone)) =  \\
+                  & \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, \\
+                  & (\pi, X, \_) \leftarrow \ZKCont.\Reprove (\crs, X', \pi', b', \relone)) =  \\
 = \mathit{Pr}(& A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\ 
                      %& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone),\\
                      & \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, (\pi, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone))

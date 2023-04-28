@@ -6,27 +6,27 @@ $$\reltwo'(\pp) = \{(X, \barz, \pp; \barx, b, \baromega_2): \ZKCont.\VerifyCom(\
 \noindent with $\reltwo$ from preamble of Section~\ref{sec:rvrf_cont}. Then we define the system $\nizkR$ for relation $\mathcal{R}$ 
 from the preamble of Section~\ref{sec:rvrf_cont} as:
 \begin{itemize}
-\item $\nizkR.\Setup: (1^{\lambda},\mathcal{R}) \mapsto (\crsR = (\crs,\crstwo), \twR = (\tw, \twtwo), \pp)$ where \\
-$(\crs, \tw, \pp) \leftarrow \ZKCont.\Setup(1^{\lambda}, \relone)$, \\ $(\crstwo, \twtwo) \leftarrow \nizktwo.\Setup: (1^{\lambda}, \reltwo'(\pp))$
+\item $\nizkR.\Setup: (1^{\lambda}) \mapsto (\crsR = (\crs,\crstwo), \twR = (\tw, \twtwo), \pp)$ where
+$(\crs, \tw, \pp) \leftarrow \ZKCont.\Setup(1^{\lambda}, \relone)$, \\ $(\crstwo, \twtwo) \leftarrow \nizktwo.\Setup(1^{\lambda})$
 
 %\item $\nizkR.\Gen: (\crsR) \mapsto (\ppR = \pp, \crspkR = (\crspk,\crspktwo), \crsvkR = (\crsvk,\crsvktwo))$ where 
 %$(\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone)$, \\ $(\crspktwo, \crsvktwo) \leftarrow \nizktwo.\Gen(\crstwo)$ 
 
-\item $\nizkR.\Prove(\crsR,\bary, \barz; \barx, \baromega_1, \baromega_2 ) \mapsto (\pi_1, \pi_2, X)$ where \\
-$(X', \pi'_1, b')\leftarrow \ZKCont.\Preprove:(\crs, \bar{y}, \bar{x}, \baromega_1, \relone)$ \\
-$(X, \pi_1, b) \leftarrow \ZKCont.\Reprove: (\crs, X', \pi_1', b', \relone)$ \\
+\item $\nizkR.\Prove: (\crsR,\bary, \barz; \barx, \baromega_1, \baromega_2 ) \mapsto (\pi_1, \pi_2, X)$ where \\
+$(X', \pi'_1, b')\leftarrow \ZKCont.\Preprove(\crs, \bar{y}, \bar{x}, \baromega_1, \relone)$ \\
+$(X, \pi_1, b) \leftarrow \ZKCont.\Reprove(\crs, X', \pi_1', b', \relone)$ \\
 $ \pi_2 \leftarrow \nizktwo.\Prove(\crstwo, X, \barz; \barx, b, \baromega_2)$ 
 
-\item $\nizkR.\Verify(\crsR,\bary, \barz, \pi_1, \pi_2, X) \mapsto 0/1$ where the output is $1$ iff 
+\item $\nizkR.\Verify: (\crsR,\bary, \barz, \pi_1, \pi_2, X) \mapsto 0/1$ where the output is $1$ iff 
 $$\ZKCont.\Verify(\crs, \bar{y}, X, \pi_1, \relone) = 1 \  \wedge \ \nizktwo.\Verify(\crstwo, X, \barz, \pi_2) =1$$
 
-\item $\nizkR.\Sim(\twR, \bary, \barz) \mapsto (\pi_1, \pi_2, X)$ where \\
-$(\pi_1, X) \leftarrow \ZKCont.\Sim: (\tw, \bary, \relone)$, $\pi_2 \leftarrow \nizktwo.\Sim: (\twtwo, X, \barz)$ 
+\item $\nizkR.\Sim: (\twR, \bary, \barz) \mapsto (\pi_1, \pi_2, X)$ where \\
+$(\pi_1, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone)$, $\pi_2 \leftarrow \nizktwo.\Sim(\twtwo, X, \barz)$ 
  \end{itemize}
  
 \begin{lemma}[Knowledge-soundness for $\nizkR$] 
 \label{le:KS_for_nizkR}
-If $\ZKCont$ is a zk continuation for $\relone$ and $\nizktwo$ is a NIZK for $\reltwo'(\pp)$ 
+If $\ZKCont$ is a zk continuation for $\relone$ and $\nizktwo$ is a NIZK for $\reltwo'(\pp)$ for some appropriately chosen public parameters $\pp$, 
 then the $\nizkR$ construction described above has knowledge-soundness for $\rel$. 
 \end{lemma} 
 \begin{proof}This is easy to infer by linking together the extractors guaranteed for $\ZKCont$ and $\nizktwo$ due to their respective 
@@ -49,7 +49,7 @@ knowledge-soundness.
 
 \begin{lemma}[Special Perfect Completeness] 
 \label{le:specialCompl_for_nizkR}
-If $\ZKCont$ is a zk continuation for $\relone$ and $\nizktwo$ is a NIZK for $\reltwo'(\pp)$ 
+If $\ZKCont$ is a zk continuation for $\relone$ and $\nizktwo$ is a NIZK for $\reltwo'(\pp)$ for some appropriately chosen public parameters $\pp$, 
 then the $\nizkR$ construction described above has special perfect completeness.
 \end{lemma} 
 \begin{proof} This is easy to infer by combining the perfect completeness properties of $\nizktwo$ and perfect completeness 
@@ -91,7 +91,7 @@ for all $\bary,\barx,\barz, \baromega_1, \baromega_2$ with $(\bary, \barx; \baro
 
 \begin{lemma}[ZK after Reusing a $\ZKCont$ Proof] 
 \label{le:specialZK_for_nizkR}
-If $\ZKCont$ is a zk continuation for $\relone$ and $\nizktwo$ is a NIZK for $\reltwo'(\pp)$ 
+If $\ZKCont$ is a zk continuation for $\relone$ and $\nizktwo$ is a NIZK for $\reltwo'(\pp)$ for some appropriately chosen public parameters $\pp$, 
 then the $\nizkR$ construction described above has zero-knowledge after reusing a $\ZKCont$ proof.
 \end{lemma} 
 \begin{proof} The statement follows from the perfect zero-knowledge w.r.t. $\relone$ for $\ZKCont$ and 
@@ -99,7 +99,7 @@ the zero-knowledge property of $\nizktwo$ w.r.t. $\reltwo'(\pp)$ .
 \end{proof}
  
 \begin{corollary}
-If $\ZKCont$ is a zk continuation for $\relone$ and $\nizktwo$ is a NIZK for $\reltwo'(\pp)$ 
+If $\ZKCont$ is a zk continuation for $\relone$ and $\nizktwo$ is a NIZK for $\reltwo'(\pp)$ for some appropriately chosen public parameters $\pp$, 
 then the $\nizkR$ construction described above is a NIZK for $\rel$.
  \end{corollary}
  
