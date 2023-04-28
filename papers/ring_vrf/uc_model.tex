@@ -18,13 +18,18 @@ In this section, we define formally a ring VRF scheme and model its security in 
 	\end{itemize}
 	The following algorithms need an input $ \ring = \set{\pk_1, \pk_2, \ldots, \pk_n}$ that we call ring:
 	\begin{itemize}
-		\item $ \rVRF.\Sign(\sk_i, \ring, \msg, \aux)\rightarrow \sigma$: It is a PPT algorithm and outputs a ring signature  $\sigma $  that signs a message $ \msg \in \{0,1\}^* $ and an associated data $ \aux \in \{0,1\}^*$ with $ \sk_i$ for $ \ring $ where $ \sk_i \in \ring $.
-		\item $ \rVRF.\Verify(\ring,\msg,\aux,\sigma) \rightarrow  (b, y)$: It is a deterministic polynomial time algorithm and outputs  $ b \in \{0,1\} $ and $ y \in\setsym{S}_{eval}\cup \{\perp\} $. $ b =1 $ means verified and $ b = 0 $ means not verified.
+		\item $ \rVRF.\CommitRing(\ring, \pk)  \rightarrow (\comring, \openring)$: It is a PPT algorithm and outputs a commitment of $ \ring $ with the opening $ \openring $ given input  $ \ring $ and $ \pk \in \ring $.
+		\item $ \rVRF.\OpenRing(\comring,\openring) \rightarrow \pk $: It is a PPT algorithm and outputs a public key $ \pk  $ given input $ \comring $ and $ \openring $.
+		\item $ \rVRF.\Sign(\sk_i, \comring,\openring, \msg, \aux)\rightarrow \sigma$: It is a PPT algorithm and outputs a ring signature  $\sigma $  that signs a message $ \msg \in \{0,1\}^* $ and an associated data $ \aux \in \{0,1\}^*$ with $ \sk_i$ for $ \comring $ if .
+		\item $ \rVRF.\Verify(\comring,\msg,\aux,\sigma) \rightarrow  (b, y)$: It is a deterministic polynomial time algorithm and outputs  $ b \in \{0,1\} $ and $ y \in\setsym{S}_{eval}\cup \{\perp\} $. $ b =1 $ means verified and $ b = 0 $ means not verified.
 	\end{itemize}
 	We note that  all algorithms above have $ pp $ as part of their input even if we do not always explicitly write it.
 \end{definition}
 
-The security properties that we want to achieve in a ring VRF scheme are informally as follows: \emph{correctness} meaning that if an honest signer outputs $ \sigma $ by running $ \rVRF.\Sign(\sk_i, \ring, \msg, \aux) $, then  $ \rVRF.\Verify(\ring,\msg,\aux,\sigma)  $ must output $ b =1 $ and $ y $ which is equal to $ \rVRF.\Eval(\sk_i, \msg) $, \emph{randomness} meaning that an evaluation value is random and independent from the message and the public key, \emph{determinism} meaning that $ \rVRF.\Eval $ is deterministic, \emph{anonymity} meaning that $ \rVRF.\Sign $ does not give any information about its signer, \emph{unforgeability} meaning that an adversary should not forge a ring signature and \emph{uniqueness} meaning that number of verified evaluation values should not be more than the number of the keys in the ring.
+
+We note that $ \rVRF.\CommitRing $ and $  \rVRF.\OpenRing $ are optional algorithms of a ring VRF scheme. If they are not defined, we should let $ \comring = \ring $ and $ \openring  = \perp$. $ \rVRF.\CommitRing $ and $  \rVRF.\OpenRing $ are functional for a succinct verification process in case of having large set of ring.
+
+The security properties that we want to achieve in a ring VRF scheme are informally as follows: \emph{correctness} meaning that when an honest signer with key $ (\sk_i,\pk_i) $ outputs $ \sigma $ by running $ \rVRF.\Sign(\sk_i, \comring,\openring, \msg, \aux) $, $ \rVRF.\Verify(\comring,\msg,\aux,\sigma)  $ must output $ b =1 $ and $ y $ which is equal to $ \rVRF.\Eval(\sk_i, \msg) $ if and only if $ \rVRF.\OpenRing(\comring,\openring) \rightarrow \pk_i \in \ring$, \emph{randomness} meaning that an evaluation value is random and independent from the message and the public key, \emph{determinism} meaning that $ \rVRF.\Eval $ is deterministic, \emph{anonymity} meaning that $ \rVRF.\Sign $ does not give any information about its signer, \emph{unforgeability} meaning that an adversary should not forge a ring signature and \emph{uniqueness} meaning that number of verified evaluation values should not be more than the number of the keys in the ring.
 
 
 We could define all these security properties formally in the standard model but this might cause the composability issues when the ring VRF protocol composed with other protocols. Considering the applications of ring VRF protocol, we want to achieve stronger security guarantees in different environments. Therefore, we define the security of a ring VRF scheme in the UC model in Section \ref{subsec:uc_model}. 
