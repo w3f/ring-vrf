@@ -11,7 +11,7 @@ use crate::bls12_381::*;
 
 #[test]
 fn single() {
-    let mut sk = SecretKey::ephemeral();
+    let sk = SecretKey::ephemeral();
 
     let mut buf = Vec::new();
     let pk0 = sk.create_nugget_public();
@@ -40,10 +40,10 @@ fn single() {
 fn aggregation() {
     let domain = b"";
     let message = b"MSG";
-    let mut sks: Vec<SecretKey> = (0..2).map(|_| SecretKey::ephemeral()).collect();
-    let pks: Vec<AggregationKey> = sks.iter_mut().map(|sk| sk.create_nugget_public()).collect();
+    let sks: Vec<SecretKey> = (0..2).map(|_| SecretKey::ephemeral()).collect();
+    let pks: Vec<AggregationKey> = sks.iter().map(|sk| sk.create_nugget_public()).collect();
     let mut g1pks0 = Vec::new();
-    let sigs: Vec<Signature> = sks.iter_mut().map(|sk| {
+    let sigs: Vec<Signature> = sks.iter().map(|sk| {
         g1pks0.push(sk.to_g1_publickey());
         let mut t = Transcript::new(b"AD");
         t.append(&sk.to_g1_publickey());

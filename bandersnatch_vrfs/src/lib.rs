@@ -107,8 +107,9 @@ impl SecretKey {
     /// Generate an ephemeral `SecretKey` with system randomness.
     #[cfg(feature = "getrandom")]
     pub fn ephemeral() -> Self {
+        use rand_core::{RngCore,OsRng};
         let mut seed: [u8; 32] = [0u8; 32];
-        rand_core::OsRng.fill_bytes(&mut seed);
+        OsRng.fill_bytes(&mut seed);
         SecretKey::from_seed(&seed)
     }
 
@@ -117,7 +118,7 @@ impl SecretKey {
     }
 
     pub fn sign_thin_vrf<const N: usize>(
-        &mut self,
+        &self,
         t: impl IntoTranscript,
         ios: &[VrfInOut]
     ) -> ThinVrfSignature<N>
@@ -129,14 +130,14 @@ impl SecretKey {
     }
 
     pub fn sign_ring_vrf<const N: usize>(
-        &mut self,
+        &self,
         t: impl IntoTranscript,
         ios: &[VrfInOut],
         // ring_prover: &RingProver
     ) -> RingVrfSignature<N>
     {
         assert_eq!(ios.len(), N);
-        let (signature,secret_blinding) = pedersen_vrf().sign_pedersen_vrf(t, ios, None, &mut self.0);
+        let (signature,secret_blinding) = pedersen_vrf().sign_pedersen_vrf(t, ios, None, &self.0);
         let preoutputs = vrf::collect_preoutputs_array(ios);
         let ring_proof = (); // ring_prove(ring_prover,secret_blinding);
         RingVrfSignature { preoutputs, signature, ring_proof, }

@@ -3,22 +3,22 @@
 //! ### VRF keys
 
 
-use core::ops::{Add,AddAssign,Mul};
+use rand_core::{RngCore}; // CryptoRng
+use zeroize::Zeroize;
 
 use ark_std::{vec::Vec, io::{Read, Write}};
 // #[cfg(debug_assertions)]
 // use ark_std::{boxed::Box, sync::Mutex};
 
-use ark_ff::fields::{PrimeField}; // Field
-use ark_ec::{AffineRepr, Group}; // CurveGroup
+use ark_ec::{AffineRepr}; // Group, CurveGroup
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 
-// use subtle::{Choice,ConstantTimeEq};
-use rand_core::{RngCore,CryptoRng};
+use ark_secret_scalar::SecretScalar;
 
-use zeroize::Zeroize;
-
-use crate::{ThinVrf, transcript::{self, digest::{Update,XofReader}}};
+use crate::{
+    ThinVrf,
+    transcript::digest::{Update,XofReader},
+};
 
 
 /// Public key
@@ -62,111 +62,6 @@ impl<C: AffineRepr> PublicKey<C> {
 
     pub fn deserialize<R: Read>(reader: R) -> Result<Self, SerializationError> {
         Self::deserialize_compressed(reader)
-    }
-}
-
-
-struct Rng2Xof<R: RngCore+CryptoRng>(R);
-impl<R: RngCore+CryptoRng> XofReader for Rng2Xof<R> {
-    fn read(&mut self, dest: &mut [u8]) {
-        self.0.fill_bytes(dest);
-    }
-}
-
-/// Secret scalar split into the sum of two scalars, which randomly mutate.
-/// Incurs 2x penalty in scalar multiplications, but provides side channel defenses.
-/// 
-/// We split additively right now, but would a multiplicative splitting help
-/// against rowhammer attacks on the secret key?
-#[derive(PartialEq,Eq)] // Copy, CanonicalSerialize,CanonicalDeserialize, Hash, 
-#[repr(transparent)]
-pub struct SecretScalar<F: PrimeField>([F; 2]);
-
-impl<F: PrimeField> Clone for SecretScalar<F> {
-    fn clone(&self) -> SecretScalar<F> {
-        let mut n = SecretScalar(self.0.clone());
-        n.resplit();
-        n
-    }
-}
-
-impl<F: PrimeField> Zeroize for SecretScalar<F> { 
-    fn zeroize(&mut self) { self.0.zeroize(); }
-}
-impl<F: PrimeField> Drop for SecretScalar<F> {
-    fn drop(&mut self) { self.zeroize() }
-}
-
-impl<F: PrimeField> SecretScalar<F> {
-    /// Initialize and unbiased `SecretScalar` from a `XofReaader`.
-    pub fn from_xof<R: XofReader>(xof: &mut R) -> Self {
-        // It's kinda obnoxious that arkworks uses rand here, not just rand_core.
-        SecretScalar([
-            transcript::xof_read_reduced(&mut *xof),
-            transcript::xof_read_reduced(&mut *xof),
-        ])
-    }
-
-    pub fn resplit(&mut self) {
-        let mut xof = Rng2Xof(getrandom_or_panic());
-        let x = transcript::xof_read_reduced(&mut xof);
-        self.0[0] += &x;
-        self.0[1] -= &x;
-    }
-
-    /// Multiply by a scalar.
-    pub fn mul_by_challenge(&mut self, rhs: &F) -> F {
-        let o = (self.0[0] * rhs) + (self.0[1] * rhs);
-        self.resplit();
-        o
-    }
-
-    /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
-    /// but ark_ec being our dependency requires left multiplication here.
-    fn mul_action<G: Group<ScalarField=F>>(&self, x: &mut G) {
-        let mut y = x.clone();
-        *x *= self.0[0];
-        y *= self.0[1];
-        *x += y;
-    }
-}
-
-impl<F: PrimeField> AddAssign<&SecretScalar<F>> for SecretScalar<F> {
-    fn add_assign(&mut self, rhs: &SecretScalar<F>) {
-        self.0[0] += rhs.0[0];
-        self.0[1] += rhs.0[1];
-    }
-}
-impl<F: PrimeField> Add<&SecretScalar<F>> for &SecretScalar<F> {
-    type Output = SecretScalar<F>;
-    fn add(self, rhs: &SecretScalar<F>) -> SecretScalar<F> {
-        let mut lhs = self.clone();
-        lhs += rhs;
-        lhs
-    }
-}
-/*
-impl<G: Group> Mul<&G> for &SecretScalar<<G as Group>::ScalarField> {
-    type Output = G;
-    /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
-    /// but ark_ec being our dependency requires left multiplication here.
-    fn mul(self, rhs: &G) -> G {
-        let mut rhs = rhs.clone();
-        self.mul_action(&mut rhs);
-        rhs
-    }
-}
-*/
-impl<C: AffineRepr> Mul<&C> for &mut SecretScalar<<C as AffineRepr>::ScalarField> {
-    type Output = <C as AffineRepr>::Group;
-    /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
-    /// but ark_ec being our dependency requires left multiplication here.
-    fn mul(self, rhs: &C) -> Self::Output {
-        let o = rhs.mul(self.0[0]) + rhs.mul(self.0[1]);
-        use ark_ec::CurveGroup;
-        debug_assert_eq!(o.into_affine(), { let mut t = rhs.into_group(); self.mul_action(&mut t); t }.into_affine() );
-        self.resplit();
-        o
     }
 }
 
@@ -308,7 +203,7 @@ impl<K: AffineRepr> SecretKey<K> {
         //         return t.witness(rng.deref_mut());
         //     }
         // }
-        t.witness(&mut getrandom_or_panic())
+        t.witness(&mut ark_secret_scalar::getrandom_or_panic())
     }
 
 /*
@@ -339,30 +234,3 @@ impl<K: AffineRepr> SecretKey<K> {
 */
 }
 
-
-/// Returns `OsRng` with `getrandom`, or a `CryptoRng` which panics without `getrandom`.
-#[cfg(feature = "getrandom")] 
-pub fn getrandom_or_panic() -> impl RngCore+CryptoRng {
-    rand_core::OsRng
-}
-
-/// Returns `OsRng` with `getrandom`, or a `CryptoRng` which panics without `getrandom`.
-#[cfg(not(feature = "getrandom"))]
-pub fn getrandom_or_panic() -> impl RngCore+CryptoRng {
-    const PRM: &'static str = "Attempted to use functionality that requires system randomness!!";
-
-    // Should we panic when invoked or when used?
-
-    struct PanicRng;
-    impl rand_core::RngCore for PanicRng {
-        fn next_u32(&mut self) -> u32 {  panic!("{}", PRM)  }
-        fn next_u64(&mut self) -> u64 {  panic!("{}", PRM)  }
-        fn fill_bytes(&mut self, _dest: &mut [u8]) {  panic!("{}", PRM)  }
-        fn try_fill_bytes(&mut self, _dest: &mut [u8]) -> Result<(), rand_core::Error> {
-            Err(core::num::NonZeroU32::new(core::u32::MAX).unwrap().into())
-        }
-    }
-    impl rand_core::CryptoRng for PanicRng {}
-
-    PanicRng
-}

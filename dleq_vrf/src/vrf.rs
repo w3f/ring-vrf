@@ -87,10 +87,10 @@ pub struct VrfInput<C: AffineRepr>(pub C);
 
 impl<K: AffineRepr> SecretKey<K> {
     /// Compute VRF pre-output from secret key and input.
-    pub fn vrf_preout<H>(&mut self, input: &VrfInput<H>) -> VrfPreOut<H> 
+    pub fn vrf_preout<H>(&self, input: &VrfInput<H>) -> VrfPreOut<H> 
     where H: AffineRepr<ScalarField = K::ScalarField>,
     {
-        VrfPreOut( (&mut self.key * &input.0).into_affine() )
+        VrfPreOut( (&self.key * &input.0).into_affine() )
     }
 
     /// Compute VRF pre-output paired with input from secret key and
@@ -100,7 +100,7 @@ impl<K: AffineRepr> SecretKey<K> {
     /// we employ arkworks' simpler `UniformRand` here, which uses
     /// shitty try and increment.  We strongly recommend you use a
     /// better hash-to-curve manually.
-    pub fn vrf_inout<I,H>(&mut self, input: I) -> VrfInOut<H>
+    pub fn vrf_inout<I,H>(&self, input: I) -> VrfInOut<H>
     where I: IntoVrfInput<H>, H: AffineRepr<ScalarField = K::ScalarField>,
     {
         let input = input.into_vrf_input();

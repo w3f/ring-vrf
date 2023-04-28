@@ -1,0 +1,40 @@
+[package]
+name = "ark-secret-scalar"
+description = "Secret scalars for non-constant-time fields and curves"
+authors = ["Jeff Burdges <jeff@web3.foundation>"]
+version = "0.0.2"
+repository = "https://github.com/w3f/ring-vrf/tree/master/ark-secret-scalar"
+edition = "2021"
+license = "MIT/Apache-2.0"
+keywords = ["crypto", "cryptography", "vrf", "signature", "proof", "zkp", "privacy"]
+
+
+[dependencies]
+rand_core.workspace = true
+
+# TODO:  Add a std feature which activates thread_rng
+# rand = { version = "0.8", default-features = false }
+
+digest.workspace = true
+zeroize.workspace = true
+
+ark-std.workspace = true
+ark-ff.workspace = true
+ark-ec.workspace = true
+ark-serialize.workspace = true
+
+ark-transcript = { version = "0.0.2", default-features = false, path = "../ark-transcript" }
+
+
+[dev-dependencies]
+
+# TODO:  Tests
+# ark-bls12-377 = { version = "0.4", default-features = false, features = [ "curve" ] }
+
+
+[features]
+default = ["getrandom"]  # "std"
+getrandom = ["rand_core/getrandom"]
+
+
+

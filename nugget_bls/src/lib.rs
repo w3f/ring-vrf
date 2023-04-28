@@ -4,12 +4,11 @@
 #![deny(unsafe_code)]
 #![doc = include_str!("../README.md")]
 
-use rand_core::{CryptoRng, RngCore};
 use zeroize::Zeroize;
 
 use ark_std::{
     borrow::{Borrow,BorrowMut}, 
-    io::{Read, Write},
+    // io::{Read, Write},
     hash::Hasher, vec::Vec, Zero,
 };
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};  // SerializationError
@@ -96,27 +95,28 @@ impl<P: Pairing> SecretKey<P> {
     /// Generate an ephemeral `SecretKey` with system randomness.
     #[cfg(feature = "getrandom")]
     pub fn ephemeral() -> Self {
+        use rand_core::{RngCore,OsRng};
         let mut seed: [u8; 32] = [0u8; 32];
-        rand_core::OsRng.fill_bytes(&mut seed);
+        OsRng.fill_bytes(&mut seed);
         SecretKey::from_seed(&seed)
     }
 
-    pub fn create_public_cert(&mut self, t: impl IntoTranscript) -> AggregationKey<P> {
+    pub fn create_public_cert(&self, t: impl IntoTranscript) -> AggregationKey<P> {
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
         t.label(b"NuggetPublic");
         let pedersen = pedersen_vrf::<P>();
         let g2_io = self.0.vrf_inout(pk_in::<P>());
         let g2 = g2_io.preoutput.clone();
-        let sig = pedersen.sign_non_batchable_pedersen_vrf(t, &[g2_io], None, &mut self.0).0;
+        let sig = pedersen.sign_non_batchable_pedersen_vrf(t, &[g2_io], None, &self.0).0;
         AggregationKey { g2, sig, } // g1: self.as_publickey().clone(),
     }
 
-    pub fn create_nugget_public(&mut self) -> AggregationKey<P> {
+    pub fn create_nugget_public(&self) -> AggregationKey<P> {
         self.create_public_cert(b"")
     }
 
-    pub fn sign_nugget_bls<M>(&mut self, t: impl IntoTranscript, input: M) -> Signature<P> 
+    pub fn sign_nugget_bls<M>(&self, t: impl IntoTranscript, input: M) -> Signature<P> 
     where M: IntoVrfInput<<P as Pairing>::G1Affine>,
     {
         let mut t = t.into_transcript();
