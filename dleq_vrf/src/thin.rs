@@ -11,7 +11,7 @@ use ark_ec::{AffineRepr, CurveGroup};
 use crate::{
     Transcript, IntoTranscript,
     flavor::{Flavor, InnerFlavor, Witness, Signature},
-    keys::{PublicKey, SecretKey, SecretScalar},
+    keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut},
 };
@@ -79,7 +79,7 @@ impl<K: AffineRepr> SecretKey<K> {
     /// Sign thin VRF signature
     /// 
     /// If `ios = &[]` this reduces to a Schnorr signature.
-    pub fn sign_thin_vrf(&mut self, t: impl IntoTranscript, ios: &[VrfInOut<K>]) -> Signature<ThinVrf<K>>
+    pub fn sign_thin_vrf(&self, t: impl IntoTranscript, ios: &[VrfInOut<K>]) -> Signature<ThinVrf<K>>
     {
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
@@ -95,7 +95,7 @@ impl<K: AffineRepr> Witness<ThinVrf<K>> {
     /// 
     /// Assumes we already hashed public key, `VrfInOut`s, etc.
     pub(crate) fn sign_final(
-        self, t: &mut Transcript, secret: &mut SecretKey<K>
+        self, t: &mut Transcript, secret: &SecretKey<K>
     ) -> Signature<ThinVrf<K>> {
         let Witness { r, k } = self;
         t.label(b"Thin R");
@@ -128,7 +128,10 @@ impl<C: AffineRepr> Valid for Signature<ThinVrf<C>> {
 */
 
 impl<K: AffineRepr> ThinVrf<K> {
-    pub(crate) fn make_public(&self, secret: &mut SecretScalar<<K as AffineRepr>::ScalarField>) -> PublicKey<K> {
+    pub(crate) fn make_public(
+        &self,
+        secret: &ark_secret_scalar::SecretScalar<<K as AffineRepr>::ScalarField>
+    ) -> PublicKey<K> {
         // #[cfg(feature = "getrandom")]
         let p = secret * self.keying_base();
         // #[cfg(not(feature = "getrandom"))]

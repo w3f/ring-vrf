@@ -34,7 +34,7 @@ fn master() {
     let flavor = pedersen_vrf_test_flavor();
     let mut sk = SecretKey::ephemeral((*flavor).clone());
 
-    let mut mk_io = |n: u32| {
+    let mk_io = |n: u32| {
         let input = vrf::ark_hash_to_curve::<K,H2C>(b"VrfIO",&n.to_le_bytes()[..]).unwrap();
         sk.vrf_inout(input)
     };

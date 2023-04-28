@@ -4,6 +4,7 @@ repository = "https://github.com/w3f/ring-vrf/"
 
 [workspace]
 members = [
+    "ark-secret-scalar",
     "ark-transcript",
     "dleq_vrf",
     "nugget_bls",
@@ -17,6 +18,10 @@ members = [
 [workspace.dependencies]
 
 rand_core = { version = "0.6", default-features = false }
+digest = { version = "0.10", default-features = false }
+# sha2 = { version = "0.10", default-features = false }
+# sha3 = { version = "0.10", default-features = false }
+zeroize = { version = "1.0", default-features = false, features = [ "zeroize_derive" ] }
 
 ark-std = { version = "0.4", default-features = false }
 ark-ff = { version = "0.4", default-features = false }
@@ -24,7 +29,3 @@ ark-ec = { version = "0.4", default-features = false }
 ark-serialize = { version = "0.4", default-features = false, features = [ "derive" ] }
 # ark-serialize-derive = { version = "0.4", default-features = false }
 
-zeroize = { version = "1.0", default-features = false, features = [ "zeroize_derive" ] }
-
-# sha2 = { version = "0.10", default-features = false }
-# sha3 = { version = "0.10", default-features = false }

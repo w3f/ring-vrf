@@ -225,7 +225,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         t: impl IntoTranscript,
         ios: &[VrfInOut<H>],
         secret_blinding: Option<SecretBlinding<K,B>>,
-        secret: &mut SecretKey<K>,
+        secret: &SecretKey<K>,
     ) -> (Signature<PedersenVrf<K,H,B>>, SecretBlinding<K,B>)
     {
         let flavor = self;
@@ -265,7 +265,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         t: impl IntoTranscript,
         ios: &[VrfInOut<H>],
         secret_blinding: Option<SecretBlinding<K,B>>,
-        secret: &mut SecretKey<K>,
+        secret: &SecretKey<K>,
     ) -> (NonBatchableSignature<PedersenVrf<K,H,B>>, SecretBlinding<K,B>)
     {
         let flavor = self;
@@ -297,7 +297,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         self,
         t: &mut Transcript,
         secret_blindings: &SecretBlinding<K,B>,
-        secret: &mut SecretKey<K>,
+        secret: &SecretKey<K>,
         compk: KeyCommitment<K>,
     ) -> (Signature<PedersenVrf<K,H,B>>,NonBatchableSignature<PedersenVrf<K,H,B>>) {
         let Witness { r, k } = self;

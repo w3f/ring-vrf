@@ -21,7 +21,9 @@ ark-ff.workspace = true
 ark-ec.workspace = true
 ark-serialize.workspace = true
 
+ark-secret-scalar = { version = "0.0.2", default-features = false, path = "../ark-secret-scalar" }
 ark-transcript = { version = "0.0.2", default-features = false, path = "../ark-transcript" }
+
 
 
 [dev-dependencies]
@@ -33,7 +35,7 @@ ark-bls12-377 = { version = "0.4", default-features = false, features = [ "curve
 
 [features]
 default = ["getrandom"]  #  "std", "rand"
-getrandom = ["rand_core/getrandom"]  #  "ark_transcript/getrandom"
+getrandom = ["rand_core/getrandom", "ark-secret-scalar/getrandom"]  #  "ark_transcript/getrandom"
 
 
 
