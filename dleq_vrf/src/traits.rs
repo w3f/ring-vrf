@@ -33,7 +33,8 @@ type VrfResult<T> = Result<T,&'static str>
 pub trait EcVrf {
     /// Target group for hash-to-curve
     type H: AffineRepr;
-    /// Actual detached signature aka proof type created by the VRF
+
+    /// Detached signature aka proof type created by the VRF
     type VrfProof: Debug,Clone,PartialEq,Eq,Hash,CanonicalSerialize,CanonicalDeserialize;
 }
 
@@ -68,7 +69,7 @@ pub trait EcVrfVerifier: EcVrf {
     fn vrf_verify<const N: usize>(
         &self,
         t: impl IntoTranscript,
-        inputs: impl IntoIterator<Item = impl IntoVrfInput>,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<Self::H>>,
         signature: &VrfSignature<V,N>,
     ) -> VrfResult<[VrfInOut<Self>; N]>
     {
@@ -83,7 +84,7 @@ pub trait EcVrfVerifier: EcVrf {
     fn vrf_verify_vec(
         &self,
         t: impl IntoTranscript,
-        inputs: impl IntoIterator<Item = impl IntoVrfInput>,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<Self::H>>,
         signature: &VrfSignatureVec<V>,
     ) -> VrfResult<Vec<VrfInOut<Self>>>
     {
@@ -99,13 +100,17 @@ pub trait EcVrfVerifier: EcVrf {
 /// 
 /// Inherent methods and other traits being used here:
 /// `vrf::{IntoVrfInput, VrfInOut}`
-pub trait EcVrfSecret: EcVrf {
+/// 
+/// We support multiple pre-output curves for the same secret key
+/// vai this formulation, which maybe overkill for polkadot, but
+/// makes some sense.
+pub trait EcVrfSecret<V: EcVrf> {
     /// Create an `InputOutput` for usage both in signing as well as
     /// in protocol buisness logic.
     /// 
     /// Always a thin wrapper around `SecretKey::vrf_inout` defined in
     /// the `dleq_vrf::vrf`, but our secret key remains abstract here.
-    fn vrf_inout(&self, input: impl IntoVrfInput) -> VrfInOut<Self>;
+    fn vrf_inout(&self, input: impl IntoVrfInput<<V as EcVrf>::H>) -> VrfInOut<V>;
 }
 
 /// VRF signer, includes the secret key, but sometimes the ring opening too.
@@ -120,17 +125,19 @@ pub trait EcVrfSecret: EcVrf {
 /// 
 /// Inherent methods and other traits being used here:
 /// `IntoTranscript`, `vrf::{VrfInOut, VrfPreOut}`
-pub trait EcVrfSigner: EcVrfSecret {
+pub trait EcVrfSigner: EcVrf+Deref<Target=Secret> {
+    type Secret: EcVrfSecret<Self>;
+
     fn vrf_sign_detached(
         &self,
         t: impl IntoTranscript,
-        ios: &[VrfInOut<K>]
+        ios: &[VrfInOut<Self>]
     ) -> VrfResult<<Self as EcVrf>::VrfProof>;
 
     fn vrf_sign<const N: usize>(
         &self,
         t: impl IntoTranscript,
-        ios: &[VrfInOut<K>; N]
+        ios: &[VrfInOut<Self>; N]
     ) -> VrfResult<VrfSignature<Self,N>>
     {
         let proof = self.vrf_sign_detached(t,ios) ?;
@@ -141,7 +148,7 @@ pub trait EcVrfSigner: EcVrfSecret {
     fn vrf_sign_vec(
         &self,
         t: impl IntoTranscript,
-        ios: &[VrfInOut<K>]
+        ios: &[VrfInOut<Self>]
     ) -> VrfResult<VrfSignatureVec<Self>>
     {
         let proof = self.vrf_sign_detached(t,ios) ?;
