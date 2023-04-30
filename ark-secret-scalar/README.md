@@ -5,7 +5,7 @@ mutate but retain the same sum.   Incurs 2x penalty in scalar
 multiplications, but provides side channel defenses.
  
 We support `&self` recievers throughout, like typical secret keys do.
-We choose non-thread-safe interior mutability vis `UnsafeCell` which
+We choose non-thread-safe interior mutability via `UnsafeCell` which
 avoids atomics, but makes `SecretScalar` only `Send` but `!Sync`.
 
 As `Mutex<T: Send>: Send+Sync`, one should prefer `Mutex<SecretKey>`
