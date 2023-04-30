@@ -18,8 +18,8 @@ Similar to VRF \cite{vrf_micali}, a ring VRF construction needs:
 %Our \rVRF.\KeyGen and \rVRF.\Eval initially resemble EC VRFs like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}.
 % In other words,
 % internally we prove a VUF output $\PreOut = \sk H_{\grE}(\msg)$,
-% with a hash-to-curve $H_{\grE}$, so then applying a PRF $H'$ yields a
-% VRF output $\Out = H'(\msg, h \PreOut)$ ala \cite[Prop. 1]{vrf_micali},
+% with a hash-to-curve $H_{\grE}$, so then applying a PRF $\Hout$ yields a
+% VRF output $\Out = \Hout(\msg, h \PreOut)$ ala \cite[Prop. 1]{vrf_micali},
 % using a key pair like $\pk = \sk \genG$ for a generator $\genG$.
 
 %We demand pseudo-randomness properties from \Eval, which could mirror

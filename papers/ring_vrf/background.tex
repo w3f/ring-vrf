@@ -22,7 +22,7 @@ We obey mathematical and cryptographic implementation convention by
 adopting additive notation for elliptic curve and multiplicative notation
 for elliptic curve scalar multiplications and pairing target groups.
 
-All object implicitly depend a security parameter \secparam.
+All objects implicitly depend a security parameter \secparam.
 All protocols therefore have an implicit parameter generation algorithm,
 which output their hash functions, elliptic curves, and
  some independent base points on the elliptic curves.
@@ -38,15 +38,15 @@ We avoid pairing unfriendly assumptions like DDH of course, but really
 we employ the algebraic group model (AGM) throughout.
 
 We sweep cofactor concerns under the rug when discussing Groth16,
-where our pairings demand deserialization prove group membership in $\grE_1$
-or $\grE_2$.  We explicitly multiply by the effective cofactor $h$ when
-doing Chaum-Pedersen DLEQ proofs though, as not doing so risks miss-reading
-by implementers.  Yet, this becomes redundant if deserialization proves
-group membership, meaning $h=1$.
+where pairings libraries have traditionally enforced group membership in
+$\grE_1$ or $\grE_2$ during deserialization.  We explicitly multiply by the
+effective cofactor $h$ when doing Chaum-Pedersen DLEQ proofs though, as not
+doing so risks miss-reading by implementers.  Yet, this becomes redundant
+if deserialization proves group membership, meaning $h=1$.
 
 We also let $\ecJ$ denote a ZCash Sapling style ``JubJub'' Edwards curve
-over $\F_p$, with distinguished subgroup $\grJ$ of prime order $p_\grJ$, so that
-SNARKs on $\ecE$ prove $\grJ$ arithmetic relatively cheaply.
+over $\F_p$, with a distinguished subgroup $\grJ$ of prime order $p_\grJ$,
+so that SNARKs on $\ecE$ prove $\grJ$ arithmetic relatively cheaply.
 Aside from Jubjub, we optionally want a ``sister'' Edwards curve $\ecEsis$,
 with a subgroup $\grE$ of the same order $p$ as $\grE_1$,
  but which lacks any pairing.
@@ -54,9 +54,9 @@ with a subgroup $\grE$ of the same order $p$ as $\grE_1$,
 We let $H_p : \{0,1\}^* \to \F_p$ and $H_{\grEsis} : \{0,1\}^* \to \grEsis$
 denote a hash-to-scalar and a hash-to-curve  with ranges
 $\F_p$ and $\grEsis$, respectively, always modeled as random oracles.  
-We only ever hash-to-$\ecEsis$ because hash-to-$\grE_1$ create a miss-use
-footgun for an anonymity protocol.  Also hash-to-$\ecEsis$ is faster.
-We let $H'$ denote the hash to the VRF output space, usually
+We only ever hash-to-$\ecEsis$ because hash-to-$\grE_1$ creates a miss-use
+footgun for for privacy.  Also hash-to-$\ecEsis$ is faster.
+We let $\Hout$ denote the hash to the VRF output space, usually
  a key derivation function plus a stream cipher, also modeled as a random oracle.
 
 All our security proofs ignore these underlying elliptic curve concerns,
