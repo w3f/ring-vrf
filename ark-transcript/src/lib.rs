@@ -81,19 +81,13 @@ impl<T: Borrow<[u8]>> IntoTranscript for IsLabel<T> {
 impl<'a> IntoTranscript for &'a [u8] {
     type Taken = Transcript;
     fn into_transcript(self) -> Transcript {
-        let mut t = Transcript::default();
-        t.write_bytes(self);
-        t.seperate();
-        t
+        Transcript::from_accumulation(self);
     }
 }
 impl<'a, const N: usize> IntoTranscript for &'a [u8; N] {
     type Taken = Transcript;
     fn into_transcript(self) -> Transcript {
-        let mut t = Transcript::default();
-        t.write_bytes(self);
-        t.seperate();
-        t
+        Transcript::from_accumulation(self);
     }
 }
 
@@ -204,12 +198,12 @@ impl Transcript {
     /// 
     /// We implicitly have an initial zero length user data write
     /// preceeding this first label.
-    pub fn new(label: impl AsLabel) -> Transcript {
+    pub fn new_labeled(label: impl AsLabel) -> Transcript {
         let mut t = Transcript::new_blank();
         t.label(label);
         t
     }
-
+    
     /// Create an empty `Transcript` in bytes accumulation mode.
     /// 
     /// You cannot create `Reader`s in accumulation mode, but 

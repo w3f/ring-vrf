@@ -15,10 +15,10 @@ fn transcript_v_witnesses() {
     let witness1 = b"witness data 1";
     let witness2 = b"witness data 2";
 
-    let mut t1 = Transcript::new(protocol_label);
-    let mut t2 = Transcript::new(protocol_label);
-    let mut t3 = Transcript::new(protocol_label);
-    let mut t4 = Transcript::new(protocol_label);
+    let mut t1 = Transcript::new_labeled(protocol_label);
+    let mut t2 = Transcript::new_labeled(protocol_label);
+    let mut t3 = Transcript::new_labeled(protocol_label);
+    let mut t4 = Transcript::new_labeled(protocol_label);
 
     t1.write_bytes(commitment1);
     t2.write_bytes(commitment2);
@@ -83,7 +83,7 @@ fn transcript_v_witnesses() {
 fn accumulation() {
     let protocol_label = b"test collisions";
 
-    let mut t1 = Transcript::new(protocol_label);
+    let mut t1 = Transcript::new_labeled(protocol_label);
     let mut t2 = Transcript::new_blank_accumulator();
     t2.label(protocol_label);
 
