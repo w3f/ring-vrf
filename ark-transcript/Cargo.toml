@@ -12,6 +12,7 @@ keywords = ["crypto", "cryptography", "sha3", "shake", "hash", "signature", "pro
 [dependencies]
 
 rand_core.workspace = true
+digest.workspace = true
 sha3 = { version = "0.10", default-features = false }
 
 ark-std.workspace = true

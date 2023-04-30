@@ -21,7 +21,8 @@ use ark_ff::{Field,PrimeField};
 
 use rand_core::{RngCore,CryptoRng};
 
-pub use sha3::{Shake128, digest};
+pub use sha3::{Shake128};
+pub use digest;
 use digest::{Update,XofReader,ExtendableOutput};
 
 #[cfg(test)]
