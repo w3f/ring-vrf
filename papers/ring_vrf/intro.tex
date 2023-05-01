@@ -74,14 +74,14 @@ individual VRF evaluations.
 
 Rerandomizable zkSNARKs like Groth16 \cite{Groth16} admit a
 transformation of a valid proof into another valid but unlinkable
-proof of the exact same statement.  In practice, rerandomization
-never gets deployed because the public inputs link different usages,
-breaking privacy.
+proof of the exact same statement.  However, in practice, rerandomization
+never gets deployed because the public inputs without further processing actually 
+link different usages, thus breaking privacy.
 
 We demonstrate in \S\ref{sec:rvrf_cont} a simple transformation of
 any Groth16 zkSNARK into a {\it zero-knowledge continuation} whose
-public inputs involve opaque Pedersen commitments, with cheaply
-rerandomizable blinding factors and proofs.
+public inputs involve opaque Pedersen commitments (i.e., hiding commitments), with cheaply
+rerandomizable blinding factors and cheaply rerandomizable proofs.
 These zero-knowledge continuations then prove validity of the contents
 of Pedersen commitments, but can now be reused arbitrarily many times,
 without linking the usages.
@@ -126,8 +126,8 @@ users being Sybil unless they first reveal numerous attributes.
 Attribute based credentials therefore provide little or no privacy
 when used to prevent abuse.
 
-Abuse and Sybil prevention is not merely the most common use cases for
-anonymous credentials, but in fact define the ``general'' use cases for
+Abuse and Sybil prevention are not merely the most common use cases for
+anonymous credentials, but in fact they define the ``general'' use cases for
 anonymous credentials.
 IRMA might improve privacy when used as ``special purpose'' credential 
 in narrower situations of course, but overall attribute based credentials
@@ -139,7 +139,7 @@ privacy and human rights than adopting online processes like IRMA.
 %
 In particular, there are many proposals by the W3C for attribute based
 credential usage in \cite{w3c_vc_use_cases}, but broadly speaking they
-all bring matching harmful uses.  % https://www.w3.org/TR/vc-use-cases/
+all bring matching harmful uses, as motivated below.  % https://www.w3.org/TR/vc-use-cases/
 
 As an example, the W3C wants users to be able to easily prove their
 employment status, ostensibly so users could open bank accounts purely
@@ -221,14 +221,17 @@ This reduces complexity, simplifies scaling, and increases flexibility.
 In particular, if governments issue ration cards based upon ring VRFs
 then these credentials could safely support other use cases, like
 free tiers in online services or games, and advertiser promotions,
-as well as identity applications like prevention of spam and online abuse.
+as well as identity applications like prevention of spam and online abuse. We discuss some of these 
+applications in \S\ref{subsec:app_ration_carts}.
 
+\begin{comment}
 In this, we need authenticated domain separation of products or identity
 consumers in queries to users' ring VRF credentials.  We briefly discuss
 some sensible patterns in \S\ref{subsec:app_ration_carts} below, but
 overall authenticated domain separation resemble TLS certificates except
 simpler in that roots of trust can self authenticate if root keys act as
 domain separators.
+\end{comment}
 
 
 %TODO Our contributions should be listed here: https://crypto.iacr.org/2023/papersubmission.php says that 'The introduction should summarize the contributions of the paper at the level understandable for a non-expert reader.'
