@@ -32,7 +32,7 @@ We demand a pseudo-randomness property from \Eval. In our construction in \S\ref
 % and prove it corresponds to $\rVRF.\Eval$ for some plausible signer.
 
 % As an instructive but insecure over simplification, 
-Different than VRF, a ring VRF scheme has  the following algorithms operate directly upon
+In contrast to VRF, a ring VRF scheme has the following algorithms operating directly upon
  set of public keys \ring:
 \begin{itemize}
 \item $\rVRF.\rSign : (\sk,\ring,\msg) \mapsto \sigma$ \,
@@ -46,10 +46,7 @@ and instead prove the signer's key lies in  \ring,
 much like how ring signatures differ from signatures.
 Ring VRFs differ from ring signatures in that the verification process of Ring VRFs outputs the evaluation output \Out of the signer if the signature is verified with $ \ring $. So  the ring signature  actually proves that $ \Out $ is the evaluation output of the signer. 
 
-
-
-
-After success verification, our verifier should be convinced that $\pk \in \ring$, that
+After successful verification, our verifier should be convinced that $\pk \in \ring$, that
 $\Out = \rVRF.\Eval(\sk,\msg)$ for some $(\sk,\pk) \leftarrow \rVRF.\KeyGen$. We demand anonymity meaning that the verifier learns nothing about the signer except that the signer's evaluation value of the signed message $ \msg $ is $ \Out $ and the signer's public key is in $ \ring $.
 
 In other words, this simplified ring VRF could be instantiated by making
@@ -93,10 +90,10 @@ An EC VRF should expose an \aux parameter which it hashes when computing
 its challenge hashes.  Aside from saving redundant signatures, exposing
 \aux avoids user key handling mistakes that create replay attacks.}{}
 
-Ring VRFs cannot so easily be combined with another signatures, which
+Ring VRFs cannot so easily be combined with other signatures, which
 makes \aux essential,%
 \eprint{\footnote{If ring VRFs authorized creating blocks in an anonymous Praos blockchain then \aux must include the block being created, or else others could steal their block production turn.}}{}
-but thankfully our ring VRF construction in in \S\ref{sec:pederson_vrf} expose \aux exactly like EC VRFs should do .%
+but thankfully our ring VRF construction in \S\ref{sec:pederson_vrf} exposes \aux exactly like EC VRFs should do.%
 \eprint{\footnote{We suppress multiple input-output pairs until \S\ref{subsec:multi_io} below, but they work like in \cite{PrivacyPass} too.}}{}
 
 % \smallskip
