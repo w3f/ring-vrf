@@ -19,13 +19,12 @@ definitions and assumptions.
 % both Chaum-Pedersen DLEQ proofs and pairing based zkSNARKs. 
 
 We obey mathematical and cryptographic implementation convention by 
-adopting additive notation for elliptic curve and multiplicative notation
-for elliptic curve scalar multiplications and pairing target groups.
+adopting additive notation for elliptic curve  scalar multiplications and 
+multiplicative notation for pairing target groups.
 
-All objects implicitly depend a security parameter \secparam.
+All objects implicitly depend on a security parameter \secparam.
 All protocols therefore have an implicit parameter generation algorithm,
-which output their hash functions, elliptic curves, and
- some independent base points on the elliptic curves.
+which output their hash functions, elliptic curves, and some independent base points on the elliptic curves.
 
 We need an elliptic curve $\ecE$ over a field of characteristic $q$,
 equipped with a type III pairing $e : \grE_1 \times \grE_2 \to \grE_T$,
@@ -52,20 +51,17 @@ with a subgroup $\grE$ of the same order $p$ as $\grE_1$,
  but which lacks any pairing.
 
 We let $H_p : \{0,1\}^* \to \F_p$ and $H_{\grEsis} : \{0,1\}^* \to \grEsis$
-denote a hash-to-scalar and a hash-to-curve  with ranges
-$\F_p$ and $\grEsis$, respectively, always modeled as random oracles.  
-We only ever hash-to-$\ecEsis$ because hash-to-$\grE_1$ creates a miss-use
-footgun for for privacy.  Also hash-to-$\ecEsis$ is faster.
-We let $\Hout$ denote the hash to the VRF output space, usually
- a key derivation function plus a stream cipher, also modeled as a random oracle.
+denote a hash-to-field and a hash-to-curve with ranges
+ $\F_p$ and $\grEsis$, respectively.  
+We only ever hash-to-$\ecEsis$ because hash-to-$\grE_1$ create a miss-use
+footgun for privacy.  Also hash-to-$\ecEsis$ is faster.
+We let $\Hout$ denote the hash to the VRF output space,
+ usually an extensible output function like Shake128.
+We model all hashes as random oracles.
 
 All our security proofs ignore these underlying elliptic curve concerns,
-so $\grE_1 = \grEsis$ and cofactors are ignores.
-All hashes are random oracles.  DDH is hard in $\grE_1$ and $\grJ$.
+so $\grE_1 = \grEsis$ and cofactors are ignored. DDH is hard in $\grE_1$ and $\grJ$.
 AGM is used for $\ecE$ in Groth16 sections, or wherever is convenient. 
-
-
-
 
 \subsection{Zero-knowledge proofs}
 \label{subsec:zkp_background}
@@ -78,21 +74,22 @@ AGM is used for $\ecE$ in Groth16 sections, or wherever is convenient.
 % 
 
 We let \rel denote a polynomial time decidable relation, so the language
-$\lang = \{x \mid \exists \omega (x; \omega) \in \rel \}$ lies in NP.
+$$\lang = \{x \mid \exists \ \omega \ (x; \omega) \in \rel \}$$ lies in NP.
 All non-interactive zero-knowledge proof systems have some setup procedure
-$\mathtt{Setup}$ that takes some implicit parameters and some ``circuit''
-description of \rel, and may produces a structured reference string (SRS).
-We discuss SRSes and their toxic waste in \S\ref{sec:rvrf_cont} but
-SRSes remain implicit in our notation.
+$\Setup$ that takes some implicit parameters and some ``circuit''
+description of \rel, and produces a common reference string ($\mathit{crs}$).
+%We discuss SRSes and their toxic waste in \S\ref{sec:rvrf_cont} but
+%SRSes remain implicit in our notation.
 
-A non-interactive proof system for $\lang$ consists of \Prove and \Verify PPT algorithms
+A non-interactive proof system for $\rel$ consists of $\Setup$, \Prove and \Verify PPT algorithms, where
 \begin{itemize}
 %\item $\NIZK.\setup(\rel) \rightarrow (crs, \tau)$ ---- Given the relation $ \rel $ it outputs a common reference string $ crs $ and a trapdoor $ \tau $ for $ \rel $.
-\item $\NIZK_\rel.\Prove(x; \omega) \mapsto \pi$ creates a proof $\pi$ for a witness and statement pair $(x; \omega) \in \rel$.
-\item $\NIZK_\rel.\Verify(x; \pi)$ returns either true of false, depending upon whether $\pi$  proves $x$.
+\item $\NIZK_\rel.\Prove(\crs, x, \omega) \mapsto \pi$ creates a proof $\pi$ for a witness and statement pair $(x; \omega) \in \rel$.
+\item $\NIZK_\rel.\Verify(\crs, x, \pi)$ returns either true of false, depending upon whether $\pi$  proves $x$.
 \end{itemize}	
 which satisfy the following completeness, zero-knowledge, and knowledge soundness definitions.
 
+\begin{comment}
 We always describe circuits as languages $\lang$ and write $\NIZK_\lang$ for two reasons: 
 All SNARK circuits have many logic wires in \rel other than
 the public input wires $x$ and the secret input witness wires $\omega$.
@@ -100,9 +97,10 @@ An existential quantifiers $\exists$ more clearly distinguishs
 public inputs $x$ from secret input witnesses $\omega$ than tuple position.
 We also benefited from language in the preceding informal exposition,
  which did not always require specifying $\omega$.
+\end{comment}
 
 \begin{definition}\label{def:nizk_completeness}
-We say $\NIZK_\rel$ is {\em complete} if $\Verify(x, \Prove(x; \omega)$ succeeds for all $(x; \omega) \in \rel$.  % with high probability
+We say $\NIZK_\rel$ is {\em complete} if $\Verify(\crs, x, \Prove(\crs, x, \omega))$ outputs true for all $(x; \omega) \in \rel$.  % with high probability
 \end{definition}
 
 \def\advV{\ensuremath{V^*}\xspace} % Why not use \adv here?
@@ -123,14 +121,16 @@ generated by \Simulate or by \Prove except with odds negligible in \secparam
 We say $\NIZK_\rel$ is {\em (white-box) knowledge sound} if
 for any non-uniform PPT adversary \advP who outputs a statement $x \in \lang$ and proof $\pi$
 there exists a PPT extractor algorithm $\Extract$ that white-box observes $\advP$ and
-if $\Verify(x; \pi)$ holds then $\Extract$ returns an $\omega$ for which $(x; \omega) \in \rel$
+if $\Verify(\crs, x, \pi)$ holds then $\Extract$ returns an $\omega$ for which $(x; \omega) \in \rel$
 (see \cite[Def. 7, \S A, pap. 29]{RandomizationGroth16}).
 \end{definition}
 
+\begin{comment}
 Our zero-knowledge continuations in \S\ref{sec:rvrf_cont} demand
 rerandomizing existing zkSNARKs, which only Groth16 supports \cite{Groth16}.
 We therefore introduce some details of Groth16 \cite{Groth16} there,
 when we tamper with Groth16's SRS and $\mathtt{Setup}$ to create zero-knowledge continuations. 
+\end{comment}
 % TODO: Do we describe Groth16 \cite{Groth16} enough?
 
 % In this, we exploit several arguments given by \cite{RandomizationGroth16},
@@ -168,7 +168,7 @@ $ \simulator $ forwards all messages forwarded by $ \env $ to $ \mathcal{F} $. T
 %TODO: \secparam should likely be implicit, especially since it appears in both worlds.
 
 \begin{definition}[UC-Security of $ \phi $] \label{def:uc}
-	Given a real world protocol $ \phi $ and an ideal functionality $ \mathcal{F} $ for the protocol $ \phi $, we call that $ \phi $ is UC-secure i.e., $ \phi $ UC-realizes $ \mathcal{F} $, if for all PPT adversaries \adv,  there exists a simulator $ \simulator  $ such that for any environment $ \env $,
+	Given a real world protocol $ \phi $ and an ideal functionality $ \mathcal{F} $ for the protocol $ \phi $, we say $ \phi $ is UC-secure i.e., $ \phi $ UC-realizes $ \mathcal{F} $, if for all PPT adversaries \adv,  there exists a simulator $ \simulator  $ such that for any environment $ \env $,
 	$\mathsf{EXEC}_{\phi, \adv, \env}$ is indistinguishable from $\mathsf{EXEC}_{\mathcal{F},\simulator, \env}$.
 \end{definition}
 

@@ -5,12 +5,6 @@ Climate change 2022: Impacts, adaptation and vulnerability. working group ii
   contribution to the ipcc sixth assessment report.
 \newblock Cambridge University Press. In Press.
 
-\bibitem{ucvrf}
-Christian Badertscher, Peter Ga{\v{z}}i, I{\~n}igo Querejeta-Azurmendi, and
-  Alexander Russell.
-\newblock On uc-secure range extension and batch verification for ecvrf.
-\newblock {\em Cryptology ePrint Archive}, 2022.
-
 \bibitem{RandomizationGroth16}
 Karim Baghery, Markulf Kohlweiss, Janno Siim, and Mikhail Volkhov.
 \newblock Another look at extraction and randomization of groth's zk-snark.
@@ -72,24 +66,12 @@ David Chaum.
 \newblock In David Chaum, Ronald~L. Rivest, and Alan~T. Sherman, editors, {\em
   Advances in Cryptology}, pages 199--203, Boston, MA, 1983. Springer US.
 
-\bibitem{praos}
-Bernardo David, Peter Ga{\v{z}}i, Aggelos Kiayias, and Alexander Russell.
-\newblock Ouroboros {P}raos: An adaptively-secure, semi-synchronous
-  proof-of-stake blockchain.
-\newblock In {\em Annual International Conference on the Theory and
-  Applications of Cryptographic Techniques}, pages 66--98. Springer, 2018.
-
 \bibitem{PrivacyPass}
 Alex Davidson, Ian Goldberg, Nick Sullivan, George Tankersley, and Filippo
   Valsorda.
 \newblock Privacy pass: Bypassing internet challenges anonymously.
 \newblock {\em Proceedings on Privacy Enhancing Technologies}, 2018:164--180,
   06 2018.
-
-\bibitem{HdVBatchEd25519}
-Henry de~Valence.
-\newblock It’s 255:19am. do you know what your validation criteria are?
-\newblock \url{https://hdevalence.ca/blog/2020-10-04-its-25519am}.
 
 \bibitem{pop2008}
 Bryan Ford and Jacob Strauss.
