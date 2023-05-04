@@ -100,13 +100,17 @@ pub struct VrfSignatureVec<V: EcVrfProof> {
 
 /// VRF signer, includes the secret key, but sometimes the ring opening too.
 /// 
-/// We do not provide pseduo-convenience methods like schnorrkel's
-/// `sign_extra_after_check`.  We've discovered too many VRF protocols
-/// need multiple input-output pairs, which makes convenience methods
-/// impossible.  instead, you should invoke `EcVrfSecret::vrf_inout`
-/// seperately for each input, run your buisness logic upon its output,
-/// and then pass whatever requires signing to `vrf_sign*`.  
-/// We do have convenience methods to handle multiple input groupings.
+/// We do not favor pseduo-convenience methods like schnorrkel's
+/// `sign_extra_after_check`.  We've found too many VRF protocols need
+/// multiple input-output pairs, making convenience methods inconvenient.
+/// In practice, one should typically invoke `EcVrfSecret::vrf_inout`
+/// seperately for each input, run buisness logic upon the `VrfInOut`s
+/// they return, and then pass whatever `VrfInOut`s require signing to
+/// `vrf_sign*`.
+/// 
+/// We do provide an analogous `vrf_sign_one` method for pedagogy, but
+/// we also provide convenience methods to handle multiple input groupings
+/// instead of doing multiple single input flavors.
 /// 
 /// Inherent methods and other traits being used here:
 /// `IntoTranscript`, `vrf::{VrfInOut, VrfPreOut}`
@@ -120,6 +124,7 @@ pub trait EcVrfSigner: EcVrf+Borrow<Secret> {
         ios: &[VrfInOut<Self>]
     ) -> VrfResult<<Self as EcVrf>::VrfProof>;
 
+    /// VRF signature for a fixed number of input-output pairs
     fn vrf_sign<const N: usize>(
         &self,
         t: impl IntoTranscript,
@@ -131,6 +136,26 @@ pub trait EcVrfSigner: EcVrf+Borrow<Secret> {
         Ok(VrfSignature { preouts, proof })
     }
 
+    /// VRF signature for a single input-output pair
+    /// 
+    /// We provide this analog of schnorrkel's `sign_extra_after_check`
+    /// more for pedagogy than for convenience.  It demonstrates choosing
+    /// whether we sign the VRF, and what else we sign in its transcript,
+    /// after examining the VRF output.
+    fn vrf_sign_one<I,T,F>(&self, input: I, check: F) -> VrfResult<VrfSignature<Self,1>>
+    where
+        I: IntoVrfInput<H>,
+        T: IntoTranscript,
+        F: FnMut(VrfInOut<H>) -> VrfResult<T>,
+    {
+        let io = self.borrow().vrf_inout(input);
+        let t = check(io) ?;
+        let proof = self.vrf_sign_detached(t,&[io]) ?;
+        let preouts = core::array::from_fn(|i| ios[i].preoutput.clone());
+        Ok(VrfSignature { preouts, proof })
+    }
+
+    /// VRF signature for a variable number of input-output pairs.
     fn vrf_sign_vec(
         &self,
         t: impl IntoTranscript,

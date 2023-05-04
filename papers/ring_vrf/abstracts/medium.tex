@@ -17,7 +17,7 @@ Intuitively our ring VRF signers generate two linked proofs,
 An evaluation proof needs only a cheap Chaum-Pedersen DLEQ proof,
 while ring membership proof depends only upon the ring itself.
 We reuse this ring membership proof across multiple inputs
-by expanding a Groth16 trusted setup to rehide public inputs when
+by expanding a Groth16 trusted setup to re-hide public inputs when
  rerandomizing the Groth16.
 %
 Incredibly, our fastest amortized ring VRF needs only eight $\mathcal{G}_1$
@@ -27,9 +27,8 @@ making it the only ring signature with performance competitive with group signat
 \eprintsmallskip
 
 We discuss applications that range across the anonymous credential space:
-
 As in proof-of-personhood work by Bryan Ford, et al.,
-a ring VRF output acts like a unique pseudo-nonymous identity
+a ring VRF output acts like a unique pseudo-anonymous identity
  within some desired context, given as the ring VRF input,
 but remains unlinkable between different contexts. 
 These unlinkable but unique pseudonyms provide a better balance between
