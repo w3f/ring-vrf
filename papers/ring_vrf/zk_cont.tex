@@ -350,7 +350,6 @@ construct extractor $E_{\SpecialG}$ for $A_{\SpecialG}$
 & \ \ \ \ \ \ \ \ \mathit{then} \ E_{\SpecialG} (\crs, \realaux, \relRQ) \ \mathit{outputs} \ \baromega^*; \\
 & \mathit{Otherwise} \ E_{\ccgroth}(\crs, \realaux, \relRQ) \ \mathit{outputs} \ \bot.
 \end{align*}
-\qhandan{}{Related to the above statement, what does the output of $  \ E_{\SpecialG} $ has $ \bar{x} $ and $ b $ as in defined in Definition \ref{def:zk_cont}. From my understanding, $ \bar{x} $ and $ b $ in $ \ZKCont $ has the similar job as in $ \ccgroth $. }
 
 We show $E_{\SpecialG}$ fulfils Definition~\ref{def:zk_cont} for $A_{\SpecialG}$. Assume by contradiction that is not the case. 
 This implies there exists an auxiliary input $\realaux$ such that each: 
@@ -358,12 +357,12 @@ This implies there exists an auxiliary input $\realaux$ such that each:
 \SpecialG.\Verify(\crs, \bary, X, \pi, &\relRQ) =1 \ (10)\ ; \ \SpecialG.\VerifyCom(\pp, X, \barx, b) =1 \ (20) \\
 & (\bary, \barx; \baromega) \notin \relRQ  \ \ (30) 
 \end{align*}
-hold with non-negligible probability. Since $(20)$ holds with non-negligible probability and \qhandan{verification}{is it proof verification or commitment verification. It should be clear} is \qhandan{identical  for $\SpecialG$ and $\ccgroth$}{I don't think you mention this fact before. If it is the case, you should say it while describing $ \SpecialG $}, and since $E_{\ccgroth}$ is an extractor for $A_{\ccgroth}$ as per Definition 3.4~\cite{LegoSNARK},
+hold with non-negligible probability. Since $(20)$ holds with non-negligible probability and verification (for both proofs and commitments actually) is identical in $\SpecialG$ and $\ccgroth$ respectively, 
+and since $E_{\ccgroth}$ is an extractor for $A_{\ccgroth}$ as per Definition 3.4~\cite{LegoSNARK},
  then each of the two events 
 \begin{align*}
-\mathit{VerCommit^*}(\pp, X, \barx^*, b^*) =1 \ (40) \ ; \ (\bary, \barx^*; \baromega^*) \in  \relRQ \ (50)
+\mathit{\ccgroth.\mathit{VerCommit}^*}(\mathit{ck}, X, \barx^*, b^*) =1 \ (40) \ ; \ (\bary, \barx^*; \baromega^*) \in  \relRQ \ (50)
 \end{align*}
-\qhandan{}{Related to $ (40) $, I guess $ \mathit{VerCommit^*} $ is $ \ccgroth.\VerifyCom $. If it is the case, $ \ccgroth.\VerifyCom $ does not have an input called $ pp $}
 holds with overwhelming probability. Since $(20)$ holds with non-negligible probability and $(40)$ holds with overwhelming probability and 
 together with (ii) from Definition 3.4~\cite{LegoSNARK} we obtain that $\barx^* = \barx$. Since $(50)$ holds with overwhelming probability, it implies 
 $(\bary, \barx; \baromega^*) \in \relRQ $ with overwhelming probability which contradicts our assumption, so our claim that $\SpecialG$ does not have 
