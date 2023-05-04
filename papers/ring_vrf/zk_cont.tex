@@ -95,6 +95,8 @@ and satisfies perfect completeness for $\Preprove$ and, for $\Reprove$, it satis
 %Zero-knowledge however should hold even if \Reprove gets invoked multiple
 %times upon the same \Preprove results,
 %again even with the additional proof-of-knowledge.
+\noindent We define perfect completeness for $\Preprove$ and $\Reprove$ algorithms separately and in the most general way possible,
+(i.e., with inputs supplied by the adversary where possible).  
 \noindent \textbf{Perfect Completeness for $\Preprove$} For all $\lambda \in \mathbb{N}$, for every $(\bary, \barx; \baromega_1) \in \relone$:
 \begin{align*}
 \mathit{Pr} (& \ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1 \ \wedge \ \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1\  | \ \\ 
