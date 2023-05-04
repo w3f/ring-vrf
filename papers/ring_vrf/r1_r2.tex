@@ -1,10 +1,12 @@
 \subsection{Our Ring VRF Construction based on SpecialG}
 
 \label{subsec:rvrf_faster}
-We modify slightly the signing and verification algorithms of our construction in Section \ref{sec:pederson_vrf} by deploying $ \SpecialG $. Thanks to this modification, our  modified construction enjoys the rerandomization properties of $ \SpecialG $ which lets a signer sign a different $ \msg $ for the same ring without running the prove algorithm of a NIZK related to showing the key is in the ring.  prove algorithm of a NIZK related to showing the key is in the ring. 
+We modify slightly the signing and verification algorithms of our ring VRF construction in Section \ref{sec:pederson_vrf} by deploying $ \SpecialG $. 
+Our modified construction enjoys the rerandomization properties of $ \SpecialG $ which lets a signer sign a 
+different $ \msg $ for the same ring without running the prove algorithm of a NIZK related to showing the key is in the ring.  
 \begin{itemize}
-	\item $ \rVRF.\Setup(1^\secparam)   $ outputs $ pp = (crs, pp' = (p, \grE,\genG, \genB), \F_p) $ where $ pp' $ is the output of $ \SpecialG.\Setup(1^\secparam, \relinner) $.
-	\item $\rVRF.\rSign : ((\sk,r),\comring, \openring,\msg,\aux) \mapsto \sigma$ It generates $ \PreOut = \sk H_\grE(\msg) $, lets $ \Out = H(\msg, \PreOut) $ and then runs $ \NIZK_{\relrvrf}.\Prove(\comring,\PreOut, \msg, \Out; \sk,r,\openring)\rightarrow \pi_{rvrf}$ where
+	\item $ \rVRF.\Setup(1^\secparam)   $ outputs $ \pprvrf = (crs, \pp = (p, \grE,\genG, \genB), \F_p) $ where $ \pp $ is the output of $ \SpecialG.\Setup(1^\secparam, \relinner) $ and $\relinner$ is defined below.
+	\item $\rVRF.\rSign : ((\sk,r),\comring, \openring,\msg,\aux) \mapsto \sigma$ generates $ \PreOut = \sk H_\grE(\msg) $, lets $ \Out = H(\msg, \PreOut) $ and then runs $ \NIZK_{\relrvrf}.\Prove(\comring,\PreOut, \msg, \Out; \sk,r,\openring)\rightarrow \pi_{rvrf}$ where
 	
 	$$ \relrvrf = \Setst{
 		\begin{aligned}
@@ -29,11 +31,11 @@ We modify slightly the signing and verification algorithms of our construction i
 	$$\relout = \{(\PreOut, \msg,\Out; \sk): \PreOut = \sk H_\grE(\msg) \wedge \Out = H(\msg,\PreOut)\}$$
 	
 	
-	We instantiate $ \NIZK_{\relrvrf}.\Prove(\comring,\PreOut, \msg, \Out; \sk,r,\openring) $ as described in Section \ref{sec:nizkR} where $ \relone = \relinner $ and $ \reltwo'(pp) = \rel_{eval} $. It works as follows: It runs $ \SpecialG.\Preprove(crs, \comring,\sk,(r,\openring),\relinner) $ and obtains $ \compk', \pi' , \openpk' = 0$. Then, it runs $ \SpecialG.\Reprove(crs, X',\pi',\openpk',\relinner) $ and obtains $ (\compk, \pi_1, \openpk) $. Finally, it lets $ \PreOut = \sk H_\grE(\msg) $ and runs $ \NIZK_{\rel_{eval}}.\Prove(\compk, \PreOut, \msg;\sk,\openpk,\msg) \rightarrow \pi_2 $ as described in Section $ \ref{sec:pederson_vrf} $ with $\aux' = \tmpaux$ .	
+	We instantiate $ \NIZK_{\relrvrf}.\Prove(\comring,\PreOut, \msg, \Out; \sk,r,\openring) $ as described in Section \ref{sec:nizkR} where $ \relone = \relinner $ and $ \reltwo'(pp) = \rel_{eval} $ and $\baseR = \relrvrf$ . It works as follows: It runs $ \SpecialG.\Preprove(crs, \comring,\sk,(r,\openring),\relinner) $ and obtains $ \compk', \pi' , \openpk' = 0$. Then, it runs $ \SpecialG.\Reprove(crs, X',\pi',\openpk',\relinner) $ and obtains $ (\compk, \pi_1, \openpk) $. Finally, it lets $ \PreOut = \sk H_\grE(\msg) $ and runs $ \NIZK_{\rel_{eval}}.\Prove(\compk, \PreOut, \msg;\sk,\openpk,\msg) \rightarrow \pi_2 $ as described in Section $ \ref{sec:pederson_vrf} $ with $\aux' = \tmpaux$ .	
 	In the end, it returns the ring signature $ \sigma = (\PreOut,  \pi_1,\pi_2, \compk) $.
 	
-	\item  $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto \Out \,\, \lor \perp$ \,
-	it parses $\sigma$ as $\\PreOut,  \pi_1,\pi_2, \compk$ and runs  $\NIZK_{\relrvrf}.\Verify(\comring, \PreOut, \msg, \Out; \pi_{rvrf})$ i.e., runs $ \SpecialG.\Verify(crs, \comring, \compk,\pi_1,\relinner) $ and $ \NIZK_{\rel_{eval}}.\Verify((\compk, (\PreOut, \msg, \Out)), \pi_2) $. If all verify, it outputs $ \Out = H(\msg,\PreOut) $. Otherwise, it returns 0.
+	\item  $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto {\color{red}\Out \,\, \lor \perp}$ \,
+	it parses $\sigma$ as $\PreOut,  \pi_1,\pi_2, \compk$ and runs  $\NIZK_{\relrvrf}.\Verify(\comring, \PreOut, \msg, \Out; \pi_{rvrf})$ i.e., runs $ \SpecialG.\Verify(crs, \comring, \compk,\pi_1,\relinner) $ and $ \NIZK_{\rel_{eval}}.\Verify((\compk, (\PreOut, \msg, \Out)), \pi_2) $. If all verify, it outputs $ \Out = H(\msg,\PreOut) $. Otherwise, it returns 0.
 \end{itemize}
 
 \begin{theorem}\label{thm:rvrfspecial}
@@ -41,7 +43,7 @@ We modify slightly the signing and verification algorithms of our construction i
 \end{theorem}
 %TODO proof sketch
 
-Now, we present an appropriate $ \mathsf{Com}.\mathsf{Commit}(\sk) $ algorithm to instantiate $ \Rring^{\mathtt{inner}} $ with $ \SpecialG $ efficiently. It works on some Jubjub curve $\ecJ$ which contains a large subgroup $\grJ$ of prime order $p_\grJ$. Here, $p_\grJ < p$ where $ p $ is the order of $\grE$ used in our ring VRF construction\footnote{This condition can be satisfied if $\ecJ$ is an Edwards curve with a cofactor}. We let $\genJ_0,\genJ_1,\genJ_2 \in \grJ$ are independent generators. We also fix a parameter $ \kappa $ where $(\log_2 p)/2 < \kappa < \log_2 p_\grJ$. $ \mathsf{Com}.\mathsf{Commit}(\sk) $ first samples $\sk_1,\sk_2 \in 2^\kappa$  where $\sk = \sk_0 + \sk_1 \, 2^{\lambda} \mod p$ and samples a blinding factor $d \leftsample \F_{p_\grJ} $. In the end, it outputs $ \sk_0, \sk_1,d $ as an opening and the commitment $\pk=\sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$ as a public key of our ring VRF construction. This commitments scheme is binding and perfectly hiding as our ring VRF construction requires because $ \pk $ is a Pedersen commitment. It is a Pedersen commitment because we can represent $ \sk = \sk_0\, \genJ_0 + \sk_1 \mod p$ since we select $ \kappa $ accordingly.
+We now present an appropriate $ \mathsf{Com}.\mathsf{Commit}(\sk) $ algorithm that together with $ \SpecialG $ efficiently instantiate the NIZK for $ \Rring^{\mathtt{inner}} $. This works on the Jubjub curve $\ecJ$ which contains a large subgroup $\grJ$ of prime order $p_\grJ$. Here, $p_\grJ < p$ where $ p $ is the order of $\grE$ used in our ring VRF construction\footnote{\color{red}This condition can be satisfied if $\ecJ$ is an Edwards curve with a cofactor.}. We let $\genJ_0,\genJ_1,\genJ_2 \in \grJ$ be independent generators. We also fix a parameter $ \kappa $ where $(\log_2 p)/2 < \kappa < \log_2 p_\grJ$. $ \mathsf{Com}.\mathsf{Commit}(\sk) $ first samples $\sk_1,\sk_2 \in 2^\kappa$  where $\sk = \sk_0 + \sk_1 \, 2^{\lambda} \mod p$ and samples a blinding factor $d \leftsample \F_{p_\grJ} $. In the end, it outputs $ \sk_0, \sk_1,d $ as an opening and the commitment $\pk=\sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$ as a public key of our ring VRF construction. This commitment scheme is binding and perfectly hiding as our ring VRF construction requires because $ \pk $ is, in fact, a Pedersen commitment. Indeed, $\pk$ is a Pedersen commitment to $\sk$ because we can represent $ \sk = \sk_0\, \genJ_0 + \sk_1 \mod p$ since we have selected $ \kappa $ accordingly.
 
 %TODO MAKE THIS CONSISTENT WITH THE DESCRIPTION SINCE WE DEFINE EVERYTHING ON ONE GROUP
 \paragraph{Efficiency:} If we have a $\SpecialG$ proof for $\relinner$ for our $\pk$ in a ring defined by $\comring$, 
