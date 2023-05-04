@@ -15,7 +15,7 @@ different $ \msg $ for the same ring without running the prove algorithm of a NI
 		\end{aligned}
 	}{
 		\begin{aligned}
-			& (\comring,\sk;r,\openring) \in \relinner \wedge \\
+			& (\comring,\sk;r,\openring) \in \relinner, \\
 			& (\PreOut, \msg, \Out; \sk) \in \relout
 	\end{aligned}	}$$   
 	
@@ -23,19 +23,19 @@ different $ \msg $ for the same ring without running the prove algorithm of a NI
 	
 	$$ \relinner = \Setst{ (\comring, \sk ; r,\openring) }{
 		\begin{aligned}
-			&	\pk = \OpenRing(\comring,\openring) \wedge \\
+			&	\pk = \rVRF.\OpenRing(\comring,\openring), \\
 			& 	\sk = \mathsf{Com}.\mathsf{Open}(\pk,r) 
 		\end{aligned}	
 	},$$
 	
-	$$\relout = \{(\PreOut, \msg,\Out; \sk): \PreOut = \sk H_\grE(\msg) \wedge \Out = H(\msg,\PreOut)\}$$
+	$$\relout = \{(\PreOut, \msg,\Out; \sk): \PreOut = \sk H_\grE(\msg), \Out = H(\msg,\PreOut)\}$$
 	
 	
 	We instantiate $ \NIZK_{\relrvrf}.\Prove(\comring,\PreOut, \msg, \Out; \sk,r,\openring) $ as described in Section \ref{sec:nizkR} where $ \relone = \relinner $ and $ \reltwo'(pp) = \rel_{eval} $ and $\baseR = \relrvrf$ . It works as follows: It runs $ \SpecialG.\Preprove(crs, \comring,\sk,(r,\openring),\relinner) $ and obtains $ \compk', \pi' , \openpk' = 0$. Then, it runs $ \SpecialG.\Reprove(crs, X',\pi',\openpk',\relinner) $ and obtains $ (\compk, \pi_1, \openpk) $. Finally, it lets $ \PreOut = \sk H_\grE(\msg) $ and runs $ \NIZK_{\rel_{eval}}.\Prove(\compk, \PreOut, \msg;\sk,\openpk,\msg) \rightarrow \pi_2 $ as described in Section $ \ref{sec:pederson_vrf} $ with $\aux' = \tmpaux$ .	
 	In the end, it returns the ring signature $ \sigma = (\PreOut,  \pi_1,\pi_2, \compk) $.
 	
-	\item  $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto \Out \,\, \lor \perp$ \,
-	it parses $\sigma$ as $\PreOut,  \pi_1,\pi_2, \compk$ and runs  $\NIZK_{\relrvrf}.\Verify(\comring, \PreOut, \msg, \Out; \pi_{rvrf})$ i.e., runs $ \SpecialG.\Verify(crs, \comring, \compk,\pi_1,\relinner) $ and $ \NIZK_{\rel_{eval}}.\Verify((\compk, (\PreOut, \msg, \Out)), \pi_2) $. If all verify, it outputs $ \Out = H(\msg,\PreOut) $. Otherwise, it returns 0.
+	\item  $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto (1,\Out) \,\, \lor (0,\perp)$ \,
+	it parses $\sigma$ as $\PreOut,  \pi_1,\pi_2, \compk$ and runs  $\NIZK_{\relrvrf}.\Verify(\comring, \PreOut, \msg, \Out; \pi_{rvrf})$ i.e., runs $ \SpecialG.\Verify(crs, \comring, \compk,\pi_1,\relinner) $ and $ \NIZK_{\rel_{eval}}.\Verify((\compk, (\PreOut, \msg, \Out)), \pi_2) $. If all verify, it outputs $ \Out = H(\msg,\PreOut) $. Otherwise, it returns $ (0,\perp) $.
 \end{itemize}
 
 \begin{theorem}\label{thm:rvrfspecial}

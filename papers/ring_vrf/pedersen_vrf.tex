@@ -55,7 +55,7 @@ instantiated by a Fiat-Shamir transform of a sigma protocol.
 
 $$ \mathcal{R}_{eval} = \Setst{
 	\begin{aligned}
-		& (\compk,\PreOut,\In) ; \\ 
+		& (\compk,\PreOut,\msg) ; \\ 
 		& \,\, (\sk, \openpk) 
 	\end{aligned}
 }{
@@ -82,7 +82,7 @@ $$
 	% and return the signature $\sigma = (\PreOut,c,s_1,s_2)$.
 	
 	\item $\PedVRF.\Verify : (\compk,\msg,\aux,\sigma) \mapsto \Out \,\, \lor \perp$ \,.
-	% $ \NIZK_{\mathcal{R}_{eval}}.\Verify(\genG, \genB,\grE,\compk,\PreOut,\In, \pi_{eval} ) $
+	It runs  $ \NIZK_{\mathcal{R}_{eval}}.\Verify((\compk,\PreOut,\msg), \pi_{eval} ) $ i.e.,
 	Parse $\sigma = (\PreOut, R,R_m,s_1,s_2) $ and compute 
 	$c = H_p(\aux,\msg,\compk,\PreOut,R,R_m)$.
 	If $ R = s_1 \genG + s_2 \genB - c \, \compk$ and
@@ -211,7 +211,7 @@ $\Rring$ instantiated below) and a commitment scheme $ \mathsf{Com} $.
 			& 	\compk = \sk \genG + \openpk \genB
 		\end{aligned}	
 	}$$
-	\item $\rVRF.\rVerify : (\comring,\msg,\aux,\rho) \mapsto \Out \,\, \lor \perp$ \, 
+	\item $\rVRF.\rVerify : (\comring,\msg,\aux,\rho) \mapsto (1,\Out) \,\, \lor (0,\perp)$ \, 
 	parses $\rho$ as $(\compk,\piring,\sigma)$,  sets $\aux' \leftarrow \tmpaux$ and runs $\NIZK_{\Rring}.\Verify((\compk,\comring); \piring)$.
 	If it fails, returns $ (0,\perp) $. Otherwise, returns $\PedVRF.\Verify(\compk,\msg, \aux', \sigma)$.
 \end{itemize}
@@ -231,12 +231,45 @@ $\Rring$ instantiated below) and a commitment scheme $ \mathsf{Com} $.
 
 % END TODO: Oana
 
-Appendix \ref{ap:ucproof} proves our ring VRF construction realizes $ \fgvrf $ in Figure \ref{f:gvrf}. Intuitively, the randomness and the determinism of $ \rVRF.\Eval $ come from the random oracles $ H' $ and $ H_{\grE'} $.  The anonymity of our ring VRF signature comes from the perfect hiding property of Pedersen commitment, the zero-knowledge property of $ \NIZK_{\mathcal{R}_{ring}} $ (Lemma \ref{lem:anonymity}) and the difficulty of DDH in  $ \grE $ (Lemma \ref{lem:honestoutput}) so that $ \PreOut $ is indistinguishable from a random element in $ \grE $. The unforgeability and uniqueness come from the fact that CDH is hard in $ \grE $ (Lemma \ref{lem:simulation-ind}), i.e., for unforgeability,  one cannot commit an honest party's secret key without breaking the CDH problem and for the uniqueness,  if one can obtain $ \PedVRF $ signatures such that $ \sigma_1 = (\PreOut_1, \pi_{\PedVRF}) $ and $ \sigma_2 = (\PreOut_2, \pi'_{\PedVRF}) $ where  $ \PreOut_1 \neq \PreOut_2 $  and verified by \compk for the message \msg, then we break a CDH problem in $ \grE $.
+Appendix \ref{ap:ucproof} proves our ring VRF construction realizes $ \fgvrf $ in Figure \ref{f:gvrf} but we want to give an intuition first why our scheme is secure. Intuitively, the randomness and the determinism of $ \rVRF.\Eval $ come from the random oracles $ H $ and $ H_{\grE} $.  The anonymity of our ring VRF signature $ (\sigma = (\compk, \pi_{ring}, \PreOut, \pi_{eval}, \comring)) $ comes from the perfect hiding property of Pedersen commitment i.e., $ \compk $ is independent from the signer's key, the zero-knowledge property of $ \NIZK_{\mathcal{R}_{ring}} $ and $ \NIZK_{\mathcal{R}_{eval}} $ and the difficulty of DDH in  $ \grE $ (Lemma \ref{lem:honestoutput}) so that $ \PreOut $ is indistinguishable from a random element in $ \grE $. The unforgeability and uniqueness come from the fact that CDH is hard in $ \grE $ (Lemma \ref{lem:simulation-ind}).
 
 \begin{theorem}\label{thm:rvrfmain}
-	$ \rVRF $  over the group structure $ (\grE,p,\genG,\genB) $ realizes $ \fgvrf $ in Figure \ref{f:gvrf} in the random oracle model assuming that $ \NIZK_{\mathcal{R}_{eval}} $ and $ \NIZK_{\mathcal{R}_{ring}}$ are zero-knowledge and knowledge sound, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $ and the commitment scheme $ \mathsf{Com} $ is binding and perfectly hiding. 
+	$ \rVRF $  over  $ pp_{rvrf} $ realizes $ \fgvrf $ running $ \Gen_{sign} $ (Algorithm \ref{alg:gensign}) in the random oracle model assuming that $ \NIZK_{\mathcal{R}_{eval}} $ and $ \NIZK_{\mathcal{R}_{ring}}$ are zero-knowledge and knowledge sound, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $ (so CDH is hard as well) and the commitment scheme $ \mathsf{Com} $ is binding and perfectly hiding. 
 \end{theorem}
-%TODO: Proof Sketch
+
+
+\begin{algorithm}
+	
+	\caption{$\Gen_{sign}(\ring,W,x,\pk,\aux,\msg)$}
+	\label{alg:gensign}	 	
+	\begin{algorithmic}[1]
+		\State $ c,s_1, s_2 \leftsample \F_p $
+		\State $ \pi_{eval}  \leftarrow (c,s_1, s_2)$
+		\State $ \openpk \leftsample \F_p $
+		\State $ \compk =  x \genG + \openpk \, K$
+		%\State $ \pi_{eval} \leftarrow \NIZK.\mathsf{Simulate}(\rcom, (G, \genB,\GG,\compk,W,\In)) $
+		%\State \textbf{send} $(\oramsg{learn\_\tau},\sid)  $ to $ \gcrs $
+		%\State \textbf{receive} $(\oramsg{trapdoor},\sid, \tau,crs)  $ from $ \gcrs $
+		\State $ \comring, \openring \leftarrow \rVRF.\CommitRing(\ring, \pk) $
+		\State $ \pi_{ring} \leftarrow \NIZK_{\Rring}.\Prove(crs, \comring, \compk\; \openpk, \openring, x) $ 
+		\State\Return$ \sigma = (\pi_{eval},\pi_{ring},\compk,\comring,W) $
+	\end{algorithmic}
+	
+\end{algorithm}
+We have the security proof of Theorem \ref{thm:rvrfmain} in Appendix \ref{ap:ucproof}. We give a proof sketch here.
+
+\noindent \textit{Proof Sketch:} We should first verify that $ \fgvrf $ running $ \Gen_{sign} $ gives the anonymity defined in Definition \ref{def:anonymity}. We can show it by reducing the anonymity game in another game where we  replace   $\NIZK_{\Rring}.\Prove(\comring, \compk\; \openpk, \openring, x) $
+by $ \NIZK_{\Rring}.\Simulate(\comring,\compk) $ in $ \Gen_{sign} $. Since the signature generated in this reduction is independent from honest keys thanks to perfectly hiding $ \compk $, the signatures generated by $ \Gen_{sign} $ are indistinguishable.
+
+After making sure that $ \fgvrf $ running $ \Gen_{sign} $ satisfies all security properties we need, we show that our protocol $ \rVRF $ realizes $ \fgvrf $. Therefore, we construct a simulator $ \simulator $ that simulates that simulates the honest parties in the execution of our protocol $ \rVRF $ and simulates the adversary in the ideal world with $ \fgvrf $. $ \simulator $ simulates the random oracles against adversaries in the real protocol. It simulates $H_\grE $ so that it knows the discrete logarithm of each $ H_\grE $ output. This trapdoor helps $ \simulator $ to learn the public key of the adversary if the adversary ever comes to the random oracle $ H $ to compute the evaluation value of $ \msg $. When it happens, $ \simulator $ asks $ \fgvrf $ to evaluate $ \msg $ for this public key and replies the evaluation value provided by $ \fgvrf $ as a random oracle $ H $. Thus, $ \simulator $ makes the evaluation values of real world malicious parties be consistent with the evaluation values of ideal world malicious parties. Whenever $ \fgvrf $ sends a message $ (\oramsg{verify}, \sid, \ring, W, \aux,\msg, \sigma) $ to $ \simulator $, $ \simulator $ runs $ \rVRF.\Verify(\comring, \msg,\aux,\sigma) \rightarrow (b_\simulator,.)$ and sends a response including $ b_\simulator $. If $ \fgvrf $ replies with a decision $ b \neq b_\simulator $, $ \simulator $ aborts because of the inconsistency. Then, we  make sure that our simulation is indistinguishable. We show this in Lemma \ref{lem:honestoutput} and \ref{lem:simulation-ind} in Appendix \ref{ap:ucproof}.
+
+We first show that the output of honest and malicious parties in the ideal world are indistinguishable from the output of honest and malicious parties in the real protocol in Lemma \ref{lem:honestoutput} in Appendix \ref{ap:ucproof}. $ \Sim $ makes sure that the malicious parties in the ideal world have the same outputs. The honest parties in our ring VRF protocol have $ \PreOut $ as a part of their signature. The ideal world honest parties has $ W $ instead of it which is sampled randomly by $ \fgvrf $ instead of it. We can show by the DDH assumption that $ W $ and $ \PreOut $ are indistinguishable.
+
+We also show that $ \simulator $ does not abort during the simulation except with negligible probability in Lemma \ref{lem:simulation-ind} in Appendix \ref{ap:ucproof}. Indeed, we show that if there exists an adversary $ \adv $ which makes $ \simulator $ abort during the simulation, then we construct another adversary $ \mathcal{B} $ which breaks either the CDH problem or the binding property of $ \mathsf{Com}$. 
+
+
+ 
+
 % NOTE:  Is this redundant after the above paragraph?
 % The security proof of Theorem \ref{thm:rvrfmain} is in Appendix \ref{ap:ucproof}.
 
