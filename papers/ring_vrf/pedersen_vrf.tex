@@ -81,7 +81,7 @@ $$
 	Return the signature $\sigma = (\PreOut,\pi) $.
 	% and return the signature $\sigma = (\PreOut,c,s_1,s_2)$.
 	
-	\item $\PedVRF.\Verify : (\compk,\msg,\aux,\sigma) \mapsto {\color{red}\Out \,\, \lor \perp}$ \,.
+	\item $\PedVRF.\Verify : (\compk,\msg,\aux,\sigma) \mapsto \Out \,\, \lor \perp$ \,.
 	% $ \NIZK_{\mathcal{R}_{eval}}.\Verify(\genG, \genB,\grE,\compk,\PreOut,\In, \pi_{eval} ) $
 	Parse $\sigma = (\PreOut, R,R_m,s_1,s_2) $ and compute 
 	$c = H_p(\aux,\msg,\compk,\PreOut,R,R_m)$.
@@ -211,7 +211,7 @@ $\Rring$ instantiated below) and a commitment scheme $ \mathsf{Com} $.
 			& 	\compk = \sk \genG + \openpk \genB
 		\end{aligned}	
 	}$$
-	\item $\rVRF.\rVerify : (\comring,\msg,\aux,\rho) \mapsto {\color{red} \Out \,\, \lor \perp}$ \, 
+	\item $\rVRF.\rVerify : (\comring,\msg,\aux,\rho) \mapsto \Out \,\, \lor \perp$ \, 
 	parses $\rho$ as $(\compk,\piring,\sigma)$,  sets $\aux' \leftarrow \tmpaux$ and runs $\NIZK_{\Rring}.\Verify((\compk,\comring); \piring)$.
 	If it fails, returns $ (0,\perp) $. Otherwise, returns $\PedVRF.\Verify(\compk,\msg, \aux', \sigma)$.
 \end{itemize}
