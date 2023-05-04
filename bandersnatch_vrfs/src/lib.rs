@@ -63,7 +63,7 @@ impl<'a> IntoVrfInput<E> for Message<'a> {
         // .expect("Hash-to-curve error, IRTF spec forbids messages longer than 2^16!")
         use ark_std::UniformRand;
         let label = b"TemporaryDoNotDeploy".as_ref();
-        let mut t = Transcript::new(label);
+        let mut t = Transcript::new_labeled(label);
         t.label(b"domain");
         t.append(self.domain);
         t.label(b"message");
