@@ -8,7 +8,7 @@ and give some intuition for our later amortization trick.
 Similar to VRF \cite{vrf_micali}, a ring VRF construction needs: 
 
 \begin{itemize}
-\item $\rVRF.\KeyGen : (1^{\lambda}) \mapsto (\sk, \pk)$ algorithm,
+\item $\rVRF.\KeyGen $ outputs $ (\sk, \pk)$ algorithm,
  which creates a random secret key \sk and associated public key \pk;
 
 \item $\rVRF.\Eval : (\sk,\msg) \mapsto \Out$ which deterministically computes the VRF output \Out from a secret key \sk and a message \msg.
@@ -52,13 +52,25 @@ $\Out = \rVRF.\Eval(\sk,\msg)$ for some $(\sk,\pk) \leftarrow \rVRF.\KeyGen$. We
 In other words, this simplified ring VRF could be instantiated by making
 \rVRF.\Eval a pseudo-random (hash) function, and using a NIZK for a relation
 \vspace{-3mm}
-$$ \rel_{\mathsf{rvrf}} = \Setst{ (\Out, \msg, \ring);(\sk,\pk)}{
+\doublecolumn{
+	\begin{scriptsize}
+		$$ \rel_{\mathsf{rvrf}} = \Setst{ (\Out, \msg, \ring);(\sk,\pk)}{
 		\begin{aligned}
-			& (\pk,\sk) \leftarrow \rVRF.\KeyGen,
+			& (\pk,\sk) \leftarrow \rVRF.\KeyGen,\\
 			& \pk \in \ring \\
 			& \Out = \rVRF.\Eval(\sk,\msg)
 		\end{aligned}
+		} $$
+	\end{scriptsize}
+}{
+	$$ \rel_{\mathsf{rvrf}} = \Setst{ (\Out, \msg, \ring);(\sk,\pk)}{
+	\begin{aligned}
+		& (\pk,\sk) \leftarrow \rVRF.\KeyGen,\\
+		& \pk \in \ring \\
+		& \Out = \rVRF.\Eval(\sk,\msg)
+	\end{aligned}
 } $$
+}
 
 
 % TODO:  \PRF vs \rVRF.\Eval here??
@@ -145,43 +157,45 @@ We solve this obstacle in \S\ref{sec:rvrf_cont}  by introducing
 rerandomizable Groth16s \cite{Groth16} and designed for SNARK composition and reuse.
 
 As a step towards this, we split the relation $ \rel_{\mathsf{rvrf}} $ into a relation
-$ \rel_{eval} $ for \rVRF evaluation and a relation $ \Rring $, which enforces our
+for \rVRF evaluation and a relation, which enforces our
 computationally expensive condition $\pk = \rVRF.\OpenRing(\comring,\openring)$.
-We want to reuse the proof for $ \Rring $ across multiple \rVRF signatures, so anonymity
-requires we rerandomize a Groth16 SNARK for $ \Rring $
+We want to reuse the proof generated for latter across multiple \rVRF signatures, so anonymity
+requires we rerandomize a Groth16 SNARK for it
 ala \cite[Theorem 3, Appendix C, pp. 31]{RandomizationGroth16}.
 %
-Yet, we must connect together the NIZKs for the two languages  $ \rel_{eval} $ and $ \Rring  $ that we define below informally. We do this by passing \pk from $ \Rring  $ to $ \rel_{eval} $, which
-demands some hiding commitment \compk to \pk.
+Yet, we connect together the NIZKs for the two relations.
+%demands some hiding commitment \compk to \pk.
 
 %
-\def\tmpAA{\Out = \rVRF.\Eval(\sk,\msg)}%
-\def\tmpBB{\textrm{\compk commits to\ \sk}}%
-$$ \rel_{eval} = \Setst{ (\Out, \msg, \aux, \compk); \sk}{
-	\eprint{
-		\tmpAA, \, \tmpBB
-	}{
-		\begin{aligned}
-			&\tmpAA, \\
-			&\tmpBB \\
-		\end{aligned}
-	}
-} $$
 
-\def\tmpAA{\textrm{\compk commits to $ \sk $ with public key\ }}%
-\def\tmpBB{\rVRF.\OpenRing(\comring,\openring)}%
-$$ \Rring = \Setst{ (\compk, \comring);(\sk,\pk) }{
-	\eprint{
-		\tmpAA \pk = \tmpBB
-	}{
-		\begin{aligned}
-			&\tmpAA \\
-			&\, \pk = \tmpBB \\
-		\end{aligned}
-	}
-} $$
 
-%TODO: WE SHOULD EXPLAIN IT BETTER AND CHANGE THE LANGUAGE TO A RELATION
+%\def\tmpAA{\Out = \rVRF.\Eval(\sk,\msg)}%
+%\def\tmpBB{\textrm{\compk commits to\ \sk}}%
+%$$ \rel_{eval} = \Setst{ (\Out, \msg, \aux, \compk); \sk}{
+%	\eprint{
+%		\tmpAA, \, \tmpBB
+%	}{
+%		\begin{aligned}
+%			&\tmpAA, \\
+%			&\tmpBB \\
+%		\end{aligned}
+%	}
+%} $$
+%
+%\def\tmpAA{\textrm{\compk commits to $ \sk $ with public key\ }}%
+%\def\tmpBB{\rVRF.\OpenRing(\comring,\openring)}%
+%$$ \Rring = \Setst{ (\compk, \comring);(\sk,\pk) }{
+%	\eprint{
+%		\tmpAA \pk = \tmpBB
+%	}{
+%		\begin{aligned}
+%			&\tmpAA \\
+%			&\, \pk = \tmpBB \\
+%		\end{aligned}
+%	}
+%} $$
+
+%TODO: WE SHOULD EXPLAIN IT BETTER FOR EPRINT
 %We discovered the SNARK for the language \Lring becomes incredibly efficient for the prover if one specializes
 %the original Groth16 SNARK construction:  An inner original Groth16 SNARK for $\Lring^\inner$
 %handles the secret key \sk directly via its public inputs, but
@@ -206,8 +220,8 @@ $$ \Rring = \Setst{ (\compk, \comring);(\sk,\pk) }{
 %the Groth16 trusted setup must be expanded by a secret multiple of
 % the otherwise independent point $K$.
 %
-In \S\ref{sec:pederson_vrf}, we introduce an extremely efficient NIZK
-for $ \rel_{eval} $, which also provides an essential proof-of-knowledge for \compk.
+%In \S\ref{sec:pederson_vrf}, we introduce an extremely efficient NIZK
+%for $ \rel_{eval} $, which also provides an essential proof-of-knowledge for \compk.
 
 
 \endinput
