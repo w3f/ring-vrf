@@ -17,7 +17,7 @@ subcomponent relation (i.e., in our case $\relone$) means one essentially needs 
 relation; the initial proof can later be re-used multiple times (just after inexpensive re-randomisations) 
 while preserving knowledge soundness and zero-knowledge of the entire NIZK. 
 Below, we formally define zero-knowledge continuation. In section~\ref{sec:rvrf_groth16} we instantiate it via a \emph{special(ised) 
-Groth16} or \SpecialG, and finally, in section~\ref{subsec:rvrf_faster} we use it to \handan{build a ring VRF}{instantiate our $ \rVRF.\Sign $ algorithm in Section \ref{sec:pederson_vrf}} with fast amortised prover time. \\
+Groth16} or \SpecialG, and finally, in section~\ref{subsec:rvrf_faster} we use it to instantiate our $ \rVRF.\Sign $ algorithm in Section \ref{sec:pederson_vrf} with fast amortised prover time. \\
 
 \noindent In addition, the anonymity property of our ring VRF demands we not only finalise multiple times a component of the zero-knowledge 
 continuation but also each time the result remains \qhandan{unlinkable to previous finalisations}{how do we cover this unlinkablity property in ZKcont, i.e., Which property of ZKcont soes provide unlikability? I guess it is ZK. I think it will be good to mention about this property after defining ZKcont to show how it is satisfied}, meaning our ring VRF stays zero-knowledge 
@@ -78,7 +78,7 @@ also outputs $b'$ as the opening for $X'$,
 verifies that indeed $X$ is a commitment to $\barx$ with opening (e.g., randomness) $b$ and 
 outputs 1 if indeed that is the case and 0 otherwise,
  
-\item \qhandan{$\ZKCont.\Verify: (\crs, \bar{y}, X, \pi, \relone) \mapsto 0/1$}{I think we need some explanations or motivation about why we have the commitment of  $ \bar{x} $ instead of $ \bar{x} $ as an input of $ \Verify $} \, outputs $1$ in case it accepts \handan{}{the proof $ \pi $} and $0$ otherwise,
+\item \qhandan{$\ZKCont.\Verify: (\crs, \bar{y}, X, \pi, \relone) \mapsto 0/1$}{I think we need some explanations or motivation about why we have the commitment of  $ \bar{x} $ instead of $ \bar{x} $ as an input of $ \Verify $} \, outputs $1$ in case it accepts  and $0$ otherwise,
 
 \item $\ZKCont.\Sim: (\tw, \bary, \relone) \mapsto (\pi, X)$ takes as input a simulation trapdoor $\tw$ and statement $(\bary, \barx)$ and returns 
 arguments $\pi$ and $X$,
@@ -100,8 +100,8 @@ and satisfies perfect completeness for $\Preprove$ and, for $\Reprove$, it satis
 
 \noindent \textbf{Perfect Completeness for $\Reprove$} For all $\lambda \in \mathbb{N}$, for every efficient adversary $A$: 
 \begin{align*}
-\mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X', \pi', \relone) = 1  \handan{= >}{\Rightarrow}  \ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1)  \ \wedge \  \\
-                   & \wedge \ (\ZKCont.\VerifyCom (\pp, X', \barx, b') = 1 \handan{= >}{\Rightarrow} \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1) \ | \\
+\mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X', \pi', \relone) = 1  \Rightarrow \ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1)  \ \wedge \  \\
+                   & \wedge \ (\ZKCont.\VerifyCom (\pp, X', \barx, b') = 1 \Rightarrow \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1) \ | \\
                    & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone),  (\bary, \barx, X', \pi', b') \leftarrow A(\crs,\relone), \\
                    & (X, \pi, b) \leftarrow \ZKCont.\Reprove(\crs, X', \pi', b', \relone)) = 1
 \end{align*}
@@ -141,7 +141,7 @@ where by $(\mathit{output_{A}};\mathit{output_{B}}) \leftarrow A || B(\mathit{in
 $\mathit{input}$ and $B$ having access to the random coins of $A$. \\
 
 \noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $\realaux$, 
-for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$, for all $b'$, for every adversary $A$ \handan{}{there exists a PPT algorithm $ \Sim $ such that}:
+for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$, for all $b'$, for every adversary $A$ there exists a PPT algorithm $ \Sim $ such that:
 \begin{align*}
 \mathit{Pr}(& A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
                   %& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
@@ -244,7 +244,7 @@ $\barv = (1, x_1, \ldots, x_n, w_1, \ldots, w_{m-n})$ (same as in Definition~\re
 $$X = \sum_{i=l+1}^{n} x_i\left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1  + b \Kgamma,$$
 where $\barx = (x_{l+1}, \ldots, x_n)$, $ 0 \leq l \leq n-1$. 
 
-\item $\handan{\ZKCont}{\SpecialG}.\Verify: (\crs, \bar{y}, X, \pi, \relRQ) \mapsto 0/1$ where the output is 1 iff the following holds 
+\item $\SpecialG.\Verify: (\crs, \bar{y}, X, \pi, \relRQ) \mapsto 0/1$ where the output is 1 iff the following holds 
 $$e(O,U) = e([\alpha]_1, [\beta]_2) \cdot e(X + Y, [\gamma]_2) \cdot e(V, [\delta]_2),$$
 where $\pi = (O, U, V)$, $Y = \sum_{i=1}^{l} x_i\left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1$ 
 and $\bary = (x_1, \ldots, x_l)$.
@@ -258,7 +258,7 @@ by definition $\bary = (x_1, \ldots, x_l)$. Note that $\pi$ is a simulated proof
 \noindent \paragraph{Notes:} First, the trusted setup required by \SpecialG is 
 an extension of that required by original Groth16~\cite{Groth16} by two additional 
 group elements $\Kgamma = [\frac{\eta}{\gamma}]_1$ and $\Kdelta = [\frac{\eta}{\delta}]_1$. 
-An identical trusted setup \handan{to}{} that used by \SpecialG was used in LegoSNARK~\cite[Fig.~22]{LegoSNARK} which defines 
+An identical trusted setup to that used by \SpecialG was also used in LegoSNARK~\cite[Fig.~22]{LegoSNARK} which defines 
 a commit-carrying SNARK based on Groth16. Second, our $\SpecialG.\Reprove$ algorithm uses a Groth16 re-randomisation 
 technique for the proof (see~\cite[Fig.~1]{RandomizationGroth16} or LegoSNARK~\cite[Fig.~22]{LegoSNARK}), 
 but, in addition, $\SpecialG.\Reprove$ also re-randomises $X$ which is a commitment to a slice of the public input; moreover, in terms of security 
@@ -281,15 +281,15 @@ $\SpecialG.\Reprove$ zero-knowledge property is preserved for both the witness a
 \begin{theorem}
 \label{sec_specialg}
 Let $\relRQ$ be a relation as per Definition~\ref{def:QAP} such that additionally $\{a_k(X)\}_{k=0}^n$ are linearly independent polynomials. Then, in the 
-AGM~\cite{Fuchs_AGM}, $\SpecialG$ is a zero-knowledge continuation as per \handan{definition}{Definition}~\ref{def:zk_cont}. 
+AGM~\cite{Fuchs_AGM}, $\SpecialG$ is a zero-knowledge continuation as per Definition~\ref{def:zk_cont}. 
 \end{theorem}
 \begin{proof} It is straightforward to prove that $\SpecialG$ has perfect completeness for $\Preprove$ and perfect completeness 
 for $\Reprove$. \\
 
 \noindent We prove knowledge-soundness (KS) an in Definition~\ref{def:zk_cont} by first arguing $\SpecialG$ is a 
 \qhandan{commit-carrying SNARK with double binding (cc-SNARK with double binding) as per Definition 3.4~\cite{LegoSNARK}}{If it is easy, you should give intuition about what it is. What is the relation with the properties that we want to show for $ \SpecialG $?}. 
-\qhandan{We use the fact that $\ccgroth$ as defined by the NILP detailed in Fig.22, Appendix H.5~\cite{LegoSNARK} satisfies that latter definition.}{I don't see in the proof you relate anything related to double binding property. Is this the fact you need? If yes, it should be more clear in the proof why you need it. From what I understood, you just use thex§x§x§ fact that ccSnark is KS.} Moreover, 
-$\SpecialG$'s $\Setup$ together with \qhandan{$\Gen$}{is there any algorithm called $ \Gen $ for $ \SpecialG $?}, on one hand, and $\ccgroth$'s \handan{$\mathit{KeyGen}$}{$ \mathsf{KeyGen} $}, on the other hand, are the same procedure. Also $\SpecialG$ 
+\qhandan{We use the fact that $\ccgroth$ as defined by the NILP detailed in Fig.22, Appendix H.5~\cite{LegoSNARK} satisfies that latter definition.}{I don't see in the proof you relate anything related to double binding property. Is this the fact you need? If yes, it should be more clear in the proof why you need it. From what I understood, you just use the  fact that ccSnark is KS.} Moreover, 
+$\SpecialG$'s $\Setup$ on one hand, and $\ccgroth$'s $ \mathsf{KeyGen} $, on the other hand, are the same procedure. Also $\SpecialG$ 
 and $\ccgroth$ share the same verification algorithm. Hence, translating the notation appropriately, $\SpecialG$ also satisfies KS 
 of a cc-SNARK with double binding. \\
 
@@ -316,9 +316,9 @@ construct extractor $E_{\SpecialG}$ for $A_{\SpecialG}$
 \qhandan{}{Related to the above statement, what does the output of $  \ E_{\SpecialG} $ has $ \bar{x} $ and $ b $ as in defined in Definition \ref{def:zk_cont}. From my understanding, $ \bar{x} $ and $ b $ in $ \ZKCont $ has the similar job as in $ \ccgroth $. }
 
 We show $E_{\SpecialG}$ fulfils Definition~\ref{def:zk_cont} for $A_{\SpecialG}$. Assume by contradiction that is not the case. 
-This implies there \handan{exist}{exists an} auxiliary input $\realaux$ such that each: 
+This implies there exists an auxiliary input $\realaux$ such that each: 
 \begin{align*}
-\handan{\ZKCont}{\SpecialG}.\Verify(\crs, \bary, X, \pi, &\relRQ) =1 \ (10)\ ; \ \handan{\ZKCont}{\SpecialG}.\VerifyCom(\pp, X, \barx, b) =1 \ (20) \\
+\SpecialG.\Verify(\crs, \bary, X, \pi, &\relRQ) =1 \ (10)\ ; \ \SpecialG.\VerifyCom(\pp, X, \barx, b) =1 \ (20) \\
 & (\bary, \barx; \baromega) \notin \relRQ  \ \ (30) 
 \end{align*}
 hold with non-negligible probability. Since $(20)$ holds with non-negligible probability and \qhandan{verification}{is it proof verification or commitment verification. It should be clear} is \qhandan{identical  for $\SpecialG$ and $\ccgroth$}{I don't think you mention this fact before. If it is the case, you should say it while describing $ \SpecialG $}, and since $E_{\ccgroth}$ is an extractor for $A_{\ccgroth}$ as per Definition 3.4~\cite{LegoSNARK},
@@ -331,9 +331,6 @@ holds with overwhelming probability. Since $(20)$ holds with non-negligible prob
 together with (ii) from Definition 3.4~\cite{LegoSNARK} we obtain that $\barx^* = \barx$. Since $(50)$ holds with overwhelming probability, it implies 
 $(\bary, \barx; \baromega^*) \in \relRQ $ with overwhelming probability which contradicts our assumption, so our claim that $\SpecialG$ does not have 
 KS as per Definition~\ref{def:zk_cont} is false. \\
-
-
-\qhandan{}{I think a notation map would be very nice from $ \ccgroth $ and $ \SpecialG $ to verify all the claims above easily i.e., $ o \rightarrow b $, $ c \rightarrow X $...}
 
 \noindent Finally, regarding zero-knowledge, it is clear that if $\pi = (O, U, V)$ is part of the output of $\SpecialG.\Reprove$, 
 then $O$ and $U$ are uniformly distributed as group elements in their respective groups. This holds, as long as the 

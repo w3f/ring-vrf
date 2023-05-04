@@ -18,7 +18,7 @@ $(X', \pi'_1, b')\leftarrow \ZKCont.\Preprove(\crs, \bar{y}, \bar{x}, \baromega_
 $(X, \pi_1, b) \leftarrow \ZKCont.\Reprove(\crs, X', \pi_1', b', \relone)$ \\
 $ \pi_2 \leftarrow \nizktwo.\Prove(\crstwo, X, \barz; \barx, b, \baromega_2)$ 
 
-\item $\nizkR.\Verify: \handan{(\crsR,\bary, \barz, \pi_1, \pi_2, X)}{(\crsR,(\bary, \barz), (\pi_1, \pi_2, X))} \mapsto 0/1$ where the output is $1$ iff 
+\item $\nizkR.\Verify: (\crsR,(\bary, \barz), (\pi_1, \pi_2, X)) \mapsto 0/1$ where the output is $1$ iff 
 $$\ZKCont.\Verify(\crs, \bar{y}, X, \pi_1, \relone) = 1 \  \wedge \ \nizktwo.\Verify(\crstwo, X, \barz, \pi_2) =1$$
 
 \item $\nizkR.\Sim: (\twR, \bary, \barz) \mapsto (\pi_1, \pi_2, X)$ where \\
@@ -78,7 +78,7 @@ for all $\bary,\barx,\barz, \baromega_1, \baromega_2$ with $(\bary, \barx; \baro
 \end{comment} 
 
 \noindent \textbf{Zero-knowledge \qhandan{after Reusing a $\ZKCont$ Proof}{I think this naming is misleading because we don't reuse zk cont proof instead we run Reprove on it.}} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $aux$, 
-for all $\bary,\barx,\barz, \baromega_1, \baromega_2$ with $(\bary, \barx; \baromega_1) \in \relone$ and $(\barz, \barx; \baromega_2) \in \reltwo$, \handan{for all $X',\pi_1',\pi_2, b'$}{for all $X',\pi_1', b'$}, for every adversary $A$ it holds:
+for all $\bary,\barx,\barz, \baromega_1, \baromega_2$ with $(\bary, \barx; \baromega_1) \in \relone$ and $(\barz, \barx; \baromega_2) \in \reltwo$, for all $X',\pi_1', b'$, for every adversary $A$ it holds:
 \begin{align*}
 | \mathit{Pr}(& A(\crs, \realaux, \pi_1,\pi_2, X, \rel) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
                   %& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\
