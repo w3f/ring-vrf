@@ -209,6 +209,20 @@ where $\barv = (v_0, \ldots, v_m) = (1, x_1, \ldots, x_n, w_1, \ldots w_{m-n})$ 
 $\barx = (x_{l+1}, \ldots, x_n)$ and $\baromega = (w_1, \ldots, w_{m-n})$. 
 \end{definition}
 
+\noindent In summary, the trusted setup required by \SpecialG is 
+an extension of that required by original Groth16~\cite{Groth16} by two additional 
+group elements $\Kgamma = \frac{\eta}{\gamma} \cdot \gone $ and $\Kdelta = \frac{\eta}{\delta} \cdot \gone$. 
+An identical trusted setup to that used by $\SpecialG$ was also used in the commit-carrying SNARK $\mathsf{ccGro16}$~\cite[Fig.~22]{LegoSNARK} 
+based, in turn, on Groth16. Moreover, together the $\Preprove$ and the $\Reprove$ procedures of $\SpecialG$ are identical to the proving and re-randomisation 
+procedure in $\mathsf{ccGro16}$ with the difference that we also re-randomise the commitment to part of the public input. Additionally, 
+the verification procedure and the commitment verification are identical to their counterparts in $\mathsf{ccGro16}$. 
+%Second, our $\SpecialG.\Reprove$ algorithm uses a Groth16 re-randomisation 
+%technique for the proof (see~\cite[Fig.~1]{RandomizationGroth16} or LegoSNARK~\cite[Fig.~22]{LegoSNARK}), 
+%but, in addition, $\SpecialG.\Reprove$ also re-randomises $X$ which is a commitment to a slice of the public input;
+%Moreover, in terms of security properties, we appropriately define the zero-knowledge for zk continuations such 
+%that even after iteratively applying $\SpecialG.\Reprove$ zero-knowledge property is preserved for both the witness 
+%as well as the public input committed to in $X$.  
+
 \noindent Given notation provided in section~\ref{sec:background}, in particular elliptic curve $\ecE$, its pairing $e$ and 
 the related source, target groups and generators, we introduce%Let $\mathbb{F}_q$ be a prime field, 
 %let $G_1$, $G_2$, $G_T$ be as defined in section~\ref{??}, let $e$, $g$, $h$ be defined as $\ldots$. Let $t(X)$ and
@@ -238,7 +252,9 @@ Let $\crs = (\barsig_1, \barsig_2)$ where
 $\pp = \left( \left \{ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \cdot \gone \right \}_{i=l+1}^{n}, \frac{\eta}{\gamma} \cdot \gone \right)$. \\
 \noindent Moreover, for simplicity and later use, we call $\Kgamma = \frac{\eta}{\gamma} \cdot \gone$  and $\Kdelta = \frac{\eta}{\delta} \cdot \gone$.
 
-\qhandan{}{We should say what is the difference from Groth16.Setup or it is the same. I think in general in $ \SpecialG $, you should tell which part is from Groth16 or Legosnark and where we change it while describing the algorithms. It will be much clear for the reader to verify. You have notes in the end but I think it is better to have it while describing since you can tell more right away from the algorithm than in the end of everything}
+\begin{comment}
+{We should say what is the difference from Groth16.Setup or it is the same. I think in general in $ \SpecialG $, you should tell which part is from Groth16 or Legosnark and where we change it while describing the algorithms. It will be much clear for the reader to verify. You have notes in the end but I think it is better to have it while describing since you can tell more right away from the algorithm than in the end of everything}
+\end{comment}
 \item $\SpecialG.\Preprove: (\crs, \bar{y}, \bar{x}, \baromega_1, \relRQ) \mapsto (X', \pi', b')$ such that \\
 \begin{align*}
 &b' = 0; r, s\xleftarrow{\$} \F_p; X' = \sum_{i=l+1}^{n} v_i \cdot  \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \cdot \gone;  \\
@@ -274,6 +290,7 @@ and commitment $X = x \cdot \gone$.
 \end{itemize} 
 \end{definition}
 
+\begin{comment}
 \noindent \paragraph{Notes:} First, the trusted setup required by \SpecialG is 
 an extension of that required by original Groth16~\cite{Groth16} by two additional 
 group elements $\Kgamma = [\frac{\eta}{\gamma}]_1$ and $\Kdelta = [\frac{\eta}{\delta}]_1$. 
@@ -283,6 +300,7 @@ technique for the proof (see~\cite[Fig.~1]{RandomizationGroth16} or LegoSNARK~\c
 but, in addition, $\SpecialG.\Reprove$ also re-randomises $X$ which is a commitment to a slice of the public input; moreover, in terms of security 
 properties, we appropriately define the zero-knowledge for zk continuations such that even after iteratively applying 
 $\SpecialG.\Reprove$ zero-knowledge property is preserved for both the witness as well as the public input committed to in $X$.  \\
+\end{comment}
 
 %{\color{red}Note that, if a trusted setup is used (for example the one described in~\cite{subversion_zk}) such that there 
 %exist a public and efficient procedure for verifying it, then, by extending it with $\Kgamma$ and $\Kdelta$ (which is our 
