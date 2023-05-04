@@ -7,9 +7,9 @@ where $\mathcal{R}_{eval}$ is the instantiation of relation $\reltwo'(\pp)$ (for
 for a relation $\relone$ similar to $\Rring$. In fact, we will instantiate $\relone$ with $\Rring^{\mathtt{inner}}$. \qhandan{}{I think it is better to relate everything below with the current description of the protocol so I suggest the following changes}
 
 
-\handan{For the latter, we need an appropriate choice of $\pk$ to commit to $\sk$. We use a Pedersen commitment using some Jubjub curve $\ecJ$. $\ecJ$ contains a large subgroup $\grJ$ of prime order $p_\grJ$. Typically $p_\grJ$ is smaller than $p$, the order of $\grE$, certainly when $\ecJ$ is an Edwards curve with a cofactor. Since $\sk \in \F_p$, we represent it with two $\F_{p_\grJ}$ elements $\sk_0,\sk_1 \leq 2^{\lambda}$ 
-so that $\sk = \sk_0 + \sk_1 \, 2^{\lambda} \mod p$ for some fixed $(\log_2 p)/2  < \lambda < \log_2 p_\grJ$. $\rVRF.\KeyGen$ now samples $\sk\leftsample \F_{p}$, computes $\sk_1,\sk_2$, samples a blinding factor $d \leftsample \F_{p_\grJ}$ and then returns a blinded Pedersen commitment as the public key $\rVRF.\pk=\sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$ and the secret key $\rVRF.\sk = (\sk_0,\sk_1,d)$. Here $\genJ_0,\genJ_1,\genJ_2 \in \grJ$ are independent generators.}{Now, we present an appropriate $ \mathsf{Com}.\mathsf{Commit}(\sk) $ algorithm used in $ \rVRF.\KeyGen $ of our construction to instantiate $ \Rring^{\mathtt{inner}} $ with $ \SpecialG $ efficiently. It works on some Jubjub curve $\ecJ$ which contains a large subgroup $\grJ$ of prime order $p_\grJ$.  Here, $p_\grJ < p$ where $ p $  is the order of $\grE$ used in our ring VRF construction\footnote{This condition can be satisfied if $\ecJ$ is an Edwards curve with a cofactor}. We let  $\genJ_0,\genJ_1,\genJ_2 \in \grJ$ are independent generators. We also fix a parameter $ \kappa $ where $(\log_2 p)/2  < \kappa < \log_2 p_\grJ$. $ \mathsf{Com}.\mathsf{Commit}(\sk) $  first samples $\sk_1,\sk_2 \in 2^\kappa$ where , samples a blinding factor $d \leftsample \F_{p_\grJ} $ where  $\sk = \sk_0 + \sk_1 \, 2^{\lambda} \mod p$. In the end, it outputs $ \sk_0, \sk_1,d $ as an opening and the commitment $\pk=\sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$ as a public key of our ring VRF construction. This commitments scheme is perfectly hiding as our ring VRF construction requires because $ \pk $ is a Pedersen commitment. It is a Pedersen commitment because we can represent $ \sk  = \sk_0\, \genJ_0 + \sk_1 \mod p$ since we select $ \kappa $ accordingly. 
-}
+We now present an appropriate $ \mathsf{Com}.\mathsf{Commit}(\sk) $ algorithm that together with $ \SpecialG $ efficiently instantiate the NIZK for $ \Rring^{\mathtt{inner}} $. This works on the Jubjub curve $\ecJ$ which contains a large subgroup $\grJ$ of prime order $p_\grJ$. Here, $p_\grJ < p$ where $ p $ is the order of $\grE$ used in our ring VRF construction\footnote{This condition can be satisfied if $\ecJ$ is an Edwards curve with a cofactor.}. We let $\genJ_0,\genJ_1,\genJ_2 \in \grJ$ be independent generators. We also fix a parameter $ \kappa $ where $(\log_2 p)/2 < \kappa < \log_2 p_\grJ$. $ \mathsf{Com}.\mathsf{Commit}(\sk) $ first samples $\sk_1,\sk_2 \in 2^\kappa$  where $\sk = \sk_0 + \sk_1 \, 2^{\lambda} \mod p$ and samples a blinding factor $d \leftsample \F_{p_\grJ} $. In the end, it outputs $ \sk_0, \sk_1,d $ as an opening and the commitment $\pk=\sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$ as a public key of our ring VRF construction. This commitment scheme is binding and perfectly hiding as our ring VRF construction requires because $ \pk $ is, in fact, a Pedersen commitment. Indeed, $\pk$ is a Pedersen commitment to $\sk$ because we can represent $ \sk = \sk_0\, \genJ_0 + \sk_1 \mod p$ since we have selected $ \kappa $ accordingly.
+
+%TODO MAKE THIS CONSISTENT WITH THE DESCRIPTION SINCE WE DEFINE EVERYTHING ON ONE GROUP
 
 We thus have a fairly efficient instantiation for \relone given by
 
@@ -35,21 +35,22 @@ $$ \rel_{\mathtt{rvrf}} = \Setst{ \Out, \msg, \comring ; \sk_0,\sk_1, d, \openri
     }
 } $$
 
-\paragraph{Efficiency:} If we have a $\SpecialG$ proof for $\relone$ for our $\pk$ in a ring defined by $\comring$, 
-to generate a ring VRF proof for the same ring, we need to run $\SpecialG.\Reprove$ and $\PedVRF.\Sign$. $\PedVRF.\Sign$ 
-requires two scalar multiplications on $\ecE_1$
-and two on the same or faster $\ecE'$,
-so together with $\SpecialG.\Reprove$ costing four scalar multiplications
-on $\ecE_1$ and two on $\ecE_2$, our amortised prover time
-runs faster than 12 scalar multiplications on typical $\ecE_1$ curves. 
-We expect the three pairings dominate verifier time, but
-verifiers also need five scalar multiplications on $\ecE_1$.
 
+\paragraph{Efficiency:} If we have a $\SpecialG$ proof for $\relinner$ for our $\pk$ in a ring defined by $\comring$, 
+to generate a ring VRF proof for the same ring, we need to run $\SpecialG.\Reprove$ and $\NIZK_{\mathcal{R}_{eval}}.\Prove$. $\NIZK_{\mathcal{R}_{eval}}.\Prove$ 
+requires two scalar multiplications on $\grE_1$
+and two on the same or faster $\grE'$,
+so together with $\SpecialG.\Reprove$ costing four scalar multiplications
+on $\grE_1$ and two on $\grE_2$, our amortised prover time
+runs faster than 12 scalar multiplications on typical $\grE_1$ curves. 
+We expect the three pairings dominate verifier time, but
+verifiers also need five scalar multiplications on $\grE_1$.
+
+%TODO WHAT DOES IT MEAN
 Importantly, our fast ring VRF's amortised prover time now rivals
 group signature schemes' performance \cite{group_sig_survey}.
 We hope this ends the temptation to deploy group signature like
- constructions where the deanonymisation vectors matter. 
-
+constructions where the deanonymisation vectors matter. 
 
 \begin{comment}
 % TODO \PedVRF.\OpenKey(\compk,\openpk)
