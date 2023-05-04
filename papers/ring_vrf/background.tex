@@ -1,9 +1,11 @@
-
+\newcommand{\com}{\mathsf{Com}}
+\newcommand{\open}{\mathsf{Open}}
+\newcommand{\commit}{\mathsf{Commit}}
 \section{Preliminaries} %It is better name because this section contains information that helps reader to understand the later sections better
 \label{sec:background}
 
-We briefly establish elliptic curve notion and recall some standard
-definitions and assumptions.
+We   give definitions of some cryptographic primitives that help us to construct our ring VRF protocol.
+
 % underlying both Chaum-Pedersen DLEQ proofs and pairing based zkSNARKs.
 
 % As our ring VRF is built by composing them,
@@ -63,8 +65,8 @@ All our security proofs ignore these underlying elliptic curve concerns,
 so $\grE_1 = \grEsis$ and cofactors are ignored. DDH is hard in $\grE_1$ and $\grJ$.
 AGM is used for $\ecE$ in Groth16 sections, or wherever is convenient. 
 
-\subsection{Zero-knowledge proofs}
-\label{subsec:zkp_background}
+\subsection{Non-Interactive Zero-Knowledge Proofs}
+%\label{subsec:zkp_background}
 
 % refs.
 % https://people.csail.mit.edu/silvio/Selected%20Scientific%20Papers/Zero%20Knowledge/Noninteractive_Zero-Knowkedge.pdf
@@ -73,64 +75,68 @@ AGM is used for $\ecE$ in Groth16 sections, or wherever is convenient.
 %   Addresses the ZK definitions better
 % 
 
-We let \rel denote a polynomial time decidable relation, so the language
-$$\lang = \{x \mid \exists \ \omega \ (x; \omega) \in \rel \}$$ lies in NP.
-All non-interactive zero-knowledge proof systems have some setup procedure
-$\Setup$ that takes some implicit parameters and some ``circuit''
-description of \rel, and produces a common reference string ($\mathit{crs}$).
+We let $ (\rel,z) $ denote a output of a relation generator $ \mathfrak{R} $ which receives $ \secparam $ as an input. $ \rel $ is a polynomial time decidable relation and $ z $ is an auxiliary input. For $ (x;\omega) \in \rel $, we call that $ x$ is the statement and $ \omega $ is the witness.
+%All non-interactive zero-knowledge proof systems have some setup procedure
+%$\mathtt{Setup}$ that takes some implicit parameters and some ``circuit''
+%description of \rel, and may produces a structured reference string (SRS).
 %We discuss SRSes and their toxic waste in \S\ref{sec:rvrf_cont} but
 %SRSes remain implicit in our notation.
-
-A non-interactive proof system for $\rel$ consists of $\Setup$, \Prove and \Verify PPT algorithms, where
+A non-interactive proof system $ \NIZK $ for $\rel$ consists of the following algorithms:
 \begin{itemize}
-%\item $\NIZK.\setup(\rel) \rightarrow (crs, \tau)$ ---- Given the relation $ \rel $ it outputs a common reference string $ crs $ and a trapdoor $ \tau $ for $ \rel $.
-\item $\NIZK_\rel.\Prove(\crs, x, \omega) \mapsto \pi$ creates a proof $\pi$ for a witness and statement pair $(x; \omega) \in \rel$.
-\item $\NIZK_\rel.\Verify(\crs, x, \pi)$ returns either true of false, depending upon whether $\pi$  proves $x$.
+	\item $\NIZK.\Setup(\rel) \rightarrow (crs, \tau)$  given $ \rel $, it outputs a common reference string $ crs $ and a trapdoor $ \tau $ for $ \rel $.
+	\item $\NIZK_\rel.\Prove(x; \omega) \mapsto \pi$ creates a proof $\pi$ for  $(x; \omega) \in \rel$. 
+	\item $\NIZK_\rel.\Verify(x; \pi)$ returns either true of false.
+	\item $ \NIZK_\rel.\Simulate(\tau,x) \mapsto \pi$ returns a proof $ \pi $.
 \end{itemize}	
-which satisfy the following completeness, zero-knowledge, and knowledge soundness definitions.
+We note that $ \Prove $ and $ \Verify $ algorithms have $ crs $ and $ \rel $ as an input even though we do not explicitly specify them. We implicitly specify them by naming $ \NIZK_{\rel} $. $ \NIZK $ satisfies the following:
 
-\begin{comment}
-We always describe circuits as languages $\lang$ and write $\NIZK_\lang$ for two reasons: 
-All SNARK circuits have many logic wires in \rel other than
-the public input wires $x$ and the secret input witness wires $\omega$.
-An existential quantifiers $\exists$ more clearly distinguishs
-public inputs $x$ from secret input witnesses $\omega$ than tuple position.
-We also benefited from language in the preceding informal exposition,
- which did not always require specifying $\omega$.
-\end{comment}
+%We always describe circuits as languages $\lang$ and write $\NIZK_\lang$ for two reasons: 
+%All SNARK circuits have many logic wires in \rel other than
+%the public input wires $x$ and the secret input witness wires $\omega$.
+%An existential quantifiers $\exists$ more clearly distinguishs
+%public inputs $x$ from secret input witnesses $\omega$ than tuple position.
+%We also benefited from language in the preceding informal exposition,
+% which did not always require specifying $\omega$.
 
 \begin{definition}\label{def:nizk_completeness}
-We say $\NIZK_\rel$ is {\em complete} if $\Verify(\crs, x, \Prove(\crs, x, \omega))$ outputs true for all $(x; \omega) \in \rel$.  % with high probability
+	We say $\NIZK_\rel$ is {\em complete} if $\Verify(x, \Prove(x; \omega))$ succeeds for all $(x; \omega) \in \rel$.  % with high probability
 \end{definition}
 
 \def\advV{\ensuremath{V^*}\xspace} % Why not use \adv here?
 
 \begin{definition}\label{def:nizk_zero_knowledge}
-We say $\NIZK_\rel$ is {\em zero-knowledge} if
-there exists a PPT simulator $\NIZK_\rel.\Simulate(x) \mapsto \pi$
-that outputs proofs for statement $x \in L$ alone, which are
-computationally indistinguishable from legitimate proofs by \Prove,
-i.e.\ any non-uniform PPT adversary \advV cannot distinguish pairs $(x; \pi)$
-generated by \Simulate or by \Prove except with odds negligible in \secparam
-(see \cite[Def. 9, \S A, pap. 29]{RandomizationGroth16}). %  or ...
+	We say $\NIZK$ is {\em perfect zero-knowledge} for all $ \secparam \in \mathbb{N} $, for all $ (\rel,z) \leftarrow \mathfrak{R} $, $ (x,\omega) \in \rel $ and for all adversaries $ \adv $, if the following holds:
+	\allowbreak
+	\doublecolumn{\begin{align*}
+		\Pr[& \adv(\crs, z, \pi,\rel) = 1 \ | \ (\crs, \tau) \leftarrow \NIZK.\Setup (\rel),  \\\nonumber
+		& \pi \leftarrow \NIZK_\rel.\Prove (x;\omega)]\\
+		=\Pr[& \adv(\crs, z, \pi,\rel) = 1 \ | \ (\crs, \tau) \leftarrow \NIZK.\Setup (\rel), \\\nonumber
+		&  \pi \leftarrow \NIZK_\rel.\Simulate (\tau,x)]
+	\end{align*}
+}{\begin{align*}
+	\Pr[& \adv(\crs, z, \pi,\rel) = 1 \ | \ (\crs, \tau) \leftarrow \NIZK.\Setup (\rel),   \pi \leftarrow \NIZK_\rel.\Prove (x;\omega)]\\
+	=\Pr[& \adv(\crs, z, \pi,\rel) = 1 \ | \ (\crs, \tau) \leftarrow \NIZK.\Setup (\rel),   \pi \leftarrow \NIZK_\rel.\Simulate (\tau,x)]
+\end{align*}}
+	
 \end{definition}
 
 \def\advP{\ensuremath{P^*}\xspace} % Why not use \adv here?
 
 \begin{definition}\label{def:nizk_knowledge_sound}
-We say $\NIZK_\rel$ is {\em (white-box) knowledge sound} if
-for any non-uniform PPT adversary \advP who outputs a statement $x \in \lang$ and proof $\pi$
-there exists a PPT extractor algorithm $\Extract$ that white-box observes $\advP$ and
-if $\Verify(\crs, x, \pi)$ holds then $\Extract$ returns an $\omega$ for which $(x; \omega) \in \rel$
-(see \cite[Def. 7, \S A, pap. 29]{RandomizationGroth16}).
+	We say $\NIZK$ is {computational knowledge sound} for all $ (\rel,z)  $ outputted by $ \mathfrak{R} $ if
+	for any non-uniform PPT adversary \adv there exists a PPT extractor $ \Extract $
+	such that
+	\begin{align}
+		\Pr[\NIZK_\rel.\Verify(x,\pi) = 1 \wedge  (x;\omega) \notin \rel | (crs,\tau) \leftarrow \NIZK.\Setup(\rel),\nonumber\\ ((x,\pi);\omega)\leftarrow (\adv||\Extract)(\rel,z,crs)] =  \negl(\secparam) \nonumber
+	\end{align}
+	
+	where $ (o_A;o_B)\leftarrow A||B(input) $ denote the algorithms that run on the same input and $ B $ has access the random coins of $ A $.
 \end{definition}
 
-\begin{comment}
-Our zero-knowledge continuations in \S\ref{sec:rvrf_cont} demand
-rerandomizing existing zkSNARKs, which only Groth16 supports \cite{Groth16}.
-We therefore introduce some details of Groth16 \cite{Groth16} there,
-when we tamper with Groth16's SRS and $\mathtt{Setup}$ to create zero-knowledge continuations. 
-\end{comment}
+%Our zero-knowledge continuations in \S\ref{sec:rvrf_cont} demand
+%rerandomizing existing zkSNARKs, which only Groth16 supports \cite{Groth16}.
+%We therefore introduce some details of Groth16 \cite{Groth16} there,
+%when we tamper with Groth16's SRS and $\mathtt{Setup}$ to create zero-knowledge continuations. 
 % TODO: Do we describe Groth16 \cite{Groth16} enough?
 
 % In this, we exploit several arguments given by \cite{RandomizationGroth16},
@@ -138,39 +144,40 @@ when we tamper with Groth16's SRS and $\mathtt{Setup}$ to create zero-knowledge 
 % satisfies: % white-box weak simulation-extractablity .
 %
 % \begin{definition}\label{def:nizk_weak_simulation_extractable}
-% We say $\NIZK_\rel$ is {\em white-box weak simulation-extractable} if
-% for any non-uniform PPT adversary \advP with oracle access to \Simulate
-% who outputs a statement $x \in \lang$ and proof $\pi$,
-% there exists a PPT extractor algorithm $\Extract$ that white-box observes $\advP$ and
-% if \advP never queried $x$ and $\Verify(x,\pi)$ holds
-% then $\Extract$ returns an $\omega$ for which $(x; \omega) \in \rel$
-% (see \cite[Def. 7, \S 2.3, pap. 29]{RandomizationGroth16}).
-% \end{definition}
+	% We say $\NIZK_\rel$ is {\em white-box weak simulation-extractable} if
+	% for any non-uniform PPT adversary \advP with oracle access to \Simulate
+	% who outputs a statement $x \in \lang$ and proof $\pi$,
+	% there exists a PPT extractor algorithm $\Extract$ that white-box observes $\advP$ and
+	% if \advP never queried $x$ and $\Verify(x,\pi)$ holds
+	% then $\Extract$ returns an $\omega$ for which $(x; \omega) \in \rel$
+	% (see \cite[Def. 7, \S 2.3, pap. 29]{RandomizationGroth16}).
+	% \end{definition}
 
 % TODO: AGM and Groth16 here?
 
 
-\subsection{Universal Composability (UC) Model}
-\label{subsec:uc_background}
-We define the security of ring VRFs in the UC model \cite{canetti1,canetti2}. In a nutshell, Canetti \cite{canetti1,canetti2} defines the UC model as follows:
-
-A protocol $ \phi $ in the UC model is an execution between distributed interactive Turing machines (ITM). Each ITM has a storage to collect the incoming messages from other ITMs, adversary \adv or the environment $ \env $. $ \env $ is an entity to represent the external world outside of the protocol execution.  The environment $ \env $ initiates ITM instances (ITIs) and the adversary \adv with arbitrary inputs and then terminates them to collect the outputs.
-% An ITM that is initiated by $ \env $ is called ITM instance (ITI). 
-We identify an ITI with its session identity $ \sid $ and its ITM's identifier $ \pid $. In this paper, when we call an entity as a party in the UC model we mean an ITI with the identifier $ (\sid, \pid) $.
-
-We define the ideal world where there exists an ideal functionality $ \mathcal{F} $ and the real world where a protocol $ \phi $ is run as follows:
-
-\paragraph{Real world:} $ \env $ initiates ITMs and \adv to run the protocol instance with some input $ z \in \{0,1\}^* $  and a security parameter $ \secparam $. After $ \env $ terminates the protocol instance, we denote the output of the real world by the random variable $ \mathsf{EXEC}(\secparam, z)_{\phi, \adv, \env} \in \{0,1\} $. Let $ \mathsf{EXEC}_{\phi, \adv, \env} $ denote the ensemble $ \{\mathsf{EXEC}(\secparam, z)_{\phi, \adv, \env} \}_{z \in \{0,1\}^*} $.
-
-\paragraph{Ideal world:} $ \env $ initiates ITMs and a simulator $ \simulator $ to contact with the ideal functionality $ \mathcal{F} $ with some input $ z \in \{0,1\}^* $  and a security parameter $ \secparam $. $ \mathcal{F} $ is trusted meaning that it cannot be corrupted.
-$ \simulator $ forwards all messages forwarded by $ \env $ to $ \mathcal{F} $. The output of execution with $ \mathcal{F} $ is denoted by a random variable $ \mathsf{EXEC}(\secparam, z)_{\mathcal{F},\simulator, \env} \in \{0,1\}$.  Let $ \mathsf{EXEC}_{\mathcal{F},\simulator, \env} $ denote the ensemble $ \{\mathsf{EXEC}(\secparam, z)_{\mathcal{F}, \simulator, \env} \}_{z \in \{0,1\}^*} $.
-
-%TODO: \secparam should likely be implicit, especially since it appears in both worlds.
-
-\begin{definition}[UC-Security of $ \phi $] \label{def:uc}
-	Given a real world protocol $ \phi $ and an ideal functionality $ \mathcal{F} $ for the protocol $ \phi $, we say $ \phi $ is UC-secure i.e., $ \phi $ UC-realizes $ \mathcal{F} $, if for all PPT adversaries \adv,  there exists a simulator $ \simulator  $ such that for any environment $ \env $,
-	$\mathsf{EXEC}_{\phi, \adv, \env}$ is indistinguishable from $\mathsf{EXEC}_{\mathcal{F},\simulator, \env}$.
-\end{definition}
+%
+%\subsection{Universal Composability (UC) Model}
+%\label{subsec:uc_background}
+%We define the security of ring VRFs in the UC model \cite{canetti1,canetti2}. In a nutshell, Canetti \cite{canetti1,canetti2} defines the UC model as follows:
+%
+%A protocol $ \phi $ in the UC model is an execution between distributed interactive Turing machines (ITM). Each ITM has a storage to collect the incoming messages from other ITMs, adversary \adv or the environment $ \env $. $ \env $ is an entity to represent the external world outside of the protocol execution.  The environment $ \env $ initiates ITM instances (ITIs) and the adversary \adv with arbitrary inputs and then terminates them to collect the outputs.
+%% An ITM that is initiated by $ \env $ is called ITM instance (ITI). 
+%We identify an ITI with its session identity $ \sid $ and its ITM's identifier $ \pid $. In this paper, when we call an entity as a party in the UC model we mean an ITI with the identifier $ (\sid, \pid) $.
+%
+%We define the ideal world where there exists an ideal functionality $ \mathcal{F} $ and the real world where a protocol $ \phi $ is run as follows:
+%
+%\paragraph{Real world:} $ \env $ initiates ITMs and \adv to run the protocol instance with some input $ z \in \{0,1\}^* $  and a security parameter $ \secparam $. After $ \env $ terminates the protocol instance, we denote the output of the real world by the random variable $ \mathsf{EXEC}(\secparam, z)_{\phi, \adv, \env} \in \{0,1\} $. Let $ \mathsf{EXEC}_{\phi, \adv, \env} $ denote the ensemble $ \{\mathsf{EXEC}(\secparam, z)_{\phi, \adv, \env} \}_{z \in \{0,1\}^*} $.
+%
+%\paragraph{Ideal world:} $ \env $ initiates ITMs and a simulator $ \simulator $ to contact with the ideal functionality $ \mathcal{F} $ with some input $ z \in \{0,1\}^* $  and a security parameter $ \secparam $. $ \mathcal{F} $ is trusted meaning that it cannot be corrupted.
+%$ \simulator $ forwards all messages forwarded by $ \env $ to $ \mathcal{F} $. The output of execution with $ \mathcal{F} $ is denoted by a random variable $ \mathsf{EXEC}(\secparam, z)_{\mathcal{F},\simulator, \env} \in \{0,1\}$.  Let $ \mathsf{EXEC}_{\mathcal{F},\simulator, \env} $ denote the ensemble $ \{\mathsf{EXEC}(\secparam, z)_{\mathcal{F}, \simulator, \env} \}_{z \in \{0,1\}^*} $.
+%
+%%TODO: \secparam should likely be implicit, especially since it appears in both worlds.
+%
+%\begin{definition}[UC-Security of $ \phi $] \label{def:uc}
+%	Given a real world protocol $ \phi $ and an ideal functionality $ \mathcal{F} $ for the protocol $ \phi $, we say $ \phi $ is UC-secure i.e., $ \phi $ UC-realizes $ \mathcal{F} $, if for all PPT adversaries \adv,  there exists a simulator $ \simulator  $ such that for any environment $ \env $,
+%	$\mathsf{EXEC}_{\phi, \adv, \env}$ is indistinguishable from $\mathsf{EXEC}_{\mathcal{F},\simulator, \env}$.
+%\end{definition}
 
 
 
@@ -181,3 +188,10 @@ $ \simulator $ forwards all messages forwarded by $ \env $ to $ \mathcal{F} $. T
 
 % REMARKS:  Removed excessive notation $\approx$.
 
+\begin{definition}
+	A commitment scheme $ \com $ consists of two algorithms:
+	\begin{itemize}
+		\item $ \com.\commit(x) \mapsto c,r$ outputs a commitment $ c $ to $ x $ and  an opening $ r $.
+		\item $ \com.\open(c;x,r)  \mapsto x'$ opens the commitment $ c $ with the openings $ x,r$ to $ x' $. 
+	\end{itemize}
+\end{definition}
