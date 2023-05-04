@@ -11,8 +11,12 @@
 
 \noindent In the following, we describe a NIZK for a relation $\rel$ where
 $$\rel = \{(\bary, \barz; \barx, \baromega_1, \baromega_2):  (\bary, \barx; \baromega_1) \in \relone, (\barz, \barx; \baromega_2) \in \reltwo \},$$
-and $\relone$, $\reltwo$ are some NP relations. Our NIZK is designed to efficiently re-prove membership for relation $\relone$
-via a new technique which we call \emph{zero-knowledge continuation}. In practice, using a NIZK that ensures a zero-knowledge continuation for a 
+and $\relone$, $\reltwo$ are some NP relations. 
+At a high level, this is based on the commit-and-prove methodology~\cite{Kilian1990UsesOR,CLOS02,LegoSNARK} 
+as relations $\relone$ and $\reltwo$ have input $\barx$ in common and the respective 
+proofs or arguments can and will make use of a commitment $X$ to $\barx$. However, our proposed NIZK has a more specific functionality: 
+it is designed to efficiently re-prove membership for relation $\relone$ via a new technique which we call \emph{zero-knowledge continuation}. 
+In practice, using a NIZK that ensures a zero-knowledge continuation for a 
 subcomponent relation (i.e., in our case $\relone$) means one essentially needs to create only once an otherwise expensive proof for that subcomponent 
 relation; the initial proof can later be re-used multiple times (just after inexpensive re-randomisations) 
 while preserving knowledge soundness and zero-knowledge of the entire NIZK. 
@@ -20,7 +24,7 @@ Below, we formally define zero-knowledge continuation. In section~\ref{sec:rvrf_
 Groth16} or \SpecialG, and finally, in section~\ref{subsec:rvrf_faster} we use it to instantiate our $ \rVRF.\Sign $ algorithm in Section \ref{sec:pederson_vrf} with fast amortised prover time. \\
 
 \noindent In addition, the anonymity property of our ring VRF demands we not only finalise multiple times a component of the zero-knowledge 
-continuation but also each time the result remains \qhandan{unlinkable to previous finalisations}{how do we cover this unlinkablity property in ZKcont, i.e., Which property of ZKcont soes provide unlikability? I guess it is ZK. I think it will be good to mention about this property after defining ZKcont to show how it is satisfied}, meaning our ring VRF stays zero-knowledge 
+continuation but also each time the result remains unlinkable to previous finalisations, meaning our ring VRF stays zero-knowledge 
 even with a continuation component being reused. We formalise such a more general zero-knowledge property in 
 section~\ref{sec:rvrf_groth16} and give an instantiation of our NIZK fulfilling such a property in section~\ref{subsec:rvrf_faster}. 
 %Moreover, the anonymity property of a ring VRF demands we finalise the amortized ``continuation'' multiple
@@ -72,13 +76,13 @@ $\bar{y}$ (called \emph{transparent}), $\bar{x}$ and vector of witnesses $\barom
 also outputs $b'$ as the opening for $X'$,
 
 \item $\ZKCont.\Reprove: (\crs, X', \pi', b', \relone) \mapsto (X, \pi, b)$ \,
-\qhandan{finalises commitment $X$}{What does it mean?} and proof $\pi$ and returns an opening $b$ for the commitment, 
+returns a new commitment $X$ and proof $\pi$ and returns an opening $b$ for the commitment, 
 
 \item $\ZKCont.\VerifyCom: (\pp, X, \barx, b) \mapsto 0/1$ \, 
 verifies that indeed $X$ is a commitment to $\barx$ with opening (e.g., randomness) $b$ and 
 outputs 1 if indeed that is the case and 0 otherwise,
  
-\item \qhandan{$\ZKCont.\Verify: (\crs, \bar{y}, X, \pi, \relone) \mapsto 0/1$}{I think we need some explanations or motivation about why we have the commitment of  $ \bar{x} $ instead of $ \bar{x} $ as an input of $ \Verify $} \, outputs $1$ in case it accepts  and $0$ otherwise,
+\item $\ZKCont.\Verify: (\crs, \bar{y}, X, \pi, \relone) \mapsto 0/1$ \, outputs $1$ in case it accepts  and $0$ otherwise,
 
 \item $\ZKCont.\Sim: (\tw, \bary, \relone) \mapsto (\pi, X)$ takes as input a simulation trapdoor $\tw$ and statement $(\bary, \barx)$ and returns 
 arguments $\pi$ and $X$,
@@ -140,6 +144,13 @@ every non-uniform efficient adversary $A$, there exists efficient non-uniform ex
 where by $(\mathit{output_{A}};\mathit{output_{B}}) \leftarrow A || B(\mathit{input})$ we denote algorithms $A$, $B$  running on the same 
 $\mathit{input}$ and $B$ having access to the random coins of $A$. \\
 
+\noindent Finally, we introduce a new flavour of zero-knowledge property. It allows us to formalise the intuition that if one calls once 
+$\ZKCont.\Preprove$ on $((\bary, \barx), \baromega_1) \in \relone$ and 
+then sequentially calls $ \ZKCont.\Reprove $ at least once but also (possibly) multiple times, 
+then every time after the first call to $ \ZKCont.\Reprove $ the proof reveals nothing regarding either $\barx$ or $\baromega_1$. From this we can 
+extrapolate that sequential $ \ZKCont.\Reprove $ proofs obtained as described above are not linkable, which is what we have hinted towards 
+in the preamble of this section. \\
+
 \noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $\realaux$, 
 for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$, for all $b'$, for every adversary $A$ there exists a PPT algorithm $ \Sim $ such that:
 \begin{align*}
@@ -164,7 +175,10 @@ for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$
 \end{align*}
 \end{comment}
  
- \qhandan{}{Maybe some remarks why we define ZK only for Reprove? Does it cover ZK for Preprove as well?}
+\begin{comment} 
+Maybe some remarks why we define ZK only for Reprove? Does it cover ZK for Preprove as well?
+\end{comment}
+
 \end{definition} 
 
 % $$ \Lring = \Setst{ \compk, \comring }{
@@ -192,8 +206,8 @@ where $\barv = (v_0, \ldots, v_m) = (1, x_1, \ldots, x_n, w_1, \ldots w_{m-n})$ 
 $\barx = (x_{l+1}, \ldots, x_n)$ and $\baromega = (w_1, \ldots, w_{m-n})$. 
 \end{definition}
 
-\noindent \qhandan{Given notation provided in section~\ref{sec:background}, we introduce}{Could you check Section \ref{sec:background} and remove the unnecessary notations or explanations? Or could you make more clear which one of them are defined related to Groth16? I think the current version of this section looks complicated and it could be simplified}
-%Let $\mathbb{F}_q$ be a prime field, 
+\noindent Given notation provided in section~\ref{sec:background}, in particular elliptic curve $\ecE$, its pairing $e$ and 
+the related source and target groups, we introduce%Let $\mathbb{F}_q$ be a prime field, 
 %let $G_1$, $G_2$, $G_T$ be as defined in section~\ref{??}, let $e$, $g$, $h$ be defined as $\ldots$. Let $t(X)$ and
 %$\{u_i(X),v_i(X),w_i(X)\}_{i=0}^m$ be polynomials in $\F_q[X]$, let $\ldots$ be $\ldots$ such that there exists $h(X) \in \F_q[X]$ with
 % $$ \sum_{i=0}^m a_iu_i(X) \cdot  \sum_{i=0}^m a_iv_i(X)  = \sum_{i=0}^m a_iw_i(X) + h(X)t(X)  \ (\ast)$$
