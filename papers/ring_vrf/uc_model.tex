@@ -88,9 +88,9 @@ We remark that once $ \simulator $ obtains an anonymous key $ W $ of  $ \msg $  
 	\textbf{[Honest Ring VRF Signature and Evaluation.]} upon receiving a message $(\oramsg{sign}, \sid, \ring, \pk_i,\aux, \msg)$ from $\user_i$, verify that $\pk_i \in \ring$ and that there exists a public key $\pk_i$ associated to $\user_i$ in $ \vklist $. If it is not the case, just ignore the request. 	
 	If there exists no $ W' $ such that $ \anonymouskeymap[\msg,W'] =  \pk_i $, let $ W \leftsample \setsym{S}_W $ and let $y \leftsample \setsym{S}_{eval}$. Set $ \anonymouskeymap[\msg,W] = \pk_i $ and set $ \evaluationslist[\msg, W] = y$.
 	
-	In any case (except ignoring), obtain $ W, y $ where $ \anonymouskeymap[\msg,W] =\pk_i $ and $ \evaluationslist[\msg, W] = y$  and run  $ \Gen_{sign}(\ring, W,x,\pk,\aux,\msg) \rightarrow \sigma $ where $ (x, \pk) \in \vklist $. 
+	In any case (except ignoring), obtain $ W, y $ where $ \anonymouskeymap[\msg,W] =\pk_i $, $ \evaluationslist[\msg, W] = y$ and  $ (x, \pk) $ is in $\vklist $. Then run  $ \Gen_{sign}(\ring, W,x,\pk,\aux,\msg) \rightarrow \sigma $.
 	%Verify that $ [\msg,\aux, W,\ring, \sigma, 0] $ is not recorded. If it is recorded, abort. Otherwise,
-	Record $ [\msg,\aux, W, \ring,\sigma, 1] $. Return $(\oramsg{signature}, \sid, \ring,W,\aux,\msg, y, \sigma )$ to $\user_i$.
+	Record $ [\msg,\aux, W, \ring,\sigma, 1] $. Return $(\oramsg{signature}, \sid, \ring,W,\aux,\msg, y, \sigma)$ to $\user_i$.
 \end{tcolorbox}
 
 
