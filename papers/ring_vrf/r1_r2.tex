@@ -1,17 +1,17 @@
-\subsection{Our Ring VRF Construction based on SpecialG}
+\subsection{Our Ring VRF Construction based on $ \ZKCont $}
 
 \label{subsec:rvrf_faster}
 We modify slightly the signing and verification algorithms of our ring VRF construction in Section \ref{sec:pederson_vrf} by deploying $ \SpecialG $. 
-Our modified construction enjoys the rerandomization properties of $ \SpecialG $ which lets a signer sign a 
+Our modified construction enjoys the rerandomization properties of $ \ZKCont $ which lets a signer sign a 
 different $ \msg $ for the same ring without running the prove algorithm of a NIZK related to showing the key is in the ring.  
 \begin{itemize}
-	\item $ \rVRF.\Setup(1^\secparam)   $ outputs $ \pprvrf = (crs, \pp = (p, \grE,\genG, \genB), \F_p) $ where $ \pp $ is the output of $ \SpecialG.\Setup(1^\secparam, \relinner) $ and $\relinner$ is defined below.
+	\item $ \rVRF.\Setup(1^\secparam)   $ outputs $ \pprvrf = (crs, \pp = (p, \grE,\genG, \genB), \F_p) $ where $ \pp $ is the output of $ \ZKCont.\Setup(1^\secparam, \relinner) $ and $\relinner$ is defined below.
 	\item $\rVRF.\rSign : ((\sk,r),\comring, \openring,\msg,\aux) \mapsto \sigma$ generates $ \PreOut = \sk H_\grE(\msg) $, lets $ \Out = H(\msg, \PreOut) $ and then runs $ \NIZK_{\relrvrf}.\Prove(\comring,\PreOut, \msg, \Out; \sk,r,\openring)\rightarrow \pi_{rvrf}$ where
 	
 	$$ \relrvrf = \Setst{
 		\begin{aligned}
 			&\comring, (\PreOut,\msg, \Out); \\
-			&\sk, \openring
+			&\sk,r, \openring
 		\end{aligned}
 	}{
 		\begin{aligned}
@@ -31,22 +31,45 @@ different $ \msg $ for the same ring without running the prove algorithm of a NI
 	$$\relout = \{(\PreOut, \msg,\Out; \sk): \PreOut = \sk H_\grE(\msg), \Out = H(\msg,\PreOut)\}$$
 	
 	
-	We instantiate $ \NIZK_{\relrvrf}.\Prove(\comring,\PreOut, \msg, \Out; \sk,r,\openring) $ as described in Section \ref{sec:nizkR} where $ \relone = \relinner $ and $ \reltwo'(pp) = \rel_{eval} $ and $\baseR = \relrvrf$ . It works as follows: It runs $ \SpecialG.\Preprove(crs, \comring,\sk,(r,\openring),\relinner) $ and obtains $ \compk', \pi' , \openpk' = 0$. Then, it runs $ \SpecialG.\Reprove(crs, X',\pi',\openpk',\relinner) $ and obtains $ (\compk, \pi_1, \openpk) $. Finally, it lets $ \PreOut = \sk H_\grE(\msg) $ and runs $ \NIZK_{\rel_{eval}}.\Prove(\compk, \PreOut, \msg;\sk,\openpk,\msg) \rightarrow \pi_2 $ as described in Section $ \ref{sec:pederson_vrf} $ with $\aux' = \tmpaux$ .	
+	We instantiate $ \NIZK_{\relrvrf}.\Prove(\comring,\PreOut, \msg, \Out; \sk,r,\openring) $ as described in Section \ref{sec:nizkR} where $ \relone = \relinner $ and $ \reltwo'(pp) = \rel_{eval} $ and $\baseR = \relrvrf$ . It works as follows: It runs $ \ZKCont.\Preprove(crs, \comring,\sk,(r,\openring),\relinner) $ and obtains $ \compk', \pi' , \openpk' = 0$. Then, it runs $ \ZKCont.\Reprove(crs, X',\pi',\openpk',\relinner) $ and obtains $ (\compk, \pi_1, \openpk) $. Finally, it lets $ \PreOut = \sk H_\grE(\msg) $ and runs $ \NIZK_{\rel_{eval}}.\Prove(\compk, \PreOut, \msg;\sk,\openpk,\msg) \rightarrow \pi_2 $ as described in Section $ \ref{sec:pederson_vrf} $ with $\aux' = \tmpaux$ .	
 	In the end, it returns the ring signature $ \sigma = (\PreOut,  \pi_1,\pi_2, \compk) $.
 	
 	\item  $\rVRF.\rVerify : (\comring,\msg,\aux,\sigma) \mapsto (1,\Out) \,\, \lor (0,\perp)$ \,
-	it parses $\sigma$ as $\PreOut,  \pi_1,\pi_2, \compk$ and runs  $\NIZK_{\relrvrf}.\Verify(\comring, \PreOut, \msg, \Out; \pi_{rvrf})$ i.e., runs $ \SpecialG.\Verify(crs, \comring, \compk,\pi_1,\relinner) $ and $ \NIZK_{\rel_{eval}}.\Verify((\compk, (\PreOut, \msg, \Out)), \pi_2) $. If all verify, it outputs $ \Out = H(\msg,\PreOut) $. Otherwise, it returns $ (0,\perp) $.
+	it parses $\sigma$ as $\PreOut,  \pi_1,\pi_2, \compk$ and runs  $\NIZK_{\relrvrf}.\Verify(\comring, \PreOut, \msg, \Out; \pi_{rvrf})$ i.e., runs $ \ZKCont.\Verify(crs, \comring, \compk,\pi_1,\relinner) $ and $ \NIZK_{\rel_{eval}}.\Verify((\compk, (\PreOut, \msg, \Out)), \pi_2) $. If all verify, it outputs $ \Out = H(\msg,\PreOut) $. Otherwise, it returns $ (0,\perp) $.
 \end{itemize}
 
-\begin{theorem}\label{thm:rvrfspecial}
-	Our specialized $ \rVRF $  over the group structure $ (\grE,p,\genG,\genB) $ realizes $ \fgvrf $ in Figure \ref{f:gvrf} in the random oracle model assuming that $ \NIZK_{\relrvrf} $ is zero-knowledge and knowledge sound, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $ and the commitment scheme $ \mathsf{Com} $ is binding and perfectly hiding. 
-\end{theorem}
-%TODO proof sketch
 
-We now present an appropriate $ \mathsf{Com}.\mathsf{Commit}(\sk) $ algorithm that together with $ \SpecialG $ efficiently instantiate the NIZK for $ \Rring^{\mathtt{inner}} $. This works on the Jubjub curve $\ecJ$ which contains a large subgroup $\grJ$ of prime order $p_\grJ$. Here, $p_\grJ < p$ where $ p $ is the order of $\grE$ used in our ring VRF construction\footnote{This condition can be satisfied if $\ecJ$ is an Edwards curve with a cofactor.}. We let $\genJ_0,\genJ_1,\genJ_2 \in \grJ$ be independent generators. We also fix a parameter $ \kappa $ where $(\log_2 p)/2 < \kappa < \log_2 p_\grJ$. $ \mathsf{Com}.\mathsf{Commit}(\sk) $ first samples $\sk_1,\sk_2 \in 2^\kappa$  where $\sk = \sk_0 + \sk_1 \, 2^{\lambda} \mod p$ and samples a blinding factor $d \leftsample \F_{p_\grJ} $. In the end, it outputs $ \sk_0, \sk_1,d $ as an opening and the commitment $\pk=\sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$ as a public key of our ring VRF construction. This commitment scheme is binding and perfectly hiding as our ring VRF construction requires because $ \pk $ is, in fact, a Pedersen commitment. Indeed, $\pk$ is a Pedersen commitment to $\sk$ because we can represent $ \sk = \sk_0\, \genJ_0 + \sk_1 \mod p$ since we have selected $ \kappa $ accordingly.
+
+
+\begin{theorem}\label{thm:rvrfspecial}
+	Our specialized $ \rVRF $   over  $ pp_{rvrf} $ realizes $ \fgvrf $ running $ \Gen_{sign} $ (Algorithm \ref{alg:gensignSG}) in the random oracle model assuming that $\ZKCont $ is zero-knowledge and knowledge sound as defined in Definition \ref{def:zk_cont} and $ \NIZK_{\mathcal{R}_{eval}} $ is zero-knowledge and knowledge sound, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $ (so the CDH problem is hard as well) and the commitment scheme $ \mathsf{Com} $ is binding and perfectly hiding. 
+\end{theorem}
+\begin{algorithm}
+	
+	\caption{$\Gen_{sign}(\ring,W,x = (\sk,r),\pk,\aux,\msg)$}
+	\label{alg:gensignSG}	 	
+	\begin{algorithmic}[1]
+		\State $ \comring, \openring \leftarrow \rVRF.\CommitRing(\ring, \pk) $
+		\State $ \compk', \pi', \openpk' \leftarrow \ZKCont.\Preprove(crs, \comring,\sk,(r,\openring),\relinner) $
+		\State $ \compk, \pi_1, \openpk \leftarrow \ZKCont\Reprove(crs, \compk',\pi',\openpk',\relinner) $ 
+		\State $ c,s_1, s_2 \leftsample \F_p $
+		\State $ \pi_{eval}  \leftarrow (c,s_1, s_2)$		
+		\State\Return$ \sigma = (\pi_{eval},\pi_{ring},\compk,\comring,W) $
+	\end{algorithmic}
+	
+\end{algorithm}
+
+\noindent \textit{Proof Sketch:}  The security proof follows the same proof we have for Theorem \ref{thm:rvrfmain} except the parts that we run extractor and simulator algorithms in $ \NIZK_{\Rring} $ and $ \NIZK_{\rel_{eval}} $.
+We construct the same $ \simulator $ described in the proof of Theorem \ref{thm:rvrfmain} because it does not deploy any extractor or simulator of $ \NIZK $ for $ \rel_{eval} $ and $ \Rring $. Similarly, Lemma \ref{lem:honestoutput} applies here. The only difference is in Lemma \ref{lem:simulation-ind} since $ \Gen_{sign} $ is different than Algorithm \ref{alg:gensign}. There, we run the simulator and extractor of $ \NIZK_{\relrvrf} $. See Appendix \ref{ap:ucproof} for more details.
+
+
+
+\paragraph{Instantiation with $ \SpecialG $:} Since $ \SpecialG $ is $ \ZKCont $, we can instantiate our protocol with $ \SpecialG$. 
+%TODO why appropriate
+In this case, we present an appropriate $ \mathsf{Com}.\mathsf{Commit}(\sk) $ algorithm that together with $ \SpecialG $ efficiently instantiate the NIZK for $ \Rring^{\mathtt{inner}} $. This works on the Jubjub curve $\ecJ$ which contains a large subgroup $\grJ$ of prime order $p_\grJ$. Here, $p_\grJ < p$ where $ p $ is the order of $\grE$ used in our ring VRF construction\footnote{This condition can be satisfied if $\ecJ$ is an Edwards curve with a cofactor.}. We let $\genJ_0,\genJ_1,\genJ_2 \in \grJ$ be independent generators. We also fix a parameter $ \kappa $ where $(\log_2 p)/2 < \kappa < \log_2 p_\grJ$. $ \mathsf{Com}.\mathsf{Commit}(\sk) $ first samples $\sk_1,\sk_2 \in 2^\kappa$  where $\sk = \sk_0 + \sk_1 \, 2^{\lambda} \mod p$ and samples a blinding factor $d \leftsample \F_{p_\grJ} $. In the end, it outputs $ \sk_0, \sk_1,d $ as an opening and the commitment $\pk=\sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$ as a public key of our ring VRF construction. This commitment scheme is binding and perfectly hiding as our ring VRF construction requires because $ \pk $ is, in fact, a Pedersen commitment. Indeed, $\pk$ is a Pedersen commitment to $\sk$ because we can represent $ \sk = \sk_0\, \genJ_0 + \sk_1 \mod p$ since we have selected $ \kappa $ accordingly.
 
 %TODO MAKE THIS CONSISTENT WITH THE DESCRIPTION SINCE WE DEFINE EVERYTHING ON ONE GROUP
-\paragraph{Efficiency:} If we have a $\SpecialG$ proof for $\relinner$ for our $\pk$ in a ring defined by $\comring$, 
+\paragraph{Efficiency with $ \SpecialG $:} If we have a $\SpecialG$ proof for $\relinner$ for our $\pk$ in a ring defined by $\comring$, 
 to generate a ring VRF proof for the same ring, we need to run $\SpecialG.\Reprove$ and $\NIZK_{\mathcal{R}_{eval}}.\Prove$. $\NIZK_{\mathcal{R}_{eval}}.\Prove$ 
 requires two scalar multiplications on $\grE_1$
 and two on the same or faster $\grE'$,

@@ -610,20 +610,7 @@ We next show that \name \ realizes $ \fgvrf $  in the random oracle model under 
 
 
 Before we start to analyse our protocol, we should define the algorithm $ \gen_{sign} $  for $ \fgvrf $ and show that $ \fgvrf $ with $ \gen_{sign} $ satisfies the anonymity defined in Definition \ref{def:anonymity}. It is very similar to Algorithm \ref{alg:gensign}.
-\begin{algorithm}
-	
-	\caption{$\gen_{sign}(\ring,W,x,\pk,\aux,\msg)$}
-	\label{alg:gensignSG}	 	
-	\begin{algorithmic}[1]
-		\State $ \comring, \openring \leftarrow \rVRF.\CommitRing(\ring, \pk) $
-		\State $ \compk', \pi', \openpk' \leftarrow \ZKCont.\Preprove(crs, \comring,\sk,(r,\openring),\relinner) $
-		\State $ \compk, \pi_1, \openpk \leftarrow \ZKCont\Reprove(crs, \compk',\pi',\openpk',\relinner) $ 
-		\State $ c,s_1, s_2 \leftsample \FF_p $
-		\State $ \pi_{eval}  \leftarrow (c,s_1, s_2)$		
-		\State\Return$ \sigma = (\pi_{eval},\pi_{ring},\compk,\comring,W) $
-	\end{algorithmic}
-	
-\end{algorithm}
+
 
 \begin{lemma} \label{lem:anonymitySG} $ \fgvrf $ running Algorithm \ref{alg:gensignSG} satisfies anonymity defined in Definition \ref{def:anonymity} assuming that $\ZKCont $ is a zero-knowledge as defined in Definition \ref{def:zk_cont}.
 \end{lemma}
