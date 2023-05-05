@@ -37,17 +37,6 @@
 \providecommand\natexlab[1]{#1}
 \providecommand\showeprint[2][]{arXiv:#2}
 
-\bibitem[\protect\citeauthoryear{??}{IPC}{}]%
-        {IPCC2022}
-\bibinfo{title}{Climate Change 2022: Impacts, Adaptation and Vulnerability.
-  Working Group II Contribution to the IPCC Sixth Assessment Report}.
-\newblock \bibinfo{howpublished}{Cambridge University Press. In Press.}.
-  (\bibinfo{year}{????}).
-\newblock
-\showURL{%
-\url{https://www.ipcc.ch/report/ar6/wg2/}}
-
-
 \bibitem[\protect\citeauthoryear{Baghery, Kohlweiss, Siim, and Volkhov}{Baghery
   et~al\mbox{.}}{2021}]%
         {RandomizationGroth16}
@@ -196,14 +185,6 @@
   oracles}. In \bibinfo{booktitle}{{\em Automata, Languages and Programming:
   34th International Colloquium, ICALP 2007, Wroc{\l}aw, Poland, July 9-13,
   2007. Proceedings 34}}. Springer, \bibinfo{pages}{423--434}.
-\newblock
-
-
-\bibitem[\protect\citeauthoryear{{Chatham House}}{{Chatham House}}{}]%
-        {climaterisk2021}
-\bibfield{author}{\bibinfo{person}{{Chatham House}}.}
-\newblock \bibinfo{title}{Climate change risk assessment 2021}.
-\newblock   (\bibinfo{year}{????}).
 \newblock
 
 
@@ -399,26 +380,6 @@
   \url{https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/Studies/GruPA/GruPA.pdf}.}
 
 
-\bibitem[\protect\citeauthoryear{McKay, Staal, Abrams, Winkelmann, Sakschewski,
-  Loriani, Fetzer, Cornell, Rockström, and Lenton}{McKay
-  et~al\mbox{.}}{2022}]%
-        {tipping2022}
-\bibfield{author}{\bibinfo{person}{David I.~Armstrong McKay},
-  \bibinfo{person}{Arie Staal}, \bibinfo{person}{Jesse~F. Abrams},
-  \bibinfo{person}{Ricarda Winkelmann}, \bibinfo{person}{Boris Sakschewski},
-  \bibinfo{person}{Sina Loriani}, \bibinfo{person}{Ingo Fetzer},
-  \bibinfo{person}{Sarah~E. Cornell}, \bibinfo{person}{Johan Rockström}, {and}
-  \bibinfo{person}{Timothy~M. Lenton}.} \bibinfo{year}{2022}\natexlab{}.
-\newblock \showarticletitle{Exceeding $1.5^{\circ}$C global warming could
-  trigger multiple climate tipping points}.
-\newblock \bibinfo{journal}{{\em Science\/}} \bibinfo{volume}{377},
-  \bibinfo{number}{6611} (\bibinfo{date}{Sep} \bibinfo{year}{2022}),
-  \bibinfo{pages}{286--295}.
-\newblock
-\showURL{%
-\url{https://www.youtube.com/watch?v=LxoyaCSWFGs}}
-
-
 \bibitem[\protect\citeauthoryear{Micali, Rabin, and Vadhan}{Micali
   et~al\mbox{.}}{1999}]%
         {vrf_micali}
@@ -470,15 +431,6 @@
 \newblock \bibinfo{howpublished}{Revision 1, 2016-10-20.
   \url{https://signal.org/docs/specifications/xeddsa/}}.
   (\bibinfo{year}{????}).
-\newblock
-
-
-\bibitem[\protect\citeauthoryear{Spratt}{Spratt}{}]%
-        {carrying_capacity}
-\bibfield{author}{\bibinfo{person}{David Spratt}.}
-\newblock \bibinfo{title}{At $4^{\circ}$C of warming, would a billion people
-  survive? What scientists say.}
-\newblock   (\bibinfo{year}{????}).
 \newblock
 
 
