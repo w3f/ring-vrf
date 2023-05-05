@@ -35,7 +35,7 @@ By asking users trust a public list, not certificates.
 % \smallskip 
 \paragraph{Ring VRFs:}
 
-A ring signature proves only that its actual signer lies in a ``ring''
+A ring signature \cite{ring_accountable,ring_efficient,ring_linkable,ring_noRO,ring_sublinear} proves only that its actual signer lies in a ``ring''
 of public keys, without revealing which signer really signed the message.
 A {\it verifiable random function} (VRF) is a signature that proves
 correct evaluation of a PRF defined by the signer's key.
@@ -47,13 +47,13 @@ but also proves correct evaluation of a pseudo-random function (PRF)
 defined by the actual signer's key. % (see \S\ref{sec:rvrf_games}).
 %
 Ring VRF outputs then provide linking proofs between different signatures
-iff the signatures have identical inputs, as well as pseudo-randomness.
+if and only if the signatures have identical inputs, as well as pseudo-randomness.
 
 As this pseudo-random output is uniquely determined by the signed message
 and signer's actual secret key, we can therefore link signatures by the
 same signer if and only if they sign identical messages.
 In effect, ring VRFs restrict anonymity similarly to but less than
-linkable ring signatures do, which makes them multi-use and contextual.
+linkable ring signatures \cite{ring_linkable,ring_linkablee} do, which makes them multi-use and contextual.
 
 We define the security of ring VRFs in both the standard model
 and in the universally composable (UC) \cite{canetti1,canetti2} model. 
