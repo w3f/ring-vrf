@@ -27,7 +27,7 @@ We introduce new privitive, a ringVRF, and prove it's security. To efficiently i
 
 \paragraph{Ring VRFs:}
 
-A ring signature \cite{ring_accountable,ring_efficient,ring_linkable,ring_noRO,ring_sublinear} proves only that its  signer lies in a ``ring''
+A ring signature \cite{ring_accountable,ring_efficient,ring_linkable,ring_noRO,ring_sublinear} proves only that its  signer lies in a ring
 of public keys, without revealing which signer  signed the message.
 A {\it verifiable random function} (VRF) is a signature that proves
 correct evaluation of a PRF defined by the signer's key.
@@ -107,9 +107,9 @@ users being Sybil unless they first reveal numerous attributes.
 Attribute based credentials therefore provide little or no privacy
 when used to prevent abuse.
 Abuse and Sybil prevention are not merely the most common use cases for
-anonymous credentials, but in fact they define the ``general'' use cases for
+anonymous credentials, but in fact they define the general use cases for
 anonymous credentials.
-IRMA might improve privacy when used as ``special purpose'' credential 
+IRMA might improve privacy when used as special purpose  credential 
 in narrower situations of course, but overall attribute based credentials
 should {\it never} be considered fit for abuse and sybil prevention.
 Aside from this, existing offline processes often better protect users'
@@ -165,13 +165,13 @@ enforces rate limits by rejecting duplicate ring VRF outputs.
 (See \S\ref{sec:app_rate_limits})
 
 In other words, our rate limiting authority treats outputs like the
-``nullifiers'' in anonymous payment schemes.
+nullifiers in anonymous payment schemes.
 Yet, ring VRF nullifiers need only temporarily storage, as eventually one
 expires the date in the VRF input.  Asymptotically we thus only need
 $O(\mathtt{users})$ storage vs the $O(\mathtt{history})$ storage
 required by anonymous payment schemes like ZCash and blind signed tokens.
 
-We further benefit from the ``ring'' credential format too,
+We further benefit from the ring credential format too,
 as opposed to certificate based designs like group signatures:
 We expect a degree of fraud whenever deploying purely certificate
 based systems, as witnessed by the litany of fraudulent TLS and covid
