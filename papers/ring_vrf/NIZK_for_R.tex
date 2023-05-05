@@ -27,17 +27,17 @@ $\ZKCont.\Verify(\crs, \bar{y}, X, \pi_1, \relone) = 1 \  \wedge \ \nizktwo.\Ver
 $(\pi_1, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone)$, \\
 $\pi_2 \leftarrow \nizktwo.\Sim(\twtwo, X, \barz)$ 
  \end{itemize}
-\vspace{-0.5cm}
+%\vspace{-0.5cm}
 \begin{lemma}[Knowledge-soundness for $\nizkR$] 
 \label{le:KS_for_nizkR}
 If $\ZKCont$ is a zk continuation for $\relone$ and $\nizktwo$ is a NIZK for $\reltwo'(\pp)$ for some appropriately chosen public parameters $\pp$, 
 then the $\nizkR$ construction described above has knowledge-soundness for $\rel$. 
 \end{lemma} 
-\vspace{-1cm}
+%\vspace{-1cm}
 \begin{proof}This is easy to infer by linking together the extractors guaranteed for $\ZKCont$ and $\nizktwo$ due to their respective 
 knowledge-soundness.
 \end{proof}
-\vspace{-0.1cm}
+%\vspace{-0.1cm}
  \noindent Next, we define \\ 
 %\noindent {\color{red}\textbf{Perfect Completeness after reproving a $\ZKCont$ Proof}}
 \noindent \textbf{Special Perfect Completeness} For all $\lambda \in \mathbb{N}$, for every efficient adversary $A$, for every 

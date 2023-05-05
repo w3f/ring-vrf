@@ -184,9 +184,11 @@ for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$
 \label{sec:rvrf_groth16}
 
 Below we instantiate our zero-knowledge continuation notion with a scheme based on Groth16~\cite{Groth16} SNARK;
-hence, we call our instantiation \emph{specialised Groth16} or \emph{$\mathsf{SpecialG}$}. We start with a  
-reminder of the definition of Quadratic Arithmetic Program (QAP)~\cite{LegoSNARK}, ~\cite{GGPR13}.
+hence, we call our instantiation \emph{specialised Groth16} or \emph{$\mathsf{SpecialG}$}. We will use the polynomials that  
+define a Quadratic Arithmetic Program (QAP)~\cite{LegoSNARK}, ~\cite{GGPR13} and related $\relRQ$ in a standard way. 
+We invite the reader to consult the references for a full reminder. 
 
+\begin{comment}
 \begin{definition}[QAP] 
 \label{def:QAP}
 A Quadratic Arithmetic Program (QAP) $\cQ = (\cA, \cB, \cC, t(X))$ of size $m$ 
@@ -198,8 +200,8 @@ $$(\sum_{k=0}^m v_k \cdot a_k(X)) \cdot (\sum_{k=0}^m v_k \cdot b_k(X)) = (\sum_
 where $\barv = (v_0, \ldots, v_m) = (1, x_1, \ldots, x_n, w_1, \ldots w_{m-n})$ and $\bary = (x_1, \ldots, x_l)$ and 
 $\barx = (x_{l+1}, \ldots, x_n)$ and $\baromega = (w_1, \ldots, w_{m-n})$. 
 \end{definition}
-
-\noindent In summary, \SpecialG setup is an extension of original Groth16~\cite{Groth16} setup by two additional 
+\end{comment}
+In summary, \SpecialG setup is an extension of original Groth16~\cite{Groth16} setup by two additional 
 group elements $\Kgamma$ and $\Kdelta$, as defined below. $\SpecialG$ setup is identical to commit-carrying 
 LegoSNARK $\ccgroth$~\cite[Fig.~22]{LegoSNARK} setup\footnote{$\ccgroth$ is, in turn, based on  Groth16.}.
 Moreover, together the $\Preprove$ and the $\Reprove$ procedures of $\SpecialG$ are identical to the proving  
@@ -221,7 +223,7 @@ the related source, target groups and generators, we introduce%Let $\mathbb{F}_q
 %Then let $\relone = \{ (;) \ | \ (;)  (\ast) \}$
 
 \begin{definition}[Specialised Groth16 ($\SpecialG$)]
-\label{insta:sg16} Let $\relRQ$ be as in Definition~\ref{def:QAP}. We call 
+\label{insta:sg16} Let $\relRQ$ be as mentioned above. We call 
 specialised Groth16 for relation $\relRQ$ the following: %instantiation of the zero-knowledge continuation notion from Definition~\ref{def:zk_cont}:
 \begin{itemize}
 \item $\SpecialG.\Setup: (1^{\lambda}, \relRQ) \mapsto (\crs, \tw,\pp)$. \\ 
@@ -256,7 +258,7 @@ $\Kgamma = \frac{\eta}{\gamma} \cdot \gone$  and $\Kdelta = \frac{\eta}{\delta} 
 &\ \ \ \ \ \ \ \ \ \pi' = (o \cdot \gone, u \cdot \gtwo, v \cdot \gtwo), 
 \end{align*}
 where $\bary = (x_1, \ldots, x_l)$, $\barx = (x_{l+1}, \ldots, x_n)$, \\
-$\baromega = (w_1, \ldots, w_{m-n})$, $\barv = (1, x_1, \ldots, x_n, w_1, \ldots, w_{m-n})$ (same as in Definition~\ref{def:QAP}).
+$\baromega = (w_1, \ldots, w_{m-n})$, $\barv = (1, x_1, \ldots, x_n, w_1, \ldots, w_{m-n})$ (same as per definition of QAP).
 
 \item $\SpecialG.\Reprove: (\crs, X', \pi', b', \relRQ) \mapsto (X, \pi, b)$  such that
 \begin{align*}
@@ -311,7 +313,7 @@ new and stronger notion so we prove that directly. Formally, we have:
 
 \begin{theorem}
 \label{sec_specialg}
-Let $\relRQ$ be a relation as per Definition~\ref{def:QAP} such that additionally $\{a_k(X)\}_{k=0}^n$ are linearly independent polynomials. Then, in the 
+Let $\relRQ$ be a relation as related to a QAP such that additionally $\{a_k(X)\}_{k=0}^n$ are linearly independent polynomials. Then, in the 
 AGM~\cite{Fuchs_AGM}, $\SpecialG$ is a zero-knowledge continuation as per Definition~\ref{def:zk_cont}. 
 \end{theorem}
 \begin{proof} It is straightforward to show that $\SpecialG$ has perfect completeness for $\Preprove$ and perfect completeness 
