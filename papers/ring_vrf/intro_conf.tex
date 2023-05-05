@@ -136,12 +136,12 @@ yield anonymous credentials which safely avoid legal restrictions.
 We credit proof-of-personhood parties by Bryan Ford, et al. \cite{pop2008,pop2017}
 % https://bford.info/pub/dec/pop-abs/  https://bford.info/pub/net/sybil-abs/
 with first espousing the idea that anonymous credentials should produce
-contextual unique identifiers, without leaking other user attributes.
+contextual unique identifiers, without leaking other attributes.
 
 As a rule, there exist simple VRF variants for all anonymous credentials,
 including IRMA \cite{IRMAcredentials} or group signatures \cite{group_sig_survey}.
-We focus exclusively upon ring VRFs for brevity, and because alone
-ring VRFs contextual linkability covers the most important use cases.
+We focus exclusively upon ring VRFs for brevity, and because
+ring VRF's contextual linkability covers the most important use cases.
 % and our optimizations make ring VRFs extremely efficient.
 
 % Third
@@ -150,7 +150,7 @@ ring VRFs contextual linkability covers the most important use cases.
 
 A rate limiting or rationing system provides users with a stream
 of single-use anonymous tokens that each enable consuming some resource.
-They are usually constructed either
+They are usually constructed
 from blind signatures ala \cite{chaum83}, or else
 from OPRFs like PrivacyPass \cite{PrivacyPass},
 both of which have an $O(n)$ issuance phase.
@@ -178,8 +178,7 @@ certificates.  Ring VRFs help mitigate fraudulent certificate concerns
 because the ring is a database and can be audited.
 
 Governments may have little choice but to institute
-rationing in response to shortages caused by climate change, ecosystem
-collapse or peak oil.  Ring VRFs help avoid ration card fraud
+rationing in response to shortages caused by climate change or peak oil.  Ring VRFs help avoid ration card fraud
 while also protecting essential privacy. We discuss some of these 
 applications in \ref{sec:app_short}.
 %
