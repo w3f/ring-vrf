@@ -59,21 +59,22 @@ section~\ref{sec:rvrf_groth16} and give an instantiation of our NIZK fulfilling 
 \label{def:zk_cont}
  A zero-knowledge continuation $\ZKCont$ for a relation $\relone$ with 
 input $(\bary, \barx)$ and witness $\baromega_1$ is a tuple of efficient algorithms 
-($\ZKCont.\Setup$, $\ZKCont.\Preprove$, $\ZKCont.\Reprove$, $\ZKCont.\VerifyCom$, $\ZKCont.\Verify$, $\ZKCont.\Sim$) 
+($\ZKCont.\Setup$, $\ZKCont.\Preprove$, $\ZKCont.\Reprove$, 
+$\ZKCont.\VerifyCom$, $\ZKCont.\Verify$, $\ZKCont.\Sim$) 
 such that for implicit security parameter $\lambda$,
 \begin{itemize}
 
-\item $\ZKCont.\Setup: (1^{\lambda}, \relone) \mapsto (\crs, \tw, \pp)$ a setup algorithm that on input the security parameter 
-outputs a common reference string $\crs$, a trapdoor $\tw$ and a list $\pp$ of public parameters, 
+\item $\ZKCont.\Setup: (1^{\lambda}, \relone) \mapsto (\crs, \tw, \pp)$ a setup 
+algorithm that on input the security parameter outputs a common reference 
+string $\crs$, a trapdoor $\tw$ and a list $\pp$ of public parameters, 
 
 %\item $\ZKCont.\Gen: (\crs, \relone) \mapsto (\crspk, \crsvk, \pp)$ \, 
 %outputs a list $\pp$ of public parameters and a pair of proving key $\crspk$ and verification key $\crsvk$, 
 
 \item $\ZKCont.\Preprove: (\crs, \bar{y}, \bar{x}, \baromega_1, \relone) \mapsto (X', \pi', b')$ \,
 constructs commitment $X'$ from a vector of inputs $\bar{x}$ (called \emph{opaque}) and 
-constructs proof $\pi'$ from vector of inputs 
-$\bar{y}$ (called \emph{transparent}), $\bar{x}$ and vector of witnesses $\baromega_1$, and it 
-also outputs $b'$ as the opening for $X'$,
+constructs proof $\pi'$ from vector of inputs $\bar{y}$ (called \emph{transparent}), 
+$\bar{x}$ and vector of witnesses $\baromega_1$, and it also outputs $b'$ as the opening for $X'$,
 
 \item $\ZKCont.\Reprove: (\crs, X', \pi', b', \relone) \mapsto (X, \pi, b)$ \,
 returns a new commitment $X$ and proof $\pi$ and returns an opening $b$ for the commitment, 
@@ -101,16 +102,20 @@ and satisfies perfect completeness for $\Preprove$ and, for $\Reprove$, it satis
 
 \noindent \textbf{Perfect Completeness for $\Preprove$} For all $\lambda \in \mathbb{N}$, for every $(\bary, \barx; \baromega_1) \in \relone$:
 \begin{align*}
-\mathit{Pr} (& \ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1 \ \wedge \ \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1\  | \ \\ 
+\mathit{Pr} (& \ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1 \ \wedge \ \\
+                   &  \wedge \ \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1\  | \ \\ 
                    & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\ 
                    & (X, \pi, b) \leftarrow \ZKCont.\Preprove(\crs, \bar{y}, \bar{x}, \baromega_1, \relone)) = 1
 \end{align*}
 
 \noindent \textbf{Perfect Completeness for $\Reprove$} For all $\lambda \in \mathbb{N}$, for every PPT adversary $A$: 
 \begin{align*}
-\mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X', \pi', \relone) = 1  \Rightarrow \ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1)  \ \wedge \  \\
-                   & \wedge \ (\ZKCont.\VerifyCom (\pp, X', \barx, b') = 1 \Rightarrow \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1) \ | \\
-                   & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone),  (\bary, \barx, X', \pi', b') \leftarrow A(\crs,\relone), \\
+\mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X', \pi', \relone) = 1  \Rightarrow \\
+                   & \Rightarrow \ \ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1)  \ \wedge \  \\
+                   & \wedge \ (\ZKCont.\VerifyCom (\pp, X', \barx, b') = 1 \Rightarrow \\ 
+                   & \wedge \ \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1) \ | \\
+                   & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
+                   & (\bary, \barx, X', \pi', b') \leftarrow A(\crs,\relone), \\
                    & (X, \pi, b) \leftarrow \ZKCont.\Reprove(\crs, X', \pi', b', \relone)) = 1
 \end{align*}
 
@@ -128,9 +133,10 @@ and satisfies perfect completeness for $\Preprove$ and, for $\Reprove$, it satis
 \noindent \textbf{Knowledge Soundness} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $\realaux$ (as per~\cite{bening_auxiliary}) and 
 every non-uniform efficient adversary $A$, there exists efficient non-uniform extractor $E$ such that:
 \begin{align*}
-\mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1) \ \wedge \ (\ZKCont.\VerifyCom(\pp, X, \bar{x}, b) = 1) \ \wedge\ \\
+\mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1) \ \wedge \ \\
+                   & \wedge \ (\ZKCont.\VerifyCom(\pp, X, \bar{x}, b) = 1) \ \wedge\ \\
                    & \wedge \ ( (\bary, \barx; \baromega_1) \notin \relone) \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
-                   %& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\
+                   %%& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\
                    & (\bary, \barx, X, \pi, b; \baromega_1 ) \leftarrow A || E (\crs, \realaux, \relone)) = \negl (\lambda),
 \end{align*}
 
@@ -157,13 +163,14 @@ in the preamble of this section. \\
 \noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $\realaux$, 
 for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$, for all $b'$, for every adversary $A$ there exists a PPT algorithm $ \Sim $ such that:
 \begin{align*}
-\mathit{Pr}(& A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
+& \mathit{Pr} (A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
                   %& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
                   & \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, \\
                   & (\pi, X, \_) \leftarrow \ZKCont.\Reprove (\crs, X', \pi', b', \relone)) =  \\
-= \mathit{Pr}(& A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\ 
+& = \mathit{Pr}(A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\ 
                      %& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone),\\
-                     & \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, (\pi, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone))
+                     & \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, \\ 
+                     & (\pi, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone))
 \end{align*} 
 \end{definition} 
 
