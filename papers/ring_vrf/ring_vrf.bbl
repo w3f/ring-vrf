@@ -164,7 +164,7 @@ Nate Otto, Sunny Lee, Brian Sletten, Daniel Burnett, Manu Sporny, and Ken
   Ebert.
 \newblock Verifiable credentials use cases.
 \newblock W3C Working Group Note 24 September 2019.
-  \url{https://www.w3.org/TR/vc-use-cases/}.
+\newblock \url{https://www.w3.org/TR/vc-use-cases/}.
 
 \bibitem{nsec5}
 Dimitrios Papadopoulos, Duane Wessels, Shumon Huque, Moni Naor, Jan Včelák,
@@ -177,7 +177,7 @@ Dimitrios Papadopoulos, Duane Wessels, Shumon Huque, Moni Naor, Jan Včelák,
 Trevor Perrin.
 \newblock The xeddsa and vxeddsa signature schemes.
 \newblock Revision 1, 2016-10-20.
-  \url{https://signal.org/docs/specifications/xeddsa/}.
+\newblock  \url{https://signal.org/docs/specifications/xeddsa/}.
 
 \bibitem{doi:10.1080/25741292.2020.1725366}
 Ronald~F. Pol.
