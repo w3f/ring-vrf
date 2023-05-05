@@ -40,14 +40,14 @@ type VrfResult<T> = Result<T,&'static str>
 /// vai this formulation, which maybe overkill for polkadot, but
 /// makes some sense.
 pub trait EcVrfSecret<H: AffineRepr> {
-    /// Compute VRF pre-output from secret key and input.
+    /// Compute VRF pre-output from secret key and input point.
     /// 
-    /// TODO:  We do not have the ideal trait interface here because
-    /// a remove signer can do no validation of a `VrfInput<H>`,
-    /// so maybe this trait method should be removed, so then
-    /// `vrf_inout` could downcast into the underlying input message
-    /// flavor?  In principle this remains possible with this interface,
-    /// provided nobody actually falls this method directly.
+    /// We do not have the ideal trait interface here because
+    /// a remote signer can do no validation of a `VrfInput<H>`,
+    /// so this method could become depricated in future.
+    /// We suggest users avoid this method, and invoke only
+    /// `vrf_inout`, but implementors could still supply this
+    /// method for now.
     pub fn vrf_preout<H>(&self, input: &VrfInput<H>) -> VrfPreOut<H>;
 
     /// Create an `InputOutput` for usage both in signing as well as
