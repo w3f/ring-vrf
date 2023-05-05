@@ -155,7 +155,7 @@ where
     ).collect::<Vec<VrfInOut<C>>>()
 }
 
-pub fn collect_preoutputs_vec<const N:usize,C: AffineRepr>(ios: &[VrfInOut<C>]) -> Vec<VrfPreOut<C>>
+pub fn collect_preoutputs_vec<C: AffineRepr>(ios: &[VrfInOut<C>]) -> Vec<VrfPreOut<C>>
 {
     ios.iter().map(
         |io| io.preoutput.clone()
