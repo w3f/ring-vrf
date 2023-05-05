@@ -2,13 +2,14 @@
 
 %TODO Check consistency with the preliminaries section
 %$$\rel = \{(\bary, \barz; \barx, \baromega_1, \baromega_2):  (\bary, \barx; \baromega_1) \in \relone, (\barz, \barx; \baromega_2) \in \reltwo \},$$
-Let $\ZKCont$ be a zk continuation for $\relone$ (from preamble of Section~\ref{sec:rvrf_cont}) and 
-let $\nizktwo$ be a NIZK for $\reltwo'(\pp)$ (for some public parameters $\pp$) defined by:
-$$\reltwo'(\pp) = \{(X, \barz, \pp; \barx, b, \baromega_2): \ZKCont.\VerifyCom(\pp, X, \barx, b) =1 \ \wedge \ (\barz, \barx; \baromega_2) \in \reltwo \},$$
+Let $\ZKCont$ be a zk continuation for $\relone$ (from preamble of this section) and 
+let $\nizktwo$ be a NIZK for $\reltwo'(\pp)$ (for some public parameters $\pp$) defined by \\ 
+$\reltwo'(\pp) = \{(X, \barz, \pp; \barx, b, \baromega_2): \ZKCont.\VerifyCom(\pp, X, \barx, b) =1\ 
+\wedge \ (\barz, \barx; \baromega_2) \in \reltwo \},$ 
 \noindent with $\reltwo$ from preamble of Section~\ref{sec:rvrf_cont}. Then we define the system $\nizkR$ for relation $\mathcal{R}$ 
-from the preamble of Section~\ref{sec:rvrf_cont} as:
+from the preamble of this section as:
 \begin{itemize}
-\item $\nizkR.\Setup: (1^{\lambda}) \mapsto (\crsR = (\crs,\crstwo), \twR = (\tw, \twtwo), \pp)$ where
+\item $\nizkR.\Setup: (1^{\lambda}) \mapsto (\crsR = (\crs,\crstwo), \twR = (\tw, \twtwo), \pp)$ where \\
 $(\crs, \tw, \pp) \leftarrow \ZKCont.\Setup(1^{\lambda}, \relone)$, \\ $(\crstwo, \twtwo) \leftarrow \nizktwo.\Setup(1^{\lambda})$
 
 %\item $\nizkR.\Gen: (\crsR) \mapsto (\ppR = \pp, \crspkR = (\crspk,\crspktwo), \crsvkR = (\crsvk,\crsvktwo))$ where 
@@ -20,10 +21,11 @@ $(X, \pi_1, b) \leftarrow \ZKCont.\Reprove(\crs, X', \pi_1', b', \relone)$ \\
 $ \pi_2 \leftarrow \nizktwo.\Prove(\crstwo, X, \barz; \barx, b, \baromega_2)$ 
 
 \item $\nizkR.\Verify: (\crsR,(\bary, \barz), (\pi_1, \pi_2, X)) \mapsto 0/1$ where the output is $1$ iff 
-$$\ZKCont.\Verify(\crs, \bar{y}, X, \pi_1, \relone) = 1 \  \wedge \ \nizktwo.\Verify(\crstwo, X, \barz, \pi_2) =1$$
+$\ZKCont.\Verify(\crs, \bar{y}, X, \pi_1, \relone) = 1 \  \wedge \ \nizktwo.\Verify(\crstwo, X, \barz, \pi_2) =1$
 
 \item $\nizkR.\Sim: (\twR, \bary, \barz) \mapsto (\pi_1, \pi_2, X)$ where \\
-$(\pi_1, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone)$, $\pi_2 \leftarrow \nizktwo.\Sim(\twtwo, X, \barz)$ 
+$(\pi_1, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone)$, \\
+$\pi_2 \leftarrow \nizktwo.\Sim(\twtwo, X, \barz)$ 
  \end{itemize}
  
 \begin{lemma}[Knowledge-soundness for $\nizkR$] 
