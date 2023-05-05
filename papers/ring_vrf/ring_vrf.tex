@@ -3,6 +3,7 @@
 
 
 \def\eprint#1#2{#2} % eprint
+\def\doublecolumn#1#2{#1}
 % \def\eprint#1#2{#2} % PETS
 \eprint{\usepackage[margin=2.5cm,includefoot]{geometry}}{}
 % \sloppy
@@ -30,7 +31,7 @@
 
 \usepackage{enumitem}
 % \setlist[itemize]{leftmargin=*}
-
+\usepackage[normalem]{ulem}
 \usepackage{etoolbox}
 \makeatletter
 \patchcmd{\@maketitle}% <cmd>

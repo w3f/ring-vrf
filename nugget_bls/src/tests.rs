@@ -23,7 +23,7 @@ fn single() {
 
     let domain = b"";
     let message = b"MSG1";
-    let t = Transcript::new(b"AD1");
+    let t = Transcript::new_labeled(b"AD1");
     let input = Message { domain, message };
     let signature = sk.sign_nugget_bls(t,input); 
 
@@ -31,7 +31,7 @@ fn single() {
     signature.serialize_compressed(&mut buf).unwrap();
     let signature = Signature::deserialize_compressed(buf.as_ref()).unwrap();
 
-    let t = Transcript::new(b"AD1");
+    let t = Transcript::new_labeled(b"AD1");
     let msg = Message { domain, message };
     pk.verify_nugget_bls(t,msg,&signature).unwrap();
 }
@@ -45,7 +45,7 @@ fn aggregation() {
     let mut g1pks0 = Vec::new();
     let sigs: Vec<Signature> = sks.iter().map(|sk| {
         g1pks0.push(sk.to_g1_publickey());
-        let mut t = Transcript::new(b"AD");
+        let mut t = Transcript::new_labeled(b"AD");
         t.append(&sk.to_g1_publickey());
         let input = Message { domain, message };
         sk.sign_nugget_bls(t,input)

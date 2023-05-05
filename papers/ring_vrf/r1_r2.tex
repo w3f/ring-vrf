@@ -1,5 +1,4 @@
 
-
 \subsection{Our Ring VRF Construction based on $ \ZKCont $}
 
 \label{subsec:rvrf_faster}
@@ -109,7 +108,77 @@ to generate a ring VRF signature for the same ring and for a different input, we
 %group signature schemes' performance \cite{group_sig_survey}.
 %We hope this ends the temptation to deploy group signature like
 % constructions where the deanonymisation vectors matter. 
+=======
+\subsection{Ring VRFs based on SpecialG}
+\label{subsec:rvrf_faster}
 
+We can apply the results of the previous subsections to construct a ring VRF using $\SpecialG$ that allows a\eprint{n incredibly }{ }fast amortized ring VRF prover. 
+First, \PedVRF has a sigma protocol which proves the relation $\mathcal{R}_{eval}$, 
+where $\mathcal{R}_{eval}$ is the instantiation of relation $\reltwo'(\pp)$ (for some appropriately chosen public parameters $\pp$). Second, we can use $\SpecialG$ 
+for a relation $\relone$ similar to $\Rring$. In fact, we will instantiate $\relone$ with $\Rring^{\mathtt{inner}}$. 
+
+
+We now present an appropriate $ \mathsf{Com}.\mathsf{Commit}(\sk) $ algorithm that together with $ \SpecialG $ efficiently instantiate the NIZK for $ \Rring^{\mathtt{inner}} $. This works on the Jubjub curve $\ecJ$ which contains a large subgroup $\grJ$ of prime order $p_\grJ$. Here, $p_\grJ < p$ where $ p $ is the order of $\grE$ used in our ring VRF construction\footnote{This condition can be satisfied if $\ecJ$ is an Edwards curve with a cofactor.}. We let $\genJ_0,\genJ_1,\genJ_2 \in \grJ$ be independent generators. We also fix a parameter $ \kappa $ where $(\log_2 p)/2 < \kappa < \log_2 p_\grJ$. $ \mathsf{Com}.\mathsf{Commit}(\sk) $ first samples $\sk_1,\sk_2 \in 2^\kappa$  where $\sk = \sk_0 + \sk_1 \, 2^{\lambda} \mod p$ and samples a blinding factor $d \leftsample \F_{p_\grJ} $. In the end, it outputs $ \sk_0, \sk_1,d $ as an opening and the commitment $\pk=\sk_0\, \genJ_0 + \sk_1\, \genJ_1 + d \genJ_2$ as a public key of our ring VRF construction. This commitment scheme is binding and perfectly hiding as our ring VRF construction requires because $ \pk $ is, in fact, a Pedersen commitment. Indeed, $\pk$ is a Pedersen commitment to $\sk$ because we can represent $ \sk = \sk_0\, \genJ_0 + \sk_1 \mod p$ since we have selected $ \kappa $ accordingly.
+
+%TODO MAKE THIS CONSISTENT WITH THE DESCRIPTION SINCE WE DEFINE EVERYTHING ON ONE GROUP
+
+We thus have a fairly efficient instantiation for \relone given by
+
+$$  \Rring^{\inner} = \Setst{ (\comring, \sk ; \sk_0, \sk_1, d, \openring) }{
+  \sk = \sk_0+ 2^{\lambda} \sk_1 \wedge
+ \genfrac{}{}{0pt}{}{ \eprint{\rVRF.}{}\OpenRing(\comring,\openring) }{ \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2 }
+} \mathperiod $$
+
+Combining $\SpecialG$ for $\relone$ and the sigma protocol which is part of $\PedVRF$ gives a 
+NIZK for relation $\rel_{\mathtt{rvrf}}$ (i.e., an instantiation of $\rel$ from previous subsections):
+
+$$ \rel_{\mathtt{rvrf}} = \Setst{ \Out, \msg, \comring ; \sk_0,\sk_1, d, \openring }{
+    \eprint{
+        \eprint{\rVRF.}{}\OpenRing(\comring,\openring)    \textrm{ and }
+        \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2, \quad
+        \Out = \rVRF.\Eval(\sk_0+ 2^{\lambda} \sk_1,\msg)
+    }{
+        \begin{aligned}
+        & \eprint{\rVRF.}{}\OpenRing(\comring,\openring) \\
+        & \,\, = \sk_0 \genJ_0 + \sk_1 \genJ_1 + d \genJ_2,\\
+        & \Out = \rVRF.\Eval(\sk_0+ 2^{\lambda} \sk_1,\msg)
+        \end{aligned}
+    }
+} $$
+
+
+\paragraph{Efficiency:} If we have a $\SpecialG$ proof for $\relone$ for our $\pk$ in a ring defined by $\comring$, 
+to generate a ring VRF proof for the same ring, we need to run $\SpecialG.\Reprove$ and $\PedVRF.\Sign$. $\PedVRF.\Sign$ 
+requires two scalar multiplications on $\ecE_1$
+and two on the same or faster $\ecE'$,
+so together with $\SpecialG.\Reprove$ costing four scalar multiplications
+on $\ecE_1$ and two on $\ecE_2$, our amortised prover time
+runs faster than 12 scalar multiplications on typical $\ecE_1$ curves. 
+We expect the three pairings dominate verifier time, but
+verifiers also need five scalar multiplications on $\ecE_1$.
+Importantly, our fast ring VRF's amortised prover time now rivals
+group signature schemes' performance \cite{group_sig_survey}.
+We hope this ends the temptation to deploy group signature like
+ constructions where the deanonymisation vectors matter. 
+
+
+\begin{comment}
+\paragraph{Efficiency:} If we have a $\SpecialG$ proof for $\relinner$ for our $\pk$ in a ring defined by $\comring$, 
+to generate a ring VRF proof for the same ring, we need to run $\SpecialG.\Reprove$ and $\NIZK_{\mathcal{R}_{eval}}.\Prove$. $\NIZK_{\mathcal{R}_{eval}}.\Prove$ 
+requires two scalar multiplications on $\grE_1$
+and two on the same or faster $\grE'$,
+so together with $\SpecialG.\Reprove$ costing four scalar multiplications
+on $\grE_1$ and two on $\grE_2$, our amortised prover time
+runs faster than 12 scalar multiplications on typical $\grE_1$ curves. 
+We expect the three pairings dominate verifier time, but
+verifiers also need five scalar multiplications on $\grE_1$.
+\end{comment}
+
+%TODO WHAT DOES IT MEAN
+Importantly, our fast ring VRF's amortised prover time now rivals
+group signature schemes' performance \cite{group_sig_survey}.
+We hope this ends the temptation to deploy group signature like
+constructions where the deanonymisation vectors matter. 
 
 \begin{comment}
 % TODO \PedVRF.\OpenKey(\compk,\openpk)

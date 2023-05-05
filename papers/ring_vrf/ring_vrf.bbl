@@ -56,6 +56,12 @@ Ran Canetti.
 \newblock In {\em Proceedings 2001 IEEE International Conference on Cluster
   Computing}, pages 136--145. IEEE, 2001.
 
+\bibitem{CLOS02}
+Ran Canetti, Yehuda Lindell, Rafail Ostrovsky, and Amit Sahai.
+\newblock Universally composable two-party and multi-party secure computation.
+\newblock {\em Conference Proceedings of the Annual ACM Symposium on Theory of
+  Computing}, 2003.
+
 \bibitem{climaterisk2021}
 {Chatham House}.
 \newblock Climate change risk assessment 2021.
@@ -125,6 +131,11 @@ Aniket Kate, Gregory~M. Zaverucha, and Ian Goldberg.
 \newblock Constant-size commitments to polynomials and their applications.
 \newblock In Masayuki Abe, editor, {\em Advances in Cryptology - ASIACRYPT
   2010}, pages 177--194, Berlin, Heidelberg, 2010. Springer Berlin Heidelberg.
+
+\bibitem{Kilian1990UsesOR}
+Joe Kilian.
+\newblock Uses of randomness in algorithms and protocols.
+\newblock PhD Thesis. Massachusetts Institute of Technology, 1990.
 
 \bibitem{group_sig_survey}
 Mark Manulis, Nils Fleischhacker, Felix G\"unther, Franziskus Kiefer, and
