@@ -309,11 +309,11 @@ AGM~\cite{Fuchs_AGM}, $\SpecialG$ is a zero-knowledge continuation as per Defini
 \begin{proof} It is straightforward to show that $\SpecialG$ has perfect completeness for $\Preprove$ and perfect completeness 
 for $\Reprove$. \\
 
-\noindent We prove knowledge-soundness (KS) an in Definition~\ref{def:zk_cont} by first arguing $\SpecialG$ is a cc-SNARK with double binding.  
-We use the fact that $\ccgroth$ as defined by the NILP detailed in Fig.22, Appendix H.5~\cite{LegoSNARK} satisfies that latter definition. Moreover, 
-$\SpecialG$'s $\Setup$ on one hand, and $\ccgroth$'s $ \mathsf{KeyGen} $, on the other hand, are the same procedure. Also $\SpecialG$ 
-and $\ccgroth$ share the same verification algorithm. Hence, translating the notation appropriately, $\SpecialG$ also satisfies KS 
-of a cc-SNARK with double binding. \\
+\noindent We prove knowledge-soundness (KS) an in Definition~\ref{def:zk_cont} by first arguing $\SpecialG$ is a cc-SNARK with double binding 
+(see Definition 3.4~\cite{LegoSNARK}).  We use the fact that $\ccgroth$ as defined by the NILP detailed in Fig.22, Appendix H.5~\cite{LegoSNARK} 
+satisfies that latter definition. Moreover, $\SpecialG$'s $\Setup$ on one hand, and $\ccgroth$'s $ \mathsf{KeyGen} $, on the other hand, are the same 
+procedure. Also $\SpecialG$ and $\ccgroth$ share the same verification algorithm. Hence, translating the notation appropriately, $\SpecialG$ also 
+satisfies KS of a cc-SNARK with double binding. \\
 
 % we first argue that We prove knowledge-soundness by reducing it to the knowledge-soundness property of the Groth16 
 %commit-carrying with double binding scheme (for short $\ccgroth$). This knowledge-soundness property has been formalised in 
@@ -322,13 +322,13 @@ of a cc-SNARK with double binding. \\
 %and $\ccgroth$ share the same verification algorithm. Since $\ccgroth$ satisfies the definition of a cc-SNARK with double binding, translating 
 %the notation appropriately, $\SpecialG$ also satisfies the knowledge soundness properties for a cc-SNARK with double binding. 
 \noindent Let $A_{\SpecialG}$ be an adversary for KS in Definition~\ref{def:zk_cont} and 
-define adversary $A_{\ccgroth}$ for KS  in \qhandan{Definition 3.4~\cite{LegoSNARK}}{I guess it is 3.2}:
+define adversary $A_{\ccgroth}$ for KS in Definition 3.4~\cite{LegoSNARK}:
 \begin{align*}
 &\mathit{If} \ A_{\SpecialG} (\crs, \pp, \realaux, \relRQ)\ \mathit{outputs} \  (\bary, \barx, X, \pi, b) \\
 &\ \ \ \ \ \ \ \ \mathit{then}\ A_{\ccgroth} (\crs, \realaux, \relRQ)\ \mathit{outputs} \ (\bary, X, \pi). 
 \end{align*}
 
-\noindent Given extractor $E_{\ccgroth}$ fulfilling \qhandan{Definition 3.4~\cite{LegoSNARK}}{I guess it is 3.2} for $A_{\ccgroth}$, we
+\noindent Given extractor $E_{\ccgroth}$ fulfilling Definition 3.4~\cite{LegoSNARK} for $A_{\ccgroth}$, we
 construct extractor $E_{\SpecialG}$ for $A_{\SpecialG}$
 \begin{align*}
 &\mathit{If} E_{\ccgroth} (\crs, \realaux, \relRQ)\ \mathit{outputs} \ (\barx^*, b^*, \baromega^*) \\
