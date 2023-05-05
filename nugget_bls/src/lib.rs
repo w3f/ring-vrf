@@ -264,7 +264,7 @@ impl<P: Pairing> AggregateSignature<P> {
         input: impl IntoVrfInput<<P as Pairing>::G1Affine>,
         agg_pk_g1: <P as Pairing>::G1Affine
     ) -> SignatureResult<()> {
-        let mut t = Transcript::new(b"NuggetAggregate");
+        let mut t = Transcript::from_accumulation(b"NuggetAggregate");
         t.label(b"g2+sig");
         t.append(self);
         t.label(b"g1");

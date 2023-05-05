@@ -75,19 +75,19 @@ impl<B: BorrowMut<Transcript>> IntoTranscript for B {
 impl<T: Borrow<[u8]>> IntoTranscript for IsLabel<T> {
     type Taken = Transcript;
     fn into_transcript(self) -> Transcript {
-        Transcript::new(self)
+        Transcript::new_labeled(self)
     }
 }
 impl<'a> IntoTranscript for &'a [u8] {
     type Taken = Transcript;
     fn into_transcript(self) -> Transcript {
-        Transcript::from_accumulation(self);
+        Transcript::from_accumulation(self)
     }
 }
 impl<'a, const N: usize> IntoTranscript for &'a [u8; N] {
     type Taken = Transcript;
     fn into_transcript(self) -> Transcript {
-        Transcript::from_accumulation(self);
+        Transcript::from_accumulation(self)
     }
 }
 
