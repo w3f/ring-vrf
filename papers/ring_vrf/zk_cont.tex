@@ -11,7 +11,7 @@
 
 \noindent In the following, we describe a NIZK for a relation $\rel$ where
 $$\rel = \{(\bary, \barz; \barx, \baromega_1, \baromega_2):  (\bary, \barx; \baromega_1) \in \relone, (\barz, \barx; \baromega_2) \in \reltwo \},$$
-and $\relone$, $\reltwo$ are some NP relations. 
+and $\relone$, $\reltwo$ are NP relations. 
 At a high level, this is based on the commit-and-prove methodology~\cite{Kilian1990UsesOR,CLOS02,LegoSNARK} 
 as relations $\relone$ and $\reltwo$ have input $\barx$ in common and the respective 
 proofs or arguments can and will make use of a commitment $X$ to $\barx$. However, our proposed NIZK has a more specific functionality: 
@@ -106,7 +106,7 @@ and satisfies perfect completeness for $\Preprove$ and, for $\Reprove$, it satis
                    & (X, \pi, b) \leftarrow \ZKCont.\Preprove(\crs, \bar{y}, \bar{x}, \baromega_1, \relone)) = 1
 \end{align*}
 
-\noindent \textbf{Perfect Completeness for $\Reprove$} For all $\lambda \in \mathbb{N}$, for every efficient adversary $A$: 
+\noindent \textbf{Perfect Completeness for $\Reprove$} For all $\lambda \in \mathbb{N}$, for every PPT adversary $A$: 
 \begin{align*}
 \mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X', \pi', \relone) = 1  \Rightarrow \ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1)  \ \wedge \  \\
                    & \wedge \ (\ZKCont.\VerifyCom (\pp, X', \barx, b') = 1 \Rightarrow \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1) \ | \\
@@ -144,14 +144,14 @@ every non-uniform efficient adversary $A$, there exists efficient non-uniform ex
 
 \noindent %where $\ZKCont.\Preprove_{|X}(\crspk, \bar{y}, \bar{x}, \baromega_1, \relone; b)$ means running the part of algorithm 
 %$\ZKCont.\Preprove$ that computes and outputs $X$ with its regular inputs and using $b$ when randomness is required; 
-where by $(\mathit{output_{A}};\mathit{output_{B}}) \leftarrow A || B(\mathit{input})$ we denote algorithms $A$, $B$  running on the same 
+where by $(\mathit{output_{A}};\mathit{output_{B}}) \leftarrow A || B(\mathit{input})$ we denote algorithms $A$, $B$ running on the same 
 $\mathit{input}$ and $B$ having access to the random coins of $A$. \\
 
 \noindent Finally, we introduce a new flavour of zero-knowledge property. It allows us to formalise the intuition that if one calls once 
 $\ZKCont.\Preprove$ on $((\bary, \barx), \baromega_1) \in \relone$ and 
 then sequentially calls $ \ZKCont.\Reprove $ at least once but also (possibly) multiple times, 
-then every time after the first call to $ \ZKCont.\Reprove $ the proof reveals nothing regarding either $\barx$ or $\baromega_1$. From this we can 
-extrapolate that sequential $ \ZKCont.\Reprove $ proofs obtained as described above are not linkable, which is what we have hinted towards 
+then every time after the first call to $ \ZKCont.\Reprove $ the resulting proofs reveal nothing regarding either $\barx$ or $\baromega_1$. 
+Hence, the proofs obtained via sequential use of $ \ZKCont.\Reprove $ as described above are not linkable, i.e., a property targeted  
 in the preamble of this section. \\
 
 \noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $\realaux$, 
@@ -164,24 +164,7 @@ for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$
 = \mathit{Pr}(& A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\ 
                      %& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone),\\
                      & \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, (\pi, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone))
-\end{align*}
-
-\begin{comment}
-\begin{align*}
-\mathit{Pr}(& A(\crs, \realaux, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
-                  & (\crs, \crs) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
-                  & (\pi', X', \_) \leftarrow \ZKCont.\Reprove (\crs, X, \pi, b, \relone), \\
-                  &  \ZKCont.\Verify(\crs, \bary, X, \pi, \relone) = 1) =  \\
-= \mathit{Pr}(& A(\crs, \realaux, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
-                     & (\crs, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi', X') \leftarrow \ZKCont.\Sim(\tw, \bary, \relone) \\ 
-                     &  \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1)
-\end{align*}
-\end{comment}
- 
-\begin{comment} 
-Maybe some remarks why we define ZK only for Reprove? Does it cover ZK for Preprove as well?
-\end{comment}
-
+\end{align*} 
 \end{definition} 
 
 % $$ \Lring = \Setst{ \compk, \comring }{
@@ -194,7 +177,7 @@ Maybe some remarks why we define ZK only for Reprove? Does it cover ZK for Prepr
 \label{sec:rvrf_groth16}
 
 Below we instantiate our zero-knowledge continuation notion with a scheme based on Groth16~\cite{Groth16} SNARK;
-hence, we call our instantiation \emph{specialised Groth16} or \emph{$\mathsf{SpecialG}$}. But first we need a 
+hence, we call our instantiation \emph{specialised Groth16} or \emph{$\mathsf{SpecialG}$}. We start with a  
 reminder of the definition of Quadratic Arithmetic Program (QAP)~\cite{LegoSNARK}, ~\cite{GGPR13}.
 
 \begin{definition}[QAP] 
@@ -209,13 +192,13 @@ where $\barv = (v_0, \ldots, v_m) = (1, x_1, \ldots, x_n, w_1, \ldots w_{m-n})$ 
 $\barx = (x_{l+1}, \ldots, x_n)$ and $\baromega = (w_1, \ldots, w_{m-n})$. 
 \end{definition}
 
-\noindent In summary, the trusted setup required by \SpecialG is 
-an extension of that required by original Groth16~\cite{Groth16} by two additional 
-group elements $\Kgamma = \frac{\eta}{\gamma} \cdot \gone $ and $\Kdelta = \frac{\eta}{\delta} \cdot \gone$. 
-An identical trusted setup to that used by $\SpecialG$ was also used in the commit-carrying SNARK $\mathsf{ccGro16}$~\cite[Fig.~22]{LegoSNARK} 
-based, in turn, on Groth16. Moreover, together the $\Preprove$ and the $\Reprove$ procedures of $\SpecialG$ are identical to the proving and re-randomisation 
-procedure in $\mathsf{ccGro16}$ with the difference that we also re-randomise the commitment to part of the public input. Additionally, 
-the verification procedure and the commitment verification are identical to their counterparts in $\mathsf{ccGro16}$. 
+\noindent In summary,  \SpecialG setup is an extension of original Groth16~\cite{Groth16} setup by two additional 
+group elements $\Kgamma$ and $\Kdelta$, as defined below. $\SpecialG$ setup is identical to commit-carrying 
+SNARK $\ccgroth$~\cite[Fig.~22]{LegoSNARK} setup\footnote{$\ccgroth$ is, in turn, based on  Groth16.}.
+Moreover, together the $\Preprove$ and the $\Reprove$ procedures of $\SpecialG$ are identical to the proving  
+procedure in $\ccgroth$ with the difference that $\SpecialG$ also re-randomises the commitment to part 
+of the public input. Additionally, the verification procedure and the commitment verification are identical to their 
+counterparts in $\ccgroth$. 
 %Second, our $\SpecialG.\Reprove$ algorithm uses a Groth16 re-randomisation 
 %technique for the proof (see~\cite[Fig.~1]{RandomizationGroth16} or LegoSNARK~\cite[Fig.~22]{LegoSNARK}), 
 %but, in addition, $\SpecialG.\Reprove$ also re-randomises $X$ which is a commitment to a slice of the public input;
@@ -231,7 +214,7 @@ the related source, target groups and generators, we introduce%Let $\mathbb{F}_q
 %Then let $\relone = \{ (;) \ | \ (;)  (\ast) \}$
 
 \begin{definition}[Specialised Groth16 ($\SpecialG$)]
-\label{insta:sg16} Let $\relRQ$ be as in Definition~\ref{def:QAP}. Then we call 
+\label{insta:sg16} Let $\relRQ$ be as in Definition~\ref{def:QAP}. We call 
 specialised Groth16 for relation $\relRQ$ the following: %instantiation of the zero-knowledge continuation notion from Definition~\ref{def:zk_cont}:
 \begin{itemize}
 \item $\SpecialG.\Setup: (1^{\lambda}, \relRQ) \mapsto (\crs, \tw,\pp)$. \\ 
@@ -313,19 +296,21 @@ $\SpecialG.\Reprove$ zero-knowledge property is preserved for both the witness a
 %since the zk-SNARK must remain knowledge-sound even given enlarged CRS; adding too many (or just ?wrong?) elements to the 
 %CRS can break the knowledge-soundness."
 
-\noindent Finally, we are ready to prove the following result:
+\noindent Finally, we are ready to prove that $\SpecialG$ is a zero-knowledge continuation. We show that the knowledge soundness property 
+of $\SpecialG$ (i.e., as defined for $\ZKCont$) is weaker than the knowledge soundness property of commit-carrying SNARK with double 
+binding (cc-SNARK with double binding, see Definition 3.4~\cite{LegoSNARK}); our notion of zero-knowledge for $\ZKCont$ is, in fact a 
+new and stronger notion so we prove that directly. Formally, we have: 
 
 \begin{theorem}
 \label{sec_specialg}
 Let $\relRQ$ be a relation as per Definition~\ref{def:QAP} such that additionally $\{a_k(X)\}_{k=0}^n$ are linearly independent polynomials. Then, in the 
 AGM~\cite{Fuchs_AGM}, $\SpecialG$ is a zero-knowledge continuation as per Definition~\ref{def:zk_cont}. 
 \end{theorem}
-\begin{proof} It is straightforward to prove that $\SpecialG$ has perfect completeness for $\Preprove$ and perfect completeness 
+\begin{proof} It is straightforward to show that $\SpecialG$ has perfect completeness for $\Preprove$ and perfect completeness 
 for $\Reprove$. \\
 
-\noindent We prove knowledge-soundness (KS) an in Definition~\ref{def:zk_cont} by first arguing $\SpecialG$ is a 
-\qhandan{commit-carrying SNARK with double binding (cc-SNARK with double binding) as per Definition 3.4~\cite{LegoSNARK}}{If it is easy, you should give intuition about what it is. What is the relation with the properties that we want to show for $ \SpecialG $?}. 
-\qhandan{We use the fact that $\ccgroth$ as defined by the NILP detailed in Fig.22, Appendix H.5~\cite{LegoSNARK} satisfies that latter definition.}{I don't see in the proof you relate anything related to double binding property. Is this the fact you need? If yes, it should be more clear in the proof why you need it. From what I understood, you just use the  fact that ccSnark is KS.} Moreover, 
+\noindent We prove knowledge-soundness (KS) an in Definition~\ref{def:zk_cont} by first arguing $\SpecialG$ is a cc-SNARK with double binding.  
+We use the fact that $\ccgroth$ as defined by the NILP detailed in Fig.22, Appendix H.5~\cite{LegoSNARK} satisfies that latter definition. Moreover, 
 $\SpecialG$'s $\Setup$ on one hand, and $\ccgroth$'s $ \mathsf{KeyGen} $, on the other hand, are the same procedure. Also $\SpecialG$ 
 and $\ccgroth$ share the same verification algorithm. Hence, translating the notation appropriately, $\SpecialG$ also satisfies KS 
 of a cc-SNARK with double binding. \\
