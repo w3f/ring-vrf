@@ -34,6 +34,8 @@ pub use pedersen::{PedersenVrf};
 // #[cfg(feature = "getrandom")]
 // mod musig
 
+pub mod traits;
+
 #[cfg(test)]
 mod tests;
 

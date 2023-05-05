@@ -3,15 +3,11 @@
 // Authors:
 // - Jeffrey Burdges <jeff@web3.foundation>
 
-//! ### VRF Output routines
+//! ### VRF input and output handling
 //!
-//! *Warning*  We warn that our ring VRF construction needs malleable
-//! outputs via the `*malleable*` methods.  These are insecure when
-//! used in  conjunction with our HDKD provided in dervie.rs.
-//! Attackers could translate malleable VRF outputs from one soft subkey 
-//! to another soft subkey, gaining early knowledge of the VRF output.
-//! We suggest using either non-malleable VRFs or using implicit
-//! certificates instead of HDKD when using VRFs.
+//! We caution that ring VRFs based upon DLEQ proofs like ours require
+//! malleable pre-outputs, which become insecure if used in conjunction
+//! with "soft key derivation" ala BIP32.
 
 use ark_ec::{AffineRepr, CurveGroup, hashing::{HashToCurve,HashToCurveError}};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
