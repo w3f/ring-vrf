@@ -1,3 +1,7 @@
+
+\def\tmpaux{\aux \doubleplus \piring \doubleplus \comring}
+\def\tmpeprintaux{\eprint{\aux'}{\tmpaux}}
+\def\tmpindent{\hspace*{5pt}}
 \section{Ring VRF construction}% {Ring VRFs from the Pedersen VRF}
 \label{sec:pederson_vrf}
 
@@ -22,7 +26,7 @@ Our ring VRF construction works with public parameters $ \pprvrf = (\crsrvrf, p,
 %Any readers only interested in theoretical security arguments
 %should assume $\ecEsis = \ecE$ and $\hsis = 1 = h$,
 % while implementers should read more carefully.
-We first describe Pedersen VRF before giving our ring VRF construction.
+We  describe Pedersen VRF before  our ring VRF construction.
 \paragraph{Pedersen VRF:} 
 We construct \PedVRF similarly to 
 \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10},
@@ -33,9 +37,9 @@ We do not expose a public key from \KeyGen, nor inject the public key in \Eval.
 \begin{itemize}
 	\item $\PedVRF.\KeyGen: \pprvrf \mapsto \sk$  where $\sk \leftsample \F_p$. % and $\pk = \sk \, \genG$.
 	\item $\PedVRF.\Eval : (\sk,\msg) \mapsto H(\msg, \PreOut)$ where $\PreOut = \sk \, H_{\grE}(\msg)$.
-\end{itemize}
-\noindent We add an algorithm to obtain a Pedersen commitment to the secret key \sk.
-\begin{itemize}
+
+%\noindent We add an algorithm to obtain a Pedersen commitment to the secret key \sk.
+
 	\item $\PedVRF.\CommitKey: \sk \mapsto (b, \compk)$ \,
 	where  $\openpk \leftsample \F_p$ is a blinding factor
 	and $\compk = \sk \, \genG + \openpk \, \genB$ is a Pedersen commitment.
@@ -53,6 +57,19 @@ the \Prove algorithm and verification procedure of a Chaum-Pedersen DLEQ proof
 for relation $\mathcal{R}_{eval}$ (see below),
 instantiated by a Fiat-Shamir transform of a sigma protocol.
 
+\eprint{$$ \mathcal{R}_{eval} = \Setst{
+		\begin{aligned}
+			& (\compk,\PreOut,\msg) ; \\ 
+			& \,\, (\sk, \openpk) 
+		\end{aligned}
+	}{
+		\begin{aligned}
+			& \compk = \sk\,\genG + \openpk\,\genB, \\
+			& \,\, \PreOut = \sk \, H_{\grE}(\msg) 
+		\end{aligned}
+	}  \mathperiod \label{rel:commit} 
+	$$}{
+\begin{scriptsize}
 $$ \mathcal{R}_{eval} = \Setst{
 	\begin{aligned}
 		& (\compk,\PreOut,\msg) ; \\ 
@@ -65,6 +82,8 @@ $$ \mathcal{R}_{eval} = \Setst{
 	\end{aligned}
 }  \mathperiod \label{rel:commit} 
 $$
+\end{scriptsize}
+}
 
 
 
@@ -77,15 +96,14 @@ $$
 	Compute $\PreOut := \sk \, H_{\grE}(\msg)$ and $ \compk = \sk \genG + \openpk\genB $. Then, run $\NIZK_{\rel_{eval}}.\Prove(\compk, \PreOut, \msg;\sk,\openpk,\msg)  $ which generates a Chaum-Pedersen DLEQ proof
 	for relation $\mathcal{R}_{eval}$ i.e.,
 	let $r_1,r_2 \leftsample \F_p$
-	and compute $R = r_1 \genG + r_2 \genB, R_m = r_1 H_{\grE}(\msg) $ and $c = H_p(\aux,\msg,\compk,\PreOut,R,R_m)$, finally compute $s_1 = r_1 + c \, \sk$ and $s_2 = r_2 + c \, \openpk$ and let $ \pi = (R,R_m,s_1,s_2) $.
+	and compute $R = r_1 \genG + r_2 \genB, R_m = r_1 H_{\grE}(\msg) $ and $c = H_p(\aux,\msg,\compk,\PreOut,R,R_m)$, finally compute $s_1 = r_1 + c \, \sk$ and $s_2 = r_2 + c \, \openpk$ and let $ \pi = (c,s_1,s_2) $.
 	Return the signature $\sigma = (\PreOut,\pi) $.
 	% and return the signature $\sigma = (\PreOut,c,s_1,s_2)$.
 	
 	\item $\PedVRF.\Verify : (\compk,\msg,\aux,\sigma) \mapsto \Out \,\, \lor \perp$ \,.
 	It runs  $ \NIZK_{\mathcal{R}_{eval}}.\Verify((\compk,\PreOut,\msg), \pi_{eval} ) $ i.e.,
-	Parse $\sigma = (\PreOut, R,R_m,s_1,s_2) $ and compute 
-	$c = H_p(\aux,\msg,\compk,\PreOut,R,R_m)$.
-	If $ R = s_1 \genG + s_2 \genB - c \, \compk$ and
+	Parse $\sigma = (\PreOut,c,s_1,s_2) $ and check if 
+	$c = H_p(\aux,\msg,\compk,\PreOut,R,R_m)$ where  $ R = s_1 \genG + s_2 \genB - c \, \compk$ and
 	and $ R_m = s_1 H_{\grE}(\msg) - c \, \PreOut$,
 	% First parse $\sigma = (\PreOut, \pi_{eval} =(c,s_1,s_2))$,
 	% recompute $\In := H_{\grEsis}(\msg)$, 
@@ -173,37 +191,41 @@ We remark that \PedVRF becomes almost EC VRF if
 we demand $\openpk = r_2 = 0$ in \Sign.
 %but our public key handling in \PedVRF breaks VRF definitions somewhat. %NOT CLEAR SENTENCE
 
-\paragraph{The Ring VRF Construction:} We now describe how our ring VRF construction works as a combination of $ \PedVRF $, $ \NIZK_{\Rring} $ (for a relation 
+\paragraph{The Ring VRF Construction:} We now describe  our ring VRF construction as a combination of $ \PedVRF $, $ \NIZK_{\Rring} $ (for a relation 
 $\Rring$ instantiated below) and a commitment scheme $ \mathsf{Com} $.
 
 \begin{itemize}
 	\item $\rVRF.\KeyGen$ \, returns as secret key $\sk,r \leftsample \F_p$ and $ \pk $ as public key where $ \pk = \mathsf{Com}.\mathsf{Commit}(\sk,r)  $. We note that $ \pk  $ can be alternatively defined as $ \pk = \sk \genG $ according to the SNARK used for $ \Rring $. In this case, we would not have $ r $ as a part of the secret key.  We provide one optimal public key design in \S\ref{subsec:rvrf_faster} for our SNARK used for $ \Rring $. 
 	
-	\item $\rVRF.\Eval((\sk,r), \msg) $ runs $\PedVRF.\Eval(\sk,\msg)$. We remark that the evaluation value is generated with \emph{only} the first part of the secret key which is $ \sk $.
+	\item $\rVRF.\Eval((\sk,r), \msg) $ runs $\PedVRF.\Eval(\sk,\msg)$. 
+	\eprint{We remark that the evaluation value is generated with \emph{only} the first part of the secret key which is $ \sk $.}{}
 	
-	\item $ \rVRF.\CommitRing: (\ring,\pk) \mapsto (\comring,\openring)$ compute a Merkle tree root $\comring  $ using random oracle $ H_\ring $ considering the elements of $ \ring $ as leaves and generating a  Merkle tree path $ \openring $ that verifies $ \pk \in \ring $.
+	\item $ \rVRF.\CommitRing: (\ring,\pk) \mapsto (\comring,\openring)$ computes a Merkle tree root $\comring  $ using $ H_\ring $ considering the elements of $ \ring $ as leaves and generating a  Merkle tree path $ \openring $ that verifies $ \pk \in \ring $.
 	
-	\item $ \rVRF.\OpenRing: (\comring, \openring) \mapsto \pk $ verify that the root computed via Merkle tree path $ \openring $ is  $ \comring $. If it is the case, output $ \pk \in \openring $. Otherwise, output $ \perp $. 
+	\item $ \rVRF.\OpenRing: (\comring, \openring) \mapsto \pk $ verifies that the root computed via Merkle tree path $ \openring $ is  $ \comring $. If it is the case, output $ \pk \in \openring $. Otherwise, output $ \perp $. 
 	
 	We choose the ring commitment scheme so the $\rVRF.\OpenRing$ invocation
 	is relatively SNARK friendly in our ring membership relation $ \Rring $. We note that an alternative ring commitment scheme may be used 
-	where $ \comring = \ring $ and $ \openring = \pk $, however as we will see below, it incurs a high cost of $O(|\ring|)$ for the ring VRF verifier. 
+	where $ \comring = \ring $ and $ \openring = \pk $.
+	%, however as we will see below, it incurs a high cost of $O(|\ring|)$ for the ring VRF verifier. 
 		
-\end{itemize}
+\eprint{\end{itemize}}{}
 
-\noindent The \Sign and \Verify for  our \rVRF are a combination of \Sign and \Verify from \PedVRF and
-\Prove and \Verify from $\NIZK_{\Rring}$, as follows:
-\def\tmpaux{\aux \doubleplus \piring \doubleplus \comring}
-\def\tmpeprintaux{\eprint{\aux'}{\tmpaux}}
-\def\tmpindent{\hspace*{5pt}}
-\begin{itemize}
+\eprint{\noindent The \Sign and \Verify for  our \rVRF are a combination of \Sign and \Verify from \PedVRF and
+\Prove and \Verify from $\NIZK_{\Rring}$, as follows:}{}
+\eprint{\begin{itemize}}{}
 	
 	\item $\rVRF.\rSign : ((\sk,r),\comring, \openring,\msg,\aux) \mapsto \rho$
-	returns a ring VRF signature $\rho = (\compk,\piring,\sigma, \comring)$
-	if \openring is a correct opening of \comring.  In this, $(\openpk,\compk) \leftarrow \PedVRF.\CommitKey(\sk)$,  $\piring \leftarrow \NIZK_{\Rring}.\Prove((\compk,\comring); \openpk,\openring, \pk,\sk,r)$ where  $\aux' \leftarrow \tmpaux$,  $\sigma \leftarrow \PedVRF.\Sign(\sk,\openpk,\msg, \aux')$.  We instantiate  $ \Rring 
-	$\footnote{We note that if $ \pk = \sk\genG $ then $ \Rring $ does not need $ \sk,r $ as a part of the witness. In this case we need to replace the last two conditions by $ \compk = \pk + \openpk \genB $.} with
-
-	
+	returns a ring VRF signature $\rho = (\compk,\piring,\sigma, \comring)$.
+  In this, $(\openpk,\compk) \leftarrow \PedVRF.\CommitKey(\sk)$,  $\piring \leftarrow \NIZK_{\Rring}.\Prove((\compk,\comring); \openpk,\openring, \pk,\sk,r)$ where  $\aux' \leftarrow \tmpaux$,  $\sigma \leftarrow \PedVRF.\Sign(\sk,\openpk,\msg, \aux')$ and 
+\eprint{$$ \Rring = \Setst{ (\compk,\comring ;\openpk,\openring,\sk,r) }{
+		\begin{aligned}
+			&	\pk = \OpenRing(\comring,\openring), \\
+			& 	\sk = \mathsf{Com}.\mathsf{Open}(\pk,r), \\
+			& 	\compk = \sk \genG + \openpk \genB
+		\end{aligned}	
+	}$$}{
+	\begin{scriptsize}
 	$$ \Rring = \Setst{ (\compk,\comring ;\openpk,\openring,\sk,r) }{
 		\begin{aligned}
 			&	\pk = \OpenRing(\comring,\openring), \\
@@ -211,6 +233,8 @@ $\Rring$ instantiated below) and a commitment scheme $ \mathsf{Com} $.
 			& 	\compk = \sk \genG + \openpk \genB
 		\end{aligned}	
 	}$$
+	\end{scriptsize}}
+We note that if $ \pk = \sk\genG $ then $ \Rring $ does not need $ \sk,r $ as a part of the witness. In this case we need to replace the last two conditions by $ \compk = \pk + \openpk \genB $.
 	\item $\rVRF.\rVerify : (\comring,\msg,\aux,\rho) \mapsto (1,\Out) \,\, \lor (0,\perp)$ \, 
 	parses $\rho$ as $(\compk,\piring,\sigma)$,  sets $\aux' \leftarrow \tmpaux$ and runs $\NIZK_{\Rring}.\Verify((\compk,\comring); \piring)$.
 	If it fails, returns $ (0,\perp) $. Otherwise, returns $\PedVRF.\Verify(\compk,\msg, \aux', \sigma)$.
@@ -231,15 +255,15 @@ $\Rring$ instantiated below) and a commitment scheme $ \mathsf{Com} $.
 
 % END TODO: Oana
 
-Appendix \ref{ap:ucproof} proves our ring VRF construction realizes $ \fgvrf $ in Figure \ref{f:gvrf} but we want to give an intuition first why our scheme is secure. Intuitively, the randomness and the determinism of $ \rVRF.\Eval $ come from the random oracles $ H $ and $ H_{\grE} $.  The anonymity of our ring VRF signature $ (\sigma = (\compk, \pi_{ring}, \PreOut, \pi_{eval}, \comring)) $ comes from the perfect hiding property of Pedersen commitment i.e., $ \compk $ is independent from the signer's key, the zero-knowledge property of $ \NIZK_{\mathcal{R}_{ring}} $ and $ \NIZK_{\mathcal{R}_{eval}} $ and the difficulty of DDH in  $ \grE $ (Lemma \ref{lem:honestoutput}) so that $ \PreOut $ is indistinguishable from a random element in $ \grE $. The unforgeability and uniqueness come from the fact that CDH is hard in $ \grE $ (Lemma \ref{lem:simulation-ind}).
+\eprint{Appendix \ref{ap:ucproof} proves our ring VRF construction realizes $ \fgvrf $ in Figure \ref{f:gvrf} but we want to give an intuition first why our scheme is secure. Intuitively, the randomness and the determinism of $ \rVRF.\Eval $ come from the random oracles $ H $ and $ H_{\grE} $.  The anonymity of our ring VRF signature $ (\sigma = (\compk, \pi_{ring}, \PreOut, \pi_{eval}, \comring)) $ comes from the perfect hiding property of Pedersen commitment i.e., $ \compk $ is independent from the signer's key, the zero-knowledge property of $ \NIZK_{\mathcal{R}_{ring}} $ and $ \NIZK_{\mathcal{R}_{eval}} $ and the difficulty of DDH in  $ \grE $ (Lemma \ref{lem:honestoutput}) so that $ \PreOut $ is indistinguishable from a random element in $ \grE $. The unforgeability and uniqueness come from the fact that CDH is hard in $ \grE $ (Lemma \ref{lem:simulation-ind}).}{}
 
 \begin{theorem}\label{thm:rvrfmain}
-	$ \rVRF $  over  $ pp_{rvrf} $ realizes $ \fgvrf $ running $ \Gen_{sign} $ (Algorithm \ref{alg:gensign}) in the random oracle model assuming that $ \NIZK_{\mathcal{R}_{eval}} $ and $ \NIZK_{\mathcal{R}_{ring}}$ are zero-knowledge and knowledge sound, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $ (so the CDH problem is hard as well) and the commitment scheme $ \mathsf{Com} $ is binding and perfectly hiding. 
+	$ \rVRF $  over  $ pp_{rvrf} $ realizes $ \fgvrf $ running $ \Gen_{sign} $ in Algorithm \ref{alg:gensign} in the random oracle model assuming that $ \NIZK_{\mathcal{R}_{eval}} $ and $ \NIZK_{\mathcal{R}_{ring}}$ are zero-knowledge and knowledge sound, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $ \eprint{(so the CDH problem is hard as well) }{} and the commitment scheme $ \mathsf{Com} $ is binding and perfectly hiding. 
 \end{theorem}
 
 
 \begin{algorithm}
-	
+	\eprint{}{\scriptsize}
 	\caption{$\Gen_{sign}(\ring,W,x,\pk,\aux,\msg)$}
 	\label{alg:gensign}	 	
 	\begin{algorithmic}[1]
@@ -258,14 +282,13 @@ Appendix \ref{ap:ucproof} proves our ring VRF construction realizes $ \fgvrf $ i
 \end{algorithm}
 We have the security proof of Theorem \ref{thm:rvrfmain} in Appendix \ref{ap:ucproof}. We give a proof sketch here.
 
-\noindent \textit{Proof Sketch:} We should first verify that $ \fgvrf $ running $ \Gen_{sign} $ gives the anonymity defined in Definition \ref{def:anonymity}. We can show it by reducing the anonymity game in another game where we  replace   $\NIZK_{\Rring}.\Prove(\comring, \compk\; \openpk, \openring, x) $
-by $ \NIZK_{\Rring}.\Simulate(\comring,\compk) $ in $ \Gen_{sign} $. Since the signature generated in this reduction is independent from honest keys thanks to perfectly hiding $ \compk $, the signatures generated by $ \Gen_{sign} $ are indistinguishable.
+\noindent \textit{Proof Sketch:} We first verify that $ \fgvrf $ running $ \Gen_{sign} $ gives the anonymity defined in Definition \ref{def:anonymity} (See Lemma \ref{lem:anonymity}). \eprint{We can show it by reducing the anonymity game in another game where we  replace   $\NIZK_{\Rring}.\Prove(\comring, \compk\; \openpk, \openring, x) $
+by $ \NIZK_{\Rring}.\Simulate(\comring,\compk) $ in $ \Gen_{sign} $. Since the signature generated in this reduction is independent from honest keys thanks to perfectly hiding $ \compk $, the signatures generated by $ \Gen_{sign} $ are indistinguishable.}{Intuitively, it does not reveal the signer because $ \NIZK_{\Rring} $ is ZK and Pedersen commitment is perfectly hiding.}
 
-After making sure that $ \fgvrf $ running $ \Gen_{sign} $ satisfies all security properties we need, we show that our protocol $ \rVRF $ realizes $ \fgvrf $. Therefore, we construct a simulator $ \simulator $ that simulates that simulates the honest parties in the execution of our protocol $ \rVRF $ and simulates the adversary in the ideal world with $ \fgvrf $. $ \simulator $ simulates the random oracles against adversaries in the real protocol. It simulates $H_\grE $ so that it knows the discrete logarithm of each $ H_\grE $ output. This trapdoor helps $ \simulator $ to learn the public key of the adversary if the adversary ever comes to the random oracle $ H $ to compute the evaluation value of $ \msg $. When it happens, $ \simulator $ asks $ \fgvrf $ to evaluate $ \msg $ for this public key and replies the evaluation value provided by $ \fgvrf $ as a random oracle $ H $. Thus, $ \simulator $ makes the evaluation values of real world malicious parties be consistent with the evaluation values of ideal world malicious parties. Whenever $ \fgvrf $ sends a message $ (\oramsg{verify}, \sid, \ring, W, \aux,\msg, \sigma) $ to $ \simulator $, $ \simulator $ runs $ \rVRF.\Verify(\comring, \msg,\aux,\sigma) \rightarrow (b_\simulator,.)$ and sends a response including $ b_\simulator $. If $ \fgvrf $ replies with a decision $ b \neq b_\simulator $, $ \simulator $ aborts because of the inconsistency. Then, we  make sure that our simulation is indistinguishable. We show this in Lemma \ref{lem:honestoutput} and \ref{lem:simulation-ind} in Appendix \ref{ap:ucproof}.
-
-We first show that the output of honest and malicious parties in the ideal world are indistinguishable from the output of honest and malicious parties in the real protocol in Lemma \ref{lem:honestoutput} in Appendix \ref{ap:ucproof}. $ \Sim $ makes sure that the malicious parties in the ideal world have the same outputs. The honest parties in our ring VRF protocol have $ \PreOut $ as a part of their signature. The ideal world honest parties has $ W $ instead of it which is sampled randomly by $ \fgvrf $ instead of it. We can show by the DDH assumption that $ W $ and $ \PreOut $ are indistinguishable.
-
-We also show that $ \simulator $ does not abort during the simulation except with negligible probability in Lemma \ref{lem:simulation-ind} in Appendix \ref{ap:ucproof}. Indeed, we show that if there exists an adversary $ \adv $ which makes $ \simulator $ abort during the simulation, then we construct another adversary $ \mathcal{B} $ which breaks either the CDH problem or the binding property of $ \mathsf{Com}$. 
+After making sure that $ \fgvrf $ running $ \Gen_{sign} $ satisfies all security properties, we show that our protocol $ \rVRF $ realizes $ \fgvrf $. So, we construct a simulator $ \simulator $ that simulates the honest parties in the real protocol $ \rVRF $ and simulates the adversary in the ideal world with $ \fgvrf $. $ \simulator $ simulates the random oracles against adversaries in the real protocol. It simulates $H_\grE $ so that it knows the discrete logarithm of each $ H_\grE $ output. This trapdoor helps $ \simulator $ to learn the public key of the adversary if the adversary ever comes to the random oracle $ H $ to compute the evaluation value of $ \msg $. When it happens, $ \simulator $ asks $ \fgvrf $ to evaluate $ \msg $ for this public key and replies the evaluation value provided by $ \fgvrf $ as a random oracle $ H $. Thus, $ \simulator $ makes the evaluation values of real world malicious parties be consistent with the evaluation values of ideal world malicious parties. Whenever $ \fgvrf $ sends a message $ (\oramsg{verify}, \sid, \ring, W, \aux,\msg, \sigma) $ to $ \simulator $, $ \simulator $ runs $ \rVRF.\Verify(\comring, \msg,\aux,\sigma) \rightarrow (b_\simulator,.)$ and sends a response including $ b_\simulator $. If $ \fgvrf $ replies with a decision $ b \neq b_\simulator $, $ \simulator $ aborts because of the inconsistency. Then, we  make sure that our simulation is indistinguishable. We show this in Lemma \ref{lem:honestoutput} and \ref{lem:simulation-ind} in Appendix \ref{ap:ucproof}:
+We  show that the indistinguishability of outputs in Lemma \ref{lem:honestoutput}. Differently than ideal honest parties, the honest parties in our  protocol have $ \PreOut $ as a part of their signature. The ideal world honest parties has $ W $ instead of it which is sampled randomly by $ \fgvrf $ instead of it. We can verify by the DDH assumption that $ W $ and $ \PreOut $ are indistinguishable.
+We also show that $ \simulator $ does not abort during the simulation except with negligible probability in Lemma \ref{lem:simulation-ind} in Appendix \ref{ap:ucproof} under the assumption of the hardness of the CDH problem. 
+%Indeed, we show that if there exists an adversary $ \adv $ which makes $ \simulator $ abort during the simulation, then we construct another adversary $ \mathcal{B} $ which breaks either the CDH problem or the binding property of $ \mathsf{Com}$. 
 
 
  
