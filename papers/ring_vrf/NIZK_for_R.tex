@@ -36,18 +36,15 @@ knowledge-soundness.
  
 \noindent Next, we define \\ 
 %\noindent {\color{red}\textbf{Perfect Completeness after reproving a $\ZKCont$ Proof}}
-\noindent \textbf{Special Perfect Completeness} For all $\lambda \in \mathbb{N}$, for every efficient adversary $A$, \qhandan{for every 
- $(\barz, \barx; \baromega_2) \in \reltwo$ it holds}{It is a completeness definition for $ \reltwo $ but there is nothing related to $ \reltwo $ below. We want to define a new completeness definition for $ \nizkR $. So, I suggest you to replace everything before given $ (|) $ with $ \nizkR.\Verify((\crsR,(\bary, \barz), (\pi_1, \pi_2, X)))\rightarrow 1 $ because everything you have before $ | $are already satisfied from the $ \NIZK $ completeness and $ \ZKCont $ special completeness, so they are already satisfied, they are not new statements. }:
-
-
- 
+\noindent \textbf{Special Perfect Completeness} For all $\lambda \in \mathbb{N}$, for every efficient adversary $A$, for every 
+ $(\barz, \barx; \baromega_2) \in \reltwo$ it holds
+%{It is a completeness definition for $ \reltwo $ but there is nothing related to $ \reltwo $ below. We want to define a new completeness definition for $ 
+%\nizkR $. So, I suggest you to replace everything before given $ (|) $ with $ \nizkR.\Verify((\crsR,(\bary, \barz), (\pi_1, \pi_2, X)))\rightarrow 1 $ because %everything you have before $ | $are already satisfied from the $ \NIZK $ completeness and $ \ZKCont $ special completeness, so they are already %satisfied, they are not new statements. }: 
 \begin{align*}
-\mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X', \pi'_1, \relone) = 1  = >  \ZKCont.\Verify(\crs, \bar{y}, X, \pi_1, \relone) = 1)  \ \wedge \  \\
-                   & \wedge \ (\ZKCont.\VerifyCom (\pp, X', \barx, b') = 1 => \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1) \ \wedge \\
-                   & \wedge \ \nizktwo.\Verify(\crstwo, X, \barz, \pi_2) =1 | \\
-                   & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone),  \\ 
-                   & (\crstwo, \twtwo) \leftarrow \nizktwo.\Setup(1^{\lambda}, \reltwo'(\pp)),  \\
-                   & (\bary, X', \pi'_1, b') \leftarrow A(\crs,\relone), (X, \pi_1, b) \leftarrow \ZKCont.\Reprove(\crs, X', \pi'_1, b', \relone) \\
+\mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X', \pi'_1, \relone) = 1 \ \wedge \ \ZKCont.\VerifyCom (\pp, X', \barx, b') = 1) ) \\
+                   & \Rightarrow \ \nizkR.\Verify(\crsR, X, \barz, \pi_2) =1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
+                   & (\crstwo, \twtwo) \leftarrow \nizktwo.\Setup(1^{\lambda}), (\bary, X', \pi'_1, b') \leftarrow A(\crs,\relone), \\ 
+                   & (X, \pi_1, b) \leftarrow \ZKCont.\Reprove(\crs, X', \pi'_1, b', \relone), \\
                    &\pi_2 \leftarrow \nizktwo.\Prove(\crstwo, X, \barz, \barx, b, \baromega_2)) = 1
 \end{align*}
 
@@ -58,6 +55,10 @@ then the $\nizkR$ construction described above has special perfect completeness.
 \end{lemma} 
 \begin{proof} This is easy to infer by combining the perfect completeness properties of $\nizktwo$ and perfect completeness 
 for $\ZKCont.\Reprove$.
+
+%  $\ZKCont.\Verify(\crs, \bar{y}, X', \pi'_1, \relone) = 1 \ \Rightarrow \ \ZKCont.\Verify(\crs, \bar{y}, X, \pi_1, \relone) = 1$
+%  $\ZKCont.\VerifyCom (\pp, X', \barx, b') = 1 \ \Rightarrow \ \ZKCont.\VerifyCom(\pp, X, \barx, b) = 1$
+%  $\pi_2 \leftarrow \nizktwo.\Prove(\crstwo, X, \barz, \barx, b, \baromega_2)) \ \Rightarrow \  \nizktwo.\Verify(\crstwo, X, \barz, \pi_2) =1$
 \end{proof}
 
 \noindent Finally, we define \\

@@ -192,9 +192,9 @@ where $\barv = (v_0, \ldots, v_m) = (1, x_1, \ldots, x_n, w_1, \ldots w_{m-n})$ 
 $\barx = (x_{l+1}, \ldots, x_n)$ and $\baromega = (w_1, \ldots, w_{m-n})$. 
 \end{definition}
 
-\noindent In summary,  \SpecialG setup is an extension of original Groth16~\cite{Groth16} setup by two additional 
+\noindent In summary, \SpecialG setup is an extension of original Groth16~\cite{Groth16} setup by two additional 
 group elements $\Kgamma$ and $\Kdelta$, as defined below. $\SpecialG$ setup is identical to commit-carrying 
-SNARK $\ccgroth$~\cite[Fig.~22]{LegoSNARK} setup\footnote{$\ccgroth$ is, in turn, based on  Groth16.}.
+LegoSNARK $\ccgroth$~\cite[Fig.~22]{LegoSNARK} setup\footnote{$\ccgroth$ is, in turn, based on  Groth16.}.
 Moreover, together the $\Preprove$ and the $\Reprove$ procedures of $\SpecialG$ are identical to the proving  
 procedure in $\ccgroth$ with the difference that $\SpecialG$ also re-randomises the commitment to part 
 of the public input. Additionally, the verification procedure and the commitment verification are identical to their 
@@ -297,7 +297,7 @@ $\SpecialG.\Reprove$ zero-knowledge property is preserved for both the witness a
 %CRS can break the knowledge-soundness."
 
 \noindent Finally, we are ready to prove that $\SpecialG$ is a zero-knowledge continuation. We show that the knowledge soundness property 
-of $\SpecialG$ (i.e., as defined for $\ZKCont$) is weaker than the knowledge soundness property of commit-carrying SNARK with double 
+of $\SpecialG$ (i.e., as defined for $\ZKCont$) is implied by the knowledge soundness property of commit-carrying SNARK with double 
 binding (cc-SNARK with double binding, see Definition 3.4~\cite{LegoSNARK}); our notion of zero-knowledge for $\ZKCont$ is, in fact a 
 new and stronger notion so we prove that directly. Formally, we have: 
 
