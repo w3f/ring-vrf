@@ -17,7 +17,7 @@ What are the cheapest SNARK proofs?  Ones users reuse without reproving.
 How can identity be safe for general use?  By revealing nothing except users' uniqueness.
 How can ration card issuance be transparent?  By asking users trust a public list, not certificates.
 
-We introduce new privitive, a ringVRF, and prove it's security. To efficiently implement our primitive, we present a novel techique, the zero-knowldege continuation and define and prove its security. We discuss applications of the Ring VRF to identity, rationing and other use cases.
+We introduce new privitive, a ring VRF, and prove its security. To efficiently implement our primitive, we present a novel techique, the zero-knowldege continuation and prove its security. We discuss applications to identity, rationing and other use cases.
 
 % After briefly introducing ring VRFs, we discuss these three questions,
 % which we later elaborate upon in
@@ -40,13 +40,13 @@ defined by the actual signer's key. % (see \S\ref{sec:rvrf_games}).
 Ring VRF outputs then provide linking proofs between different signatures
 if and only if  the signatures have identical inputs, as well as pseudo-randomness.
 As the pseudo-random output is uniquely determined by the signed message
-and signer's  key, we can therefore link signatures by the
+and signer's key, we can therefore link signatures by the
 same signer if and only if they sign identical messages.
 In effect, ring VRFs restrict anonymity similarly to but less than
 linkable ring signatures \cite{ring_linkable,ring_linkablee}  do, which makes them multi-use and contextual.
 
 We define the security of a ring VRF scheme in the universally composable (UC) \cite{canetti1,canetti2} model. Then, we construct our UC-secure ring VRF scheme. We slightly modify it by preserving its security to build extremely efficient 
-ring VRFs by amortizing a ``zero-knowledge continuation'' that unlinkably
+ring VRFs by amortizing a zero-knowledge continuation that unlinkably
 proves ring membership of a secret key, and  cheaply proving
 individual VRF evaluations.
 
@@ -60,7 +60,7 @@ individual VRF evaluations.
 
 Rerandomizable zkSNARKs like Groth16 \cite{Groth16} admit a
 transformation of a valid proof into another valid but unlinkable
-proof of the exact same statement.  However, in practice, rerandomization
+proof of the same statement.  However, in practice, rerandomization
 never gets deployed because the public inputs without further processing actually 
 link different usages, thus breaking privacy.
 We formally define zero-knowledge continuations in a way that it preserves privacy after rerandomization and then  we demonstrate in \S\ref{sec:rvrf_cont} a simple transformation of
@@ -68,7 +68,7 @@ any Groth16 zkSNARK into a {\it zero-knowledge continuation} whose
 public inputs involve opaque Pedersen commitments (i.e., hiding commitments), with cheaply
 rerandomizable blinding factors and cheaply rerandomizable proofs.
 These zero-knowledge continuations then prove validity of the contents
-of Pedersen commitments, but can now be reused arbitrarily many times,
+of Pedersen commitments, but can be reused arbitrarily many times,
 without linking the usages.
 In brief, we adjust the trusted setup of the Groth16 to additionally
 produce a blinding factor base for the Groth16 public input, 
@@ -172,7 +172,7 @@ required by anonymous payment schemes like ZCash and blind signed tokens.
 
 We further benefit from the ring credential format too,
 as opposed to certificate based designs like group signatures:
-We expect a degree of fraud whenever deploying purely certificate
+We expect some fraud whenever deploying purely certificate
 based systems, as witnessed by the litany of fraudulent TLS and covid
 certificates.  Ring VRFs help mitigate fraudulent certificate concerns
 because the ring is a database and can be audited.
@@ -181,7 +181,7 @@ Governments may have little choice but to institute
 rationing in response to shortages caused by climate change, ecosystem
 collapse or peak oil.  Ring VRFs help avoid ration card fraud
 while also protecting essential privacy. We discuss some of these 
-applications in \S\ref{subsec:app_ration_carts}.
+applications.
 %
 %As an important caveat, ring VRFs need heavier verifiers than single-use
 %tokens based on OPRFs \cite{PrivacyPass} or blind signatures, but
