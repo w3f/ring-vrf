@@ -31,7 +31,8 @@ which output their hash functions, elliptic curves, and some independent base po
 We need an elliptic curve $\ecE$ over a field of characteristic $q$,
 equipped with a type III pairing $e : \grE_1 \times \grE_2 \to \grE_T$,
 where the groups  $\grE_1 \le \ecE[\F_q]$, $\grE_2 \le \ecE[\F_{q^2}]$, and
-$\grE_T \le \F^*_{q^{12}}$ all have prime order $p \approx 2^{2\secparam}$.
+$\grE_T \le \F^*_{q^{12}}$ all have prime order $p \approx 2^{2\secparam}$. 
+Let $\gone$ and $\gtwo$ be the generators of $\grE_1$ and $\grE_2$, respectively. 
 
 We write $\grE$ when discussing the Chaum-Pedersen DLEQ proofs, which do
 not employ pairings, but $\grE$ always denotes $\grE_1$ eventually.
@@ -49,12 +50,11 @@ We also let $\ecJ$ denote a ZCash Sapling style ``JubJub'' Edwards curve
 over $\F_p$, with a distinguished subgroup $\grJ$ of prime order $p_\grJ$,
 so that SNARKs on $\ecE$ prove $\grJ$ arithmetic relatively cheaply.
 Aside from Jubjub, we optionally want a ``sister'' Edwards curve $\ecEsis$,
-with a subgroup $\grE$ of the same order $p$ as $\grE_1$,
+with a subgroup $\grE'$ of the same order $p$ as $\grE_1$,
  but which lacks any pairing.
 
 We let $H_p : \{0,1\}^* \to \F_p$ and $H_{\grEsis} : \{0,1\}^* \to \grEsis$
-denote a hash-to-field and a hash-to-curve with ranges
- $\F_p$ and $\grEsis$, respectively.  
+denote a hash-to-field and a hash-to-curve with ranges $\F_p$ and $\grEsis$, respectively.  
 We only ever hash-to-$\ecEsis$ because hash-to-$\grE_1$ create a miss-use
 footgun for privacy.  Also hash-to-$\ecEsis$ is faster.
 We let $\Hout$ denote the hash to the VRF output space,
