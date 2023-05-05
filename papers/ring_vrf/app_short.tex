@@ -5,10 +5,9 @@ We briefly outline how ring VRFs could be used for
  identity, moderation, rationing, and games.
 
 
-\subsection{Identity}
-\label{subsec:app_identity}
-
-Ring VRF outputs could provide users with stable identities across
+\eprint{\subsection{Identity}
+\label{subsec:app_identity}}{\noindent{\textbf{Identity:}}}
+Ring VRF outputs  provide users with stable identities across
 arbitrarily many services given several conditions:
 First, our ring VRF input should be stable for a given services,
  like by using services' urls.
@@ -22,47 +21,47 @@ Fourth, the server trusts the ring membership, like by trusting
 Also, this third party updates users as the ring membership evolves.
 
 An HTTPS workflow satisfying these conditions resembles:
-
+\renewcommand{\pifast}{\ensuremath{\pi_{\ring}}}
 \begin{itemize}
 \item {\em Register} --
 	Adds users' public key commitments into some \ring,
 	after verifying the user does not currently exist in \ring.
 \item {\em Update} --
-	User agents regenerate their stored SNARK $(\pk,\pifast^\inner)$ using
-	$\SpecialG.\Preprove( (\sk_1,\sk_2,\openring); (\sk,\comring) )$
-	each time \ring changes, perhaps even receiving \comring and \openring
-	from some ring management service.
+	User agents regenerate their stored signature using
+	$\SpecialG.\Preprove$
+	each time \ring changes\eprint{, perhaps even receiving \comring and \openring
+	from a ring management service.}{.}
 \item {\em Identify} --
 	Our user agent first opens a standard TLS connection to a server \msg,
 	both checking the server's url is \msg and checking certificate
 	transparency logs, and then computes the shared session id \aux.
 	Our user agent computes the user's identity
-	$\mathtt{id} = \PedVRF.\Eval(\sk,\msg)$ on the server id \msg,
+	$\mathtt{id} = \PedVRF.\Eval(\sk,\msg)$ on the server id \msg,\eprint{
 	Our user agent next rerandomizes \pifast, \compk, and \openpk using
 	$\SpecialG.\Reprove( \pk, \pifast^\inner )$, computes
 	$\sigma = \PedVRF.\Sign(\sk,\openpk,\msg,\aux \doubleplus \compk \doubleplus \pifast)$,
-	and finally sends the server their ring VRF signature $(\compk,\pifast,\sigma)$
-	% $\rVRF.\rSign(\sk,\openring,\msg,\aux)$ % $ = (\compk,\pifast,\sigma)$.
-	Our user agent rejects identity requests from resources besides
-	top/outer most frame.
+	and finally sends the server their ring VRF signature $(\compk,\pifast,\sigma)$}{ and generates ring VRF signature.}
+	\eprint{Our user agent rejects identity requests from resources besides
+	top/outer most frame.}{}
 \item {\em Verify} -- 
-	After receiving $(\compk,\pifast,\sigma)$ in channel \aux,
+	\eprint{After receiving $(\compk,\pifast,\sigma)$ in channel \aux,
 	the server \msg checks $\SpecialG.\Verify( \comring, (\compk,\pifast) )$,
 	checks the VRF signature, and obtains the user's identity $\mathtt{id}$, ala \\
-	$\mathtt{id} = \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \pifast,\sigma)$.
+	$\mathtt{id} = \PedVRF.\Verify(\compk,\msg,\aux \doubleplus \compk \doubleplus \pifast,\sigma)$.}{It verifies the ring VRF signature. If it verifies, it checks whether $ \mathtt{id}$ equals to the evaluation value generated from the verification process.}
 \end{itemize}
 
-Anonymity depends largely upon certificate authentication, including
+\eprint{Anonymity depends largely upon certificate authentication, including
 certificate transparency logs, in that users could otherwise login to
-a site with fraudulent credentials.  We think cross site restrictions
- and \aux being the channel limit this attack vector somewhat though.
-If stronger defenses are desired then instead of \msg being the url,
+a site with fraudulent credentials.
+%  We think cross site restrictions
+%and \aux being the channel limit this attack vector somewhat though.
+If stronger defences are desired then instead of \msg being the url,
 \msg could be an air gapped public ``root'' key for the site or CA, which
-then also certifies its TLS certificate.  
+then also certifies its TLS certificate.  }{}
 
-As an optimization, \Reprove could rerandomize deterministically based
+\eprint{As an optimization, \Reprove could rerandomize deterministically based
 upon $H(\sk,\msg)$, so servers could then cache $\pifast$ verification.
-
+}{}
 
 \eprint{}{\begin{comment}}
 \subsection{AML/KYC}
@@ -121,22 +120,19 @@ if joining the ring requires $(\pk,\sigma)$.
 % \end{proposition}
 \eprint{}{\end{comment}}
 
-
-\subsection{Moderation}
-\label{subsec:moderation}
-
+%TODO:we don't prove anything related to multiple VRF input-output. We should make sure its security before adding it.
+\eprint{\subsection{Moderation}
+\label{subsec:moderation}}{\noindent\textbf{Moderation:}}
 \eprint{%
 All discussion or collaboration sites have behavioral guidelines and
 moderation rules that deeply impact their culture and collective values.%
 }{}
-
 Our ring VRFs enables a simple blacklisting operation:
 If a user misbehaves, then sites could blacklist or otherwise penalizes
 their site local identity $\mathtt{id}$.
 As $\mathtt{id}$ remains unlinked from other sites, we avoid thorny
 questions about how such penalties impact the user elsewhere, and thus
 can assess and dispense justice more precisely. 
-
 At the same time, there exist sites who must forget users' histories
 eventually, like under a ``right to be forgotten'' principle ala GDPR.
 % or an ethical principles of social mistakes being ephemeral.
@@ -150,12 +146,14 @@ by waiting until the next week or month.
 
 We then adjust \PedVRF to simultaneously prove multiple VRF input-output
 pairs $(\msg_j,\mathtt{id}_j)$.  As in \cite{PrivacyPass}, we merely
-delinearize \In and \PreOut in \rSign and \rVerify like:
-\begin{align*}
+delinearize $ \In  = H_\grE(\msg)$ and \PreOut in \rSign and \rVerify like:
+\eprint{\begin{align*}
 	x &= H(\msg_j,\mathtt{id}_j,\ldots,\msg_j,\mathtt{id}_j) \\
 	\In &= \sum_j H_p(x,j) \, \In_j \\
 	\PreOut &= \sum_j H_p(x,j) \, \PreOut_j \\
-\end{align*}
+\end{align*}}{$ H(\msg_j,\mathtt{id}_j,\ldots,\msg_j,\mathtt{id}_j),
+\In = \sum_j H_p(x,j),
+\PreOut = \sum_j H_p(x,j) \, \PreOut_j $.}
 In this way, \PedVRF proves the same secret key controls two or more
 ephemeral identities, thereby constructing a stable identity from the
 ephemeral identities.
@@ -166,39 +164,33 @@ $\msg_2 = \mathtt{site\_name} \doubleplus \mathtt{registration\_month}$,
 so users could have multiple active pseudo-nyms given by $\mathtt{id}_2$,
 but only one active pseudo-nym per week, enforced by deduplicating
 $\mathtt{id}_1$, which still prevents spam and abuse.
-
-Alternatively, we could associate users pseudo-nyms with their recently
+\eprint{Alternatively, we could associate users pseudo-nyms with their recently
 seen $\mathtt{id}_1$ but link adjacent months.  In other words, we define
 $\msg_j$ by the $j$th previous month, until reaching a previously used
 $\mathtt{id}_1$.  In this model, pseudo-nyms could be abandoned, but
-abandoned pseudo-nyms cannot then be reclaimed without linking intervening ones.
+abandoned pseudo-nyms cannot then be reclaimed without linking intervening ones.}{}
 % Although more costly, sites could permanently bans a few problematic
 % users via the inequality proofs described in \S\ref{subsec:AML_KYC} too.
-
 In these ways, sites encode important aspects of their moderation rules
 into the ring VRF inputs they demand.  
 % % We expect this makes sites' values and culture more uniform, predictable, and transparent.
 
 
-\section{Rate limiting}
-\label{sec:app_rate_limits}
-
+\eprint{\section{Rate limiting}
+\label{sec:app_rate_limits}}{\noindent\textbf{Rate limiting:}}
 As a rate limiting device, we repeat this approximate date trick from
 moderation, but also include a counter $k = 1 \ldots n$ in \msg, so
  $\msg = \mathtt{domain} \doubleplus \mathtt{date} \doubleplus k$.
 Instead of treating ring VRF outputs like identities,
 we now treat them like nullifiers which could each be spent exactly once,
  similarly to the nullifiers in ZCash or ecash systems.
-
 We do leak information about nullifiers' ownership by revealing $k$ here:
-%
 An adversary Eve observes two ring VRF signatures with the same
 $\mathtt{domain}$ and $\mathtt{date}$ so
 $\msg_i = \mathtt{domain} \doubleplus \mathtt{date} \doubleplus k_i$
 for $i=1,2$, but with different outputs $\Out_1$ and $\Out_2$.
 If $k_1 \ne k_2$ then Eve learns nothing, but if $k_1 = k_2$ then
 Eve learns that $sk_1 \ne \sk_2$, representing different users. 
-
 We do not always care if Eve learns this much information, but users'
 threat models should be clearly understood before making this choice.
 In principle, we could hide $k$ if we replace \PedVRF by a flavor of
@@ -208,10 +200,9 @@ Indeed these \Reval choices could provide post-quantum anonymity,
 without expensive post-quantum soundness, perhaps interesting if leaking $k$ matters.
 
 
-\subsection{Ration cards}
-\label{subsec:app_ration_carts}
-
-As a species, we expect $+3^{\circ}$C over the pre-industrial climate
+\eprint{\subsection{Ration cards}
+\label{subsec:app_ration_carts}}{\noindent\textbf{Ration Cards:}}
+\eprint{As a species, we expect $+3^{\circ}$C over the pre-industrial climate
 by 2100 \cite{IPCC2022}, or more likely above $+4^{\circ}$C given
 tipping points \cite{tipping2022}.  % https://www.youtube.com/watch?v=LxoyaCSWFGs
 At these levels, we experience devastating famines as the Earth's
@@ -223,7 +214,7 @@ ala peak oil.  We expect synchronous crop failures around the 2040s
 in particular \cite{climaterisk2021}. % https://nitter.it/ThierryAaron/status/1442442451541807109#m
 % off topic: https://12ft.io/proxy?q=https%3A%2F%2Fwww.bbc.com%2Ftravel%2Farticle%2F20220816-why-theres-no-dijon-in-dijon-mustard
 Invariably, nations manage shortages through rationing, like during WWI, WWII, and the oil shocks.  
-
+}{}
 Anonymous rationing works much like rate limiting, except with
  multiple resources, an issuing authority, and limited time shifting:
 %
@@ -252,8 +243,8 @@ Our authority stores the nullifiers until expiry aka $d \le \expiry_{u,d_0}$.
 % blind signatures, ZCash sapling, etc.  Yet, all these tokens require
 % an explicit issuance stage, while ring VRFs self-issue.
 
-Among the political hurdles to rationing, we know certificates have
-a considerable forgery problem, as witnessed by the long history of
+Among the political hurdles to rationing, certificates have
+a \eprint{considerable}{} forgery problem, as witnessed by the \eprint{long}{} history of
 fraudulent covid and TLS certificates.  It follows citizens would
 justifiably protest to ration carts that operate by simple certificates.
 Ring VRFs avoid this political unrest by proving membership in a public list.
