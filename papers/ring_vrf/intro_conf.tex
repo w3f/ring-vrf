@@ -1,0 +1,227 @@
+\section{Introduction}
+
+\def\qaudbreak{\eprint{\quad}{\\}}
+
+
+We introduce an anonymous credential flavor called
+ring verifiable random functions (ring VRFs),
+in essence ring signatures that anonymize signers but
+also prove evaluation of the signers' PRFs.
+Ring VRFs provide a better foundation for anonymous credentials
+across a range of concerns, including formalization, optimizations,
+the nuances of use-cases, and miss-use resistance.
+
+Along with some formalizations, we address three questions within
+the unfolding ring VRF story:
+What are the cheapest SNARK proofs?  Ones users reuse without reproving.
+How can identity be safe for general use?  By revealing nothing except users' uniqueness.
+How can ration card issuance be transparent?  By asking users trust a public list, not certificates.
+
+% After briefly introducing ring VRFs, we discuss these three questions,
+% which we later elaborate upon in
+%  \S\ref{sec:rvrf_cont}, \S\ref{sec:app_identity}, and \S\ref{sec:app_rate_limits} 
+
+% \smallskip 
+
+\paragraph{Ring VRFs:}
+
+A ring signature \cite{ring_accountable,ring_efficient,ring_linkable,ring_noRO,ring_sublinear} proves only that its  signer lies in a ``ring''
+of public keys, without revealing which signer  signed the message.
+A {\it verifiable random function} (VRF) is a signature that proves
+correct evaluation of a PRF defined by the signer's key.
+% but nuances exist .
+A {\it ring verifiable random function} (ring VRF) is a ring signature, in
+that it anonymizes its  signer within a ring,
+but also proves correct evaluation of a pseudo-random function (PRF)
+defined by the actual signer's key. % (see \S\ref{sec:rvrf_games}).
+%
+Ring VRF outputs then provide linking proofs between different signatures
+if and only if  the signatures have identical inputs, as well as pseudo-randomness.
+As the pseudo-random output is uniquely determined by the signed message
+and signer's  key, we can therefore link signatures by the
+same signer if and only if they sign identical messages.
+In effect, ring VRFs restrict anonymity similarly to but less than
+linkable ring signatures \cite{ring_linkable,ring_linkablee}  do, which makes them multi-use and contextual.
+
+We define the security of a ring VRF scheme in the universally composable (UC) \cite{canetti1,canetti2} model. Then, we construct our UC-secure ring VRF scheme. We slightly modify it by preserving its security to build extremely efficient 
+ring VRFs by amortizing a ``zero-knowledge continuation'' that unlinkably
+proves ring membership of a secret key, and  cheaply proving
+individual VRF evaluations.
+
+% We discuss the applications to identity in \S\ref{sec:app_identity} and
+% to rationing in \S\ref{sec:app_rate_limits}.
+% As a highly multi-use primitive, ring VRFs also present a multi-use
+
+% First
+% \smallskip 
+\paragraph{Zero-knowledge continuations:}
+
+Rerandomizable zkSNARKs like Groth16 \cite{Groth16} admit a
+transformation of a valid proof into another valid but unlinkable
+proof of the exact same statement.  However, in practice, rerandomization
+never gets deployed because the public inputs without further processing actually 
+link different usages, thus breaking privacy.
+We formally define zero-knowledge continuations in a way that it preserves privacy after rerandomization and then  we demonstrate in \S\ref{sec:rvrf_cont} a simple transformation of
+any Groth16 zkSNARK into a {\it zero-knowledge continuation} whose
+public inputs involve opaque Pedersen commitments (i.e., hiding commitments), with cheaply
+rerandomizable blinding factors and cheaply rerandomizable proofs.
+These zero-knowledge continuations then prove validity of the contents
+of Pedersen commitments, but can now be reused arbitrarily many times,
+without linking the usages.
+In brief, we adjust the trusted setup of the Groth16 to additionally
+produce a blinding factor base for the Groth16 public input, 
+along with an absorbing base that cancels out this blinding factor in the
+Groth16 verification.
+As our public inputs involve opaque Pedersen commitments,
+they now require proofs-of-knowledge resentment of to \cite{LegoSNARK}. 
+% In essence, this specializes the Groth16 
+As recursive SNARKs remain slow,
+we expect zero-knowledge continuations via rerandomisations become a very viable efficient alternative for zkSNARKs.
+% Second
+% \smallskip
+
+Now, we describe briefly the possible applications for ring VRF.
+\paragraph{Identity uses:}
+
+An identity system can be based upon ring VRFs in an natural way:
+After verifying an identity requesting domain name in TLS,
+our user agent signs into the session by returning a ring VRF
+signature whose input is the requesting domain name, so their
+ring VRF output becomes their unique identity at that domain.
+At this point, the requesting domain knows each user represents
+distinct ring members, which prevents Sybil behavior, and permits
+banning specific users.
+At the same time, users' activities remain unlinkable across different
+domains.
+In essence, ring VRF based credentials, if correctly deployed, only
+prevent users being Sybil, but leak nothing more about users.  
+%We argue
+%this yields diverse legally and ethically straightforward identity usages.
+
+As a problematic contrast, attribute based credential schemes like
+IRMA (``I Reveal My Attributes'') credentials \cite{IRMAcredentials}
+are being marketed as an online privacy solution, but cannot prevent
+users being Sybil unless they first reveal numerous attributes.
+Attribute based credentials therefore provide little or no privacy
+when used to prevent abuse.
+Abuse and Sybil prevention are not merely the most common use cases for
+anonymous credentials, but in fact they define the ``general'' use cases for
+anonymous credentials.
+IRMA might improve privacy when used as ``special purpose'' credential 
+in narrower situations of course, but overall attribute based credentials
+should {\it never} be considered fit for abuse and sybil prevention.
+Aside from this, existing offline processes often better protect users'
+privacy and human rights than adopting online processes like IRMA.
+In particular, there are many proposals by the W3C for attribute based
+credential usage in \cite{w3c_vc_use_cases}, but broadly speaking they
+all bring matching harmful uses. % https://www.w3.org/TR/vc-use-cases/
+As an example, the W3C wants users to be able to easily prove their
+employment status, ostensibly so users could open bank accounts purely
+online.  Yet, job application sites could similarly demand these same
+proofs of current employment, a discriminatory practice.
+Average users apply for jobs far more often than they open bank accounts,
+so credentials that prove current employment do more harm than good.
+An IRMA deployment should prevent this abusive practice by making
+verifiers prove some legal authorization to request employment status,
+or other attributes, before user agents prove their attributes.
+Indeed IRMA deployments need to regulate IRMA verifiers, certainly by
+government privacy laws,
+but this limits their flexibility and becomes hard internationally.
+Ring VRFs avoid these abuse risks by being unlinkable, and thus
+yield anonymous credentials which safely avoid legal restrictions.
+%{\it Any ethical general purpose identity system should be based
+%	upon ring VRFs, not attribute based credentials like IRMA.}
+We credit proof-of-personhood parties by Bryan Ford, et al. \cite{pop2008,pop2017}
+% https://bford.info/pub/dec/pop-abs/  https://bford.info/pub/net/sybil-abs/
+with first espousing the idea that anonymous credentials should produce
+contextual unique identifiers, without leaking other user attributes.
+
+As a rule, there exist simple VRF variants for all anonymous credentials,
+including IRMA \cite{IRMAcredentials} or group signatures \cite{group_sig_survey}.
+We focus exclusively upon ring VRFs for brevity, and because alone
+ring VRFs contextual linkability covers the most important use cases.
+% and our optimizations make ring VRFs extremely efficient.
+
+% Third
+% \smallskip
+\paragraph{Rationing uses:}
+
+A rate limiting or rationing system provides users with a stream
+of single-use anonymous tokens that each enable consuming some resource.
+They are usually constructed either
+from blind signatures ala \cite{chaum83}, or else
+from OPRFs like PrivacyPass \cite{PrivacyPass},
+both of which have an $O(n)$ issuance phase.
+
+Ring VRFs yield rate limiting or rationing systems with no issuance phase:
+We first place into the ring the public keys for all users permitted to
+consume resources, perhaps all legal residents within some country.  
+We define single-use tokens to be ring VRF signatures whose VRF input
+consists of a resource name, an approximate date, and a bounded counter.
+Now merchants reports each anonymous token back to some authority who
+enforces rate limits by rejecting duplicate ring VRF outputs.
+(See \S\ref{sec:app_rate_limits})
+
+In other words, our rate limiting authority treats outputs like the
+``nullifiers'' in anonymous payment schemes.
+Yet, ring VRF nullifiers need only temporarily storage, as eventually one
+expires the date in the VRF input.  Asymptotically we thus only need
+$O(\mathtt{users})$ storage vs the $O(\mathtt{history})$ storage
+required by anonymous payment schemes like ZCash and blind signed tokens.
+
+We further benefit from the ``ring'' credential format too,
+as opposed to certificate based designs like group signatures:
+We expect a degree of fraud whenever deploying purely certificate
+based systems, as witnessed by the litany of fraudulent TLS and covid
+certificates.  Ring VRFs help mitigate fraudulent certificate concerns
+because the ring is a database and can be audited.
+
+We know governments have ultimately little choice but to institute
+rationing in response to shortages caused by climate change, ecosystem
+collapse, and peak oil.  Ring VRFs help avoid ration card fraud,
+and thereby reduce social opposition, while also protecting essential privacy. We discuss some of these 
+applications in \S\ref{subsec:app_ration_carts}.
+%
+%As an important caveat, ring VRFs need heavier verifiers than single-use
+%tokens based on OPRFs \cite{PrivacyPass} or blind signatures, but
+%those credentials' heavy issuance phase represents a major adoption hurdle.
+%A ring VRF systems issue fresh tokens almost non-interactively merely by
+%adjusting allowed VRF input on resource names, dates, and bounds.
+%This reduces complexity, simplifies scaling, and increases flexibility.
+
+%In particular, if governments issue ration cards based upon ring VRFs
+%then these credentials could safely support other use cases, like
+%free tiers in online services or games, and advertiser promotions,
+%as well as identity applications like prevention of spam and online abuse. We discuss some of these 
+%applications in \S\ref{subsec:app_ration_carts}.
+
+\begin{comment}
+	In this, we need authenticated domain separation of products or identity
+	consumers in queries to users' ring VRF credentials.  We briefly discuss
+	some sensible patterns in \S\ref{subsec:app_ration_carts} below, but
+	overall authenticated domain separation resemble TLS certificates except
+	simpler in that roots of trust can self authenticate if root keys act as
+	domain separators.
+\end{comment}
+
+
+%TODO Our contributions should be listed here: https://crypto.iacr.org/2023/papersubmission.php says that 'The introduction should summarize the contributions of the paper at the level understandable for a non-expert reader.'
+
+
+
+
+\endinput
+
+
+
+
+As a field, anonymous credentials come in myriad flavors,
+many of which exist to limits the anonymity provided, ala
+attribute based credentials and group signatures. % \cite{group_sig_survey}.
+% aka anonymized signatures
+%
+Ring VRFs by weakening anonymity only contextually provide a safer,
+more private, more flexible, more powerful, and more ethical
+choice for all everyday anonymous credential use cases.  % needs:  ???
+
+
