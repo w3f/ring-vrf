@@ -176,7 +176,7 @@ pub struct AggregationKey<P: Pairing> {
     /// 
     /// Inclusion of public keys inside signatures makes sense for
     /// the PdersenVrf, but only an odd artifact here.
-    sig: dleq_vrf::NonBatchableSignature<PedersenVrf<P>>,
+    sig: dleq_vrf::NonBatchable<PedersenVrf<P>>,
 }
 
 impl<P: Pairing> core::cmp::PartialEq<Self> for AggregationKey<P> {

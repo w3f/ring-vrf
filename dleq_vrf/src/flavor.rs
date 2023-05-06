@@ -119,7 +119,7 @@ impl<F: Flavor> Signature<F> {
 
 /// Non-batchable VRF signature detached from VRF inputs and outpus,resembles EC VRF.
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
-pub struct NonBatchableSignature<F: Flavor> 
+pub struct NonBatchable<F: Flavor> 
 // where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     pub(crate) compk: <F as InnerFlavor>::KeyCommitment,
@@ -128,7 +128,7 @@ pub struct NonBatchableSignature<F: Flavor>
 }
 
 /// Arkworks' own serialization traits should be preferred over these.
-impl<F: Flavor> NonBatchableSignature<F> {
+impl<F: Flavor> NonBatchable<F> {
     pub fn as_key_commitment(&self) -> &<F as InnerFlavor>::KeyCommitment { &self.compk }
 
     pub fn size_of_serialized(&self) -> usize {

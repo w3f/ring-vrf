@@ -16,7 +16,7 @@ use zeroize::Zeroize;
 
 use crate::{
     Transcript, IntoTranscript,
-    flavor::{Flavor, InnerFlavor, Witness, Signature, NonBatchableSignature},
+    flavor::{Flavor, InnerFlavor, Witness, Signature, NonBatchable},
     keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut},
@@ -137,7 +137,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     }
 }
 
-impl<K,H> NonBatchableSignature<PedersenVrf<K,H,0>>
+impl<K,H> NonBatchable<PedersenVrf<K,H,0>>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     pub fn to_publickey(&self) -> PublicKey<K> {
@@ -266,7 +266,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         ios: &[VrfInOut<H>],
         secret_blinding: Option<SecretBlinding<K,B>>,
         secret: &SecretKey<K>,
-    ) -> (NonBatchableSignature<PedersenVrf<K,H,B>>, SecretBlinding<K,B>)
+    ) -> (NonBatchable<PedersenVrf<K,H,B>>, SecretBlinding<K,B>)
     {
         let flavor = self;
         let mut t = t.into_transcript();
@@ -299,7 +299,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         secret_blindings: &SecretBlinding<K,B>,
         secret: &SecretKey<K>,
         compk: KeyCommitment<K>,
-    ) -> (Signature<PedersenVrf<K,H,B>>,NonBatchableSignature<PedersenVrf<K,H,B>>) {
+    ) -> (Signature<PedersenVrf<K,H,B>>,NonBatchable<PedersenVrf<K,H,B>>) {
         let Witness { r, k } = self;
         t.label(b"Pedersen R");
         t.append(&r);
@@ -313,7 +313,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
             blindings: blindings.into_inner().unwrap(),
         };
         // k.zeroize();
-        (Signature { compk: compk.clone(), r, s: s.clone() }, NonBatchableSignature { compk, c, s })
+        (Signature { compk: compk.clone(), r, s: s.clone() }, NonBatchable { compk, c, s })
         // See additional rowhammer defenses thoughts in Witness<ThinVrf>::sign_final
     }
 }
@@ -370,7 +370,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         &self,
         t: impl IntoTranscript,
         ios: &'a [VrfInOut<H>],
-        signature: &NonBatchableSignature<PedersenVrf<K,H,B>>,
+        signature: &NonBatchable<PedersenVrf<K,H,B>>,
     ) -> SignatureResult<&'a [VrfInOut<H>]>
     {
         let mut t = t.into_transcript();
