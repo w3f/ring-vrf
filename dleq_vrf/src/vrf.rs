@@ -86,7 +86,8 @@ impl<K: AffineRepr> SecretKey<K> {
     pub fn vrf_preout<H>(&self, input: &VrfInput<H>) -> VrfPreOut<H> 
     where H: AffineRepr<ScalarField = K::ScalarField>,
     {
-        VrfPreOut( (&self.key * &input.0).into_affine() )
+        // VrfPreOut( (&self.key * &input.0).into_affine() )
+        crate::traits::EcVrfSecret::vrf_preout(self,input)
     }
 
     /// Compute VRF pre-output paired with input from secret key and
@@ -99,9 +100,10 @@ impl<K: AffineRepr> SecretKey<K> {
     pub fn vrf_inout<I,H>(&self, input: I) -> VrfInOut<H>
     where I: IntoVrfInput<H>, H: AffineRepr<ScalarField = K::ScalarField>,
     {
-        let input = input.into_vrf_input();
-        let preoutput = self.vrf_preout(&input);
-        VrfInOut { input, preoutput }
+        // let input = input.into_vrf_input();
+        // let preoutput = self.vrf_preout(&input);
+        // VrfInOut { input, preoutput }
+        crate::traits::EcVrfSecret::vrf_inout(self,input)
     }
 }
 

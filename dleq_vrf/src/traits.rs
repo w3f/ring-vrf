@@ -1,11 +1,10 @@
 //! # Elliptic curve based VRFs trait abstractions
 //!
-//! We provide trait abstractions suitable for usage with most
+//! We provide trait abstractions suitable for usage with many
 //! elliptic curve based verifiable random functions (EC VRFs).
-//! 
 //! We support some ring verifiable random functions (ring VRFs) too,
 //! because under the hood some of these employ constructions very
-//! similar to EC VRFs
+//! similar to EC VRFs.
 //! 
 //! We assume all VRFs support arbitrarily many input-output pairs,
 //! given by elliptic curve points all on the same curve.  We also
@@ -28,7 +27,7 @@ use core::borrow::Borrow;
 
 use ark_std::{vec::Vec, fmt::Debug};
 
-use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,Valid};
+use ark_serialize::{CanonicalSerialize,CanonicalDeserialize}; // Valid
 use ark_ec::{AffineRepr,CurveGroup};
 
 pub use crate::{
@@ -68,8 +67,8 @@ pub trait EcVrfSecret<H: AffineRepr> {
     }
 }
 
-/// TODO:  We should delegate the `SecretKey::{vrf_preout, vrf_inout}`
-/// in the `vrf` module to these ones, so they'll always agree.
+/// We delegate the `SecretKey::{vrf_preout, vrf_inout}` in the `vrf`
+/// module to these ones, which asures agreement.
 impl<H,K> EcVrfSecret<H> for SecretKey<K>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
@@ -215,7 +214,7 @@ pub trait EcVrfVerifier: EcVrf {
     {
         let mut inputs = inputs.into_iter();
         let mut preouts = signature.preouts.iter().cloned();
-        let mut cb = |_| preouts.next().unwrap().attach_input(inputs.next().unwrap());
+        let cb = |_| preouts.next().unwrap().attach_input(inputs.next().unwrap());
         let ios: [EcVrfInOut<Self>; N] = core::array::from_fn(cb);
         self.vrf_verify_detached(t,ios.as_slice(),&signature.proof) ?;
         Ok(ios)
