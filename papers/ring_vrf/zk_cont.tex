@@ -1,15 +1,27 @@
+
+\newcommand{\handan}[2]{{\sout{#1}}\textcolor{blue}{#2}}
+%\newcommand{\handan}[2]{{#1}{}}
+
+\newcommand{\qhandan}[2]{{\uline{#1}}\textcolor{pink}{(#2)}}
+%TO REMOVE ALL QUESTIONS
+%\newcommand{\qhandan}[2]{{#1}{}}
+
 \section{Zero-knowledge Continuations}
 \label{sec:rvrf_cont}
 
 \noindent In the following, we describe a NIZK for a relation $\rel$ where
 $$\rel = \{(\bary, \barz; \barx, \baromega_1, \baromega_2):  (\bary, \barx; \baromega_1) \in \relone, (\barz, \barx; \baromega_2) \in \reltwo \},$$
-and $\relone$, $\reltwo$ are some NP relations. Our NIZK is designed to efficiently re-prove membership for relation $\relone$
-via a new technique which we call \emph{zero-knowledge continuation}. In practice, using a NIZK that ensures a zero-knowledge continuation for a 
+and $\relone$, $\reltwo$ are NP relations. 
+At a high level, this is based on the commit-and-prove methodology~\cite{Kilian1990UsesOR,CLOS02,LegoSNARK} 
+as relations $\relone$ and $\reltwo$ have input $\barx$ in common and the respective 
+proofs or arguments can and will make use of a commitment $X$ to $\barx$. However, our proposed NIZK has a more specific functionality: 
+it is designed to efficiently re-prove membership for relation $\relone$ via a new technique which we call \emph{zero-knowledge continuation}. 
+In practice, using a NIZK that ensures a zero-knowledge continuation for a 
 subcomponent relation (i.e., in our case $\relone$) means one essentially needs to create only once an otherwise expensive proof for that subcomponent 
 relation; the initial proof can later be re-used multiple times (just after inexpensive re-randomisations) 
 while preserving knowledge soundness and zero-knowledge of the entire NIZK. 
 Below, we formally define zero-knowledge continuation. In section~\ref{sec:rvrf_groth16} we instantiate it via a \emph{special(ised) 
-Groth16} or \SpecialG, and finally, in section~\ref{subsec:rvrf_faster} we use it to build a ring VRF with fast amortised prover time. \\
+Groth16} or \SpecialG, and finally, in section~\ref{subsec:rvrf_faster} we use it to instantiate our $ \rVRF.\Sign $ algorithm in Section \ref{sec:pederson_vrf} with fast amortised prover time. \\
 
 \noindent In addition, the anonymity property of our ring VRF demands we not only finalise multiple times a component of the zero-knowledge 
 continuation but also each time the result remains unlinkable to previous finalisations, meaning our ring VRF stays zero-knowledge 
@@ -42,34 +54,36 @@ section~\ref{sec:rvrf_groth16} and give an instantiation of our NIZK fulfilling 
 %times upon the same \Preprove results, again even with the additional proof-of-knowledge.
 %\end{definition} 
 
+%TODO: Check notation consistancy with NIZK in preliminaries
 \begin{definition}[ZK Continuations]
 \label{def:zk_cont}
  A zero-knowledge continuation $\ZKCont$ for a relation $\relone$ with 
 input $(\bary, \barx)$ and witness $\baromega_1$ is a tuple of efficient algorithms 
-($\ZKCont.\Setup$, $\ZKCont.\Preprove$, $\ZKCont.\Reprove$, $\ZKCont.\VerifyCom$, $\ZKCont.\Verify$, $\ZKCont.\Sim$) 
+($\ZKCont.\Setup$, $\ZKCont.\Preprove$, $\ZKCont.\Reprove$, 
+$\ZKCont.\VerifyCom$, $\ZKCont.\Verify$, $\ZKCont.\Sim$) 
 such that for implicit security parameter $\lambda$,
 \begin{itemize}
 
-\item $\ZKCont.\Setup: (1^{\lambda}, \relone) \mapsto (\crs, \tw, \pp)$ a setup algorithm that on input the security parameter 
-outputs a common reference string $\crs$, a trapdoor $\tw$ and a list $\pp$ of public parameters, 
+\item $\ZKCont.\Setup: (1^{\lambda}, \relone) \mapsto (\crs, \tw, \pp)$ a setup 
+algorithm that on input the security parameter outputs a common reference 
+string $\crs$, a trapdoor $\tw$ and a list $\pp$ of public parameters, 
 
 %\item $\ZKCont.\Gen: (\crs, \relone) \mapsto (\crspk, \crsvk, \pp)$ \, 
 %outputs a list $\pp$ of public parameters and a pair of proving key $\crspk$ and verification key $\crsvk$, 
 
 \item $\ZKCont.\Preprove: (\crs, \bar{y}, \bar{x}, \baromega_1, \relone) \mapsto (X', \pi', b')$ \,
 constructs commitment $X'$ from a vector of inputs $\bar{x}$ (called \emph{opaque}) and 
-constructs proof $\pi'$ from vector of inputs 
-$\bar{y}$ (called \emph{transparent}), $\bar{x}$ and vector of witnesses $\baromega_1$, and it 
-also outputs $b'$ as the opening for $X'$,
+constructs proof $\pi'$ from vector of inputs $\bar{y}$ (called \emph{transparent}), 
+$\bar{x}$ and vector of witnesses $\baromega_1$, and it also outputs $b'$ as the opening for $X'$,
 
 \item $\ZKCont.\Reprove: (\crs, X', \pi', b', \relone) \mapsto (X, \pi, b)$ \,
-finalises commitment $X$ and proof $\pi$ and returns an opening $b$ for the commitment, 
+returns a new commitment $X$ and proof $\pi$ and returns an opening $b$ for the commitment, 
 
 \item $\ZKCont.\VerifyCom: (\pp, X, \barx, b) \mapsto 0/1$ \, 
 verifies that indeed $X$ is a commitment to $\barx$ with opening (e.g., randomness) $b$ and 
 outputs 1 if indeed that is the case and 0 otherwise,
  
-\item $\ZKCont.\Verify: (\crs, \bar{y}, X, \pi, \relone) \mapsto 0/1$ \, outputs $1$ in case it accepts and $0$ otherwise,
+\item $\ZKCont.\Verify: (\crs, \bar{y}, X, \pi, \relone) \mapsto 0/1$ \, outputs $1$ in case it accepts  and $0$ otherwise,
 
 \item $\ZKCont.\Sim: (\tw, \bary, \relone) \mapsto (\pi, X)$ takes as input a simulation trapdoor $\tw$ and statement $(\bary, \barx)$ and returns 
 arguments $\pi$ and $X$,
@@ -82,21 +96,30 @@ and satisfies perfect completeness for $\Preprove$ and, for $\Reprove$, it satis
 %Zero-knowledge however should hold even if \Reprove gets invoked multiple
 %times upon the same \Preprove results,
 %again even with the additional proof-of-knowledge.
+
+\noindent We define perfect completeness for $\Preprove$ and $\Reprove$ algorithms separately and in the most general way possible,
+(i.e., with inputs supplied by the adversary where possible).  
+
 \noindent \textbf{Perfect Completeness for $\Preprove$} For all $\lambda \in \mathbb{N}$, for every $(\bary, \barx; \baromega_1) \in \relone$:
 \begin{align*}
-\mathit{Pr} (& \ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1 \ \wedge \ \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1\  | \ \\ 
+\mathit{Pr} (& \ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1 \ \wedge \ \\
+                   &  \wedge \ \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1\  | \ \\ 
                    & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\ 
                    & (X, \pi, b) \leftarrow \ZKCont.\Preprove(\crs, \bar{y}, \bar{x}, \baromega_1, \relone)) = 1
 \end{align*}
 
-\noindent \textbf{Perfect Completeness for $\Reprove$} For all $\lambda \in \mathbb{N}$, for every efficient adversary $A$: 
+\noindent \textbf{Perfect Completeness for $\Reprove$} For all $\lambda \in \mathbb{N}$, for every PPT adversary $A$: 
 \begin{align*}
-\mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X', \pi', \relone) = 1  = >  \ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1)  \ \wedge \  \\
-                   & \wedge \ (\ZKCont.\VerifyCom (\pp, X', \barx, b') = 1 => \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1) \ | \\
-                   & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone),  (\bary, \barx, X', \pi', b') \leftarrow A(\crs,\relone), \\
+\mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X', \pi', \relone) = 1  \Rightarrow \\
+                   & \Rightarrow \ \ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1)  \ \wedge \  \\
+                   & \wedge \ (\ZKCont.\VerifyCom (\pp, X', \barx, b') = 1 \Rightarrow \\ 
+                   & \wedge \ \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1) \ | \\
+                   & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
+                   & (\bary, \barx, X', \pi', b') \leftarrow A(\crs,\relone), \\
                    & (X, \pi, b) \leftarrow \ZKCont.\Reprove(\crs, X', \pi', b', \relone)) = 1
 \end{align*}
 
+%TODO Check consistency of extractor notations in the paper
 \begin{comment}
 \begin{align*}
 \mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1  = >  \ZKCont.\Verify(\crs, \bar{y}, X', \pi', \relone) = 1)  \ \wedge \  \\
@@ -110,9 +133,10 @@ and satisfies perfect completeness for $\Preprove$ and, for $\Reprove$, it satis
 \noindent \textbf{Knowledge Soundness} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $\realaux$ (as per~\cite{bening_auxiliary}) and 
 every non-uniform efficient adversary $A$, there exists efficient non-uniform extractor $E$ such that:
 \begin{align*}
-\mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1) \ \wedge \ (\ZKCont.\VerifyCom(\pp, X, \bar{x}, b) = 1) \ \wedge\ \\
+\mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1) \ \wedge \ \\
+                   & \wedge \ (\ZKCont.\VerifyCom(\pp, X, \bar{x}, b) = 1) \ \wedge\ \\
                    & \wedge \ ( (\bary, \barx; \baromega_1) \notin \relone) \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
-                   %& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\
+                   %%& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\
                    & (\bary, \barx, X, \pi, b; \baromega_1 ) \leftarrow A || E (\crs, \realaux, \relone)) = \negl (\lambda),
 \end{align*}
 
@@ -126,33 +150,28 @@ every non-uniform efficient adversary $A$, there exists efficient non-uniform ex
 
 \noindent %where $\ZKCont.\Preprove_{|X}(\crspk, \bar{y}, \bar{x}, \baromega_1, \relone; b)$ means running the part of algorithm 
 %$\ZKCont.\Preprove$ that computes and outputs $X$ with its regular inputs and using $b$ when randomness is required; 
-where by $(\mathit{output_{A}};\mathit{output_{B}}) \leftarrow A || B(\mathit{input})$ we denote algorithms $A$, $B$  running on the same 
+where by $(\mathit{output_{A}};\mathit{output_{B}}) \leftarrow A || B(\mathit{input})$ we denote algorithms $A$, $B$ running on the same 
 $\mathit{input}$ and $B$ having access to the random coins of $A$. \\
 
+\noindent Finally, we introduce a new flavour of zero-knowledge property. It allows us to formalise the intuition that if one calls once 
+$\ZKCont.\Preprove$ on $((\bary, \barx), \baromega_1) \in \relone$ and 
+then sequentially calls $ \ZKCont.\Reprove $ at least once but also (possibly) multiple times, 
+then every time after the first call to $ \ZKCont.\Reprove $ the resulting proofs reveal nothing regarding either $\barx$ or $\baromega_1$. 
+Hence, the proofs obtained via sequential use of $ \ZKCont.\Reprove $ as described above are not linkable, i.e., a property targeted  
+in the preamble of this section. \\
+
 \noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $\realaux$, 
-for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$, for all $b'$, for every adversary $A$:
+for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$, for all $b'$, for every adversary $A$ there exists a PPT algorithm $ \Sim $ such that:
 \begin{align*}
-\mathit{Pr}(& A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
+& \mathit{Pr} (A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
                   %& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
                   & \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, \\
                   & (\pi, X, \_) \leftarrow \ZKCont.\Reprove (\crs, X', \pi', b', \relone)) =  \\
-= \mathit{Pr}(& A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\ 
+& = \mathit{Pr}(A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\ 
                      %& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone),\\
-                     & \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, (\pi, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone))
-\end{align*}
-
-\begin{comment}
-\begin{align*}
-\mathit{Pr}(& A(\crs, \realaux, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\
-                  & (\crs, \crs) \leftarrow \ZKCont.\Gen(\crs, \relone), \\ 
-                  & (\pi', X', \_) \leftarrow \ZKCont.\Reprove (\crs, X, \pi, b, \relone), \\
-                  &  \ZKCont.\Verify(\crs, \bary, X, \pi, \relone) = 1) =  \\
-= \mathit{Pr}(& A(\crs, \realaux, \pi', X', \relone) = 1 \ | \ (\crs, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
-                     & (\crs, \crsvk) \leftarrow \ZKCont.\Gen(\crs, \relone), (\pi', X') \leftarrow \ZKCont.\Sim(\tw, \bary, \relone) \\ 
-                     &  \ZKCont.\Verify(\crsvk, \bary, X, \pi, \relone) = 1)
-\end{align*}
-\end{comment}
- 
+                     & \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, \\ 
+                     & (\pi, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone))
+\end{align*} 
 \end{definition} 
 
 % $$ \Lring = \Setst{ \compk, \comring }{
@@ -165,9 +184,11 @@ for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$
 \label{sec:rvrf_groth16}
 
 Below we instantiate our zero-knowledge continuation notion with a scheme based on Groth16~\cite{Groth16} SNARK;
-hence, we call our instantiation \emph{specialised Groth16} or \emph{$\mathsf{SpecialG}$}. But first we need a 
-reminder of the definition of Quadratic Arithmetic Program (QAP)~\cite{LegoSNARK}, ~\cite{GGPR13}.
+hence, we call our instantiation \emph{specialised Groth16} or \emph{$\mathsf{SpecialG}$}. We will use the polynomials that  
+define a Quadratic Arithmetic Program (QAP)~\cite{LegoSNARK}, ~\cite{GGPR13} and related $\relRQ$ in a standard way. 
+We invite the reader to consult the references for a full reminder or the Appendix~\ref{appendix_specialg}.  
 
+\begin{comment}
 \begin{definition}[QAP] 
 \label{def:QAP}
 A Quadratic Arithmetic Program (QAP) $\cQ = (\cA, \cB, \cC, t(X))$ of size $m$ 
@@ -179,79 +200,106 @@ $$(\sum_{k=0}^m v_k \cdot a_k(X)) \cdot (\sum_{k=0}^m v_k \cdot b_k(X)) = (\sum_
 where $\barv = (v_0, \ldots, v_m) = (1, x_1, \ldots, x_n, w_1, \ldots w_{m-n})$ and $\bary = (x_1, \ldots, x_l)$ and 
 $\barx = (x_{l+1}, \ldots, x_n)$ and $\baromega = (w_1, \ldots, w_{m-n})$. 
 \end{definition}
+\end{comment}
+In summary, \SpecialG setup is an extension of original Groth16~\cite{Groth16} setup by two additional 
+group elements. %$\Kgamma$ and $\Kdelta$, as defined below. 
+$\SpecialG$ setup is identical to commit-carrying LegoSNARK $\ccgroth$~\cite[Fig.~22]{LegoSNARK} setup\footnote{$\ccgroth$ is, in turn, based on  Groth16.}.
+Moreover, together the $\Preprove$ and the $\Reprove$ procedures of $\SpecialG$ are identical to the proving  
+procedure in $\ccgroth$ with the difference that $\SpecialG$ also re-randomises the commitment to part 
+of the public input, as part of  $\Reprove$. Additionally, the verification procedure and the commitment verification are identical to their 
+counterparts in $\ccgroth$. We give $\SpecialG$ in full in Appendix~\ref{appendix_specialg} and below we only detail 
+%Second, our $\SpecialG.\Reprove$ algorithm uses a Groth16 re-randomisation 
+%technique for the proof (see~\cite[Fig.~1]{RandomizationGroth16} or LegoSNARK~\cite[Fig.~22]{LegoSNARK}), 
+%but, in addition, $\SpecialG.\Reprove$ also re-randomises $X$ which is a commitment to a slice of the public input;
+%Moreover, in terms of security properties, we appropriately define the zero-knowledge for zk continuations such 
+%that even after iteratively applying $\SpecialG.\Reprove$ zero-knowledge property is preserved for both the witness 
+%as well as the public input committed to in $X$.  
 
-\noindent Given notation provided in section~\ref{sec:background}, we introduce
-%Let $\mathbb{F}_q$ be a prime field, 
+\begin{comment}
+\noindent Given notation provided in section~\ref{sec:background}, in particular elliptic curve $\ecE$, its pairing $e$ and 
+the related source, target groups and generators, we introduce%Let $\mathbb{F}_q$ be a prime field, 
 %let $G_1$, $G_2$, $G_T$ be as defined in section~\ref{??}, let $e$, $g$, $h$ be defined as $\ldots$. Let $t(X)$ and
 %$\{u_i(X),v_i(X),w_i(X)\}_{i=0}^m$ be polynomials in $\F_q[X]$, let $\ldots$ be $\ldots$ such that there exists $h(X) \in \F_q[X]$ with
 % $$ \sum_{i=0}^m a_iu_i(X) \cdot  \sum_{i=0}^m a_iv_i(X)  = \sum_{i=0}^m a_iw_i(X) + h(X)t(X)  \ (\ast)$$
 %Then let $\relone = \{ (;) \ | \ (;)  (\ast) \}$
 
 \begin{definition}[Specialised Groth16 ($\SpecialG$)]
-\label{insta:sg16} Let $\relRQ$ be as in Definition~\ref{def:QAP}. Then we call 
+\label{insta:sg16} Let $\relRQ$ be as mentioned above. We call 
 specialised Groth16 for relation $\relRQ$ the following: %instantiation of the zero-knowledge continuation notion from Definition~\ref{def:zk_cont}:
 \begin{itemize}
 \item $\SpecialG.\Setup: (1^{\lambda}, \relRQ) \mapsto (\crs, \tw,\pp)$. \\ 
-\noindent Let $\alpha, \beta, \gamma, \delta, \tau, \eta  \xleftarrow{\$} \F_q^{*}$. Let $\tw = (\alpha, \beta, \gamma, \delta, \tau, \eta)$. \\ 
-Let $\crs = ([\barsig_1]_1, [\barsig_2]_2)$ where 
+\noindent Let $\alpha, \beta, \gamma, \delta, \tau, \eta  \xleftarrow{\$} \F_q^{*}$. 
+Let $\tw = (\alpha, \beta, \gamma, \delta, \tau, \eta)$. \\ 
+Let $\crs = (\barsig_1, \barsig_2)$ where 
 \begin{align*}
-\barsig_1 = (&\alpha, \beta, \delta, \{\tau_i\}_{i=0}^{d-1}, \left\{\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}\right\}_{i=1}^n,  
-\frac{\eta}{\gamma}, \\ 
-&\left\{\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\delta} \right\}_{i=n+1}^m, \left\{\frac{1}{\delta}\sigma^it(\sigma) \right\}_{i=0}^{d-2}, 
-\frac{\eta}{\delta}), \\
-\barsig_2 = (&\beta, \gamma, \delta, \{\tau^i\}_{i=0}^{d-1}). 
+\barsig_1 = (&\alpha \cdot \gone, \beta \cdot \gone, \delta \cdot \gone, \{\tau_i \cdot \gone\}_{i=0}^{d-1}, \\
+& \left\{\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \cdot \gone \right\}_{i=1}^n, \frac{\eta}{\gamma} \cdot \gone, \\ 
+&\left\{\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\delta} \cdot \gone \right\}_{i=n+1}^m, \\
+& \left\{\frac{1}{\delta}\sigma^it(\sigma)\cdot \gone \right\}_{i=0}^{d-2}, \frac{\eta}{\delta}\cdot \gone), \\
+\barsig_2 = (&\beta \cdot \gtwo, \gamma \cdot \gtwo, \delta \cdot \gtwo, \{\tau^i \cdot \gtwo\}_{i=0}^{d-1}). 
 \end{align*} 
 
 %\item $\SpecialG.\Gen: (\crs, \relRQ) \mapsto (\pp, \crspk, \crsvk)$ where \\
 %$\crspk = \left([\barsig_1]_1, [\beta]_2, [\delta]_2, \left\{[\tau^i]_2\right\}_{i=0}^{d-1}\right)$  \\ 
 %$\crsvk = \left([\alpha]_1, \left\{ \left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1 \right\}_{i=1}^{l}, 
 %[\beta]_2, [\gamma]_2, [\delta]_2\right)$  \\ 
-$\pp = \left( \left \{ \left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1 \right \}_{i=l+1}^{n}, \left[ \frac{\eta}{\gamma} \right]_1 \right)$. \\
-\noindent Moreover, for simplicity and later use, we call $\Kgamma = \left[\frac{\eta}{\gamma}\right]_1$  and $\Kdelta = \left[ \frac{\eta}{\delta}\right] _1$.
+$\pp = \left( \left \{ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \cdot \gone \right \}_{i=l+1}^{n}, \frac{\eta}{\gamma} \cdot \gone \right)$. \\
+\noindent Moreover, for simplicity and later use, we call \\
+$\Kgamma = \frac{\eta}{\gamma} \cdot \gone$  and $\Kdelta = \frac{\eta}{\delta} \cdot \gone$.
+
+
+%{We should say what is the difference from Groth16.Setup or it is the same. I think in general in $ \SpecialG $, you should tell which part is from Groth16 or Legosnark and where we %change it while describing the algorithms. It will be much clear for the reader to verify. You have notes in the end but I think it is better to have it while describing since you can tell %more right away from the algorithm than in the end of everything}
 
 
 \item $\SpecialG.\Preprove: (\crs, \bar{y}, \bar{x}, \baromega_1, \relRQ) \mapsto (X', \pi', b')$ such that \\
 \begin{align*}
-&b' = 0; r, s\xleftarrow{\$} \F_p; X' = \sum_{i=l+1}^{n} v_i\left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1;  \\
-&o = \alpha + \sum_{i=0}^{m} v_i \cdot a_i(\tau) + r \cdot \delta; u = \beta + \sum_{i=0}^{m} v_i \cdot b_i(\tau) + s \cdot \delta; \\ 
-&v = \frac{\sum_{i=n+1}^{m} (v_i (\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau))) + h(\tau)t(\tau)}{\delta}   + o\cdot s + u \cdot r - r \cdot s \cdot \delta; \\
-& \pi' = ([o]_1, [u]_2, [v]_1), 
+&\ \ \ \ \ \ \ \   b' = 0; r, s\xleftarrow{\$} \F_p; X' = \sum_{i=l+1}^{n} v_i \cdot  \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \cdot \gone;  \\
+&\ \ \ \ \ \ \ \  o = \alpha + \sum_{i=0}^{m} v_i \cdot a_i(\tau) + r \cdot \delta; u = \beta + \sum_{i=0}^{m} v_i \cdot b_i(\tau) + s \cdot \delta; \\ 
+&\ \ \ \ \ \ \ \   v = \frac{\sum_{i=n+1}^{m} (v_i (\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau))) + h(\tau)t(\tau)}{\delta}   + \\ 
+& \ \ \ \ \ \ \ \ \ \ \ \ \  \ \   + o\cdot s + u \cdot r - r \cdot s \cdot \delta; \\
+&\ \ \ \ \ \ \ \ \ \pi' = (o \cdot \gone, u \cdot \gtwo, v \cdot \gone), 
 \end{align*}
-where $\bary = (x_1, \ldots, x_l)$, $\barx = (x_{l+1}, \ldots, x_n)$, $\baromega = (w_1, \ldots, w_{m-n})$, \\
-$\barv = (1, x_1, \ldots, x_n, w_1, \ldots, w_{m-n})$ (same as in Definition~\ref{def:QAP}).
+where $\bary = (x_1, \ldots, x_l)$, $\barx = (x_{l+1}, \ldots, x_n)$, \\
+$\baromega = (w_1, \ldots, w_{m-n})$, $\barv = (1, x_1, \ldots, x_n, w_1, \ldots, w_{m-n})$ (same as per definition of QAP).
+\end{itemize}
+\end{comment}
 
-
-\item $\SpecialG.\Reprove: (\crs, X', \pi', b', \relRQ) \mapsto (X, \pi, b)$  such that
+$\SpecialG.\Reprove: (\crs, X', \pi', b', \relRQ) \mapsto (X, \pi, b)$  such that
 \begin{align*}
-&b , r_1, r_2  \xleftarrow{\$} \F_p, X = X' + (b- b') \Kgamma, \pi = (O, U, V), \\
-&O = \frac{1}{r_1} O', U = r_1 U' + r_1r_2[\delta]_2, V = V' + r_2O'  - (b - b') \Kdelta \mathperiod
+&\ \ \ \ \ \ \ \  b , r_1, r_2  \xleftarrow{\$} \F_p, X = X' + (b- b') \Kgamma, \pi = (O, U, V), \\
+&\ \ \ \ \ \ \ \ O = \frac{1}{r_1} O', U = r_1 U' + r_1r_2 \delta \gtwo, V = V' + r_2O'  - (b - b') \Kdelta \mathperiod
 \end{align*}
 \noindent where $\pi' = (O', U', V')$.
- 
+
+\begin{comment}
+\begin{itemize} 
 \item $\SpecialG.\VerifyCom: (\pp, X, \barx, b) \mapsto 0/1$ where the output is 1 iff the following holds
-$$X = \sum_{i=l+1}^{n} x_i\left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1  + b \Kgamma,$$
+$$X = \sum_{i=l+1}^{n} x_i \cdot  \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \cdot \gone  + b \Kgamma,$$
 where $\barx = (x_{l+1}, \ldots, x_n)$, $ 0 \leq l \leq n-1$. 
 
-\item $\ZKCont.\Verify: (\crs, \bar{y}, X, \pi, \relRQ) \mapsto 0/1$ where the output is 1 iff the following holds 
-$$e(O,U) = e([\alpha]_1, [\beta]_2) \cdot e(X + Y, [\gamma]_2) \cdot e(V, [\delta]_2),$$
-where $\pi = (O, U, V)$, $Y = \sum_{i=1}^{l} x_i\left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1$ 
+\item $\SpecialG.\Verify: (\crs, \bar{y}, X, \pi, \relRQ) \mapsto 0/1$ where the output is 1 iff the following holds 
+$$e(O,U) = e(\alpha \cdot \gone, \beta \cdot \gtwo) \cdot e(X + Y, \gamma \cdot \gtwo) \cdot e(V, \delta \cdot \gtwo),$$
+where $\pi = (O, U, V)$, $Y = \sum_{i=1}^{l} x_i \cdot \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}  \cdot \gone$ 
 and $\bary = (x_1, \ldots, x_l)$.
 
-\item $\SpecialG.\Sim: (\tw, \bary, \relRQ) \mapsto (\pi, X)$ where $x, o, u \xleftarrow {\$} \F_p$ and let \\
-$\pi = ([o]_1, [u]_2, [v]_1)$ where $v = \frac{o\cdot u - \alpha \beta - \sum_{i=1}^{l} x_i (\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau))- x}{\delta}  $ and, 
-by definition $\bary = (x_1, \ldots, x_l)$. Note that $\pi$ is a simulated proof for transparent input $\bary$ and commitment $X = [x]_1$.
+\item $\SpecialG.\Sim: (\tw, \bary, \relRQ) \mapsto (\pi, X)$ where \\ $x, o, u \xleftarrow {\$} \F_p$ and let 
+$\pi = (o \cdot \gone, u  \cdot \gtwo , v \cdot \gone)$ where \\ $v = \frac{o\cdot u - \alpha \beta - \sum_{i=1}^{l} x_i (\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau))- x}{\delta}  $ and, 
+by definition $\bary = (x_1, \ldots, x_l)$. Note that $\pi$ is a simulated proof for transparent input $\bary$ 
+and commitment $X = x \cdot \gone$.
 \end{itemize} 
 \end{definition}
+\end{comment}
 
-\noindent \paragraph{Notes:} First, the trusted setup required by \SpecialG is 
-an extension of that required by original Groth16~\cite{Groth16} by two additional 
-group elements $\Kgamma = [\frac{\eta}{\gamma}]_1$ and $\Kdelta = [\frac{\eta}{\delta}]_1$. 
-An identical trusted setup to that used by \SpecialG was used in LegoSNARK~\cite[Fig.~22]{LegoSNARK} which defines 
-a commit-carrying SNARK based on Groth16. Second, our $\SpecialG.\Reprove$ algorithm uses a Groth16 re-randomisation 
-technique for the proof (see~\cite[Fig.~1]{RandomizationGroth16} or LegoSNARK~\cite[Fig.~22]{LegoSNARK}), 
-but, in addition, $\SpecialG.\Reprove$ also re-randomises $X$ which is a commitment to a slice of the public input; moreover, in terms of security 
-properties, we appropriately define the zero-knowledge for zk continuations such that even after iteratively applying 
-$\SpecialG.\Reprove$ zero-knowledge property is preserved for both the witness as well as the public input committed to in $X$.  \\
+%\noindent \paragraph{Notes:} First, the trusted setup required by \SpecialG is 
+%an extension of that required by original Groth16~\cite{Groth16} by two additional 
+%group elements $\Kgamma = [\frac{\eta}{\gamma}]_1$ and $\Kdelta = [\frac{\eta}{\delta}]_1$. 
+%An identical trusted setup to that used by \SpecialG was also used in LegoSNARK~\cite[Fig.~22]{LegoSNARK} which defines 
+%a commit-carrying SNARK based on Groth16. Second, our $\SpecialG.\Reprove$ algorithm uses a Groth16 re-randomisation 
+%technique for the proof (see~\cite[Fig.~1]{RandomizationGroth16} or LegoSNARK~\cite[Fig.~22]{LegoSNARK}), 
+%but, in addition, $\SpecialG.\Reprove$ also re-randomises $X$ which is a commitment to a slice of the public input; moreover, in terms of security 
+%properties, we appropriately define the zero-knowledge for zk continuations such that even after iteratively applying 
+%$\SpecialG.\Reprove$ zero-knowledge property is preserved for both the witness as well as the public input committed to in $X$.  \\
+
 
 %{\color{red}Note that, if a trusted setup is used (for example the one described in~\cite{subversion_zk}) such that there 
 %exist a public and efficient procedure for verifying it, then, by extending it with $\Kgamma$ and $\Kdelta$ (which is our 
@@ -264,22 +312,24 @@ $\SpecialG.\Reprove$ zero-knowledge property is preserved for both the witness a
 %since the zk-SNARK must remain knowledge-sound even given enlarged CRS; adding too many (or just ?wrong?) elements to the 
 %CRS can break the knowledge-soundness."
 
-\noindent Finally, we are ready to prove the following result:
+\noindent Finally, we are ready to prove that $\SpecialG$ is a zero-knowledge continuation. We show that the knowledge soundness property 
+of $\SpecialG$ (i.e., as defined for $\ZKCont$) is implied by the knowledge soundness property of commit-carrying SNARK with double 
+binding (cc-SNARK with double binding, see Definition 3.4~\cite{LegoSNARK}); our notion of zero-knowledge for $\ZKCont$ is, in fact a 
+new and stronger notion so we prove that directly. Formally, we have: 
 
 \begin{theorem}
 \label{sec_specialg}
-Let $\relRQ$ be a relation as per Definition~\ref{def:QAP} such that additionally $\{a_k(X)\}_{k=0}^n$ are linearly independent polynomials. Then, in the 
-AGM~\cite{Fuchs_AGM}, $\SpecialG$ is a zero-knowledge continuation as per definition~\ref{def:zk_cont}. 
+Let $\relRQ$ be a relation as related to a QAP such that additionally $\{a_k(X)\}_{k=0}^n$ are linearly independent polynomials. Then, in the 
+AGM~\cite{Fuchs_AGM}, $\SpecialG$ is a zero-knowledge continuation as per Definition~\ref{def:zk_cont}. 
 \end{theorem}
-\begin{proof} It is straightforward to prove that $\SpecialG$ has perfect completeness for $\Preprove$ and perfect completeness 
+\begin{proof} It is straightforward to show that $\SpecialG$ has perfect completeness for $\Preprove$ and perfect completeness 
 for $\Reprove$. \\
 
-\noindent We prove knowledge-soundness (KS) an in Definition~\ref{def:zk_cont} by first arguing $\SpecialG$ is a 
-commit-carrying SNARK with double binding (cc-SNARK with double binding) as per Definition 3.4~\cite{LegoSNARK}. 
-We use the fact that $\ccgroth$ as defined by the NILP detailed in Fig.22, Appendix H.5~\cite{LegoSNARK} satisfies that latter definition. Moreover, 
-$\SpecialG$'s $\Setup$ together with $\Gen$, on one hand, and $\ccgroth$'s $\mathit{KeyGen}$, on the other hand, are the same procedure. Also $\SpecialG$ 
-and $\ccgroth$ share the same verification algorithm. Hence, translating the notation appropriately, $\SpecialG$ also satisfies KS 
-of a cc-SNARK with double binding. \\
+\noindent We prove knowledge-soundness (KS) an in Definition~\ref{def:zk_cont} by first arguing $\SpecialG$ is a cc-SNARK with double binding 
+(see Definition 3.4~\cite{LegoSNARK}).  We use the fact that $\ccgroth$ as defined by the NILP detailed in Fig.22, Appendix H.5~\cite{LegoSNARK} 
+satisfies that latter definition. Moreover, $\SpecialG$'s $\Setup$ on one hand, and $\ccgroth$'s $ \mathsf{KeyGen} $, on the other hand, are the same 
+procedure. Also $\SpecialG$ and $\ccgroth$ share the same verification algorithm. Hence, translating the notation appropriately, $\SpecialG$ also 
+satisfies KS of a cc-SNARK with double binding. \\
 
 % we first argue that We prove knowledge-soundness by reducing it to the knowledge-soundness property of the Groth16 
 %commit-carrying with double binding scheme (for short $\ccgroth$). This knowledge-soundness property has been formalised in 
@@ -288,7 +338,7 @@ of a cc-SNARK with double binding. \\
 %and $\ccgroth$ share the same verification algorithm. Since $\ccgroth$ satisfies the definition of a cc-SNARK with double binding, translating 
 %the notation appropriately, $\SpecialG$ also satisfies the knowledge soundness properties for a cc-SNARK with double binding. 
 \noindent Let $A_{\SpecialG}$ be an adversary for KS in Definition~\ref{def:zk_cont} and 
-define adversary $A_{\ccgroth}$ for KS  in Definition 3.4~\cite{LegoSNARK}:
+define adversary $A_{\ccgroth}$ for KS in Definition 3.4~\cite{LegoSNARK}:
 \begin{align*}
 &\mathit{If} \ A_{\SpecialG} (\crs, \pp, \realaux, \relRQ)\ \mathit{outputs} \  (\bary, \barx, X, \pi, b) \\
 &\ \ \ \ \ \ \ \ \mathit{then}\ A_{\ccgroth} (\crs, \realaux, \relRQ)\ \mathit{outputs} \ (\bary, X, \pi). 
@@ -301,17 +351,19 @@ construct extractor $E_{\SpecialG}$ for $A_{\SpecialG}$
 & \ \ \ \ \ \ \ \ \mathit{then} \ E_{\SpecialG} (\crs, \realaux, \relRQ) \ \mathit{outputs} \ \baromega^*; \\
 & \mathit{Otherwise} \ E_{\ccgroth}(\crs, \realaux, \relRQ) \ \mathit{outputs} \ \bot.
 \end{align*}
+
 We show $E_{\SpecialG}$ fulfils Definition~\ref{def:zk_cont} for $A_{\SpecialG}$. Assume by contradiction that is not the case. 
-This implies there exist auxiliary input $\realaux$ such that each: 
+This implies there exists an auxiliary input $\realaux$ such that each: 
 \begin{align*}
-\ZKCont.\Verify(\crs, \bary, X, \pi, &\relRQ) =1 \ (10)\ ; \ \ZKCont.\VerifyCom(\pp, X, \barx, b) =1 \ (20) \\
+&\SpecialG.\Verify(\crs, \bary, X, \pi, \relRQ) =1 \ \ (10), \\
+& \SpecialG.\VerifyCom(\pp, X, \barx, b) =1 \ \ (20), \\
 & (\bary, \barx; \baromega) \notin \relRQ  \ \ (30) 
 \end{align*}
-hold with non-negligible probability. Since $(20)$ holds with non-negligible probability and verification is identical for 
-$\SpecialG$ and $\ccgroth$, and since $E_{\ccgroth}$ is an extractor for $A_{\ccgroth}$ as per Definition 3.4~\cite{LegoSNARK},
+hold with non-negligible probability. Since $(20)$ holds with non-negligible probability and verification (for both proofs and commitments actually) is identical in $\SpecialG$ and $\ccgroth$ respectively, 
+and since $E_{\ccgroth}$ is an extractor for $A_{\ccgroth}$ as per Definition 3.4~\cite{LegoSNARK},
  then each of the two events 
 \begin{align*}
-\mathit{VerCommit^*}(\pp, X, \barx^*, b^*) =1 \ (40) \ ; \ (\bary, \barx^*; \baromega^*) \in  \relRQ \ (50)
+\mathit{\ccgroth.\mathit{VerCommit}^*}(\mathit{ck}, X, \barx^*, b^*) =1 \ (40) \ ; \ (\bary, \barx^*; \baromega^*) \in  \relRQ \ (50)
 \end{align*}
 holds with overwhelming probability. Since $(20)$ holds with non-negligible probability and $(40)$ holds with overwhelming probability and 
 together with (ii) from Definition 3.4~\cite{LegoSNARK} we obtain that $\barx^* = \barx$. Since $(50)$ holds with overwhelming probability, it implies 

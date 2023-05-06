@@ -7,9 +7,11 @@
 \newcommand{\PedVRF}{\primalgo{PedVRF}} 
 
 \newcommand\pp{\ensuremath{\mathit{pp}}\xspace}
+\newcommand\pprvrf{\ensuremath{\mathit{pp_{\mathit{rvrf}}}}\xspace}
 \newcommand\ppR{\ensuremath{\mathit{pp}_{\mathcal{R}}}\xspace}
 
 \newcommand{\realaux}{\ensuremath{\mathit{aux}}\xspace}
+\newcommand\crsrvrf{\ensuremath{\mathit{crs_{\mathit{rvrf}}}}\xspace}
 \newcommand\crs{\ensuremath{\mathit{crs}}\xspace}
 \newcommand\crspk{\ensuremath{\mathit{crs}_{\mathit{pk}}}\xspace}
 \newcommand\crsvk{\ensuremath{\mathit{crs}_{\mathit{vk}}}\xspace}
@@ -24,7 +26,8 @@
 \newcommand\crspktwo{\ensuremath{\mathit{crs}_{\mathit{pk},{\mathcal{R}'_2}}}\xspace}
 \newcommand\crsvktwo{\ensuremath{\mathit{crs}_{\mathit{vk},{\mathcal{R}'_2}}}\xspace}
 
-
+\newcommand{\gone}{\ensuremath{\mathsf{g}_1}\xspace}
+\newcommand{\gtwo}{\ensuremath{\mathsf{g}_2}\xspace}
 
 \newcommand\Kgamma{\ensuremath{K_{\gamma}}\xspace}
 \newcommand\Kdelta{\ensuremath{K_{\delta}}\xspace}
@@ -46,11 +49,19 @@
 
 \newcommand\twR{\ensuremath{\mathit{td}_{\mathcal{R}}}\xspace}
 
+\newcommand\baseR{\mathcal{R}}
+\newcommand\Reval{\ensuremath{\baseR_{\mathtt{eval}}}\xspace}
+\newcommand\Rring{\ensuremath{\baseR_{\mathtt{ring}}}\xspace}
+\newcommand\Rfast{\ensuremath{\baseR_{\mathtt{fast}}}\xspace}
+
 \newcommand\baromega{\ensuremath{\bar{w}}\xspace}
 \newcommand\baromegap{\ensuremath{\bar{w'}}\xspace}
-\newcommand\relone{\ensuremath{\mathcal{R}_1}\xspace}
-\newcommand\reltwo{\ensuremath{\mathcal{R}_2}\xspace}
-\newcommand\relRQ{\ensuremath{\mathcal{R}_{\mathcal{Q}}}\xspace}
+\newcommand\relone{\ensuremath{\baseR_1}\xspace}
+\newcommand\reltwo{\ensuremath{\baseR_2}\xspace}
+\newcommand\relRQ{\ensuremath{\baseR_{\mathcal{Q}}}\xspace}
+\newcommand{\relrvrf}{\ensuremath{\baseR_{\mathtt{rvrf}}}}
+\newcommand{\relout}{\ensuremath{\baseR_{\mathtt{out}}}}
+\newcommand{\relinner}{\ensuremath{\Rring^{\inner}}}
 
 \newcommand\baseL{\mathcal{L}}
 \newcommand\Lrvrf{\ensuremath{\baseL_{\mathtt{rvrf}}}\xspace}
@@ -58,10 +69,6 @@
 \newcommand\Lring{\ensuremath{\baseL_{\mathtt{ring}}}\xspace}
 \newcommand\Lfast{\ensuremath{\baseL_{\mathtt{fast}}}\xspace}
 
-\newcommand\baseR{\mathcal{R}}
-\newcommand\Reval{\ensuremath{\baseR_{\mathtt{eval}}}\xspace}
-\newcommand\Rring{\ensuremath{\baseR_{\mathtt{ring}}}\xspace}
-\newcommand\Rfast{\ensuremath{\baseR_{\mathtt{fast}}}\xspace}
 
 \newcommand\hsis{{h'}}
 \newcommand\ecEsis{{\mathbb{G}'}}
@@ -86,7 +93,7 @@
 
 
 %\newcommand{\PoK}{\ensuremath{\primalgo{PoK}}\xspace}
-\newcommand{\ccgroth}{\ensuremath{\primalgo{ccGroth16}}\xspace}
+\newcommand{\ccgroth}{\ensuremath{\primalgo{ccGro16}}\xspace}
 \newcommand{\SpecialG}{\ensuremath{\primalgo{SpecialG}}\xspace}
 \newcommand{\ZKCont}{\ensuremath{\primalgo{ZKCont}}\xspace}
 \newcommand{\Preprove}{\ensuremath{\primalgo{Preprove}}\xspace}

@@ -56,6 +56,12 @@ Ran Canetti.
 \newblock In {\em Proceedings 2001 IEEE International Conference on Cluster
   Computing}, pages 136--145. IEEE, 2001.
 
+\bibitem{CLOS02}
+Ran Canetti, Yehuda Lindell, Rafail Ostrovsky, and Amit Sahai.
+\newblock Universally composable two-party and multi-party secure computation.
+\newblock {\em Conference Proceedings of the Annual ACM Symposium on Theory of
+  Computing}, 2003.
+
 \bibitem{climaterisk2021}
 {Chatham House}.
 \newblock Climate change risk assessment 2021.
@@ -126,6 +132,11 @@ Aniket Kate, Gregory~M. Zaverucha, and Ian Goldberg.
 \newblock In Masayuki Abe, editor, {\em Advances in Cryptology - ASIACRYPT
   2010}, pages 177--194, Berlin, Heidelberg, 2010. Springer Berlin Heidelberg.
 
+\bibitem{Kilian1990UsesOR}
+Joe Kilian.
+\newblock Uses of randomness in algorithms and protocols.
+\newblock PhD Thesis. Massachusetts Institute of Technology, 1990.
+
 \bibitem{group_sig_survey}
 Mark Manulis, Nils Fleischhacker, Felix G\"unther, Franziskus Kiefer, and
   Bertram Poettering.
@@ -153,7 +164,7 @@ Nate Otto, Sunny Lee, Brian Sletten, Daniel Burnett, Manu Sporny, and Ken
   Ebert.
 \newblock Verifiable credentials use cases.
 \newblock W3C Working Group Note 24 September 2019.
-  \url{https://www.w3.org/TR/vc-use-cases/}.
+\newblock \url{https://www.w3.org/TR/vc-use-cases/}.
 
 \bibitem{nsec5}
 Dimitrios Papadopoulos, Duane Wessels, Shumon Huque, Moni Naor, Jan Včelák,
@@ -166,7 +177,7 @@ Dimitrios Papadopoulos, Duane Wessels, Shumon Huque, Moni Naor, Jan Včelák,
 Trevor Perrin.
 \newblock The xeddsa and vxeddsa signature schemes.
 \newblock Revision 1, 2016-10-20.
-  \url{https://signal.org/docs/specifications/xeddsa/}.
+\newblock  \url{https://signal.org/docs/specifications/xeddsa/}.
 
 \bibitem{doi:10.1080/25741292.2020.1725366}
 Ronald~F. Pol.
