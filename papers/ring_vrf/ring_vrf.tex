@@ -2,8 +2,8 @@
 % \documentclass[a4paper,11pt]{amsart}
 
 
-\def\eprint#1#2{#2} % eprint
-\def\doublecolumn#1#2{#1}
+\def\eprint#1#2{#1} % eprint
+\def\doublecolumn#1#2{#2}
 % \def\eprint#1#2{#2} % PETS
 \eprint{\usepackage[margin=2.5cm,includefoot]{geometry}}{}
 % \sloppy
@@ -29,7 +29,7 @@
 % \usepackage{tikz}
 % \usetikzlibrary{arrows,chains,matrix,positioning,scopes}
 
-\usepackage{enumitem}
+\usepackage{enumitem} 
 % \setlist[itemize]{leftmargin=*}
 \usepackage[normalem]{ulem}
 \usepackage{etoolbox}
@@ -91,14 +91,10 @@
 \input{pedersen_vrf}
 \input{zk_cont}
 
-\input{ring_updates}
-\input{ring_hiding}
+\eprint{\input{ring_updates}}{}
+\eprint{\input{ring_hiding}}{}
 % Handan writes: We cannot prove the UC security of our protocol with these options. Also, they are not formally described for a conference submission. We  should just say merkle tree or ring in the protocol description section
-
-
-\input{app_id}
-\input{app_rate}
-
+\eprint{\input{app_id}\input{app_rate}}{\input{app_short}}
 % \input{conclusion}
 
 \bibliographystyle{plain}
@@ -108,7 +104,7 @@
 \input{uc_fun}
 \input{uc_proof}
 \eprint{\input{more_uc_funcs}}{}
-
+\eprint{}{\input{appendix_SpeciaG_instantiation}}
 
 \end{document}
 
