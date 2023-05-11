@@ -12,8 +12,9 @@ use ark_ec::{
     AffineRepr, CurveGroup,
     hashing::{HashToCurveError, curve_maps, map_to_curve_hasher::MapToCurveBasedHasher}, // HashToCurve
 };
-use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};  // SerializationError
 use ark_std::{ borrow::BorrowMut, Zero, vec::Vec, };   // io::{Read, Write}
+
+pub use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};  // SerializationError
 
 pub use ark_ed_on_bls12_381_bandersnatch::{
     self as bandersnatch,
@@ -151,8 +152,8 @@ pub struct PublicKey(pub dleq_vrf::PublicKey<E>);
 
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct ThinVrfSignature<const N: usize> {
-    signature: dleq_vrf::Signature<ThinVrf>,
-    preoutputs: [VrfPreOut; N],
+    pub signature: dleq_vrf::Signature<ThinVrf>,
+    pub preoutputs: [VrfPreOut; N],
 }
 
 impl<const N: usize> ThinVrfSignature<N>
