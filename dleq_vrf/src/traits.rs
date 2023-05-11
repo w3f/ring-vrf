@@ -16,7 +16,7 @@
 //! RSA-FDH is an extremely fast VRF if properly configured.
 //! BLS is a terrible VRF but winds up being popularized.
 //! 
-//! TODO:  We have not evaluated if these traits mesh wqell with
+//! TODO:  We have not evaluated if these traits mesh well with
 //! batch verification or threshold multi-signed VRFs.
 //! 
 //! TODO:  `IntoTranscript` might not correctly abstract signing for
