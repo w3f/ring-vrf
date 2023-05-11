@@ -31,14 +31,14 @@ We need a new trick if the $\chi_i$ come from different circuit's
 trusted setups.  A priori, our zero-knowledge continuation \pifast
 fixes some $\genG = \chi_1$, which reveals the circuit,
 due to its dependence upon the SRS like
-$$ \chi_1 = \left[ {\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) \over \gamma} \right]_1 \mathperiod $$
+$$ \chi_1 = \frac{\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau)}{\gamma} \cdot \gone \ \mathperiod $$
 
 Instead, we propose to stabilize the public input SRS elements across circuits:
 We choose $\chi_{1,\gamma}$ independently before selecting the circuit
 or running its trusted setup.
 We then merely add an SRS element $\chi_{1,\delta}$, for usage in $C$, that binds
 our independent $\chi_{1,\gamma}$ to the desired definition, so
-$$ \chi_{1,\delta} := \left[ {\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) - \gamma \chi_{1,\gamma} \over \delta} \right]_1 \mathperiod $$
+$$ \chi_{1,\delta} := \frac{\beta u_1(\tau) + \alpha v_1(\tau) + w_1(\tau) - \gamma \chi_{1,\gamma}}{\delta} \cdot \gone \mathperiod $$
 At this point, we replace $\chi_1$ by $\chi_{1,\gamma}$ everywhere and
 our proofs add $\comring \, \chi_{1,\delta}$ to $C$.
 
@@ -49,8 +49,8 @@ public input SRS points $\chi_{1,\gamma}$, and similarly $\chi_0$ if desired.
 \smallskip
 
 At this point, one still needs to hide the SRS elements
- $[\delta]_2, [\gamma]_2 \in \grE_2$ and
- $e([\alpha]_1, [\beta]_2) \in \grE_T$.
+ $\delta \cdot \gtwo, \gamma \cdot \gtwo \in \grE_2$ and
+ $e(\alpha \cdot \gone, \beta \cdot \gtwo) \in \grE_T$.
 We leave this as an exercise to the reader.
 
 
@@ -62,8 +62,8 @@ We leave this as an exercise to the reader.
 
 In their trusted setups, all these Groth16 circuits wind up with unique
 toxic waste $\alpha,\beta,\delta$ and hence unique SRS elements
- $[\alpha]_1 \in \ecE_1$ and $[\beta]_2, [\delta]_2, [\gamma]_2 \in \grE_2$,
-and a unique $\grE_T$ element $e([\alpha]_1, [\beta]_2)$.
+ $\alpha \cdot \gone \in \ecE_1$ and $\beta \cdot \gtwo, \delta \cdot \gtwo, \gamma \cdot \gtwo \in \grE_2$,
+and a unique $\grE_T$ element $e(\alpha \cdot \gone, \beta \cdot \gtwo)$.
 We hence encounter the open questions:
 How should we optimize blinding the verifier key elements derived from toxic waste?
 In particular, could we choose some toxic waste elements identically across multiple trusted setups?
@@ -73,13 +73,13 @@ this question depends upon other factors, especially if the trusted setups
 run concurrently.
 If for example, $\alpha$ and/or $\beta$ could be identical across
 concurrent trusted setups, then we avoid extensive complexity in
- handling $([\alpha]_1, [\beta]_2) \in \grE_T$ terms.
+ handling $(\alpha \cdot \gone, \beta \cdot \gtwo) \in \grE_T$ terms.
 
-We expect the $[\delta]_2$ might differ between different circuits.
+We expect the $\delta \cdot \gtwo$ might differ between different circuits.
 As a nice solution, our Groth16 trusted setup could construct a
 KZG polynomial commitment $\rho$ along with openings to the
-various $\delta$ as $[\delta]_2$.  At this point, our signer could
-blind open $\rho$ to the curve point $[\delta]_2$.
+various $\delta$ as $\delta \cdot \gtwo$.  At this point, our signer could
+blind open $\rho$ to the curve point $\delta \cdot \gtwo$.
 We suspect concurrent trusted setups could skip much complexity of
 Caulk+ \cite{caulk+} or Caulk \cite{caulk} because actually the
  trusted setup erases all knowledge of all openings of $\rho$.
