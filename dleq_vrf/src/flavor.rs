@@ -80,7 +80,7 @@ pub(crate) struct Witness<F: Flavor> {
     pub(crate) r: <F as InnerFlavor>::Affines,
 }
 
-/// VRF signature detached from VRF inputs and outpus
+/// Batchable VRF signature detached from VRF inputs and outpus
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct Signature<F: Flavor> {
     pub(crate) compk: <F as InnerFlavor>::KeyCommitment,
