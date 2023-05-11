@@ -105,10 +105,7 @@ pub trait EcVrfVerifier {
         signature: &VrfSignature<Self,N>,
     ) -> Result<[EcVrfInOut<Self>; N],Self::Error>
     {
-        let mut inputs = inputs.into_iter();
-        let mut preouts = signature.preouts.iter().cloned();
-        let cb = |_| preouts.next().unwrap().attach_input(inputs.next().unwrap());
-        let ios: [EcVrfInOut<Self>; N] = core::array::from_fn(cb);
+        let ios: [EcVrfInOut<Self>; N] = signature.attach_inputs(inputs);
         self.vrf_verify_detached(t,ios.as_slice(),&signature.proof) ?;
         Ok(ios)
     }
@@ -120,9 +117,7 @@ pub trait EcVrfVerifier {
         signature: &VrfSignatureVec<Self>,
     ) -> Result<Vec<EcVrfInOut<Self>>,Self::Error>
     {
-        let ios: Vec<EcVrfInOut<Self>> = signature.preouts.iter()
-        .zip(inputs).map(|(preout,input)| preout.attach_input(input))
-        .collect();
+        let ios = signature.attach_inputs(inputs);
         self.vrf_verify_detached(t,ios.as_slice(),&signature.proof) ?;
         Ok(ios)
     }
@@ -155,12 +150,56 @@ pub struct VrfSignature<V: EcVrfVerifier+?Sized, const N: usize> {
     pub preouts: [EcVrfPreOut<V>; N],
 }
 
+impl<V: EcVrfVerifier+?Sized, const N: usize> VrfSignature<V,N> {
+    pub fn attach_inputs(
+        &self,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<V::H>>
+    ) -> [EcVrfInOut<V>; N]
+    {
+        let mut inputs = inputs.into_iter();
+        let mut preouts = self.preouts.iter().cloned();
+        let cb = |_| preouts.next().unwrap().attach_input(inputs.next().unwrap());
+        core::array::from_fn(cb)
+    }
+
+    pub fn vrf_verify( 
+        &self,
+        t: impl IntoTranscript,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<V::H>>,
+        public: &V,
+    ) -> Result<[EcVrfInOut<V>; N],V::Error>
+    {
+        public.vrf_verify(t,inputs,self)
+    }
+}
+
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct VrfSignatureVec<V: EcVrfVerifier+?Sized> {
     pub proof: EcVrfProof<V>,
     pub preouts: Vec<EcVrfPreOut<V>>,
 }
 
+impl<V: EcVrfVerifier+?Sized> VrfSignatureVec<V> {
+    pub fn attach_inputs(
+        &self,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<V::H>>
+    ) -> Vec<EcVrfInOut<V>>
+    {
+        self.preouts.iter().zip(inputs)
+        .map(|(preout,input)| preout.attach_input(input))
+        .collect()
+    }
+
+    pub fn vrf_verify(
+        &self,
+        t: impl IntoTranscript,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<V::H>>,
+        public: &V,
+    ) -> Result<Vec<EcVrfInOut<V>>,V::Error>
+    {
+        public.vrf_verify_vec(t,inputs,self)
+    }
+}
 
 /// VRF signer, includes the secret key, but sometimes the ring opening too.
 /// 
