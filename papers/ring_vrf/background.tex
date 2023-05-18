@@ -116,8 +116,8 @@ $ \NIZK $ satisfies the following:
 		&  \pi \leftarrow \NIZK_\rel.\Simulate (\tau_\rel, x)]
 	\end{align*}
 }{\begin{align*}
-	\Pr[& \adv(\crs_\rel, z, \pi,\rel) = 1 \ | \ (\crs_\rel, \tau_\rel) \leftarrow \NIZK_\rel.\Setup (\rel),   \pi \leftarrow \NIZK_\rel.\Prove (\crs_\rel, x; \omega)]\\
-	=\Pr[& \adv(\crs_\rel, z, \pi,\rel) = 1 \ | \ (\crs_\rel, \tau_\rel) \leftarrow \NIZK_\rel.\Setup (\rel),   \pi \leftarrow \NIZK_\rel.\Simulate (\crs_\rel, \tau_\rel, x)]
+	\Pr[& \adv(\crs_\rel, z, \pi,\rel) = 1 \ | \ (\crs_\rel, \tau_\rel) \leftarrow \NIZK_\rel.\Setup (1^{\lambda}),   \pi \leftarrow \NIZK_\rel.\Prove (\crs_\rel, x; \omega)]\\
+	=\Pr[& \adv(\crs_\rel, z, \pi,\rel) = 1 \ | \ (\crs_\rel, \tau_\rel) \leftarrow \NIZK_\rel.\Setup (1^{\lambda}),   \pi \leftarrow \NIZK_\rel.\Simulate (\crs_\rel, \tau_\rel, x)]
 \end{align*}}
 	
 \end{definition}
@@ -130,7 +130,7 @@ $ \NIZK $ satisfies the following:
 	such that
 	\begin{align}
 		\Pr[\NIZK_\rel.\Verify(x,\pi) = 1 \wedge  (x;\omega) \notin \rel \ | \ (\rel,z) \leftarrow \mathfrak{R}, \\  
-		(\crs_\rel,\tau_\rel) \leftarrow \NIZK_\rel.\Setup(\rel),\nonumber ((x,\pi);\omega)\leftarrow (\adv||\Extract)(\rel, z, \crs_\rel)] =  \negl(\secparam) \nonumber
+		(\crs_\rel,\tau_\rel) \leftarrow \NIZK_\rel.\Setup(1^{\lambda}),\nonumber ((x,\pi);\omega)\leftarrow (\adv||\Extract)(\rel, z, \crs_\rel)] =  \negl(\secparam) \nonumber
 	\end{align}
 	
 	\noindent where $ (o_A;o_B)\leftarrow A||B(input) $ denote the algorithms that run on the same input and $ B $ has access to the random coins of $ A $.
