@@ -83,10 +83,10 @@ We let $ (\rel, z) $ denote the output of a relation generator $ \mathfrak{R} $ 
 %SRSes remain implicit in our notation.
 A non-interactive zero-knowledge system for $\rel$ ($ \NIZK_\rel $)  consists of the following algorithms:
 \begin{itemize}
-	\item $\NIZK_\rel.\Setup(1^{\lambda}) \rightarrow (\crs_\rel, \tau_\rel)$  given $ \rel $, it outputs a common reference string $ \crs_\rel $ and a trapdoor $ \tau_\rel $ for $ \rel $.
-	\item $\NIZK_\rel.\Prove(\crs_\rel, x; \omega) \mapsto \pi$ creates a proof $\pi$ for  $(x; \omega) \in \rel$. 
-	\item $\NIZK_\rel.\Verify(\crs_\rel, x; \pi)$ returns either true of false.
-	\item $ \NIZK_\rel.\Simulate(\tau_\rel, x) \mapsto \pi$ returns a proof $ \pi $.
+	\item $\NIZK_\rel.\Setup(1^{\lambda}) \rightarrow (\crs_\rel, \tau_\rel, \pp_\rel)$  given $ \rel $, it outputs a common reference string $ \crs_\rel $, a trapdoor $ \tau_\rel $ and a list of public parameters $\pp_\rel$. 
+	\item $\NIZK_\rel.\Prove(\crs_\rel, \pp_\rel, x; \omega) \mapsto \pi$ creates a proof $\pi$ for  $(x; \omega) \in \rel$. 
+	\item $\NIZK_\rel.\Verify(\crs_\rel, \pp_\rel, x; \pi)$ returns either true of false.
+	\item $ \NIZK_\rel.\Simulate(\tau_\rel, \pp_\rel, x) \mapsto \pi$ returns a proof $ \pi $.
 \end{itemize}	
 %We note that $ \Prove $ and $ \Verify $ algorithms have $ \rel $ as an input even though we do not explicitly specify it. 
 $ \NIZK $ satisfies the following:
@@ -100,7 +100,7 @@ $ \NIZK $ satisfies the following:
 % which did not always require specifying $\omega$.
 
 \begin{definition}\label{def:nizk_completeness}
-	We say $\NIZK_\rel$ is {\em complete} if \ $\NIZK_\rel.\Verify(\crs_\rel, x, \NIZK_\rel.\Prove(\crs_\rel, x; \omega))$ succeeds for all 
+	We say $\NIZK_\rel$ is {\em complete} if \ $\NIZK_\rel.\Verify(\crs_\rel,  \pp_\rel, x, \NIZK_\rel.\Prove(\crs_\rel, \pp_\rel, x; \omega))$ succeeds for all 
 	$ \secparam \in \mathbb{N} $, for all $ (\rel,z) \leftarrow \mathfrak{R} $, for all $(x; \omega) \in \rel$.  % with high probability
 \end{definition}
 
@@ -110,14 +110,14 @@ $ \NIZK $ satisfies the following:
 	We say $\NIZK_\rel$ is {\em perfect zero-knowledge} for all $ \secparam \in \mathbb{N} $, for all $ (\rel,z) \leftarrow \mathfrak{R} $, $ (x,\omega) \in \rel $ and for all adversaries $ \adv $, if the following holds:
 	\allowbreak
 	\doublecolumn{\begin{align*}
-		\Pr[& \adv(\crs_\rel, z, \pi,\rel) = 1 \ | \ (\crs_\rel, \tau_\rel) \leftarrow \NIZK_\rel.\Setup (1^{\lambda}),  \\\nonumber
-		& \pi \leftarrow \NIZK_\rel.\Prove (\crs_\rel, x;\omega)]\\
-		=\Pr[& \adv(\crs_\rel, z, \pi,\rel) = 1 \ | \ (\crs_\rel, \tau) \leftarrow \NIZK_\rel.\Setup (1^{\lambda}), \\\nonumber
-		&  \pi \leftarrow \NIZK_\rel.\Simulate (\tau_\rel, x)]
+		\Pr[& \adv(\crs_\rel,  \pp_\rel, z, \pi,\rel) = 1 \ | \ (\crs_\rel, \tau_\rel,  \pp_\rel) \leftarrow \NIZK_\rel.\Setup (1^{\lambda}),  \\\nonumber
+		& \pi \leftarrow \NIZK_\rel.\Prove (\crs_\rel, \pp_\rel, x;\omega)]\\
+		=\Pr[& \adv(\crs_\rel,  \pp_\rel, z, \pi,\rel) = 1 \ | \ (\crs_\rel, \tau,  \pp_\rel) \leftarrow \NIZK_\rel.\Setup (1^{\lambda}), \\\nonumber
+		&  \pi \leftarrow \NIZK_\rel.\Simulate (\tau_\rel,  \pp_\rel, x)]
 	\end{align*}
 }{\begin{align*}
-	\Pr[& \adv(\crs_\rel, z, \pi,\rel) = 1 \ | \ (\crs_\rel, \tau_\rel) \leftarrow \NIZK_\rel.\Setup (1^{\lambda}),   \pi \leftarrow \NIZK_\rel.\Prove (\crs_\rel, x; \omega)]\\
-	=\Pr[& \adv(\crs_\rel, z, \pi,\rel) = 1 \ | \ (\crs_\rel, \tau_\rel) \leftarrow \NIZK_\rel.\Setup (1^{\lambda}),   \pi \leftarrow \NIZK_\rel.\Simulate (\crs_\rel, \tau_\rel, x)]
+	\Pr[& \adv(\crs_\rel, \pp_\rel, z, \pi,\rel) = 1 \ | \ (\crs_\rel, \tau_\rel, \pp_\rel) \leftarrow \NIZK_\rel.\Setup (1^{\lambda}),   \pi \leftarrow \NIZK_\rel.\Prove (\crs_\rel,  \pp_\rel, x; \omega)]\\
+	=\Pr[& \adv(\crs_\rel,  \pp_\rel, z, \pi,\rel) = 1 \ | \ (\crs_\rel, \tau_\rel, \pp_\rel) \leftarrow \NIZK_\rel.\Setup (1^{\lambda}),   \pi \leftarrow \NIZK_\rel.\Simulate (\tau_\rel,  \pp_\rel, x)]
 \end{align*}}
 	
 \end{definition}
@@ -129,12 +129,21 @@ $ \NIZK $ satisfies the following:
 	for any non-uniform PPT adversary \adv there exists a PPT extractor $ \Extract $
 	such that
 	\begin{align}
-		\Pr[\NIZK_\rel.\Verify(x,\pi) = 1 \wedge  (x;\omega) \notin \rel \ | \ (\rel,z) \leftarrow \mathfrak{R}, \\  
-		(\crs_\rel,\tau_\rel) \leftarrow \NIZK_\rel.\Setup(1^{\lambda}),\nonumber ((x,\pi);\omega)\leftarrow (\adv||\Extract)(\rel, z, \crs_\rel)] =  \negl(\secparam) \nonumber
+		\Pr[\NIZK_\rel.\Verify(\crs_\rel, \pp_\rel, x,\pi) = 1 \wedge  (x;\omega) \notin \rel \ | \ (\rel,z) \leftarrow \mathfrak{R}, \\  
+		(\crs_\rel,\tau_\rel,  \pp_\rel) \leftarrow \NIZK_\rel.\Setup(1^{\lambda}),\nonumber ((x,\pi);\omega)\leftarrow (\adv||\Extract)(\rel, z, \crs_\rel,  \pp_\rel)] =  \negl(\secparam) \nonumber
 	\end{align}
 	
 	\noindent where $ (o_A;o_B)\leftarrow A||B(input) $ denote the algorithms that run on the same input and $ B $ has access to the random coins of $ A $.
 \end{definition}
+
+\noindent In our NIZK definition above the corresponding algorithms have more parameters that generally needed. 
+This statement refers to the fact that not all $\crs_\rel$, $\pp_\rel$ or $\tau_\rel$ may be needed by a $\NIZK_\rel$ algorithm for a given $\rel$. 
+In the rest of the work, we adhere to the convention that when instantiating the general $\NIZK_\rel$ api for a specific $\rel$, for simplicity, 
+we will leave out the parameters which in that particular instantiation are the empty set. We do this in order to aggregate in one definition the different types of NIZK that we need and use in this work. 
+Indeed, in case of the non-interactive version of a Sigma protocol, we have that $\crs_\rel = \emptyset$ and $\pp_\rel = \emptyset$. For a $\NIZK_\rel$ such as Groth16~\cite{Groth16}, $\pp_\rel  = \emptyset$. 
+However, for our particular instantiation of $\NIZK_\rel$ in Section~\ref{subsec:rvrf_faster} with $\rel$ defined in Section~\ref{sec:rvrf_cont}, the $\NIZK_\rel.\Setup$ outputs all three parameters 
+$\crs_\rel$, $\tau_\rel$, $\pp_\rel$. Thus our definition allows for maximum flexibility. 
+
 
 %Our zero-knowledge continuations in \S\ref{sec:rvrf_cont} demand
 %rerandomizing existing zkSNARKs, which only Groth16 supports \cite{Groth16}.
