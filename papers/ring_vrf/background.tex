@@ -139,10 +139,12 @@ $ \NIZK $ satisfies the following:
 \noindent In our NIZK definition above the corresponding algorithms have more parameters that generally needed. 
 This statement refers to the fact that not all $\crs_\rel$, $\pp_\rel$ or $\tau_\rel$ may be needed by a $\NIZK_\rel$ algorithm for a given $\rel$. 
 In the rest of the work, we adhere to the convention that when instantiating the general $\NIZK_\rel$ api for a specific $\rel$, for simplicity, 
-we will leave out the parameters which in that particular instantiation are the empty set. We do this in order to aggregate in one definition the different types of NIZK that we need and use in this work. 
-Indeed, in case of the non-interactive version of a Sigma protocol, we have that $\crs_\rel = \emptyset$ and $\pp_\rel = \emptyset$. For a $\NIZK_\rel$ such as Groth16~\cite{Groth16}, $\pp_\rel  = \emptyset$. 
-However, for our particular instantiation of $\NIZK_\rel$ in Section~\ref{subsec:rvrf_faster} with $\rel$ defined in Section~\ref{sec:rvrf_cont}, the $\NIZK_\rel.\Setup$ outputs all three parameters 
-$\crs_\rel$, $\tau_\rel$, $\pp_\rel$. Thus our definition allows for maximum flexibility. 
+we will leave out the parameters which in that particular instantiation are the empty set. We do this in order to aggregate in one definition 
+the different types of NIZK that we need and use in this work. Indeed, in case of the non-interactive version of a Sigma protocol, we have 
+that $\crs_\rel = \emptyset$ and $\pp_\rel = \emptyset$. For a $\NIZK_\rel$ such as Groth16~\cite{Groth16}, $\pp_\rel  = \emptyset$. 
+However, for our particular instantiation of $\NIZK_\rel$ in Section~\ref{subsec:rvrf_faster} with $\rel$ defined in Section~\ref{sec:rvrf_cont}, the $\NIZK_\rel.\Setup$ outputs 
+all three parameters $\crs_\rel$, $\tau_\rel$, $\pp_\rel$. Thus our definition allows for maximum flexibility. Finally, for each of our instantiations, we consider only benign 
+auxiliary inputs as defined in~\cite{bening_auxiliary}. 
 
 
 %Our zero-knowledge continuations in \S\ref{sec:rvrf_cont} demand
