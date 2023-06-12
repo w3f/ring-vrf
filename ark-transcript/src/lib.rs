@@ -418,13 +418,13 @@ pub struct Reader(sha3::Shake128Reader);
 impl Reader {
     /// Read bytes from the transcript into the buffer.
     pub fn read_bytes(&mut self, buf: &mut [u8]) {
-        self.0.read(buf);
+        XofReader::read(&mut self.0, buf);
     }
 
     /// Read bytes from the transcript. Always succeed fully.
     pub fn read_byte_array<const N: usize>(&mut self) -> [u8; N] {
         let mut buf = [0u8; N];
-        self.0.read(&mut buf);
+        self.read_bytes(&mut buf);
         buf
     }
 
