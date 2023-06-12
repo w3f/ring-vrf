@@ -146,7 +146,6 @@ impl SecretKey {
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct PublicKey(pub dleq_vrf::PublicKey<E>);
 
-
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct ThinVrfSignature<const N: usize> {
     pub signature: dleq_vrf::Signature<ThinVrf>,
@@ -171,12 +170,13 @@ impl<const N: usize> ThinVrfSignature<N>
     }
 }
 
+pub type PedersenVrfSignature = dleq_vrf::Signature<PedersenVrf>;
 
 #[derive(CanonicalSerialize,CanonicalDeserialize)]
 pub struct RingVrfSignature<const N: usize> {
-    signature: dleq_vrf::Signature<PedersenVrf>,
-    preoutputs: [VrfPreOut; N],
-    ring_proof: RingProof,
+    pub signature: dleq_vrf::Signature<PedersenVrf>,
+    pub preoutputs: [VrfPreOut; N],
+    pub ring_proof: RingProof,
 }
 
 impl<const N: usize> RingVrfSignature<N>
