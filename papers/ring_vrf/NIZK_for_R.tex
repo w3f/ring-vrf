@@ -4,28 +4,27 @@
 %$$\rel = \{(\bary, \barz; \barx, \baromega_1, \baromega_2):  (\bary, \barx; \baromega_1) \in \relone, (\barz, \barx; \baromega_2) \in \reltwo \},$$
 Let $\ZKCont$ be a zk continuation for $\relone$ (from preamble of this section) and 
 let $\nizktwo$ be a NIZK for $\reltwo'(\pp)$ (for some public parameters $\pp$) defined by \\ 
-$\reltwo'(\pp) = \{(X, \barz, \pp; \barx, b, \baromega_2): \ZKCont.\VerifyCom(\pp, X, \barx, b) =1\ 
-\wedge \ (\barz, \barx; \baromega_2) \in \reltwo \},$ 
+$$\reltwo'(\pp) = \{(X, \barz, \pp; \barx, b, \baromega_2): \ZKCont.\VerifyCom(\pp, X, \barx, b) =1\ 
+\wedge \ (\barz, \barx; \baromega_2) \in \reltwo \},$$ \\
 \noindent with $\reltwo$ from preamble of Section~\ref{sec:rvrf_cont}. Then we define the system $\nizkR$ for relation $\mathcal{R}$ 
 from the preamble of this section as:
 \begin{itemize}
-\item $\nizkR.\Setup: (1^{\lambda}) \mapsto (\crsR = (\crs,\crstwo), \twR = (\tw, \twtwo), \pp)$ where \\
-$(\crs, \tw, \pp) \leftarrow \ZKCont.\Setup(1^{\lambda}, \relone)$, \\ $(\crstwo, \twtwo) \leftarrow \nizktwo.\Setup(1^{\lambda})$
+\item $\nizkR.\Setup: (1^{\lambda}) \mapsto (\crsR = (\crs,\crstwo), \twR = (\tw, \twtwo), \pp_\rel = \pp)$ where \\
+$(\crs, \tw, \pp) \leftarrow \ZKCont.\Setup(1^{\lambda}, \relone)$, $(\crstwo, \twtwo) \leftarrow \nizktwo.\Setup(1^{\lambda})$.
 
 %\item $\nizkR.\Gen: (\crsR) \mapsto (\ppR = \pp, \crspkR = (\crspk,\crspktwo), \crsvkR = (\crsvk,\crsvktwo))$ where 
 %$(\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone)$, \\ $(\crspktwo, \crsvktwo) \leftarrow \nizktwo.\Gen(\crstwo)$ 
 
 \item $\nizkR.\Prove: (\crsR,\bary, \barz; \barx, \baromega_1, \baromega_2 ) \mapsto (\pi_1, \pi_2, X)$ where \\
-$(X', \pi'_1, b')\leftarrow \ZKCont.\Preprove(\crs, \bar{y}, \bar{x}, \baromega_1, \relone)$ \\
-$(X, \pi_1, b) \leftarrow \ZKCont.\Reprove(\crs, X', \pi_1', b', \relone)$ \\
-$ \pi_2 \leftarrow \nizktwo.\Prove(\crstwo, X, \barz; \barx, b, \baromega_2)$ 
+$(X', \pi'_1, b')\leftarrow \ZKCont.\Preprove(\crs, \bar{y}, \bar{x}, \baromega_1, \relone)$, 
+$(X, \pi_1, b) \leftarrow \ZKCont.\Reprove(\crs, X', \pi_1', b', \relone)$, \\
+$\pi_2 \leftarrow \nizktwo.\Prove(\crstwo, X, \barz; \barx, b, \baromega_2)$. 
 
 \item $\nizkR.\Verify: (\crsR,(\bary, \barz), (\pi_1, \pi_2, X)) \mapsto 0/1$ where the output is $1$ iff 
-$\ZKCont.\Verify(\crs, \bar{y}, X, \pi_1, \relone) = 1 \  \wedge \ \nizktwo.\Verify(\crstwo, X, \barz, \pi_2) =1$
+$$\ZKCont.\Verify(\crs, \bar{y}, X, \pi_1, \relone) = 1 \  \wedge \ \nizktwo.\Verify(\crstwo, X, \barz, \pi_2) =1.$$
 
 \item $\nizkR.\Sim: (\twR, \bary, \barz) \mapsto (\pi_1, \pi_2, X)$ where \\
-$(\pi_1, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone)$, \\
-$\pi_2 \leftarrow \nizktwo.\Sim(\twtwo, X, \barz)$ 
+$(\pi_1, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone)$, $\pi_2 \leftarrow \nizktwo.\Sim(\twtwo, X, \barz)$.
  \end{itemize}
 %\vspace{-0.5cm}
 \begin{lemma}[Knowledge-soundness for $\nizkR$] 
@@ -44,7 +43,13 @@ knowledge-soundness.
  $(\barz, \barx; \baromega_2) \in \reltwo$ it holds
 %{It is a completeness definition for $ \reltwo $ but there is nothing related to $ \reltwo $ below. We want to define a new completeness definition for $ 
 %\nizkR $. So, I suggest you to replace everything before given $ (|) $ with $ \nizkR.\Verify((\crsR,(\bary, \barz), (\pi_1, \pi_2, X)))\rightarrow 1 $ because %everything you have before $ | $are already satisfied from the $ \NIZK $ completeness and $ \ZKCont $ special completeness, so they are already %satisfied, they are not new statements. }: 
-\begin{align*}
+\eprint{\begin{align*}
+\mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X', \pi'_1, \relone) = 1 \ \wedge \ \ZKCont.\VerifyCom (\pp, X', \barx, b') = 1) ) \\
+                   & \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \Rightarrow \ \nizkR.\Verify(\crsR, X, \barz, \pi_2) =1 \ | \  \\
+                   & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), (\crstwo, \twtwo) \leftarrow \nizktwo.\Setup(1^{\lambda}), \\
+                   & (\bary, X', \pi'_1, b') \leftarrow A(\crs,\relone), (X, \pi_1, b) \leftarrow \ZKCont.\Reprove(\crs, X', \pi'_1, b', \relone), \\
+                   & \pi_2 \leftarrow \nizktwo.\Prove(\crstwo, X, \barz, \barx, b, \baromega_2)) = 1
+\end{align*}}{\begin{align*}
 \mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X', \pi'_1, \relone) = 1 \ \wedge \ \\
                    & \ \ZKCont.\VerifyCom (\pp, X', \barx, b') = 1) ) \\
                    & \Rightarrow \ \nizkR.\Verify(\crsR, X, \barz, \pi_2) =1 \ | \  \\
@@ -53,7 +58,7 @@ knowledge-soundness.
                    & (\bary, X', \pi'_1, b') \leftarrow A(\crs,\relone), \\ 
                    & (X, \pi_1, b) \leftarrow \ZKCont.\Reprove(\crs, X', \pi'_1, b', \relone), \\
                    &\pi_2 \leftarrow \nizktwo.\Prove(\crstwo, X, \barz, \barx, b, \baromega_2)) = 1
-\end{align*}
+\end{align*}}
 
 \begin{lemma}[Special Perfect Completeness] 
 \label{le:specialCompl_for_nizkR}
@@ -91,7 +96,17 @@ $(\barz, \barx; \baromega_2) \in \reltwo$, for all $X,\pi_1,\pi_2, b$, for every
 
 \noindent \textbf{Zero-knowledge after Reproving a $\ZKCont$ Proof} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $aux$, 
 for all $\bary,\barx,\barz, \baromega_1, \baromega_2$ with $(\bary, \barx; \baromega_1) \in \relone$ and $(\barz, \barx; \baromega_2) \in \reltwo$, for all $X',\pi_1', b'$, for every adversary $A$ it holds:
-\begin{align*}
+\eprint{\begin{align*}
+| \mathit{Pr}(& A(\crs, \realaux, \pi_1,\pi_2, X, \rel) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
+                  %& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\
+                  & (\pi_1, X, \_) \leftarrow \ZKCont.\Reprove (\crs, X', \pi_1', b', \relone), \pi_2 \leftarrow \nizktwo.\Prove(\crstwo, X, \barz, \barx, b, \baromega_2), \\
+                  & \ZKCont.\Verify(\crs, \bary, X', \pi'_1, \relone) = 1, \ZKCont.\VerifyCom(\pp, X', \barx', b') = 1)   \\
+- \mathit{Pr}(& A(\crs, \realaux, \pi_1,\pi_2, X, \rel) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\ 
+                     %& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), 
+                     & (\pi_1,\pi_2, X) \leftarrow \nizkR.\Sim(\tw, \bary, \relone), \ZKCont.\Verify(\crs, \bary, X', \pi'_1, \relone) = 1, \\
+                     & \ZKCont.\VerifyCom(\pp, X', \barx', b') = 1) | \leq \negl(\lambda)
+\end{align*}}
+{\begin{align*}
 | \mathit{Pr}(& A(\crs, \realaux, \pi_1,\pi_2, X, \rel) = 1 \ | \\ 
                     & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
                   %& (\crspk, \crsvk, \pp) \leftarrow \ZKCont.\Gen(\crs, \relone), \\
@@ -106,7 +121,7 @@ for all $\bary,\barx,\barz, \baromega_1, \baromega_2$ with $(\bary, \barx; \baro
                      &  \ZKCont.\Verify(\crs, \bary, X', \pi'_1, \relone) = 1 \wedge \ \\
                      & \wedge \  \ZKCont.\VerifyCom(\pp, X', \barx', b') = 1) | \\
                     \leq \negl(\lambda)
-\end{align*}
+\end{align*}}
 
 \begin{lemma}[ZK after Reproving a $\ZKCont$ Proof] 
 \label{le:specialZK_for_nizkR}
@@ -114,7 +129,7 @@ If $\ZKCont$ is a zk continuation for $\relone$ and $\nizktwo$ is a NIZK for $\r
 then the $\nizkR$ construction described above has zero-knowledge after reproving a $\ZKCont$ proof.
 \end{lemma} 
 \begin{proof} The statement follows from the perfect zero-knowledge w.r.t. $\relone$ for $\ZKCont$ and 
-the zero-knowledge property of $\nizktwo$ w.r.t. $\reltwo'(\pp)$ .
+the zero-knowledge property of $\nizktwo$ w.r.t. $\reltwo'(\pp)$.
 \end{proof}
  
 \begin{corollary}
