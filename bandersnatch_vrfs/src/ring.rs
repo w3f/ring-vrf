@@ -45,7 +45,26 @@ impl KZG {
     pub fn insecure_kzg_setup(seed: [u8;32], domain_size: usize) -> Self {
         let piop_params = make_piop_params(seed, domain_size);
 
-        let mut rng = rand_core::OsRng;
+        // let mut rng = rand_core::OsRng;
+        // TODO: davxy this is for testing only
+        use rand_core::SeedableRng;
+        let mut rng = rand_chacha::ChaCha20Rng::from_seed(seed.clone());
+
+        let pcs_params = RealKZG::setup(3 * domain_size, &mut rng);
+        KZG {
+            seed,
+            piop_params,
+            pcs_params,
+        }
+    }
+
+    // TODO: davxy this is for testing only
+    pub fn testing_kzg_setup(seed: [u8;32], domain_size: usize) -> Self {
+        let piop_params = make_piop_params(seed, domain_size);
+
+        use rand_core::SeedableRng;
+        let mut rng = rand_chacha::ChaCha20Rng::from_seed(seed);
+
         let pcs_params = RealKZG::setup(3 * domain_size, &mut rng);
         KZG {
             seed,
@@ -105,7 +124,7 @@ impl CanonicalDeserialize for KZG {
         let pcs_params = PcsParams::deserialize_with_mode(&mut reader, compress, validate)?;
         // TODO: @jeff should we serialize the original `domain_size` to get it back here?
         // Or shoud we use a global constant value?
-        let domain_size = 0; // FIXME
+        let domain_size = 2usize.pow(10); // FIXME
         let piop_params = make_piop_params(seed, domain_size);
         Ok(KZG {
             seed,
