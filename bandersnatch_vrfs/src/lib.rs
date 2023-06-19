@@ -231,14 +231,13 @@ mod tests {
     fn ring_test_init(pk: PublicKey) -> (RingProver, RingVerifier) {
         use ark_std::UniformRand;
 
-        // TODO @jeff: WHAT EXACTILY IS THIS DOMAIN SIZE and what value should we use?
         let kzg = ring::KZG::testing_kzg_setup([0; 32], 2usize.pow(10));
         let keyset_size = kzg.max_keyset_size();
 
         // Gen a bunch of random public keys
         let mut rng = rand_core::OsRng;
         let mut pks: Vec<_> = (0..keyset_size).map(|_| E::rand(&mut rng)).collect();
-        // Just select one spot for the actual key we are using
+        // Just select one index for the actual key we are for signing
         let secret_key_idx = keyset_size / 2;
         pks[secret_key_idx] = pk.0.0.into();
      
