@@ -6,7 +6,6 @@
 
 pub mod ring;
 
-use rand_core::{CryptoRng, RngCore};
 use zeroize::Zeroize;
 use crate::ring::{RingProver, RingProof, RingVerifier};
 
@@ -14,7 +13,7 @@ use ark_ec::{
     AffineRepr, CurveGroup,
     hashing::{HashToCurveError, curve_maps, map_to_curve_hasher::MapToCurveBasedHasher}, // HashToCurve
 };
-use ark_std::{ borrow::BorrowMut, Zero, vec::Vec, };   // io::{Read, Write}
+use ark_std::{borrow::BorrowMut, Zero, vec::Vec, rand::RngCore};   // io::{Read, Write}
 
 pub use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};  // SerializationError
 
@@ -30,6 +29,7 @@ pub use dleq_vrf::{
     vrf::{self, IntoVrfInput},
 };
 
+// Set usage of SW affine form
 // use bandersnatch::EdwardsAffine as E;
 use bandersnatch::SWAffine as E;
 
@@ -59,7 +59,6 @@ impl<'a> IntoVrfInput<E> for Message<'a> {
         // TODO: Add Elligator to Arkworks
         // hash_to_bandersnatch_curve(self.domain,self.message)
         // .expect("Hash-to-curve error, IRTF spec forbids messages longer than 2^16!")
-        use ark_std::UniformRand;
         let label = b"TemporaryDoNotDeploy".as_ref();
         let mut t = Transcript::new_labeled(label);
         t.label(b"domain");
@@ -104,7 +103,7 @@ impl SecretKey {
     /// Generate an ephemeral `SecretKey` with system randomness.
     #[cfg(feature = "getrandom")]
     pub fn ephemeral() -> Self {
-        use rand_core::{RngCore,OsRng};
+        use rand_core::OsRng;
         let mut seed: [u8; 32] = [0u8; 32];
         OsRng.fill_bytes(&mut seed);
         SecretKey::from_seed(&seed)
@@ -233,7 +232,7 @@ mod tests {
         use ark_std::UniformRand;
 
         // TODO @jeff: WHAT EXACTILY IS THIS DOMAIN SIZE and what value should we use?
-        let kzg = ring::KZG::insecure_kzg_setup([0; 32], 2usize.pow(10));
+        let kzg = ring::KZG::testing_kzg_setup([0; 32], 2usize.pow(10));
         let keyset_size = kzg.max_keyset_size();
 
         // Gen a bunch of random public keys

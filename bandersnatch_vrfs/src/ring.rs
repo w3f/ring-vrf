@@ -1,6 +1,8 @@
 extern crate alloc;
 use alloc::vec::Vec;
 
+use ark_std::rand::{Rng, SeedableRng};
+
 use ark_serialize::{
     CanonicalSerialize, CanonicalDeserialize, Valid, Compress, Validate, SerializationError,
     Write, Read,
@@ -26,7 +28,6 @@ pub type ProverKey = ring::ProverKey<Fq, RealKZG, SWAffine>;
 pub type VerifierKey = ring::VerifierKey<Fq, RealKZG>;
 
 fn make_piop_params(seed: [u8; 32], domain_size: usize) -> PiopParams {
-    use rand_core::SeedableRng;
     let mut rng = rand_chacha::ChaCha20Rng::from_seed(seed.clone());
     let domain = Domain::new(domain_size, true);
     PiopParams::setup(domain, &mut rng)
@@ -41,16 +42,10 @@ pub struct KZG {
 
 impl KZG {
     // TODO: Import powers of tau
-    #[cfg(feature = "getrandom")]
-    pub fn insecure_kzg_setup(seed: [u8;32], domain_size: usize) -> Self {
+    pub fn insecure_kzg_setup<R: Rng>(seed: [u8;32], domain_size: usize, rng: &mut R) -> Self {
         let piop_params = make_piop_params(seed, domain_size);
 
-        // let mut rng = rand_core::OsRng;
-        // TODO: davxy this is for testing only
-        use rand_core::SeedableRng;
-        let mut rng = rand_chacha::ChaCha20Rng::from_seed(seed.clone());
-
-        let pcs_params = RealKZG::setup(3 * domain_size, &mut rng);
+        let pcs_params = RealKZG::setup(3 * domain_size, rng);
         KZG {
             seed,
             piop_params,
@@ -58,19 +53,10 @@ impl KZG {
         }
     }
 
-    // TODO: davxy this is for testing only
+    // Testing only kzg setup.
     pub fn testing_kzg_setup(seed: [u8;32], domain_size: usize) -> Self {
-        let piop_params = make_piop_params(seed, domain_size);
-
-        use rand_core::SeedableRng;
         let mut rng = rand_chacha::ChaCha20Rng::from_seed(seed);
-
-        let pcs_params = RealKZG::setup(3 * domain_size, &mut rng);
-        KZG {
-            seed,
-            piop_params,
-            pcs_params,
-        }
+        Self::insecure_kzg_setup(seed, domain_size, &mut rng)
     }
 
     pub fn max_keyset_size(&self) -> usize {
