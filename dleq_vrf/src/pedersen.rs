@@ -63,7 +63,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>
 /// that reveals the difference ebtween two public keys.
 #[derive(Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
 pub struct SecretBlinding<C: AffineRepr,const B: usize>(
-    pub(crate) [<C as AffineRepr>::ScalarField; B]
+    pub [<C as AffineRepr>::ScalarField; B]
 );
 
 impl<C: AffineRepr,const B: usize> Zeroize for SecretBlinding<C,B> {
