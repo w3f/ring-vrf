@@ -17,14 +17,15 @@ What are the cheapest SNARK proofs?  Ones users reuse without reproving.
 How can identity be safe for general use?  By revealing nothing except users' uniqueness.
 How can ration card issuance be transparent?  By asking users trust a public list, not certificates.
 
-We introduce new privitive, a ring VRF, and prove its security. To efficiently implement our primitive, we present a novel techique, the zero-knowldege continuation and prove its security. We discuss applications to identity, rationing and other use cases.
+We introduce new privitive, a ring VRF, and prove its security.
+To efficiently implement our primitive, we present a novel techique,
+the zero-knowldege continuation and prove its security. We discuss applications to identity, rationing and other use cases.
 
 % After briefly introducing ring VRFs, we discuss these three questions,
 % which we later elaborate upon in
 %  \S\ref{sec:rvrf_cont}, \S\ref{sec:app_identity}, and \S\ref{sec:app_rate_limits} 
 
 % \smallskip 
-
 \paragraph{Ring VRFs:}
 
 A ring signature \cite{ring_accountable,ring_efficient,ring_linkable,ring_noRO,ring_sublinear} proves only that its  signer lies in a ring
@@ -45,7 +46,9 @@ same signer if and only if they sign identical messages.
 In effect, ring VRFs restrict anonymity similarly to but less than
 linkable ring signatures \cite{ring_linkable,ring_linkablee}  do, which makes them multi-use and contextual.
 
-We define the security of a ring VRF scheme in the universally composable (UC) \cite{canetti1,canetti2} model. Then, we construct our UC-secure ring VRF scheme. We slightly modify it by preserving its security to build extremely efficient 
+We define the security of a ring VRF scheme in the universally composable (UC)
+\cite{canetti1,canetti2} model. Then, we construct our UC-secure ring VRF scheme.
+We slightly modify it by preserving its security to build extremely efficient 
 ring VRFs by amortizing a zero-knowledge continuation that unlinkably
 proves ring membership of a secret key, and  cheaply proving
 individual VRF evaluations.
@@ -63,7 +66,8 @@ transformation of a valid proof into another valid but unlinkable
 proof of the same statement.  However, in practice, rerandomization
 never gets deployed because the public inputs without further processing actually 
 link different usages, thus breaking privacy.
-We formally define zero-knowledge continuations in a way that it preserves privacy after rerandomization and then  we demonstrate in \S\ref{sec:rvrf_cont} a simple transformation of
+We formally define zero-knowledge continuations in a way that
+ it preserves privacy after rerandomization and then  we demonstrate in \S\ref{sec:rvrf_cont} a simple transformation of
 any Groth16 zkSNARK into a {\it zero-knowledge continuation} whose
 public inputs involve opaque Pedersen commitments (i.e., hiding commitments), with cheaply
 rerandomizable blinding factors and cheaply rerandomizable proofs.
@@ -78,7 +82,9 @@ As our public inputs involve opaque Pedersen commitments,
 they now require proofs-of-knowledge resentment of to \cite{LegoSNARK}. 
 % In essence, this specializes the Groth16 
 As recursive SNARKs remain slow,
-we expect zero-knowledge continuations via rerandomisations become a very viable efficient alternative for zkSNARKs.
+we expect zero-knowledge continuations via rerandomisations become
+ a very viable efficient alternative for zkSNARKs.
+
 % Second
 % \smallskip
 
