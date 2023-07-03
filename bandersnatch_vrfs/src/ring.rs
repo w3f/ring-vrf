@@ -24,8 +24,8 @@ pub type RingProof = ring::RingProof<Fq, RealKZG>;
 pub type RingProver = ring::ring_prover::RingProver<Fq, RealKZG, SWConfig>;
 pub type RingVerifier = ring::ring_verifier::RingVerifier<Fq, RealKZG, SWConfig>;
 
-pub type ProverSRS = ring::ProverKey<Fq, RealKZG, SWAffine>;
-pub type VerifierSRS = ring::VerifierKey<Fq, RealKZG>;
+pub type ProverKey = ring::ProverKey<Fq, RealKZG, SWAffine>;
+pub type VerifierKey = ring::VerifierKey<Fq, RealKZG>;
 
 fn make_piop_params(seed: [u8; 32], domain_size: usize) -> PiopParams {
     let mut rng = rand_chacha::ChaCha20Rng::from_seed(seed.clone());
@@ -63,21 +63,21 @@ impl KZG {
         self.piop_params.keyset_part_size
     }
 
-    pub fn prover_srs(&self, pks: Vec<SWAffine>) -> ProverSRS {
+    pub fn prover_key(&self, pks: Vec<SWAffine>) -> ProverKey {
         ring::index(self.pcs_params.clone(), &self.piop_params, pks).0
     }
 
-    pub fn verifier_srs(&self, pks: Vec<SWAffine>) -> VerifierSRS {
+    pub fn verifier_key(&self, pks: Vec<SWAffine>) -> VerifierKey {
         ring::index(self.pcs_params.clone(), &self.piop_params, pks).1
     }
 
     /// `k` is the prover secret index in [0..keyset_size).
-    pub fn init_ring_prover(&self, prover_srs: ProverSRS, k: usize) -> RingProver {
-        RingProver::init(prover_srs, self.piop_params.clone(), k, Transcript::new(b"ring-vrf-test"))
+    pub fn init_ring_prover(&self, prover_key: ProverKey, k: usize) -> RingProver {
+        RingProver::init(prover_key, self.piop_params.clone(), k, Transcript::new(b"ring-vrf-test"))
     }
 
-    pub fn init_ring_verifier(&self, verifier_srs: VerifierSRS) -> RingVerifier {
-        RingVerifier::init(verifier_srs, self.piop_params.clone(), Transcript::new(b"ring-vrf-test"))
+    pub fn init_ring_verifier(&self, verifier_key: VerifierKey) -> RingVerifier {
+        RingVerifier::init(verifier_key, self.piop_params.clone(), Transcript::new(b"ring-vrf-test"))
     }
 }
 
