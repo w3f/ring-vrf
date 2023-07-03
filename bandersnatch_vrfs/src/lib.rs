@@ -129,7 +129,7 @@ impl SecretKey {
         &self,
         t: impl IntoTranscript,
         ios: &[VrfInOut],
-        ring_prover: &RingProver
+        ring_prover: &RingProver,
     ) -> RingVrfSignature<N>
     {
         assert_eq!(ios.len(), N);
@@ -256,11 +256,11 @@ mod tests {
         let secret_key_idx = keyset_size / 2;
         pks[secret_key_idx] = pk.0.0.into();
      
-        let prover_key = kzg.prover_key(pks.clone());
-        let ring_prover = kzg.init_ring_prover(prover_key, secret_key_idx);
+        let prover_srs = kzg.prover_srs(pks.clone());
+        let ring_prover = kzg.init_ring_prover(prover_srs, secret_key_idx);
 
-        let verifier_key = kzg.verifier_key(pks);
-        let ring_verifier = kzg.init_ring_verifier(verifier_key);
+        let verifier_srs = kzg.verifier_srs(pks);
+        let ring_verifier = kzg.init_ring_verifier(verifier_srs);
 
         (ring_prover, ring_verifier)
     }
