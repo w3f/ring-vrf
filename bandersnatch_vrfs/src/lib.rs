@@ -15,7 +15,7 @@ use ark_ec::{
 };
 use ark_std::{borrow::BorrowMut, Zero, vec::Vec, rand::RngCore};   // io::{Read, Write}
 
-pub use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};  // SerializationError
+pub use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 
 pub use ark_ed_on_bls12_381_bandersnatch::{
     self as bandersnatch,
@@ -142,8 +142,23 @@ impl SecretKey {
 }
 
 
+pub const PUBLIC_KEY_LENGTH: usize = 32;
+pub type PublicKeyBytes = [u8; PUBLIC_KEY_LENGTH];
+
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct PublicKey(pub dleq_vrf::PublicKey<E>);
+
+impl PublicKey {
+    pub fn serialize(&self) -> Result<PublicKeyBytes, SerializationError> {
+        let mut bytes = [0u8; PUBLIC_KEY_LENGTH];
+        self.serialize_compressed(bytes.as_mut_slice()) ?;
+        Ok(bytes)
+    }
+
+    pub fn deserialize(reader: &[u8]) -> Result<Self, SerializationError> {
+        Self::deserialize_compressed(reader)
+    }
+}
 
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct ThinVrfSignature<const N: usize> {
