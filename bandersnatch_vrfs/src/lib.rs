@@ -142,7 +142,7 @@ impl SecretKey {
 }
 
 
-pub const PUBLIC_KEY_LENGTH: usize = 32;
+pub const PUBLIC_KEY_LENGTH: usize = 33;
 pub type PublicKeyBytes = [u8; PUBLIC_KEY_LENGTH];
 
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
@@ -152,7 +152,7 @@ impl PublicKey {
     pub fn serialize(&self) -> PublicKeyBytes {
         let mut bytes = [0u8; PUBLIC_KEY_LENGTH];
         self.serialize_compressed(bytes.as_mut_slice())
-        .expect("Curve needs more than 32 bytes compressed!");
+        .expect("Curve needs more than 33 bytes compressed!");
         bytes
     }
 
@@ -227,6 +227,9 @@ mod tests {
     fn thin_sign_verify() {
         let secret = SecretKey::from_seed(&[0; 32]);
         let public = secret.to_public();
+        assert_eq!(public.compressed_size(), PUBLIC_KEY_LENGTH);
+        let public = public.serialize();
+        let public = PublicKey::deserialize(&public).unwrap();
 
         let input = Message {
             domain: b"domain",
