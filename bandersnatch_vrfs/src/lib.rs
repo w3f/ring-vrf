@@ -280,10 +280,12 @@ mod tests {
             message: b"message",
         }.into_vrf_input();
         let io = secret.0.vrf_inout(input.clone());
-        let transcript = Transcript::new_labeled(b"label");
+        let transcript: &[u8] = b"Meow";  // Transcript::new_labeled(b"label");
         
         let signature: RingVrfSignature<1> = secret.sign_ring_vrf(transcript.clone(), &[io], &ring_prover);
         
+        // TODO: serialize signature
+
         let result = signature.verify_ring_vrf(transcript, iter::once(input), &ring_verifier);
         assert!(result.is_ok());
     }
