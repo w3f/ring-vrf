@@ -149,10 +149,11 @@ pub type PublicKeyBytes = [u8; PUBLIC_KEY_LENGTH];
 pub struct PublicKey(pub dleq_vrf::PublicKey<E>);
 
 impl PublicKey {
-    pub fn serialize(&self) -> Result<PublicKeyBytes, SerializationError> {
+    pub fn serialize(&self) -> PublicKeyBytes {
         let mut bytes = [0u8; PUBLIC_KEY_LENGTH];
-        self.serialize_compressed(bytes.as_mut_slice()) ?;
-        Ok(bytes)
+        self.serialize_compressed(bytes.as_mut_slice())
+        .expect("Curve needs more than 32 bytes compressed!");
+        bytes
     }
 
     pub fn deserialize(reader: &[u8]) -> Result<Self, SerializationError> {
@@ -246,7 +247,7 @@ mod tests {
     fn ring_test_init(pk: PublicKey) -> (RingProver, RingVerifier) {
         use ark_std::UniformRand;
 
-        let kzg = ring::KZG::testing_kzg_setup([0; 32], 2usize.pow(10));
+        let kzg = ring::KZG::testing_kzg_setup([0; 32], 2u32.pow(10));
         let keyset_size = kzg.max_keyset_size();
 
         // Gen a bunch of random public keys
@@ -255,7 +256,7 @@ mod tests {
         // Just select one index for the actual key we are for signing
         let secret_key_idx = keyset_size / 2;
         pks[secret_key_idx] = pk.0.0.into();
-     
+
         let prover_key = kzg.prover_key(pks.clone());
         let ring_prover = kzg.init_ring_prover(prover_key, secret_key_idx);
 

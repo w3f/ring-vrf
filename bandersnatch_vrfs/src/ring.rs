@@ -11,6 +11,7 @@ use ark_serialize::{
 use merlin::Transcript;
 
 use fflonk::pcs::PCS;
+use rand_core::RngCore;
 use ring::Domain;
 
 use ark_ed_on_bls12_381_bandersnatch::{Fq, Fr, SWConfig, SWAffine};
@@ -35,18 +36,20 @@ fn make_piop_params(seed: [u8; 32], domain_size: usize) -> PiopParams {
 
 #[derive(Clone)]
 pub struct KZG {
+    domain_size: u32,
     seed: [u8; 32],
     piop_params: PiopParams,
     pcs_params: PcsParams,
 }
 
+
 impl KZG {
     // TODO: Import powers of tau
-    pub fn insecure_kzg_setup<R: Rng>(seed: [u8;32], domain_size: usize, rng: &mut R) -> Self {
-        let piop_params = make_piop_params(seed, domain_size);
-
-        let pcs_params = RealKZG::setup(3 * domain_size, rng);
+    pub fn insecure_kzg_setup<R: Rng>(seed: [u8;32], domain_size: u32, rng: &mut R) -> Self {
+        let piop_params = make_piop_params(seed, domain_size as usize);
+        let pcs_params = RealKZG::setup(3 * (domain_size as usize), rng);
         KZG {
+            domain_size,
             seed,
             piop_params,
             pcs_params,
@@ -54,14 +57,27 @@ impl KZG {
     }
 
     // Testing only kzg setup.
-    pub fn testing_kzg_setup(seed: [u8;32], domain_size: usize) -> Self {
-        let mut rng = rand_chacha::ChaCha20Rng::from_seed(seed);
+    pub fn testing_kzg_setup(preseed: [u8;32], domain_size: u32) -> Self {
+        let mut rng = rand_chacha::ChaCha20Rng::from_seed(preseed);
+        let mut seed = [0u8; 32];
+        rng.fill_bytes(&mut seed);
         Self::insecure_kzg_setup(seed, domain_size, &mut rng)
     }
 
     pub fn max_keyset_size(&self) -> usize {
         self.piop_params.keyset_part_size
     }
+
+    /*
+    // Unecessary but right now our own padding is broken, and it's maybe not flexible enough anyways.
+	// https://github.com/w3f/ring-proof/blob/master/ring/src/piop/params.rs#L56
+    pub fn padding_point(&self) -> SWAffine {
+        let mut seed = self.seed.clone();
+        seed.reverse();
+        let mut rng = rand_chacha::ChaCha20Rng::from_seed(seed);
+        SWAffine::rand(&mut rng)
+    }
+    */
 
     pub fn prover_key(&self, pks: Vec<SWAffine>) -> ProverKey {
         ring::index(self.pcs_params.clone(), &self.piop_params, pks).0
@@ -89,12 +105,16 @@ impl CanonicalSerialize for KZG {
         compress: Compress
     ) -> Result<(), SerializationError> 
     {
-        writer.write(&self.seed).map_err(|e| SerializationError::IoError(e))?;
-        self.pcs_params.serialize_with_mode(&mut writer, compress)
+        self.domain_size.serialize_compressed(&mut writer) ?;
+        self.seed.serialize_compressed(&mut writer) ?;
+        self.pcs_params.serialize_with_mode(&mut writer, compress) ?;
+        Ok(())
     }
 
     fn serialized_size(&self, compress: Compress) -> usize {
-        32 + self.pcs_params.serialized_size(compress)
+        self.domain_size.compressed_size()
+        + self.seed.compressed_size()
+        + self.pcs_params.serialized_size(compress)
     }
 }
 
@@ -105,14 +125,12 @@ impl CanonicalDeserialize for KZG {
         validate: Validate
     ) -> Result<Self, SerializationError>
     {
-        let mut seed = [0u8; 32];
-        reader.read(&mut seed).map_err(|e| SerializationError::IoError(e))?;
-        let pcs_params = PcsParams::deserialize_with_mode(&mut reader, compress, validate)?;
-        // TODO: @jeff should we serialize the original `domain_size` to get it back here?
-        // Or shoud we use a global constant value?
-        let domain_size = 2usize.pow(10); // FIXME
-        let piop_params = make_piop_params(seed, domain_size);
+        let domain_size = <u32 as CanonicalDeserialize>::deserialize_compressed(&mut reader) ?;
+        let seed = <[u8;32] as CanonicalDeserialize>::deserialize_compressed(&mut reader) ?;
+        let piop_params = make_piop_params(seed, domain_size as usize);
+        let pcs_params = <PcsParams as CanonicalDeserialize>::deserialize_with_mode(&mut reader, compress, validate) ?;
         Ok(KZG {
+            domain_size,
             seed,
             piop_params,
             pcs_params,
