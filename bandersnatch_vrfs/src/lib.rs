@@ -253,8 +253,12 @@ mod tests {
         let kzg = ring::KZG::testing_kzg_setup([0; 32], 2u32.pow(10));
         let keyset_size = kzg.max_keyset_size();
 
-        // Gen a bunch of random public keys
         let mut rng = rand_core::OsRng;
+		let mut l = [0u8; 8];
+		rng.fill_bytes(&mut l);
+		let keyset_size = usize::from_le_bytes(l) % keyset_size;
+
+        // Gen a bunch of random public keys
         let mut pks: Vec<_> = (0..keyset_size).map(|_| E::rand(&mut rng)).collect();
         // Just select one index for the actual key we are for signing
         let secret_key_idx = keyset_size / 2;
