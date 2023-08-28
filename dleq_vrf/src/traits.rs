@@ -130,7 +130,7 @@ impl<K: AffineRepr> EcVrfVerifier for (&crate::ThinVrf<K>,&crate::PublicKey<K>) 
     fn vrf_verify_detached<'a>(
         &self,
         t: impl IntoTranscript,
-        ios: &'a [EcVrfInOut<Self>],        
+        ios: &'a [EcVrfInOut<Self>],
         signature: &EcVrfProof<Self>,
     ) -> Result<&'a [EcVrfInOut<Self>],error::SignatureError>
     {

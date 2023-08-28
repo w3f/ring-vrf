@@ -112,12 +112,11 @@ impl<F: Flavor> ArkScaleMaxEncodedLen for crate::NonBatchable<F>
 where
     <F as InnerFlavor>::KeyCommitment: ArkScaleMaxEncodedLen,
     <F as InnerFlavor>::Scalars: ArkScaleMaxEncodedLen,
-    <F as Flavor>::ScalarField: ArkScaleMaxEncodedLen,
 {
     fn max_encoded_len() -> usize {
         <<F as InnerFlavor>::KeyCommitment as ArkScaleMaxEncodedLen>::max_encoded_len()
         + <<F as InnerFlavor>::Scalars as ArkScaleMaxEncodedLen>::max_encoded_len()
-        + <<F as Flavor>::ScalarField as ArkScaleMaxEncodedLen>::max_encoded_len()
+        + <<F as Flavor>::ScalarField as ark_ff::Zero>::zero().compressed_size()
     }
 }
 
