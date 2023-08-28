@@ -24,6 +24,10 @@ ark-serialize.workspace = true
 ark-secret-scalar = { version = "0.0.2", default-features = false, path = "../ark-secret-scalar" }
 ark-transcript = { version = "0.0.2", default-features = false, path = "../ark-transcript" }
 
+ark-scale = { version = "0.0.8", default-features = false, features = ["ec"], optional = true }
+
+# parity-scale-codec = { version = "3.6", default-features = false, features = ["max-encoded-len"], optional = true }
+
 
 
 [dev-dependencies]
@@ -36,6 +40,5 @@ ark-bls12-377 = { version = "0.4", default-features = false, features = [ "curve
 [features]
 default = ["getrandom"]  #  "std", "rand"
 getrandom = ["rand_core/getrandom", "ark-secret-scalar/getrandom"]  #  "ark_transcript/getrandom"
-
-
+scale = ["dep:ark-scale"] # "dep:parity-scale-codec"
 
