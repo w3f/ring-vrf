@@ -23,6 +23,14 @@ pub use ark_ed_on_bls12_381_bandersnatch::{
 };
 // Conversion discussed in https://github.com/arkworks-rs/curves/pull/76#issuecomment-929121470
 
+use ark_scale::{
+    ArkScaleMaxEncodedLen,MaxEncodedLen,
+    impl_decode_via_ark,
+    impl_encode_via_ark,
+    scale::{Encode,Decode,EncodeLike},
+};
+
+
 pub use dleq_vrf::{
     Transcript, IntoTranscript, transcript,
     error::{SignatureResult, SignatureError},
@@ -160,6 +168,19 @@ impl PublicKey {
         Self::deserialize_compressed(reader)
     }
 }
+
+ark_scale::impl_scale_via_ark!(PublicKey);
+
+impl MaxEncodedLen for PublicKey {
+    #[inline]
+    fn max_encoded_len() -> usize {
+        crate::PUBLIC_KEY_LENGTH
+    }
+}
+
+
+
+// VrfSignature
 
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct ThinVrfSignature<const N: usize> {

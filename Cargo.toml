@@ -29,6 +29,6 @@ ark-ec = { version = "0.4", default-features = false }
 ark-serialize = { version = "0.4", default-features = false, features = [ "derive" ] }
 # ark-serialize-derive = { version = "0.4", default-features = false }
 
-ark-scale = { version = "0.0.9", default-features = false, features = ["ec"] }
+ark-scale = { version = "0.0.10", default-features = false, features = ["ec"] }
 
 
