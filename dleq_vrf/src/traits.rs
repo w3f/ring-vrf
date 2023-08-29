@@ -1,4 +1,4 @@
-//! # Elliptic curve based VRFs trait abstractions
+//! # Elliptic curve based VRF trait abstractions
 //!
 //! We provide trait abstractions suitable for usage with many
 //! elliptic curve based verifiable random functions (EC VRFs).
@@ -47,12 +47,14 @@ pub use crate::{
 pub trait EcVrfSecret<H: AffineRepr> {
     /// Compute VRF pre-output from secret key and input point.
     /// 
-    /// We do not have the ideal trait interface here because
-    /// a remote signer can do no validation of a `VrfInput<H>`,
-    /// so this method could become depricated in future.
-    /// We suggest users avoid this method, and invoke only
-    /// `vrf_inout`, but implementors could still supply this
-    /// method for now.
+    /// Implementers may provide this method, but users must not
+    /// invoke this method directly.  Inkove `vrf_inout` instead.
+    /// 
+    /// A remote signer can do no validation of a `VrfInput<H>`,
+    /// so remote signers should make this method `panic!`,
+    /// and instead implement `vrf_inout` using reflection, meaning
+    /// their `vrf_inout` should work for their expected types,
+    /// but `panic!` for unexpected types, including `VrfInput<H>`.
     fn vrf_preout(&self, input: &VrfInput<H>) -> VrfPreOut<H>;
 
     /// Create an `InputOutput` for usage both in signing as well as
