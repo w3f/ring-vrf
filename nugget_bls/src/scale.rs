@@ -49,7 +49,6 @@ impl<P: Pairing> Encode for Signature<P> {
 
 impl<P: Pairing> EncodeLike for Signature<P> {}
 
-/*
 impl<P: Pairing> MaxEncodedLen for Signature<P> 
 where <P as Pairing>::ScalarField: ArkScaleMaxEncodedLen
 {
@@ -59,7 +58,6 @@ where <P as Pairing>::ScalarField: ArkScaleMaxEncodedLen
         + <dleq_vrf::NonBatchable<ThinVrf<P>> as ArkScaleMaxEncodedLen>::max_encoded_len()
     }
 }
-*/
 
 
 impl<P: Pairing> Decode for AggregationKey<P> {

@@ -8,7 +8,6 @@ use ark_scale::{
     ArkScaleMaxEncodedLen,MaxEncodedLen,
     impl_decode_via_ark,
     impl_encode_via_ark,
-    impl_body_max_encode_len,
     scale::{Encode,Decode,EncodeLike}
 };
 
@@ -105,12 +104,13 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 impl<F: Flavor> ArkScaleMaxEncodedLen for crate::Signature<F>
 where
     <F as InnerFlavor>::KeyCommitment: ArkScaleMaxEncodedLen,
-    <F as InnerFlavor>::Scalars: ArkScaleMaxEncodedLen,
+    // <F as InnerFlavor>::Scalars: ArkScaleMaxEncodedLen,
     <F as InnerFlavor>::Affines: ArkScaleMaxEncodedLen,
 {
     fn max_encoded_len() -> usize {
         <<F as InnerFlavor>::KeyCommitment as ArkScaleMaxEncodedLen>::max_encoded_len()
-        + <<F as InnerFlavor>::Scalars as ArkScaleMaxEncodedLen>::max_encoded_len()
+        + <F as InnerFlavor>::Scalars::default().compressed_size()
+        // + <<F as InnerFlavor>::Scalars as ArkScaleMaxEncodedLen>::max_encoded_len()
         + <<F as InnerFlavor>::Affines as ArkScaleMaxEncodedLen>::max_encoded_len()
     }
 }
@@ -118,11 +118,12 @@ where
 impl<F: Flavor> ArkScaleMaxEncodedLen for crate::NonBatchable<F>
 where
     <F as InnerFlavor>::KeyCommitment: ArkScaleMaxEncodedLen,
-    <F as InnerFlavor>::Scalars: ArkScaleMaxEncodedLen,
+    // <F as InnerFlavor>::Scalars: ArkScaleMaxEncodedLen,
 {
     fn max_encoded_len() -> usize {
         <<F as InnerFlavor>::KeyCommitment as ArkScaleMaxEncodedLen>::max_encoded_len()
-        + <<F as InnerFlavor>::Scalars as ArkScaleMaxEncodedLen>::max_encoded_len()
+        + <F as InnerFlavor>::Scalars::default().compressed_size()
+        // + <<F as InnerFlavor>::Scalars as ArkScaleMaxEncodedLen>::max_encoded_len()
         + <<F as Flavor>::ScalarField as ark_ff::Zero>::zero().compressed_size()
     }
 }

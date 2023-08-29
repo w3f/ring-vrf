@@ -7,7 +7,7 @@
 //! 
 //! 
 
-use ark_ff::{PrimeField};
+use ark_ff::PrimeField;
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
 use ark_std::{borrow::BorrowMut, vec::Vec};
@@ -150,6 +150,16 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 pub struct Scalars<SF: PrimeField,const B: usize> {
     pub(crate) keying:   SF,
     pub(crate) blindings: [SF; B],
+}
+
+// We cannot deirve Default yet
+impl<SF: PrimeField,const B: usize> Default for Scalars<SF,B> {
+    fn default() -> Self {
+        Scalars {
+            keying: SF::zero(),
+            blindings: core::array::from_fn(|_| SF::zero()),
+        }
+    }
 }
 
 impl<SF: PrimeField,const B: usize> Zeroize for Scalars<SF,B> {

@@ -69,7 +69,7 @@ pub trait Flavor : InnerFlavor {
 
 pub trait InnerFlavor {
     type KeyCommitment: ark_std::fmt::Debug + Clone + CanonicalSerialize + CanonicalDeserialize;
-    type Scalars: ark_std::fmt::Debug + Clone + CanonicalSerialize + CanonicalDeserialize + zeroize::Zeroize;
+    type Scalars: ark_std::fmt::Debug + Clone + CanonicalSerialize + CanonicalDeserialize + Default + zeroize::Zeroize;
     type Affines: ark_std::fmt::Debug + Clone + CanonicalSerialize + CanonicalDeserialize;
 }
 
