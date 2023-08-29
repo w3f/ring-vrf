@@ -24,10 +24,7 @@ ark-serialize.workspace = true
 ark-secret-scalar = { version = "0.0.2", default-features = false, path = "../ark-secret-scalar" }
 ark-transcript = { version = "0.0.2", default-features = false, path = "../ark-transcript" }
 
-ark-scale = { version = "0.0.8", default-features = false, features = ["ec"], optional = true }
-
-# parity-scale-codec = { version = "3.6", default-features = false, features = ["max-encoded-len"], optional = true }
-
+ark-scale = { workspace = true, optional = true }
 
 
 [dev-dependencies]
