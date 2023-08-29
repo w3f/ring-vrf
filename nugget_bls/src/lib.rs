@@ -26,6 +26,10 @@ pub use dleq_vrf::{
 use dleq_vrf::vrf::{VrfInput, VrfInOut}; // VrfPreOut
 use transcript::digest::Update;
 
+
+#[cfg(feature = "scale")]
+pub mod scale;
+
 #[cfg(test)]
 mod tests;
 

@@ -41,6 +41,13 @@ impl<C: AffineRepr> MaxEncodedLen for $t<C> {
     }
 }
 
+impl<C: AffineRepr> ArkScaleMaxEncodedLen for $t<C> {
+    #[inline]
+    fn max_encoded_len() -> usize {
+        <C as AffineRepr>::zero().compressed_size()
+    }
+}
+
     }
 } // macro_rules! impl_point_wrapper
 
