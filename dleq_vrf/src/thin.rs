@@ -23,6 +23,12 @@ pub struct ThinVrf<C: AffineRepr> {
     pub keying_base: C,
 }
 
+impl<C: AffineRepr> Default for ThinVrf<C> {
+    fn default() -> Self {
+        ThinVrf { keying_base: C::generator(), }
+    }
+}
+
 
 impl<C: AffineRepr> Flavor for ThinVrf<C> {
     type ScalarField = <C as AffineRepr>::ScalarField;

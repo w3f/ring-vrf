@@ -140,6 +140,21 @@ impl<K: AffineRepr> EcVrfVerifier for (&crate::ThinVrf<K>,&crate::PublicKey<K>) 
     }
 }
 
+impl<K: AffineRepr> EcVrfVerifier for crate::PublicKey<K> {
+    type H = K;
+    type VrfProof = crate::Signature<crate::ThinVrf<K>>;
+    type Error = error::SignatureError;
+    fn vrf_verify_detached<'a>(
+        &self,
+        t: impl IntoTranscript,
+        ios: &'a [EcVrfInOut<Self>],
+        signature: &EcVrfProof<Self>,
+    ) -> Result<&'a [EcVrfInOut<Self>],error::SignatureError>
+    {
+        crate::ThinVrf::default().verify_thin_vrf(t,ios,self,signature)
+    }
+}
+
 
 pub type EcVrfInput<V> = VrfInput<<V as EcVrfVerifier>::H>;
 pub type EcVrfPreOut<V> = VrfPreOut<<V as EcVrfVerifier>::H>;
