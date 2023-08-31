@@ -127,7 +127,7 @@ pub trait EcVrfVerifier {
 
 impl<K: AffineRepr> EcVrfVerifier for (&crate::ThinVrf<K>,&crate::PublicKey<K>) {
     type H = K;
-    type VrfProof = crate::Signature<crate::ThinVrf<K>>;
+    type VrfProof = crate::Batchable<crate::ThinVrf<K>>;
     type Error = error::SignatureError;
     fn vrf_verify_detached<'a>(
         &self,
@@ -142,7 +142,7 @@ impl<K: AffineRepr> EcVrfVerifier for (&crate::ThinVrf<K>,&crate::PublicKey<K>) 
 
 impl<K: AffineRepr> EcVrfVerifier for crate::PublicKey<K> {
     type H = K;
-    type VrfProof = crate::Signature<crate::ThinVrf<K>>;
+    type VrfProof = crate::Batchable<crate::ThinVrf<K>>;
     type Error = error::SignatureError;
     fn vrf_verify_detached<'a>(
         &self,

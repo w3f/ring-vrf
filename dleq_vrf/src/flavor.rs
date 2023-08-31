@@ -82,14 +82,14 @@ pub(crate) struct Witness<F: Flavor> {
 
 /// Batchable VRF signature detached from VRF inputs and outpus
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
-pub struct Signature<F: Flavor> {
+pub struct Batchable<F: Flavor> {
     pub(crate) compk: <F as InnerFlavor>::KeyCommitment,
     pub(crate) s: <F as InnerFlavor>::Scalars,
     pub(crate) r: <F as InnerFlavor>::Affines,
 }
 
 /*
-impl<P: Flavor> Valid for Signature<F> {
+impl<P: Flavor> Valid for Batchable<F> {
     fn check(&self) -> Result<(), SerializationError> {
         if self.is_on_curve() && self.is_in_correct_subgroup_assuming_on_curve() {
             Ok(())
@@ -101,7 +101,7 @@ impl<P: Flavor> Valid for Signature<F> {
 */
 
 /// Arkworks' own serialization traits should be preferred over these.
-impl<F: Flavor> Signature<F> {
+impl<F: Flavor> Batchable<F> {
     pub fn as_key_commitment(&self) -> &<F as InnerFlavor>::KeyCommitment { &self.compk }
 
     pub fn size_of_serialized(&self) -> usize {

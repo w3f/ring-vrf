@@ -101,7 +101,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 }
 
 
-impl<F: Flavor> ArkScaleMaxEncodedLen for crate::Signature<F>
+impl<F: Flavor> ArkScaleMaxEncodedLen for crate::Batchable<F>
 where
     <F as InnerFlavor>::KeyCommitment: ArkScaleMaxEncodedLen,
     // <F as InnerFlavor>::Scalars: ArkScaleMaxEncodedLen,

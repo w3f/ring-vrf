@@ -169,7 +169,7 @@ pub struct Signature<P: Pairing> {
     /// Actual BLS signature
     preoutput: dleq_vrf::VrfPreOut<<P as Pairing>::G1Affine>,
     /// DLEQ proof of correctness for BLS signature
-    signature: dleq_vrf::Signature<ThinVrf<P>>,
+    signature: dleq_vrf::Batchable<ThinVrf<P>>,
 }
 
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)] // Copy, PartialOrd, Ord, 

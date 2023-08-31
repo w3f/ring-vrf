@@ -10,7 +10,7 @@ use ark_ec::{AffineRepr, CurveGroup};
 
 use crate::{
     Transcript, IntoTranscript,
-    flavor::{Flavor, InnerFlavor, Witness, Signature},
+    flavor::{Flavor, InnerFlavor, Witness, Batchable},
     keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut},
@@ -85,7 +85,7 @@ impl<K: AffineRepr> SecretKey<K> {
     /// Sign thin VRF signature
     /// 
     /// If `ios = &[]` this reduces to a Schnorr signature.
-    pub fn sign_thin_vrf(&self, t: impl IntoTranscript, ios: &[VrfInOut<K>]) -> Signature<ThinVrf<K>>
+    pub fn sign_thin_vrf(&self, t: impl IntoTranscript, ios: &[VrfInOut<K>]) -> Batchable<ThinVrf<K>>
     {
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
@@ -102,14 +102,14 @@ impl<K: AffineRepr> Witness<ThinVrf<K>> {
     /// Assumes we already hashed public key, `VrfInOut`s, etc.
     pub(crate) fn sign_final(
         self, t: &mut Transcript, secret: &SecretKey<K>
-    ) -> Signature<ThinVrf<K>> {
+    ) -> Batchable<ThinVrf<K>> {
         let Witness { r, k } = self;
         t.label(b"Thin R");
         t.append(&r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge").read_reduce();
         let s = k + secret.key.mul_by_challenge(&c);
         // k.zeroize();
-        Signature { compk: (), r, s }
+        Batchable { compk: (), r, s }
         // TODO: Add some verify_final for additional rowhammer defenses?
         // We already hash the public key though, so no issues like Ed25519.
         // Against secret key corruption verify_final might still help, or
@@ -122,7 +122,7 @@ impl<K: AffineRepr> Witness<ThinVrf<K>> {
 // --- Verify --- //
 
 /*
-impl<C: AffineRepr> Valid for Signature<ThinVrf<C>> {
+impl<C: AffineRepr> Valid for Batchable<ThinVrf<C>> {
     fn check(&self) -> Result<(), SerializationError> {
         if self.is_on_curve() && self.is_in_correct_subgroup_assuming_on_curve() {
             Ok(())
@@ -153,7 +153,7 @@ impl<K: AffineRepr> ThinVrf<K> {
         t: impl IntoTranscript,
         ios: &'a [VrfInOut<K>],
         public: &PublicKey<K>,
-        signature: &Signature<ThinVrf<K>>,
+        signature: &Batchable<ThinVrf<K>>,
     ) -> SignatureResult<&'a [VrfInOut<K>]>
     {
         let mut t = t.into_transcript();

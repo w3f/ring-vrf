@@ -2,7 +2,7 @@
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
 use ark_std::vec::Vec;
 
-use crate::{Transcript, vrf, Signature};
+use crate::{Transcript, vrf, Batchable};
 
 use ark_bls12_377 as curve;
 
@@ -54,11 +54,11 @@ fn master() {
     
     let mut buf = Vec::new();
     sig_pedersen.serialize_compressed(&mut buf).unwrap();
-    let sig_pedersen = Signature::deserialize_compressed::<&[u8]>(buf.as_slice()).unwrap();
+    let sig_pedersen = Batchable::deserialize_compressed::<&[u8]>(buf.as_slice()).unwrap();
 
     buf.clear();
     sig_thin.serialize_compressed(&mut buf).unwrap();
-    let sig_thin = Signature::deserialize_compressed::<&[u8]>(buf.as_slice()).unwrap();
+    let sig_thin = Batchable::deserialize_compressed::<&[u8]>(buf.as_slice()).unwrap();
 
     buf.clear();
     sk.as_publickey().serialize_compressed(&mut buf).unwrap();

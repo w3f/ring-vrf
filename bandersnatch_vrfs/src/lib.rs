@@ -179,12 +179,13 @@ impl MaxEncodedLen for PublicKey {
 }
 
 
-
+// pub type ThinVrfSignature<const N: usize> = dleq_vrf::VrfSignature<ThinVrf>;
+ 
 // VrfSignature
 
 #[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
 pub struct ThinVrfSignature<const N: usize> {
-    pub signature: dleq_vrf::Signature<ThinVrf>,
+    pub signature: dleq_vrf::Batchable<ThinVrf>,
     pub preoutputs: [VrfPreOut; N],
 }
 
@@ -206,11 +207,11 @@ impl<const N: usize> ThinVrfSignature<N>
     }
 }
 
-pub type PedersenVrfSignature = dleq_vrf::Signature<PedersenVrf>;
+// pub type PedersenVrfSignature = dleq_vrf::Batchable<PedersenVrf>;
 
 #[derive(CanonicalSerialize,CanonicalDeserialize)]
 pub struct RingVrfSignature<const N: usize> {
-    pub signature: dleq_vrf::Signature<PedersenVrf>,
+    pub signature: dleq_vrf::Batchable<PedersenVrf>,
     pub preoutputs: [VrfPreOut; N],
     pub ring_proof: RingProof,
 }
