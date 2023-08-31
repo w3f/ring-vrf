@@ -54,15 +54,15 @@ fn master() {
     
     let mut buf = Vec::new();
     sig_pedersen.serialize_compressed(&mut buf).unwrap();
-    let sig_pedersen = Signature::deserialize_compressed(buf.as_ref()).unwrap();
+    let sig_pedersen = Signature::deserialize_compressed::<&[u8]>(buf.as_slice()).unwrap();
 
     buf.clear();
     sig_thin.serialize_compressed(&mut buf).unwrap();
-    let sig_thin = Signature::deserialize_compressed(buf.as_ref()).unwrap();
+    let sig_thin = Signature::deserialize_compressed::<&[u8]>(buf.as_slice()).unwrap();
 
     buf.clear();
     sk.as_publickey().serialize_compressed(&mut buf).unwrap();
-    let pk = crate::PublicKey::deserialize_compressed(buf.as_ref()).unwrap();
+    let pk = crate::PublicKey::deserialize_compressed::<&[u8]>(buf.as_slice()).unwrap();
     assert!( *sig_pedersen.as_key_commitment() == flavor.compute_blinded_publickey(&pk,&secret_blinding) );
 
     let t = Transcript::new_labeled(b"AD1");

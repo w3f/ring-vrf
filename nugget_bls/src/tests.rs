@@ -16,7 +16,7 @@ fn single() {
     let mut buf = Vec::new();
     let pk0 = sk.create_nugget_public();
     pk0.serialize_compressed(&mut buf).unwrap();
-    let pk = AggregationKey::deserialize_compressed(buf.as_ref()).unwrap();
+    let pk = AggregationKey::deserialize_compressed::<&[u8]>(buf.as_slice()).unwrap();
     assert_eq!(pk0,pk);
     pk.validate_nugget_public().unwrap();
     assert_eq!(sk.to_g1_publickey(), pk.to_g1_publickey());
@@ -29,7 +29,7 @@ fn single() {
 
     buf.clear();
     signature.serialize_compressed(&mut buf).unwrap();
-    let signature = Signature::deserialize_compressed(buf.as_ref()).unwrap();
+    let signature = Signature::deserialize_compressed::<&[u8]>(buf.as_slice()).unwrap();
 
     let t = Transcript::new_labeled(b"AD1");
     let msg = Message { domain, message };
@@ -56,3 +56,4 @@ fn aggregation() {
     assert_eq!(g1pks0, g1pks);
     agg.verify_by_pks(input,g1pks.iter()).unwrap();
 }
+
