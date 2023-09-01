@@ -155,6 +155,27 @@ impl<K: AffineRepr> EcVrfVerifier for crate::PublicKey<K> {
     }
 }
 
+impl<K: AffineRepr> crate::PublicKey<K> {
+    pub fn verify_thin_vrf<const N: usize>(
+        &self,
+        t: impl IntoTranscript,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<K>>,
+        signature: &VrfSignature<Self,N>,
+    ) -> Result<[VrfInOut<K>; N],error::SignatureError>
+    {
+        self.vrf_verify(t,inputs,signature)
+    }
+
+    pub fn verify_thin_vrf_vec(
+        &self,
+        t: impl IntoTranscript,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<K>>,
+        signature: &VrfSignatureVec<Self>,
+    ) -> Result<Vec<VrfInOut<K>>,error::SignatureError>
+    {
+        self.vrf_verify_vec(t,inputs,signature)
+    }
+}
 
 pub type EcVrfInput<V> = VrfInput<<V as EcVrfVerifier>::H>;
 pub type EcVrfPreOut<V> = VrfPreOut<<V as EcVrfVerifier>::H>;
@@ -297,7 +318,7 @@ pub trait EcVrfSigner: Borrow<Self::Secret> {
 }
 
 impl<K: AffineRepr> EcVrfSigner for SecretKey<K> {
-    type V = (&'static crate::ThinVrf<K>,&'static crate::PublicKey<K>);
+    type V = crate::PublicKey<K>;
     type Error = ();
     type Secret = Self;
     fn vrf_sign_detached(
@@ -306,7 +327,36 @@ impl<K: AffineRepr> EcVrfSigner for SecretKey<K> {
         ios: &[EcVrfInOut<Self::V>]
     ) -> Result<EcVrfProof<Self::V>,()>
     {
-        Ok(self.sign_thin_vrf(t,ios))
+        Ok(self.sign_thin_vrf_detached(t,ios))
     }
 }
 
+impl<K: AffineRepr> SecretKey<K> {
+    pub fn sign_thin_vrf<const N: usize>(
+        &self,
+        t: impl IntoTranscript,
+        ios: &[VrfInOut<K>; N]
+    ) -> Result<VrfSignature<crate::PublicKey<K>,N>,()>
+    {
+        self.vrf_sign(t,ios)
+    }
+
+    pub fn sign_thin_vrf_one<I,T,F>(&self, input: I, check: F)
+     -> Result<VrfSignature<crate::PublicKey<K>,1>,()>
+    where
+        I: IntoVrfInput<K>,
+        T: IntoTranscript,
+        F: FnMut(&VrfInOut<K>) -> Result<T,()>,
+    {
+        self.vrf_sign_one(input,check)
+    }
+
+    pub fn sign_thin_vrf_vec(
+        &self,
+        t: impl IntoTranscript,
+        ios: &[VrfInOut<K>]
+    ) -> Result<VrfSignatureVec<crate::PublicKey<K>>,()>
+    {
+        self.vrf_sign_vec(t,ios)
+    }
+}

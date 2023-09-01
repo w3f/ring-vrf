@@ -41,7 +41,7 @@ fn master() {
     let ios: [vrf::VrfInOut<K>; 4] = [mk_io(0), mk_io(1), mk_io(2), mk_io(3)];
 
     let t = Transcript::new_labeled(b"AD1");
-    let sig_thin = sk.sign_thin_vrf(t, &ios[0..2]);
+    let sig_thin = sk.sign_thin_vrf_detached(t, &ios[0..2]);
 
     let t = Transcript::new_labeled(b"AD2");
     let (sig_pedersen, secret_blinding)

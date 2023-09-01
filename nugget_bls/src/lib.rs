@@ -128,7 +128,7 @@ impl<P: Pairing> SecretKey<P> {
         t.label(b"NuggetBLS");
         let io = self.0.vrf_inout(input);
         let preoutput = io.preoutput.clone();
-        let signature = self.0.sign_thin_vrf(t, &[io]);
+        let signature = self.0.sign_thin_vrf_detached(t, &[io]);
         Signature { preoutput, signature }
     }
 }

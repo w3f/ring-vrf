@@ -38,6 +38,10 @@ pub use pedersen::{PedersenVrf};
 pub mod scale;
 
 pub mod traits;
+pub use traits::{
+    EcVrfSecret,EcVrfSigner,EcVrfVerifier,
+    VrfSignature,VrfSignatureVec,
+};
 
 #[cfg(test)]
 mod tests;

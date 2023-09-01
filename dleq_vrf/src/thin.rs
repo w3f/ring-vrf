@@ -85,7 +85,7 @@ impl<K: AffineRepr> SecretKey<K> {
     /// Sign thin VRF signature
     /// 
     /// If `ios = &[]` this reduces to a Schnorr signature.
-    pub fn sign_thin_vrf(&self, t: impl IntoTranscript, ios: &[VrfInOut<K>]) -> Batchable<ThinVrf<K>>
+    pub fn sign_thin_vrf_detached(&self, t: impl IntoTranscript, ios: &[VrfInOut<K>]) -> Batchable<ThinVrf<K>>
     {
         let mut t = t.into_transcript();
         let t = t.borrow_mut();

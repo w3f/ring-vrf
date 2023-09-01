@@ -128,7 +128,7 @@ impl SecretKey {
     ) -> ThinVrfSignature<N>
     {
         assert_eq!(ios.len(), N);
-        let signature = self.0.sign_thin_vrf(t,ios);
+        let signature = self.0.sign_thin_vrf_detached(t,ios);
         let preoutputs = vrf::collect_preoutputs_array(ios);
         ThinVrfSignature { preoutputs, signature, }
     }
