@@ -23,16 +23,15 @@ type SecretKey = crate::SecretKey<K>;
 pub(crate) fn pedersen_vrf_test_flavor() -> PedersenVrf {
     let mut t = Transcript::new_labeled(b"TestFlavor");
     let mut reader = t.challenge(b"Keying&Blinding");
-    PedersenVrf::new(
-        reader.read_uniform(),
-        [reader.read_uniform()],
-    )
+    crate::ThinVrf { keying_base: reader.read_uniform(), }
+    .pedersen_vrf([ reader.read_uniform() ])
 }
+
 
 #[test]
 fn master() {
     let flavor = pedersen_vrf_test_flavor();
-    let mut sk = SecretKey::ephemeral((*flavor).clone());
+    let mut sk = (*flavor).clone().ephemeral_secretkey();
 
     let mk_io = |n: u32| {
         let input = vrf::ark_hash_to_curve::<K,H2C>(b"VrfIO",&n.to_le_bytes()[..]).unwrap();

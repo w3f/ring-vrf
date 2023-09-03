@@ -137,38 +137,56 @@ impl<K: AffineRepr> ConstantTimeEq for SecretKey<K> {
 }
 */
 
-
-impl<K: AffineRepr> SecretKey<K> {
+impl<K: AffineRepr> ThinVrf<K> {
     /// Generate an "unbiased" `SecretKey` from a user supplied `XofReader`.
-    pub fn from_xof(thin: ThinVrf<K>, mut xof: impl XofReader) -> Self
+    pub fn secretkey_from_xof(self, mut xof: impl XofReader) -> SecretKey<K>
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
         xof.read(&mut nonce_seed);
         let mut key = SecretScalar::from_xof(&mut xof);
-        let public = thin.make_public(&mut key);
-        SecretKey { thin, key, nonce_seed, public, 
+        let public = self.make_public(&mut key);
+        SecretKey { thin: self, key, nonce_seed, public, 
             #[cfg(debug_assertions)]
             test_vector_fake_rng: false,
         }
     }
 
     /// Generate a `SecretKey` from a 32 byte seed.
-    pub fn from_seed(thin: ThinVrf<K>, seed: &[u8; 32]) -> Self {
+    pub fn secretkey_from_seed(self, seed: &[u8; 32]) -> SecretKey<K> {
         use crate::transcript::digest::{ExtendableOutput};
         let mut xof = crate::transcript::Shake128::default();
         xof.update(b"VrfSecretSeed");
         xof.update(seed.as_ref());
         xof.update(& (32u32).to_be_bytes());
         xof.update(b"VrfSecretKey");
-        SecretKey::from_xof(thin, xof.finalize_xof())
+        self.secretkey_from_xof(xof.finalize_xof())
     }
 
     /// Generate an ephemeral `SecretKey` with system randomness.
     #[cfg(feature = "getrandom")]
-    pub fn ephemeral(thin: ThinVrf<K>) -> Self {
+    pub fn ephemeral_secretkey(self) -> SecretKey<K> {
         let mut seed: [u8; 32] = [0u8; 32];
         rand_core::OsRng.fill_bytes(&mut seed);
-        SecretKey::from_seed(thin, &seed)
+        self.secretkey_from_seed(&seed)
+    }
+}
+// 
+impl<K: AffineRepr> SecretKey<K> {
+    /// Generate an "unbiased" `SecretKey` from a user supplied `XofReader`.
+    pub fn from_xof(xof: impl XofReader) -> Self
+    {
+        ThinVrf::<K>::default().secretkey_from_xof(xof)
+    }
+
+    /// Generate a `SecretKey` from a 32 byte seed.
+    pub fn from_seed(seed: &[u8; 32]) -> Self {
+        ThinVrf::<K>::default().secretkey_from_seed(seed)
+    }
+
+    /// Generate an ephemeral `SecretKey` with system randomness.
+    #[cfg(feature = "getrandom")]
+    pub fn ephemeral() -> Self {
+         ThinVrf::<K>::default().ephemeral_secretkey()
     }
 
     /// Reference the `PublicKey` corresponding to this `SecretKey`.

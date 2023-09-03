@@ -64,12 +64,12 @@ type PedersenVrf<P> = dleq_vrf::PedersenVrf<<P as Pairing>::G1Affine,<P as Pairi
 
 /// Then VRF configured by the G1 generator for signatures.
 pub fn thin_vrf<P: Pairing>() -> ThinVrf<P> {
-    dleq_vrf::ThinVrf { keying_base: <P as Pairing>::G1Affine::generator(), }
+    dleq_vrf::ThinVrf::default()  // keying_base: <P as Pairing>::G1Affine::generator()
 }
 
 /// Pedersen VRF configured by the G1 generator for public key certs.
 pub fn pedersen_vrf<P: Pairing>() -> PedersenVrf<P> {
-    dleq_vrf::PedersenVrf::new( <P as Pairing>::G1Affine::generator(), [] )
+    thin_vrf::<P>().pedersen_vrf([])
 }
 
 /// VrfInput from the G2 generator for public key certs.
@@ -88,12 +88,12 @@ impl<P: Pairing> SecretKey<P> {
     
     /// Generate an "unbiased" `SecretKey` from a user supplied `XofReader`.
     pub fn from_xof(xof: impl transcript::digest::XofReader) -> Self {
-        SecretKey( dleq_vrf::SecretKey::from_xof( thin_vrf::<P>(), xof ))
+        SecretKey( dleq_vrf::SecretKey::from_xof( xof ))
     }
 
     /// Generate a `SecretKey` from a 32 byte seed.
     pub fn from_seed(seed: &[u8; 32]) -> Self {
-        SecretKey( dleq_vrf::SecretKey::from_seed( thin_vrf::<P>(), seed ))
+        SecretKey( dleq_vrf::SecretKey::from_seed( seed ))
     }
 
     /// Generate an ephemeral `SecretKey` with system randomness.
