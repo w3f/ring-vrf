@@ -28,7 +28,7 @@ pub use dleq_vrf::{
     vrf::{self, IntoVrfInput},
     EcVrfSecret,EcVrfSigner,EcVrfVerifier,
     VrfSignature,VrfSignatureVec,
-    scale::{ArkScaleMaxEncodedLen}
+    scale,
 };
 
 // Set usage of SW affine form
@@ -128,9 +128,9 @@ mod tmp {
     }
 }
 
-impl ArkScaleMaxEncodedLen for RingVrfProof {
+impl scale::ArkScaleMaxEncodedLen for RingVrfProof {
     fn max_encoded_len() -> usize {
-        <PedersenVrfProof as ArkScaleMaxEncodedLen>::max_encoded_len()
+        <PedersenVrfProof as scale::ArkScaleMaxEncodedLen>::max_encoded_len()
         + 4096  // TODO: How large is RingProof, Sergey?
     }
 }
