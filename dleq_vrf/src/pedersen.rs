@@ -15,7 +15,7 @@ use ark_std::{borrow::BorrowMut, vec::Vec};
 use zeroize::Zeroize;
 
 use crate::{
-    Transcript, IntoTranscript,
+    Transcript, IntoTranscript, ThinVrf,
     flavor::{Flavor, InnerFlavor, Witness, Batchable, NonBatchable},
     keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
@@ -29,7 +29,7 @@ pub struct PedersenVrf<K, H=K, const B: usize=1>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     // keying_base: K,
-    thin: crate::ThinVrf<K>,
+    thin: ThinVrf<K>,
     blinding_bases: [K; B],
     _pd: core::marker::PhantomData<H>,
 }
@@ -96,14 +96,18 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 }
 */
 
+impl<K: AffineRepr> ThinVrf<K> {
+    pub fn pedersen_vrf<H,const B: usize>(self, blinding_bases: [K; B]) -> PedersenVrf<K,H,B>
+    where H: AffineRepr<ScalarField = K::ScalarField>
+    {
+        PedersenVrf { thin: self, blinding_bases, _pd: core::marker::PhantomData, }
+    }
+}
+
+
 impl<K,H,const B: usize> PedersenVrf<K,H,B>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
-    pub fn new(keying_base: K, blinding_bases: [K; B],) -> PedersenVrf<K,H,B> {
-        let thin = crate::ThinVrf { keying_base };
-        PedersenVrf { thin, blinding_bases, _pd: core::marker::PhantomData, }
-    }
-
     pub fn compute_blinded_publickey(
         &self,
         public: &PublicKey<K>, 

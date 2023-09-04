@@ -7,7 +7,6 @@
 pub mod ring;
 
 use zeroize::Zeroize;
-use crate::ring::{RingProver, RingProof, RingVerifier};
 
 use ark_ec::{
     AffineRepr, CurveGroup,
@@ -23,18 +22,13 @@ pub use ark_ed_on_bls12_381_bandersnatch::{
 };
 // Conversion discussed in https://github.com/arkworks-rs/curves/pull/76#issuecomment-929121470
 
-use ark_scale::{
-    ArkScaleMaxEncodedLen,MaxEncodedLen,
-    impl_decode_via_ark,
-    impl_encode_via_ark,
-    scale::{Encode,Decode,EncodeLike},
-};
-
-
 pub use dleq_vrf::{
     Transcript, IntoTranscript, transcript,
     error::{SignatureResult, SignatureError},
     vrf::{self, IntoVrfInput},
+    EcVrfSecret,EcVrfSigner,EcVrfVerifier,
+    VrfSignature,VrfSignatureVec,
+    scale::{ArkScaleMaxEncodedLen}
 };
 
 // Set usage of SW affine form
@@ -83,132 +77,148 @@ type ThinVrf = dleq_vrf::ThinVrf<E>;
 
 /// Then VRF configured by the G1 generator for signatures.
 pub fn thin_vrf() -> ThinVrf {
-    dleq_vrf::ThinVrf { keying_base: E::generator(), }
+    dleq_vrf::ThinVrf::default()  //  keying_base: E::generator()
 }
 
 type PedersenVrf = dleq_vrf::PedersenVrf<E>;
 
 /// Pedersen VRF configured by the G1 generator for public key certs.
 pub fn pedersen_vrf(blinding_base: E) -> PedersenVrf {
-    dleq_vrf::PedersenVrf::new( E::generator(), [ blinding_base ] )
+    thin_vrf().pedersen_vrf([ blinding_base ])
 }
 
 
-#[derive(Clone,Zeroize)]
-pub struct SecretKey(pub dleq_vrf::SecretKey<E>);
-
-impl SecretKey {
-    /// Generate an "unbiased" `SecretKey` from a user supplied `XofReader`.
-    pub fn from_xof(xof: impl transcript::digest::XofReader) -> Self {
-        SecretKey( dleq_vrf::SecretKey::from_xof( thin_vrf(), xof ))
-    }
-
-    /// Generate a `SecretKey` from a 32 byte seed.
-    pub fn from_seed(seed: &[u8; 32]) -> Self {
-        SecretKey( dleq_vrf::SecretKey::from_seed( thin_vrf(), seed ))
-    }
-
-    /// Generate an ephemeral `SecretKey` with system randomness.
-    #[cfg(feature = "getrandom")]
-    pub fn ephemeral() -> Self {
-        use rand_core::OsRng;
-        let mut seed: [u8; 32] = [0u8; 32];
-        OsRng.fill_bytes(&mut seed);
-        SecretKey::from_seed(&seed)
-    }
-
-    pub fn to_public(&self) -> PublicKey { 
-        PublicKey( self.0.to_public() )
-    }
-
-    pub fn sign_thin_vrf<const N: usize>(
-        &self,
-        t: impl IntoTranscript,
-        ios: &[VrfInOut]
-    ) -> ThinVrfSignature<N>
-    {
-        assert_eq!(ios.len(), N);
-        let signature = self.0.sign_thin_vrf_detached(t,ios);
-        let preoutputs = vrf::collect_preoutputs_array(ios);
-        ThinVrfSignature { preoutputs, signature, }
-    }
-
-    pub fn sign_ring_vrf<const N: usize>(
-        &self,
-        t: impl IntoTranscript,
-        ios: &[VrfInOut],
-        ring_prover: &RingProver
-    ) -> RingVrfSignature<N>
-    {
-        assert_eq!(ios.len(), N);
-        let blinding_base = ring_prover.piop_params().h;
-        let (signature,secret_blinding) = pedersen_vrf(blinding_base).sign_pedersen_vrf(t, ios, None, &self.0);
-        let preoutputs = vrf::collect_preoutputs_array(ios);
-        let ring_proof = ring_prover.prove(secret_blinding.0[0]);
-        RingVrfSignature { preoutputs, signature, ring_proof, }
-    }
-}
-
+pub type SecretKey = dleq_vrf::SecretKey<E>;
 
 pub const PUBLIC_KEY_LENGTH: usize = 33;
 pub type PublicKeyBytes = [u8; PUBLIC_KEY_LENGTH];
 
-#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
-pub struct PublicKey(pub dleq_vrf::PublicKey<E>);
+pub type PublicKey = dleq_vrf::PublicKey<E>;
 
-impl PublicKey {
-    pub fn serialize(&self) -> PublicKeyBytes {
-        let mut bytes = [0u8; PUBLIC_KEY_LENGTH];
-        self.serialize_compressed(bytes.as_mut_slice())
-        .expect("Curve needs more than 33 bytes compressed!");
-        bytes
-    }
+pub fn serialize_publickey(pk: &PublicKey) -> PublicKeyBytes {
+    let mut bytes = [0u8; PUBLIC_KEY_LENGTH];
+    pk.serialize_compressed(bytes.as_mut_slice())
+    .expect("Curve needs more than 33 bytes compressed!");
+    bytes
+}
 
-    pub fn deserialize(reader: &[u8]) -> Result<Self, SerializationError> {
-        Self::deserialize_compressed(reader)
+pub fn deserialize_publickey(reader: &[u8]) -> Result<PublicKey, SerializationError> {
+    PublicKey::deserialize_compressed(reader)
+}
+
+
+pub type ThinVrfSignature<const N: usize> = dleq_vrf::VrfSignature<PublicKey,N>;
+
+
+type PedersenVrfProof = dleq_vrf::Batchable<PedersenVrf>;
+
+#[derive(Clone,CanonicalSerialize,CanonicalDeserialize)]
+pub struct RingVrfProof {
+    pub dleq_proof: PedersenVrfProof,
+    pub ring_proof: ring::RingProof,
+}
+
+// TODO: Can you impl Debug for ring::RingProof please Sergey?  We'll then derive Debug.
+mod tmp {
+    use ark_std::fmt::{Debug,Formatter,Error};
+    impl Debug for crate::RingVrfProof {
+        fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+            self.dleq_proof.fmt(f)
+        }
     }
 }
 
-ark_scale::impl_scale_via_ark!(PublicKey);
-
-impl MaxEncodedLen for PublicKey {
-    #[inline]
+impl ArkScaleMaxEncodedLen for RingVrfProof {
     fn max_encoded_len() -> usize {
-        crate::PUBLIC_KEY_LENGTH
+        <PedersenVrfProof as ArkScaleMaxEncodedLen>::max_encoded_len()
+        + 4096  // TODO: How large is RingProof, Sergey?
     }
 }
 
+// #[derive(Debug,Clone)]
+pub struct RingVerifier(pub ring::RingVerifier);
 
-// pub type ThinVrfSignature<const N: usize> = dleq_vrf::VrfSignature<ThinVrf>;
- 
-// VrfSignature
+pub type RingVrfSignature<const N: usize> = dleq_vrf::VrfSignature<RingVerifier,N>;
 
-#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
-pub struct ThinVrfSignature<const N: usize> {
-    pub signature: dleq_vrf::Batchable<ThinVrf>,
-    pub preoutputs: [VrfPreOut; N],
-}
+impl EcVrfVerifier for RingVerifier {
+    type H = E;
+    type VrfProof = RingVrfProof;
+    type Error = SignatureError;
 
-impl<const N: usize> ThinVrfSignature<N>
-{
-    pub fn verify_thin_vrf<I,II>(
+    fn vrf_verify_detached<'a>(
         &self,
         t: impl IntoTranscript,
-        inputs: II,
-        public: &PublicKey,
-    ) -> SignatureResult<[VrfInOut; N]>
-    where
-        I: IntoVrfInput<E>,
-        II: IntoIterator<Item=I>,
-    {
-        let ios = vrf::attach_inputs_array(&self.preoutputs,inputs);
-        thin_vrf().verify_thin_vrf(t,ios.as_ref(),&public.0,&self.signature) ?;
-        Ok(ios)
+        ios: &'a [VrfInOut],
+        signature: &RingVrfProof,
+    ) -> Result<&'a [VrfInOut],Self::Error> {
+        let ring_verifier = &self.0;
+        let blinding_base = ring_verifier.piop_params().h;
+        pedersen_vrf(blinding_base).verify_pedersen_vrf(t,ios.as_ref(),&signature.dleq_proof) ?;
+
+        let key_commitment = signature.dleq_proof.as_key_commitment();
+        match ring_verifier.verify_ring_proof(signature.ring_proof.clone(), key_commitment.0.clone()) {
+            true => Ok(ios),
+            false => Err(SignatureError::Invalid),
+        }
     }
 }
 
-// pub type PedersenVrfSignature = dleq_vrf::Batchable<PedersenVrf>;
+impl RingVerifier {
+    pub fn verify_ring_vrf<const N: usize>(
+        &self,
+        t: impl IntoTranscript,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<E>>,
+        signature: &RingVrfSignature<N>,
+    ) -> Result<[VrfInOut; N],SignatureError>
+    {
+        self.vrf_verify(t, inputs, signature)
+    }
+}
 
+
+// #[derive(Clone)]
+pub struct RingProver<'a> {
+    pub ring_prover: &'a ring::RingProver,
+    pub secret: &'a SecretKey,
+}
+
+impl<'a> core::borrow::Borrow<SecretKey> for RingProver<'a> {
+    fn borrow(&self) -> &SecretKey { &self.secret }
+}
+
+impl<'a> EcVrfSigner for RingProver<'a> {
+    type V = RingVerifier;
+    type Error = ();
+    type Secret = SecretKey;
+    fn vrf_sign_detached(
+        &self,
+        t: impl IntoTranscript,
+        ios: &[VrfInOut]
+    ) -> Result<RingVrfProof,()>
+    {
+        let RingProver { ring_prover, secret } = *self;
+        let blinding_base = ring_prover.piop_params().h;
+        let secret_blinding = None; // TODO: Set this first so we can hash the ring proof
+        let (dleq_proof,secret_blinding) = pedersen_vrf(blinding_base).sign_pedersen_vrf(t, ios, secret_blinding, secret);
+        let ring_proof = ring_prover.prove(secret_blinding.0[0]);
+        Ok(RingVrfProof { dleq_proof, ring_proof, })
+    }
+}
+
+impl<'a> RingProver<'a> {
+    pub fn sign_ring_vrf<const N: usize>(
+        &self,
+        t: impl IntoTranscript,
+        ios: &[VrfInOut; N],
+    ) -> RingVrfSignature<N>
+    {
+        self.vrf_sign(t, ios).expect("no failure modes")
+    }
+}
+
+
+
+/* 
 #[derive(CanonicalSerialize,CanonicalDeserialize)]
 pub struct RingVrfSignature<const N: usize> {
     pub signature: dleq_vrf::Batchable<PedersenVrf>,
@@ -239,6 +249,8 @@ impl<const N: usize> RingVrfSignature<N>
         }
     }
 }
+*/
+
 
 #[cfg(test)]
 mod tests {
@@ -246,30 +258,36 @@ mod tests {
     use core::iter;
 
     #[test]
+    fn good_max_encoded_len() {
+        use dleq_vrf::scale::MaxEncodedLen;
+        assert_eq!(crate::PUBLIC_KEY_LENGTH, <PublicKey as MaxEncodedLen>::max_encoded_len());
+    }
+
+    #[test]
     fn thin_sign_verify() {
         let secret = SecretKey::from_seed(&[0; 32]);
         let public = secret.to_public();
         assert_eq!(public.compressed_size(), PUBLIC_KEY_LENGTH);
-        let public = public.serialize();
-        let public = PublicKey::deserialize(&public).unwrap();
+        let public = serialize_publickey(&public);
+        let public = deserialize_publickey(&public).unwrap();
 
         let input = Message {
             domain: b"domain",
             message: b"message",
         }.into_vrf_input();
-        let io = secret.0.vrf_inout(input.clone());
+        let io = secret.vrf_inout(input.clone());
         let transcript = Transcript::new_labeled(b"label");
 
         let signature: ThinVrfSignature<1> = secret.sign_thin_vrf(transcript.clone(), &[io.clone()]);
 
-        let result = signature.verify_thin_vrf(transcript, iter::once(input), &public);
+        let result = public.verify_thin_vrf(transcript, iter::once(input), &signature);
         
         assert!(result.is_ok());
         let io2 = result.unwrap();
         assert_eq!(io2[0].preoutput, io.preoutput);
     }
 
-    fn ring_test_init(pk: PublicKey) -> (RingProver, RingVerifier) {
+    fn ring_test_init(pk: PublicKey) -> (ring::RingProver, ring::RingVerifier) {
         use ark_std::UniformRand;
 
         let kzg = ring::KZG::testing_kzg_setup([0; 32], 2u32.pow(10));
@@ -284,7 +302,7 @@ mod tests {
         let mut pks: Vec<_> = (0..keyset_size).map(|_| E::rand(&mut rng)).collect();
         // Just select one index for the actual key we are for signing
         let secret_key_idx = keyset_size / 2;
-        pks[secret_key_idx] = pk.0.0.into();
+        pks[secret_key_idx] = pk.0.into();
 
         let prover_key = kzg.prover_key(pks.clone());
         let ring_prover = kzg.init_ring_prover(prover_key, secret_key_idx);
@@ -297,7 +315,7 @@ mod tests {
 
     #[test]
     fn ring_sign_verify() {
-        let secret = SecretKey::from_seed(&[0; 32]);
+        let secret = & SecretKey::from_seed(&[0; 32]);
 
         let (ring_prover, ring_verifier) = ring_test_init(secret.to_public());
         
@@ -305,14 +323,17 @@ mod tests {
             domain: b"domain",
             message: b"message",
         }.into_vrf_input();
-        let io = secret.0.vrf_inout(input.clone());
+        let io = secret.vrf_inout(input.clone());
         let transcript: &[u8] = b"Meow";  // Transcript::new_labeled(b"label");
         
-        let signature: RingVrfSignature<1> = secret.sign_ring_vrf(transcript.clone(), &[io], &ring_prover);
+        let signature: RingVrfSignature<1> = RingProver {
+            ring_prover: &ring_prover, secret,
+        }.sign_ring_vrf(transcript.clone(), &[io]);
         
         // TODO: serialize signature
 
-        let result = signature.verify_ring_vrf(transcript, iter::once(input), &ring_verifier);
+        let result = RingVerifier(ring_verifier)
+        .verify_ring_vrf(transcript, iter::once(input), &signature);
         assert!(result.is_ok());
     }
 }

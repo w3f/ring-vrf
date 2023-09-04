@@ -19,8 +19,6 @@ ark-ff.workspace = true
 ark-ec.workspace = true
 ark-serialize.workspace = true
 
-ark-scale = { worspace = true, features = [ "ec" ] }
-
 fflonk = { git = "https://github.com/w3f/fflonk" }
 ring = { git = "https://github.com/w3f/ring-proof", rev="0e948f3" }
 merlin = { version = "3.0", default-features = false }

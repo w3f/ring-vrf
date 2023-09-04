@@ -4,7 +4,7 @@ use ark_serialize::{CanonicalSerialize};
 use ark_ec::AffineRepr;
 
 // #[macro_use]
-use ark_scale::{
+pub use ark_scale::{
     ArkScaleMaxEncodedLen,MaxEncodedLen,
     impl_decode_via_ark,
     impl_encode_via_ark,

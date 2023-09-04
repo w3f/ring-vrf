@@ -336,9 +336,9 @@ impl<K: AffineRepr> SecretKey<K> {
         &self,
         t: impl IntoTranscript,
         ios: &[VrfInOut<K>; N]
-    ) -> Result<VrfSignature<crate::PublicKey<K>,N>,()>
+    ) -> VrfSignature<crate::PublicKey<K>,N>
     {
-        self.vrf_sign(t,ios)
+        self.vrf_sign(t,ios).unwrap() // "Infalible"
     }
 
     pub fn sign_thin_vrf_one<I,T,F>(&self, input: I, check: F)
@@ -355,8 +355,8 @@ impl<K: AffineRepr> SecretKey<K> {
         &self,
         t: impl IntoTranscript,
         ios: &[VrfInOut<K>]
-    ) -> Result<VrfSignatureVec<crate::PublicKey<K>>,()>
+    ) -> VrfSignatureVec<crate::PublicKey<K>>
     {
-        self.vrf_sign_vec(t,ios)
+        self.vrf_sign_vec(t,ios).unwrap() // "Infalible"
     }
 }
