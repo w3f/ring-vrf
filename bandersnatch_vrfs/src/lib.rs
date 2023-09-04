@@ -28,7 +28,7 @@ pub use dleq_vrf::{
     vrf::{self, IntoVrfInput},
     EcVrfSecret,EcVrfSigner,EcVrfVerifier,
     VrfSignature,VrfSignatureVec,
-    scale,
+    scale::self,
 };
 
 // Set usage of SW affine form
