@@ -20,8 +20,7 @@ ark-ec.workspace = true
 ark-serialize.workspace = true
 
 fflonk = { git = "https://github.com/w3f/fflonk" }
-ring = { git = "https://github.com/w3f/ring-proof" }
-# rev="0e948f3"
+ring = { git = "https://github.com/w3f/ring-proof", rev="8657210" }
 
 merlin = { version = "3.0", default-features = false }
 
