@@ -6,13 +6,11 @@
 
 pub mod ring;
 
-use zeroize::Zeroize;
-
 use ark_ec::{
     AffineRepr, CurveGroup,
     hashing::{HashToCurveError, curve_maps, map_to_curve_hasher::MapToCurveBasedHasher}, // HashToCurve
 };
-use ark_std::{borrow::BorrowMut, Zero, vec::Vec, rand::RngCore};   // io::{Read, Write}
+use ark_std::{vec::Vec, rand::RngCore};   // io::{Read, Write}
 
 pub use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 

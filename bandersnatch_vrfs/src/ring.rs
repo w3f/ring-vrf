@@ -28,16 +28,19 @@ pub type RingVerifier = ring::ring_verifier::RingVerifier<Fq, RealKZG, SWConfig>
 pub type ProverKey = ring::ProverKey<Fq, RealKZG, SWAffine>;
 pub type VerifierKey = ring::VerifierKey<Fq, RealKZG>;
 
-fn make_piop_params(seed: [u8; 32], domain_size: usize) -> PiopParams {
-    let mut rng = rand_chacha::ChaCha20Rng::from_seed(seed.clone());
+fn make_piop_params(h_seed: [u8; 32], domain_size: usize) -> PiopParams {
     let domain = Domain::new(domain_size, true);
-    PiopParams::setup(domain, &mut rng)
+    let mut rng = rand_chacha::ChaCha20Rng::from_seed(h_seed.clone());
+    use ark_std::UniformRand;
+    let h = SWAffine::rand(&mut rng);
+    let seed = ring::find_complement_point::<crate::bandersnatch::BandersnatchConfig>();
+    PiopParams::setup(domain, h, seed)
 }
 
 #[derive(Clone)]
 pub struct KZG {
     domain_size: u32,
-    seed: [u8; 32],
+    h_seed: [u8; 32],
     piop_params: PiopParams,
     pcs_params: PcsParams,
 }
@@ -45,12 +48,12 @@ pub struct KZG {
 
 impl KZG {
     // TODO: Import powers of tau
-    pub fn insecure_kzg_setup<R: Rng>(seed: [u8;32], domain_size: u32, rng: &mut R) -> Self {
-        let piop_params = make_piop_params(seed, domain_size as usize);
+    pub fn insecure_kzg_setup<R: Rng>(h_seed: [u8;32], domain_size: u32, rng: &mut R) -> Self {
+        let piop_params = make_piop_params(h_seed, domain_size as usize);
         let pcs_params = RealKZG::setup(3 * (domain_size as usize), rng);
         KZG {
             domain_size,
-            seed,
+            h_seed,
             piop_params,
             pcs_params,
         }
@@ -59,9 +62,9 @@ impl KZG {
     // Testing only kzg setup.
     pub fn testing_kzg_setup(preseed: [u8;32], domain_size: u32) -> Self {
         let mut rng = rand_chacha::ChaCha20Rng::from_seed(preseed);
-        let mut seed = [0u8; 32];
-        rng.fill_bytes(&mut seed);
-        Self::insecure_kzg_setup(seed, domain_size, &mut rng)
+        let mut h_seed = [0u8; 32];
+        rng.fill_bytes(&mut h_seed);
+        Self::insecure_kzg_setup(h_seed, domain_size, &mut rng)
     }
 
     pub fn max_keyset_size(&self) -> usize {
@@ -106,14 +109,14 @@ impl CanonicalSerialize for KZG {
     ) -> Result<(), SerializationError> 
     {
         self.domain_size.serialize_compressed(&mut writer) ?;
-        self.seed.serialize_compressed(&mut writer) ?;
+        self.h_seed.serialize_compressed(&mut writer) ?;
         self.pcs_params.serialize_with_mode(&mut writer, compress) ?;
         Ok(())
     }
 
     fn serialized_size(&self, compress: Compress) -> usize {
         self.domain_size.compressed_size()
-        + self.seed.compressed_size()
+        + self.h_seed.compressed_size()
         + self.pcs_params.serialized_size(compress)
     }
 }
@@ -126,12 +129,12 @@ impl CanonicalDeserialize for KZG {
     ) -> Result<Self, SerializationError>
     {
         let domain_size = <u32 as CanonicalDeserialize>::deserialize_compressed(&mut reader) ?;
-        let seed = <[u8;32] as CanonicalDeserialize>::deserialize_compressed(&mut reader) ?;
-        let piop_params = make_piop_params(seed, domain_size as usize);
+        let h_seed = <[u8;32] as CanonicalDeserialize>::deserialize_compressed(&mut reader) ?;
+        let piop_params = make_piop_params(h_seed, domain_size as usize);
         let pcs_params = <PcsParams as CanonicalDeserialize>::deserialize_with_mode(&mut reader, compress, validate) ?;
         Ok(KZG {
             domain_size,
-            seed,
+            h_seed,
             piop_params,
             pcs_params,
         })
