@@ -14,7 +14,7 @@ use fflonk::pcs::PCS;
 use rand_core::RngCore;
 use ring::Domain;
 
-use ark_ed_on_bls12_381_bandersnatch::{Fq, Fr, SWConfig, SWAffine};
+use ark_ed_on_bls12_381_bandersnatch::{Fq, SWConfig, SWAffine};  // Fr
 
 type RealKZG = fflonk::pcs::kzg::KZG<ark_bls12_381::Bls12_381>;
 

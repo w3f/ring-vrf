@@ -10,7 +10,7 @@ use ark_ec::{
     AffineRepr, CurveGroup,
     hashing::{HashToCurveError, curve_maps, map_to_curve_hasher::MapToCurveBasedHasher}, // HashToCurve
 };
-use ark_std::{vec::Vec, rand::RngCore};   // io::{Read, Write}
+use ark_std::{vec::Vec};   // io::{Read, Write}
 
 pub use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 
@@ -261,6 +261,7 @@ impl<const N: usize> RingVrfSignature<N>
 mod tests {
     use super::*;
     use core::iter;
+    use ark_std::rand::RngCore;
 
     #[test]
     fn good_max_encoded_len() {

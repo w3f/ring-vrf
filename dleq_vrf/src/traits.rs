@@ -23,7 +23,7 @@
 //! a remote signer.
 
 
-use ark_std::{borrow::Borrow, cmp, fmt, vec::Vec};
+use ark_std::{borrow::Borrow, fmt, vec::Vec};
 
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize}; // Valid
 use ark_ec::{AffineRepr,CurveGroup};
