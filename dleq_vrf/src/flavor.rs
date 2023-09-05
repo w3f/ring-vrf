@@ -67,10 +67,10 @@ pub trait Flavor : InnerFlavor {
     fn keying_base(&self) -> &Self::KeyAffine;
 }
 
-pub trait InnerFlavor {
-    type KeyCommitment: ark_std::fmt::Debug + Clone + CanonicalSerialize + CanonicalDeserialize;
-    type Scalars: ark_std::fmt::Debug + Clone + CanonicalSerialize + CanonicalDeserialize + Default + zeroize::Zeroize;
-    type Affines: ark_std::fmt::Debug + Clone + CanonicalSerialize + CanonicalDeserialize;
+pub trait InnerFlavor: Eq + PartialEq {
+    type KeyCommitment: ark_std::fmt::Debug + Clone + Eq + PartialEq + CanonicalSerialize + CanonicalDeserialize;
+    type Scalars: ark_std::fmt::Debug + Clone + Eq + PartialEq + CanonicalSerialize + CanonicalDeserialize + Default + zeroize::Zeroize;
+    type Affines: ark_std::fmt::Debug + Clone + Eq + PartialEq + CanonicalSerialize + CanonicalDeserialize;
 }
 
 /// Secret and public nonce/witness for doing one signature,
@@ -81,7 +81,7 @@ pub(crate) struct Witness<F: Flavor> {
 }
 
 /// Batchable VRF signature detached from VRF inputs and outpus
-#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
+#[derive(Debug,Clone,Eq,PartialEq,CanonicalSerialize,CanonicalDeserialize)]
 pub struct Batchable<F: Flavor> {
     pub(crate) compk: <F as InnerFlavor>::KeyCommitment,
     pub(crate) s: <F as InnerFlavor>::Scalars,
@@ -118,7 +118,7 @@ impl<F: Flavor> Batchable<F> {
 }
 
 /// Non-batchable VRF signature detached from VRF inputs and outpus,resembles EC VRF.
-#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
+#[derive(Debug,Clone,Eq,PartialEq,CanonicalSerialize,CanonicalDeserialize)]
 pub struct NonBatchable<F: Flavor> 
 // where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {

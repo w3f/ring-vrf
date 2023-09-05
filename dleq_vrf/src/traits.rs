@@ -23,9 +23,7 @@
 //! a remote signer.
 
 
-use core::{borrow::Borrow, fmt};
-
-use ark_std::{vec::Vec, fmt::Debug};
+use ark_std::{borrow::Borrow, cmp, fmt, vec::Vec};
 
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize}; // Valid
 use ark_ec::{AffineRepr,CurveGroup};
@@ -88,7 +86,7 @@ pub trait EcVrfVerifier {
     /// Target group for hash-to-curve
     type H: AffineRepr;
     /// Detached signature aka proof type created by the VRF
-    type VrfProof: Debug+Clone+CanonicalSerialize+CanonicalDeserialize;
+    type VrfProof: fmt::Debug+Clone+Eq+PartialEq+CanonicalSerialize+CanonicalDeserialize;
 
     /// Verification failures
     type Error: From<error::SignatureError>; // = error::SignatureError;
@@ -203,6 +201,14 @@ impl<V: EcVrfVerifier+?Sized, const N: usize> fmt::Debug for VrfSignature<V,N> {
 	}
 }
 
+impl<V: EcVrfVerifier+?Sized, const N: usize> Eq for VrfSignature<V,N> {}
+
+impl<V: EcVrfVerifier+?Sized, const N: usize> PartialEq for VrfSignature<V,N> {
+    fn eq(&self, other: &Self) -> bool {
+        self.proof == other.proof && self.preouts == other.preouts
+    }
+}
+
 impl<V: EcVrfVerifier+?Sized, const N: usize> VrfSignature<V,N> {
     pub fn attach_inputs(
         &self,
@@ -247,6 +253,13 @@ impl<V: EcVrfVerifier+?Sized> fmt::Debug for VrfSignatureVec<V> {
 	}
 }
 
+impl<V: EcVrfVerifier+?Sized> Eq for VrfSignatureVec<V> {}
+
+impl<V: EcVrfVerifier+?Sized> PartialEq for VrfSignatureVec<V> {
+    fn eq(&self, other: &Self) -> bool {
+        self.proof == other.proof && self.preouts == other.preouts
+    }
+}
 
 impl<V: EcVrfVerifier+?Sized> VrfSignatureVec<V> {
     pub fn attach_inputs(

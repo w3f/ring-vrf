@@ -18,7 +18,7 @@ use crate::{
 
 
 /// Thin VRF flavor
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,Eq,PartialEq)]
 pub struct ThinVrf<C: AffineRepr> {
     pub keying_base: C,
 }
@@ -28,7 +28,6 @@ impl<C: AffineRepr> Default for ThinVrf<C> {
         ThinVrf { keying_base: C::generator(), }
     }
 }
-
 
 impl<C: AffineRepr> Flavor for ThinVrf<C> {
     type ScalarField = <C as AffineRepr>::ScalarField;

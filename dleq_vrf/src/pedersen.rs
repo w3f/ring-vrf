@@ -24,7 +24,7 @@ use crate::{
 
 
 /// Pedersen VRF flavor
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,Eq,PartialEq)]
 pub struct PedersenVrf<K, H=K, const B: usize=1> 
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
@@ -150,7 +150,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 }
 
 
-#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
+#[derive(Debug,Clone,PartialEq,Eq,CanonicalSerialize,CanonicalDeserialize)]
 pub struct Scalars<SF: PrimeField,const B: usize> {
     pub(crate) keying:   SF,
     pub(crate) blindings: [SF; B],
@@ -175,7 +175,7 @@ impl<SF: PrimeField,const B: usize> Zeroize for Scalars<SF,B> {
     }
 }
  
-#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
+#[derive(Debug,Clone,PartialEq,Eq,CanonicalSerialize,CanonicalDeserialize)]
 pub struct Affines<K,H> 
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {

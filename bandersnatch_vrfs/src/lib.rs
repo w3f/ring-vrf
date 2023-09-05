@@ -116,12 +116,19 @@ pub struct RingVrfProof {
     pub ring_proof: ring::RingProof,
 }
 
-// TODO: Can you impl Debug for ring::RingProof please Sergey?  We'll then derive Debug.
+// TODO: Can you impl Debug+Eq+PartialEq for ring::RingProof please Sergey?  We'll then derive Debug.
 mod tmp {
     use ark_std::fmt::{Debug,Formatter,Error};
     impl Debug for crate::RingVrfProof {
         fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
             self.dleq_proof.fmt(f)
+        }
+    }
+    impl Eq for crate::RingVrfProof {}
+    impl PartialEq for crate::RingVrfProof {
+        fn eq(&self, other: &Self) -> bool {
+            // Ignore ring_proof for now
+            self.dleq_proof == other.dleq_proof
         }
     }
 }
