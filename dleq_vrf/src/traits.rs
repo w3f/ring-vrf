@@ -23,7 +23,7 @@
 //! a remote signer.
 
 
-use core::borrow::Borrow;
+use core::{borrow::Borrow, fmt};
 
 use ark_std::{vec::Vec, fmt::Debug};
 
@@ -182,10 +182,25 @@ pub type EcVrfPreOut<V> = VrfPreOut<<V as EcVrfVerifier>::H>;
 pub type EcVrfInOut<V> = VrfInOut<<V as EcVrfVerifier>::H>;
 pub type EcVrfProof<V> = <V as EcVrfVerifier>::VrfProof;
 
-#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
+#[derive(CanonicalSerialize,CanonicalDeserialize)]
 pub struct VrfSignature<V: EcVrfVerifier+?Sized, const N: usize> {
     pub proof: EcVrfProof<V>,
     pub preouts: [EcVrfPreOut<V>; N],
+}
+
+impl<V: EcVrfVerifier+?Sized, const N: usize> Clone for VrfSignature<V,N> {
+    fn clone(&self) -> Self {
+        VrfSignature {
+            proof: self.proof.clone(),
+            preouts: self.preouts.clone(),
+        }
+    }
+}
+
+impl<V: EcVrfVerifier+?Sized, const N: usize> fmt::Debug for VrfSignature<V,N> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "VrfSignature {{ proof: {:?}, preouts: {:?} }}", &self.proof, &self.preouts)
+	}
 }
 
 impl<V: EcVrfVerifier+?Sized, const N: usize> VrfSignature<V,N> {
@@ -211,11 +226,27 @@ impl<V: EcVrfVerifier+?Sized, const N: usize> VrfSignature<V,N> {
     }
 }
 
-#[derive(Debug,Clone,CanonicalSerialize,CanonicalDeserialize)]
+#[derive(CanonicalSerialize,CanonicalDeserialize)]
 pub struct VrfSignatureVec<V: EcVrfVerifier+?Sized> {
     pub proof: EcVrfProof<V>,
     pub preouts: Vec<EcVrfPreOut<V>>,
 }
+
+impl<V: EcVrfVerifier+?Sized> Clone for VrfSignatureVec<V> {
+    fn clone(&self) -> Self {
+        VrfSignatureVec {
+            proof: self.proof.clone(),
+            preouts: self.preouts.clone(),
+        }
+    }
+}
+
+impl<V: EcVrfVerifier+?Sized> fmt::Debug for VrfSignatureVec<V> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "VrfSignature {{ proof: {:?}, preouts: {:?} }}", &self.proof, &self.preouts)
+	}
+}
+
 
 impl<V: EcVrfVerifier+?Sized> VrfSignatureVec<V> {
     pub fn attach_inputs(

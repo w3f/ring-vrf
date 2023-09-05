@@ -133,7 +133,7 @@ impl scale::ArkScaleMaxEncodedLen for RingVrfProof {
     }
 }
 
-// #[derive(Debug,Clone)]
+// TODO: Sergey, should this be #[derive(Debug,Clone)] ?
 pub struct RingVerifier(pub ring::RingVerifier);
 
 pub type RingVrfSignature<const N: usize> = dleq_vrf::VrfSignature<RingVerifier,N>;
