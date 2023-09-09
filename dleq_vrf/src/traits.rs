@@ -85,15 +85,15 @@ impl<P: EcVrfProofBound, H: AffineRepr, const N: usize> VrfSignature<P, H, N> {
         core::array::from_fn(cb)
     }
 
-    // pub fn vrf_verify<V: EcVrfVerifier>( 
-    //     &self,
-    //     t: impl IntoTranscript,
-    //     inputs: impl IntoIterator<Item = impl IntoVrfInput<H>>,
-    //     public: &impl EcVrfVerifier,
-    // ) -> Result<[VrfInOut<H>; N], V::Error>
-    // {
-    //     public.vrf_verify(t,inputs,self)
-    // }
+    pub fn vrf_verify<V: EcVrfVerifier<VrfProof = P, H = H>>( 
+        &self,
+        t: impl IntoTranscript,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<H>>,
+        verifier: &V
+    ) -> Result<[VrfInOut<H>; N], V::Error>
+    {
+        verifier.vrf_verify(t,inputs,self)
+    }
 }
 
 // #[derive(CanonicalSerialize,CanonicalDeserialize)]
@@ -183,7 +183,7 @@ pub trait EcVrfSecret<H: AffineRepr> {
 /// We delegate the `SecretKey::{vrf_preout, vrf_inout}` in the `vrf`
 /// module to these ones, which asures agreement.
 impl<H,K> EcVrfSecret<H> for SecretKey<K>
-where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
+    where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     fn vrf_preout(&self, input: &vrf::VrfInput<H>) -> VrfPreOut<H> {
         VrfPreOut( (&self.key * &input.0).into_affine() )

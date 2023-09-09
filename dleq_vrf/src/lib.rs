@@ -26,10 +26,10 @@ pub mod vrf;
 pub use vrf::{IntoVrfInput, VrfInput, VrfPreOut, VrfInOut};
 
 mod thin;
-pub use thin::{ThinVrf};
+pub use thin::ThinVrf;
 
 mod pedersen;
-pub use pedersen::{PedersenVrf};
+pub use pedersen::PedersenVrf;
 
 // #[cfg(feature = "getrandom")]
 // mod musig
