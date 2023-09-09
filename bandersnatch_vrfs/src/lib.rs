@@ -8,7 +8,7 @@ pub mod ring;
 
 use ark_ec::{
     AffineRepr, CurveGroup,
-    hashing::{HashToCurveError, curve_maps, map_to_curve_hasher::MapToCurveBasedHasher}, // HashToCurve
+    // hashing::{HashToCurveError, curve_maps, map_to_curve_hasher::MapToCurveBasedHasher}, // HashToCurve
 };
 use ark_std::{vec::Vec};   // io::{Read, Write}
 
