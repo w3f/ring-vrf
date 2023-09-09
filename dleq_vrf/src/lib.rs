@@ -39,8 +39,9 @@ pub mod scale;
 
 pub mod traits;
 pub use traits::{
-    EcVrfSecret,EcVrfSigner,EcVrfVerifier,
-    VrfSignature,VrfSignatureVec,
+    EcVrfSecret, EcVrfSigner, EcVrfVerifier,
+    VrfSignature,
+    //VrfSignatureVec,
 };
 
 #[cfg(test)]

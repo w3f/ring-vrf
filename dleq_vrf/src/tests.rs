@@ -17,8 +17,6 @@ type H2C = ark_ec::hashing::map_to_curve_hasher::MapToCurveBasedHasher::<
 
 // type ThinVrf = crate::ThinVrf<K>;
 type PedersenVrf = crate::PedersenVrf<K>;
-type SecretKey = crate::SecretKey<K>;
-
 
 pub(crate) fn pedersen_vrf_test_flavor() -> PedersenVrf {
     let mut t = Transcript::new_labeled(b"TestFlavor");
