@@ -222,41 +222,6 @@ impl<'a> RingProver<'a> {
 }
 
 
-
-/* 
-#[derive(CanonicalSerialize,CanonicalDeserialize)]
-pub struct RingVrfSignature<const N: usize> {
-    pub signature: dleq_vrf::Batchable<PedersenVrf>,
-    pub preoutputs: [VrfPreOut; N],
-    pub ring_proof: RingProof,
-}
-
-impl<const N: usize> RingVrfSignature<N>
-{
-    pub fn verify_ring_vrf<I,II>(
-        &self,
-        t: impl IntoTranscript,
-        inputs: II,
-        ring_verifier: &RingVerifier,
-    ) -> SignatureResult<[VrfInOut; N]>
-    where
-        I: IntoVrfInput<E>,
-        II: IntoIterator<Item=I>,
-    {
-        let ios = vrf::attach_inputs_array(&self.preoutputs,inputs);
-        let blinding_base = ring_verifier.piop_params().h;
-        pedersen_vrf(blinding_base).verify_pedersen_vrf(t,ios.as_ref(),&self.signature) ?;
-
-        let key_commitment = self.signature.as_key_commitment();
-        match ring_verifier.verify_ring_proof(self.ring_proof.clone(), key_commitment.0.clone()) {
-            true => Ok(ios),
-            false => Err(SignatureError::Invalid),
-        }
-    }
-}
-*/
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
