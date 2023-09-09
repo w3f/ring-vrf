@@ -33,44 +33,31 @@ pub use crate::{
     vrf::{self, IntoVrfInput, VrfInput, VrfPreOut, VrfInOut},
 };
 
+// Helpers types
+
 pub type EcAffineRepr<V> = <V as EcVrfVerifier>::H;
 pub type EcVrfInput<V> = VrfInput<<V as EcVrfVerifier>::H>;
 pub type EcVrfPreOut<V> = VrfPreOut<<V as EcVrfVerifier>::H>;
 pub type EcVrfInOut<V> = VrfInOut<<V as EcVrfVerifier>::H>;
 pub type EcVrfProof<V> = <V as EcVrfVerifier>::VrfProof;
 
+type VrfSignatureFor<V, const N: usize> = VrfSignature<EcVrfProof<V>, EcAffineRepr<V>, N>;
+type VrfSignatureVecFor<V> = VrfSignatureVec<EcVrfProof<V>, EcAffineRepr<V>>;
+
 /// Bound we require for a generic  Elliptic Curve signature type.
 pub trait EcVrfProofBound: fmt::Debug + Sync + Send + Clone + Eq + PartialEq + CanonicalSerialize + CanonicalDeserialize {}
 
-pub type VrfSignatureFor<V, const N: usize> = VrfSignature<EcVrfProof<V>, EcAffineRepr<V>, N>;
 
-#[derive(CanonicalSerialize, CanonicalDeserialize)]
+#[derive(Clone, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize)]
 pub struct VrfSignature<P: EcVrfProofBound, H: AffineRepr, const N: usize> {
     pub proof: P,
     pub preouts: [VrfPreOut<H>; N],
-}
-
-impl<P: EcVrfProofBound, H: AffineRepr, const N: usize> Clone for VrfSignature<P, H, N> {
-    fn clone(&self) -> Self {
-        VrfSignature {
-            proof: self.proof.clone(),
-            preouts: self.preouts.clone(),
-        }
-    }
 }
 
 impl<P: EcVrfProofBound, H: AffineRepr, const N: usize> fmt::Debug for VrfSignature<P, H, N> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "VrfSignature {{ proof: {:?}, preouts: {:?} }}", &self.proof, &self.preouts)
 	}
-}
-
-impl<P: EcVrfProofBound, H: AffineRepr, const N: usize> Eq for VrfSignature<P, H, N> {}
-
-impl<P: EcVrfProofBound, H: AffineRepr, const N: usize> PartialEq for VrfSignature<P, H, N> {
-    fn eq(&self, other: &Self) -> bool {
-        self.proof == other.proof && self.preouts == other.preouts
-    }
 }
 
 impl<P: EcVrfProofBound, H: AffineRepr, const N: usize> VrfSignature<P, H, N> {
@@ -92,60 +79,43 @@ impl<P: EcVrfProofBound, H: AffineRepr, const N: usize> VrfSignature<P, H, N> {
         verifier: &V
     ) -> Result<[VrfInOut<H>; N], V::Error>
     {
-        verifier.vrf_verify(t,inputs,self)
+        verifier.vrf_verify(t, inputs, self)
     }
 }
 
-// #[derive(CanonicalSerialize,CanonicalDeserialize)]
-// pub struct VrfSignatureVec<V: EcVrfVerifier+?Sized> {
-//     pub proof: EcVrfProof<V>,
-//     pub preouts: Vec<EcVrfPreOut<V>>,
-// }
+#[derive(Clone, CanonicalSerialize, CanonicalDeserialize)]
+pub struct VrfSignatureVec<P: EcVrfProofBound, H: AffineRepr> {
+    pub proof: P,
+    pub preouts: Vec<VrfPreOut<H>>,
+}
 
-// impl<V: EcVrfVerifier+?Sized> Clone for VrfSignatureVec<V> {
-//     fn clone(&self) -> Self {
-//         VrfSignatureVec {
-//             proof: self.proof.clone(),
-//             preouts: self.preouts.clone(),
-//         }
-//     }
-// }
+impl<P: EcVrfProofBound, H: AffineRepr> fmt::Debug for VrfSignatureVec<P, H> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "VrfSignature {{ proof: {:?}, preouts: {:?} }}", &self.proof, &self.preouts)
+	}
+}
 
-// impl<V: EcVrfVerifier+?Sized> fmt::Debug for VrfSignatureVec<V> {
-// 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-// 		write!(f, "VrfSignature {{ proof: {:?}, preouts: {:?} }}", &self.proof, &self.preouts)
-// 	}
-// }
+impl<P: EcVrfProofBound, H: AffineRepr> VrfSignatureVec<P, H> {
+    pub fn attach_inputs(
+        &self,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<H>>
+    ) -> Vec<VrfInOut<H>>
+    {
+        self.preouts.iter().zip(inputs)
+            .map(|(preout,input)| preout.attach_input(input))
+            .collect()
+    }
 
-// impl<V: EcVrfVerifier+?Sized> Eq for VrfSignatureVec<V> {}
-
-// impl<V: EcVrfVerifier+?Sized> PartialEq for VrfSignatureVec<V> {
-//     fn eq(&self, other: &Self) -> bool {
-//         self.proof == other.proof && self.preouts == other.preouts
-//     }
-// }
-
-// impl<V: EcVrfVerifier+?Sized> VrfSignatureVec<V> {
-//     pub fn attach_inputs(
-//         &self,
-//         inputs: impl IntoIterator<Item = impl IntoVrfInput<V::H>>
-//     ) -> Vec<EcVrfInOut<V>>
-//     {
-//         self.preouts.iter().zip(inputs)
-//         .map(|(preout,input)| preout.attach_input(input))
-//         .collect()
-//     }
-
-//     pub fn vrf_verify(
-//         &self,
-//         t: impl IntoTranscript,
-//         inputs: impl IntoIterator<Item = impl IntoVrfInput<V::H>>,
-//         public: &V,
-//     ) -> Result<Vec<EcVrfInOut<V>>,V::Error>
-//     {
-//         public.vrf_verify_vec(t,inputs,self)
-//     }
-// }
+    pub fn vrf_verify<V: EcVrfVerifier<VrfProof = P, H = H>>( 
+        &self,
+        t: impl IntoTranscript,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<H>>,
+        verifier: &V,
+    ) -> Result<Vec<EcVrfInOut<V>>, V::Error>
+    {
+        verifier.vrf_verify_vec(t, inputs, self)
+    }
+}
 
 /// VRF secret key.
 /// 
@@ -217,24 +187,22 @@ pub trait EcVrfVerifier {
         t: impl IntoTranscript,
         inputs: impl IntoIterator<Item = impl IntoVrfInput<Self::H>>,
         signature: &VrfSignature<Self::VrfProof, Self::H, N>,
-    ) -> Result<[VrfInOut<Self::H>; N],Self::Error>
-    {
+    ) -> Result<[VrfInOut<Self::H>; N], Self::Error> {
         let ios: [VrfInOut<Self::H>; N] = signature.attach_inputs(inputs);
         self.vrf_verify_detached(t,ios.as_slice(),&signature.proof) ?;
         Ok(ios)
     }
 
-    // fn vrf_verify_vec(
-    //     &self,
-    //     t: impl IntoTranscript,
-    //     inputs: impl IntoIterator<Item = impl IntoVrfInput<Self::H>>,
-    //     signature: &VrfSignatureVec<Self>,
-    // ) -> Result<Vec<VrfInOut<Self::H>>,Self::Error>
-    // {
-    //     let ios = signature.attach_inputs(inputs);
-    //     self.vrf_verify_detached(t,ios.as_slice(),&signature.proof) ?;
-    //     Ok(ios)
-    // }
+    fn vrf_verify_vec(
+        &self,
+        t: impl IntoTranscript,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<Self::H>>,
+        signature: &VrfSignatureVec<Self::VrfProof, Self::H>,
+    ) -> Result<Vec<VrfInOut<Self::H>>, Self::Error> {
+        let ios = signature.attach_inputs(inputs);
+        self.vrf_verify_detached(t,ios.as_slice(),&signature.proof) ?;
+        Ok(ios)
+    }
 }
 
 
@@ -302,15 +270,15 @@ pub trait EcVrfSigner: Borrow<Self::Secret> {
         self.vrf_sign(t,&[io])
     }
 
-    // /// VRF signature for a variable number of input-output pairs.
-    // fn vrf_sign_vec(
-    //     &self,
-    //     t: impl IntoTranscript,
-    //     ios: &[EcVrfInOut<Self::V>]
-    // ) -> Result<VrfSignatureVec<Self::V>,Self::Error>
-    // {
-    //     let proof = self.vrf_sign_detached(t,ios) ?;
-    //     let preouts = ios.iter().map(|io| io.preoutput.clone()).collect();
-    //     Ok(VrfSignatureVec { preouts, proof })
-    // }
+    /// VRF signature for a variable number of input-output pairs.
+    fn vrf_sign_vec(
+        &self,
+        t: impl IntoTranscript,
+        ios: &[VrfInOut<<Self::V as EcVrfVerifier>::H>]
+    ) -> Result<VrfSignatureVecFor<Self::V>, Self::Error>
+    {
+        let proof = self.vrf_sign_detached(t,ios) ?;
+        let preouts = ios.iter().map(|io| io.preoutput.clone()).collect();
+        Ok(VrfSignatureVec { preouts, proof })
+    }
 }

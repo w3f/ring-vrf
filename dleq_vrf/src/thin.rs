@@ -5,7 +5,7 @@
 
 //! ### Thin VRF routines
 
-use ark_std::borrow::{Borrow,BorrowMut};
+use ark_std::{borrow::{Borrow, BorrowMut}, vec::Vec};
 use ark_ec::{AffineRepr, CurveGroup};
 
 use crate::{
@@ -14,7 +14,7 @@ use crate::{
     keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
     vrf::{self, VrfInput, VrfInOut, IntoVrfInput},
-    traits::{EcVrfSigner, EcVrfVerifier, EcVrfInOut, EcVrfProofBound, VrfSignature},
+    traits::{EcVrfSigner, EcVrfVerifier, EcVrfInOut, EcVrfProofBound, VrfSignature, VrfSignatureVec},
 };
 
 
@@ -119,14 +119,14 @@ impl<K: AffineRepr> SecretKey<K> {
         self.vrf_sign_one(input,check)
     }
 
-    // pub fn sign_thin_vrf_vec(
-    //     &self,
-    //     t: impl IntoTranscript,
-    //     ios: &[VrfInOut<K>]
-    // ) -> VrfSignatureVec<crate::PublicKey<K>>
-    // {
-    //     self.vrf_sign_vec(t,ios).unwrap() // "Infalible"
-    // }
+    pub fn sign_thin_vrf_vec(
+        &self,
+        t: impl IntoTranscript,
+        ios: &[VrfInOut<K>]
+    ) -> VrfSignatureVec<ThinVrfProof<K>, K>
+    {
+        self.vrf_sign_vec(t,ios).unwrap() // "Infalible"
+    }
 }
 
 impl<K: AffineRepr> EcVrfSigner for SecretKey<K> {
@@ -189,15 +189,15 @@ impl<K: AffineRepr> PublicKey<K> {
         self.vrf_verify(t,inputs,signature)
     }
 
-    // pub fn verify_thin_vrf_vec(
-    //     &self,
-    //     t: impl IntoTranscript,
-    //     inputs: impl IntoIterator<Item = impl IntoVrfInput<K>>,
-    //     signature: &VrfSignatureVec<Self>,
-    // ) -> Result<Vec<VrfInOut<K>>,error::SignatureError>
-    // {
-    //     self.vrf_verify_vec(t,inputs,signature)
-    // }
+    pub fn verify_thin_vrf_vec(
+        &self,
+        t: impl IntoTranscript,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<K>>,
+        signature: &VrfSignatureVec<ThinVrfProof<K>, K>,
+    ) -> Result<Vec<VrfInOut<K>>, SignatureError>
+    {
+        self.vrf_verify_vec(t,inputs,signature)
+    }
 }
 
 impl<K: AffineRepr> EcVrfVerifier for (&ThinVrf<K>, &PublicKey<K>) {
