@@ -5,7 +5,7 @@
 
 //! ### Thin VRF routines
 
-use ark_std::borrow::{Borrow,BorrowMut};
+use ark_std::{borrow::{Borrow,BorrowMut}, vec::Vec};
 use ark_ec::{AffineRepr, CurveGroup};
 
 use crate::{
@@ -13,7 +13,8 @@ use crate::{
     flavor::{Flavor, InnerFlavor, Witness, Batchable},
     keys::{PublicKey, SecretKey},
     error::{SignatureResult, SignatureError},
-    vrf::{self, VrfInput, VrfInOut},
+    vrf::{self, IntoVrfInput, VrfInput, VrfInOut},
+    EcVrfVerifier,EcVrfSigner,
 };
 
 
@@ -84,7 +85,7 @@ impl<K: AffineRepr> SecretKey<K> {
     /// Sign thin VRF signature
     /// 
     /// If `ios = &[]` this reduces to a Schnorr signature.
-    pub fn sign_thin_vrf_detached(&self, t: impl IntoTranscript, ios: &[VrfInOut<K>]) -> Batchable<ThinVrf<K>>
+    pub fn sign_thin_vrf_detached(&self, t: impl IntoTranscript, ios: &[VrfInOut<K>]) -> ThinVrfProof<K>
     {
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
@@ -161,7 +162,7 @@ impl<K: AffineRepr> ThinVrf<K> {
         // A priori, one expects thin_vrf_merge's msm could be merged
         // into the multiplication by c below, except thin_vrf_merge
         // only needs 128 bit scalar multiplications, so doing this
-        // should only boosts performance when ios.len() = 2.
+        // should harm performance, even when ios.len() = 1.
         let io = self.thin_vrf_merge(t, public, ios);
 
         // verify_final
@@ -183,3 +184,106 @@ impl<K: AffineRepr> ThinVrf<K> {
     }
 }
 
+
+// Implement traits interface //
+
+/// Thin VRF proof component
+pub type ThinVrfProof<K> = Batchable<ThinVrf<K>>;
+
+impl<K: AffineRepr> crate::EcVrfProof for Batchable<ThinVrf<K>> {
+    type H = K;
+}
+
+impl<K: AffineRepr> EcVrfVerifier for (&ThinVrf<K>,&PublicKey<K>) {
+    type Proof = ThinVrfProof<K>;
+    type Error = SignatureError;
+    fn vrf_verify_detached<'a>(
+        &self,
+        t: impl IntoTranscript,
+        ios: &'a [VrfInOut<K>],
+        signature: &Self::Proof,
+    ) -> Result<&'a [VrfInOut<K>],SignatureError>
+    {
+        self.0.verify_thin_vrf(t,ios,self.1,signature)
+    }
+}
+
+impl<K: AffineRepr> EcVrfVerifier for PublicKey<K> {
+    type Proof = ThinVrfProof<K>;
+    type Error = SignatureError;
+    fn vrf_verify_detached<'a>(
+        &self,
+        t: impl IntoTranscript,
+        ios: &'a [VrfInOut<K>],
+        signature: &Self::Proof,
+    ) -> Result<&'a [VrfInOut<K>],SignatureError>
+    {
+        crate::ThinVrf::default().verify_thin_vrf(t,ios,self,signature)
+    }
+}
+
+impl<K: AffineRepr> PublicKey<K> {
+    pub fn verify_thin_vrf<const N: usize>(
+        &self,
+        t: impl IntoTranscript,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<K>>,
+        signature: &crate::VrfSignature<ThinVrfProof<K>,N>,
+    ) -> Result<[VrfInOut<K>; N],SignatureError>
+    {
+        self.vrf_verify(t,inputs,signature)
+    }
+
+    pub fn verify_thin_vrf_vec(
+        &self,
+        t: impl IntoTranscript,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<K>>,
+        signature: &crate::VrfSignatureVec<ThinVrfProof<K>>,
+    ) -> Result<Vec<VrfInOut<K>>,SignatureError>
+    {
+        self.vrf_verify_vec(t,inputs,signature)
+    }
+}
+
+impl<K: AffineRepr> EcVrfSigner for SecretKey<K> {
+    type Proof = ThinVrfProof<K>;
+    type Error = ();
+    type Secret = Self;
+    fn vrf_sign_detached(
+        &self,
+        t: impl IntoTranscript,
+        ios: &[VrfInOut<K>]
+    ) -> Result<Self::Proof,()>
+    {
+        Ok(self.sign_thin_vrf_detached(t,ios))
+    }
+}
+
+impl<K: AffineRepr> SecretKey<K> {
+    pub fn sign_thin_vrf<const N: usize>(
+        &self,
+        t: impl IntoTranscript,
+        ios: &[VrfInOut<K>; N]
+    ) -> crate::VrfSignature<ThinVrfProof<K>,N>
+    {
+        self.vrf_sign(t,ios).unwrap() // "Infalible"
+    }
+
+    pub fn sign_thin_vrf_one<I,T,F>(&self, input: I, check: F)
+     -> Result<crate::VrfSignature<ThinVrfProof<K>,1>,()>
+    where
+        I: IntoVrfInput<K>,
+        T: IntoTranscript,
+        F: FnMut(&VrfInOut<K>) -> Result<T,()>,
+    {
+        self.vrf_sign_one(input,check)
+    }
+
+    pub fn sign_thin_vrf_vec(
+        &self,
+        t: impl IntoTranscript,
+        ios: &[VrfInOut<K>]
+    ) -> crate::VrfSignatureVec<ThinVrfProof<K>>
+    {
+        self.vrf_sign_vec(t,ios).unwrap() // "Infalible"
+    }
+}

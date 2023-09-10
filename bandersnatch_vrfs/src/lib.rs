@@ -105,7 +105,9 @@ pub fn deserialize_publickey(reader: &[u8]) -> Result<PublicKey, SerializationEr
 }
 
 
-pub type ThinVrfSignature<const N: usize> = dleq_vrf::VrfSignature<PublicKey,N>;
+type ThinVrfProof = dleq_vrf::Batchable<ThinVrf>;
+
+pub type ThinVrfSignature<const N: usize> = dleq_vrf::VrfSignature<ThinVrfProof,N>;
 
 
 type PedersenVrfProof = dleq_vrf::Batchable<PedersenVrf>;
@@ -114,6 +116,10 @@ type PedersenVrfProof = dleq_vrf::Batchable<PedersenVrf>;
 pub struct RingVrfProof {
     pub dleq_proof: PedersenVrfProof,
     pub ring_proof: ring::RingProof,
+}
+
+impl dleq_vrf::EcVrfProof for RingVrfProof {
+    type H = E;
 }
 
 // TODO: Can you impl Debug+Eq+PartialEq for ring::RingProof please Sergey?  We'll then derive Debug.
@@ -141,13 +147,12 @@ impl scale::ArkScaleMaxEncodedLen for RingVrfProof {
 }
 
 // TODO: Sergey, should this be #[derive(Debug,Clone)] ?
-pub struct RingVerifier(pub ring::RingVerifier);
+pub struct RingVerifier<'a>(pub &'a ring::RingVerifier);
 
-pub type RingVrfSignature<const N: usize> = dleq_vrf::VrfSignature<RingVerifier,N>;
+pub type RingVrfSignature<const N: usize> = dleq_vrf::VrfSignature<RingVrfProof,N>;
 
-impl EcVrfVerifier for RingVerifier {
-    type H = E;
-    type VrfProof = RingVrfProof;
+impl EcVrfVerifier for RingVerifier<'_> {
+    type Proof = RingVrfProof;
     type Error = SignatureError;
 
     fn vrf_verify_detached<'a>(
@@ -168,7 +173,7 @@ impl EcVrfVerifier for RingVerifier {
     }
 }
 
-impl RingVerifier {
+impl RingVerifier<'_> {
     pub fn verify_ring_vrf<const N: usize>(
         &self,
         t: impl IntoTranscript,
@@ -192,7 +197,7 @@ impl<'a> core::borrow::Borrow<SecretKey> for RingProver<'a> {
 }
 
 impl<'a> EcVrfSigner for RingProver<'a> {
-    type V = RingVerifier;
+    type Proof = RingVrfProof;
     type Error = ();
     type Secret = SecretKey;
     fn vrf_sign_detached(
@@ -220,41 +225,6 @@ impl<'a> RingProver<'a> {
         self.vrf_sign(t, ios).expect("no failure modes")
     }
 }
-
-
-
-/* 
-#[derive(CanonicalSerialize,CanonicalDeserialize)]
-pub struct RingVrfSignature<const N: usize> {
-    pub signature: dleq_vrf::Batchable<PedersenVrf>,
-    pub preoutputs: [VrfPreOut; N],
-    pub ring_proof: RingProof,
-}
-
-impl<const N: usize> RingVrfSignature<N>
-{
-    pub fn verify_ring_vrf<I,II>(
-        &self,
-        t: impl IntoTranscript,
-        inputs: II,
-        ring_verifier: &RingVerifier,
-    ) -> SignatureResult<[VrfInOut; N]>
-    where
-        I: IntoVrfInput<E>,
-        II: IntoIterator<Item=I>,
-    {
-        let ios = vrf::attach_inputs_array(&self.preoutputs,inputs);
-        let blinding_base = ring_verifier.piop_params().h;
-        pedersen_vrf(blinding_base).verify_pedersen_vrf(t,ios.as_ref(),&self.signature) ?;
-
-        let key_commitment = self.signature.as_key_commitment();
-        match ring_verifier.verify_ring_proof(self.ring_proof.clone(), key_commitment.0.clone()) {
-            true => Ok(ios),
-            false => Err(SignatureError::Invalid),
-        }
-    }
-}
-*/
 
 
 #[cfg(test)]
@@ -338,7 +308,7 @@ mod tests {
         
         // TODO: serialize signature
 
-        let result = RingVerifier(ring_verifier)
+        let result = RingVerifier(&ring_verifier)
         .verify_ring_vrf(transcript, iter::once(input), &signature);
         assert!(result.is_ok());
     }

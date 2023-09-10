@@ -26,7 +26,7 @@ pub mod vrf;
 pub use vrf::{IntoVrfInput, VrfInput, VrfPreOut, VrfInOut};
 
 mod thin;
-pub use thin::{ThinVrf};
+pub use thin::{ThinVrf,ThinVrfProof};
 
 mod pedersen;
 pub use pedersen::{PedersenVrf};
@@ -39,7 +39,7 @@ pub mod scale;
 
 pub mod traits;
 pub use traits::{
-    EcVrfSecret,EcVrfSigner,EcVrfVerifier,
+    EcVrfSecret,EcVrfProof,EcVrfVerifier,EcVrfSigner,
     VrfSignature,VrfSignatureVec,
 };
 
