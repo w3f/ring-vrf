@@ -147,11 +147,11 @@ impl scale::ArkScaleMaxEncodedLen for RingVrfProof {
 }
 
 // TODO: Sergey, should this be #[derive(Debug,Clone)] ?
-pub struct RingVerifier(pub ring::RingVerifier);
+pub struct RingVerifier<'a>(pub &'a ring::RingVerifier);
 
 pub type RingVrfSignature<const N: usize> = dleq_vrf::VrfSignature<RingVrfProof,N>;
 
-impl EcVrfVerifier for RingVerifier {
+impl EcVrfVerifier for RingVerifier<'_> {
     type Proof = RingVrfProof;
     type Error = SignatureError;
 
@@ -173,7 +173,7 @@ impl EcVrfVerifier for RingVerifier {
     }
 }
 
-impl RingVerifier {
+impl RingVerifier<'_> {
     pub fn verify_ring_vrf<const N: usize>(
         &self,
         t: impl IntoTranscript,
@@ -308,7 +308,7 @@ mod tests {
         
         // TODO: serialize signature
 
-        let result = RingVerifier(ring_verifier)
+        let result = RingVerifier(&ring_verifier)
         .verify_ring_vrf(transcript, iter::once(input), &signature);
         assert!(result.is_ok());
     }
