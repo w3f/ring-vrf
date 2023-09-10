@@ -105,7 +105,9 @@ pub fn deserialize_publickey(reader: &[u8]) -> Result<PublicKey, SerializationEr
 }
 
 
-pub type ThinVrfSignature<const N: usize> = dleq_vrf::VrfSignature<PublicKey,N>;
+type ThinVrfProof = dleq_vrf::Batchable<ThinVrf>;
+
+pub type ThinVrfSignature<const N: usize> = dleq_vrf::VrfSignature<ThinVrfProof,N>;
 
 
 type PedersenVrfProof = dleq_vrf::Batchable<PedersenVrf>;
@@ -114,6 +116,10 @@ type PedersenVrfProof = dleq_vrf::Batchable<PedersenVrf>;
 pub struct RingVrfProof {
     pub dleq_proof: PedersenVrfProof,
     pub ring_proof: ring::RingProof,
+}
+
+impl dleq_vrf::EcVrfProof for RingVrfProof {
+    type H = E;
 }
 
 // TODO: Can you impl Debug+Eq+PartialEq for ring::RingProof please Sergey?  We'll then derive Debug.
@@ -143,11 +149,10 @@ impl scale::ArkScaleMaxEncodedLen for RingVrfProof {
 // TODO: Sergey, should this be #[derive(Debug,Clone)] ?
 pub struct RingVerifier(pub ring::RingVerifier);
 
-pub type RingVrfSignature<const N: usize> = dleq_vrf::VrfSignature<RingVerifier,N>;
+pub type RingVrfSignature<const N: usize> = dleq_vrf::VrfSignature<RingVrfProof,N>;
 
 impl EcVrfVerifier for RingVerifier {
-    type H = E;
-    type VrfProof = RingVrfProof;
+    type Proof = RingVrfProof;
     type Error = SignatureError;
 
     fn vrf_verify_detached<'a>(
@@ -192,7 +197,7 @@ impl<'a> core::borrow::Borrow<SecretKey> for RingProver<'a> {
 }
 
 impl<'a> EcVrfSigner for RingProver<'a> {
-    type V = RingVerifier;
+    type Proof = RingVrfProof;
     type Error = ();
     type Secret = SecretKey;
     fn vrf_sign_detached(

@@ -17,7 +17,7 @@ use crate::{
     pedersen::KeyCommitment,
     // ThinVrf,PedersenVrf,
     flavor::{Flavor,InnerFlavor},
-    traits::{EcVrfVerifier,VrfSignature,VrfSignatureVec},
+    traits::{EcVrfProof,VrfSignature,VrfSignatureVec},
 };
 
 
@@ -56,33 +56,31 @@ impl_point_wrapper!(VrfPreOut);
 impl_point_wrapper!(KeyCommitment);
 
 
-impl<V: EcVrfVerifier+?Sized> Decode for VrfSignatureVec<V> {
+impl<P: EcVrfProof> Decode for VrfSignatureVec<P> {
     impl_decode_via_ark!();
 }
 
-impl<V: EcVrfVerifier+?Sized> Encode for VrfSignatureVec<V> {
+impl<P: EcVrfProof> Encode for VrfSignatureVec<P> {
     impl_encode_via_ark!();
 }
 
-impl<V: EcVrfVerifier+?Sized> EncodeLike for VrfSignatureVec<V> {}
+impl<P: EcVrfProof> EncodeLike for VrfSignatureVec<P> {}
 
 
-impl<V: EcVrfVerifier+?Sized, const N: usize> Decode for VrfSignature<V,N> {
+impl<P: EcVrfProof, const N: usize> Decode for VrfSignature<P,N> {
     impl_decode_via_ark!();
 }
 
-impl<V: EcVrfVerifier+?Sized, const N: usize> Encode for VrfSignature<V,N> {
+impl<P: EcVrfProof, const N: usize> Encode for VrfSignature<P,N> {
     impl_encode_via_ark!();
 }
 
-impl<V: EcVrfVerifier+?Sized, const N: usize> EncodeLike for VrfSignature<V,N> {}
+impl<P: EcVrfProof, const N: usize> EncodeLike for VrfSignature<P,N> {}
 
-impl<V: EcVrfVerifier+?Sized, const N: usize> MaxEncodedLen for VrfSignature<V,N> 
-where <V as EcVrfVerifier>::VrfProof: ArkScaleMaxEncodedLen
-{
+impl<P: EcVrfProof+ArkScaleMaxEncodedLen, const N: usize> MaxEncodedLen for VrfSignature<P,N> {
     fn max_encoded_len() -> usize {
-        let o = <<V as EcVrfVerifier>::H as AffineRepr>::zero().compressed_size();
-        N * o + <<V as EcVrfVerifier>::VrfProof as ArkScaleMaxEncodedLen>::max_encoded_len()
+        let o = <<P as EcVrfProof>::H as AffineRepr>::zero().compressed_size();
+        N * o + <P as ArkScaleMaxEncodedLen>::max_encoded_len()
     }
 }
 
