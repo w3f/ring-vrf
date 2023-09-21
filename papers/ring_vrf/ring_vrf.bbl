@@ -13,11 +13,27 @@ Karim Baghery, Markulf Kohlweiss, Janno Siim, and Mikhail Volkhov.
   Springer Berlin Heidelberg.
 \newblock \url{https://ia.cr/2020/811}.
 
+\bibitem{ring_noRO}
+Adam Bender, Jonathan Katz, and Ruggero Morselli.
+\newblock Ring signatures: Stronger definitions, and constructions without
+  random oracles.
+\newblock In {\em Theory of Cryptography: Third Theory of Cryptography
+  Conference, TCC 2006, New York, NY, USA, March 4-7, 2006. Proceedings 3},
+  pages 60--79. Springer, 2006.
+
 \bibitem{bening_auxiliary}
 Nir Bitansky, Ran Canetti, Omer Paneth, and Alon Rosen.
 \newblock On the existence of extractable one-way functions.
 \newblock In {\em Proceedings of the Forty-Sixth Annual ACM Symposium on Theory
   of Computing}, 2014.
+
+\bibitem{ring_accountable}
+Jonathan Bootle, Andrea Cerulli, Pyrros Chaidos, Essam Ghadafi, Jens Groth, and
+  Christophe Petit.
+\newblock Short accountable ring signatures based on ddh.
+\newblock In {\em Computer Security--ESORICS 2015: 20th European Symposium on
+  Research in Computer Security, Vienna, Austria, September 21-25, 2015,
+  Proceedings, Part I}, pages 243--265. Springer, 2016.
 
 \bibitem{pop2017}
 Maria Borge, Eleftherios Kokoris-Kogias, Philipp Jovanovic, Linus Gasser,
@@ -25,6 +41,12 @@ Maria Borge, Eleftherios Kokoris-Kogias, Philipp Jovanovic, Linus Gasser,
 \newblock Proof-of-personhood: Redemocratizing permissionless cryptocurrencies.
 \newblock In {\em 2017 IEEE European Symposium on Security and Privacy
   Workshops (EuroS\&PW)}, pages 23--26, 2017.
+
+\bibitem{sassafras}
+Jeffrey Burdges, Handan~Kılınç Alper, Alistair Stewart, and Sergey Vasilyev.
+\newblock Sassafras and semi-anonymous single leader election.
+\newblock Cryptology ePrint Archive, Paper 2023/031, 2023.
+\newblock \url{https://eprint.iacr.org/2023/031}.
 
 \bibitem{taler}
 Jeffrey Burdges, Florian Dold, and Christian Grothoff.
@@ -61,6 +83,13 @@ Ran Canetti, Yehuda Lindell, Rafail Ostrovsky, and Amit Sahai.
 \newblock Universally composable two-party and multi-party secure computation.
 \newblock {\em Conference Proceedings of the Annual ACM Symposium on Theory of
   Computing}, 2003.
+
+\bibitem{ring_sublinear}
+Nishanth Chandran, Jens Groth, and Amit Sahai.
+\newblock Ring signatures of sub-linear size without random oracles.
+\newblock In {\em Automata, Languages and Programming: 34th International
+  Colloquium, ICALP 2007, Wroc{\l}aw, Poland, July 9-13, 2007. Proceedings 34},
+  pages 423--434. Springer, 2007.
 
 \bibitem{climaterisk2021}
 {Chatham House}.
@@ -148,6 +177,27 @@ Aniket Kate, Gregory~M. Zaverucha, and Ian Goldberg.
 Joe Kilian.
 \newblock Uses of randomness in algorithms and protocols.
 \newblock PhD Thesis. Massachusetts Institute of Technology, 1990.
+
+\bibitem{ring_linkablee}
+Joseph~K Liu, Man~Ho Au, Willy Susilo, and Jianying Zhou.
+\newblock Linkable ring signature with unconditional anonymity.
+\newblock {\em IEEE Transactions on Knowledge and Data Engineering},
+  26(1):157--165, 2013.
+
+\bibitem{ring_linkable}
+Joseph~K Liu and Duncan~S Wong.
+\newblock Linkable ring signatures: Security models and new schemes.
+\newblock In {\em Computational Science and Its Applications--ICCSA 2005:
+  International Conference, Singapore, May 9-12, 2005, Proceedings, Part II 5},
+  pages 614--623. Springer, 2005.
+
+\bibitem{ring_efficient}
+Giulio Malavolta and Dominique Schr{\"o}der.
+\newblock Efficient ring signatures in the standard model.
+\newblock In {\em Advances in Cryptology--ASIACRYPT 2017: 23rd International
+  Conference on the Theory and Applications of Cryptology and Information
+  Security, Hong Kong, China, December 3-7, 2017, Proceedings, Part II 23},
+  pages 128--157. Springer, 2017.
 
 \bibitem{group_sig_survey}
 Mark Manulis, Nils Fleischhacker, Felix G\"unther, Franziskus Kiefer, and

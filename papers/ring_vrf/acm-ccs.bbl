@@ -2,7 +2,7 @@
 %%% Do NOT edit. File created by BibTeX with style
 %%% ACM-Reference-Format-Journals [18-Jan-2012].
 
-\begin{thebibliography}{00}
+\begin{thebibliography}{28}
 
 %%% ====================================================================
 %%% NOTE TO THE USER: you can override these defaults by providing
@@ -44,15 +44,17 @@
   Kohlweiss}, \bibinfo{person}{Janno Siim}, {and} \bibinfo{person}{Mikhail
   Volkhov}.} \bibinfo{year}{2021}\natexlab{}.
 \newblock \showarticletitle{Another Look at Extraction and Randomization of
-  Groth's zk-SNARK}. In \bibinfo{booktitle}{{\em Financial Cryptography and
+  Groth's zk-SNARK}. In \bibinfo{booktitle}{\emph{Financial Cryptography and
   Data Security}}, \bibfield{editor}{\bibinfo{person}{Nikita Borisov} {and}
   \bibinfo{person}{Claudia Diaz}} (Eds.). \bibinfo{publisher}{Springer Berlin
   Heidelberg}, \bibinfo{address}{Berlin, Heidelberg},
   \bibinfo{pages}{457--475}.
 \newblock
 \showISBNx{978-3-662-64322-8}
+\urldef\tempurl%
+\url{https://ia.cr/2020/811}
 \showURL{%
-\url{https://ia.cr/2020/811}}
+\tempurl}
 \newblock
 \shownote{\url{https://ia.cr/2020/811}.}
 
@@ -64,7 +66,7 @@
   Katz}, {and} \bibinfo{person}{Ruggero Morselli}.}
   \bibinfo{year}{2006}\natexlab{}.
 \newblock \showarticletitle{Ring signatures: Stronger definitions, and
-  constructions without random oracles}. In \bibinfo{booktitle}{{\em Theory of
+  constructions without random oracles}. In \bibinfo{booktitle}{\emph{Theory of
   Cryptography: Third Theory of Cryptography Conference, TCC 2006, New York,
   NY, USA, March 4-7, 2006. Proceedings 3}}. Springer, \bibinfo{pages}{60--79}.
 \newblock
@@ -77,11 +79,12 @@
   Canetti}, \bibinfo{person}{Omer Paneth}, {and} \bibinfo{person}{Alon Rosen}.}
   \bibinfo{year}{2014}\natexlab{}.
 \newblock \showarticletitle{On the Existence of Extractable One-Way Functions}.
-  In \bibinfo{booktitle}{{\em Proceedings of the Forty-Sixth Annual ACM
+  In \bibinfo{booktitle}{\emph{Proceedings of the Forty-Sixth Annual ACM
   Symposium on Theory of Computing}}.
 \newblock
-\showDOI{%
-\url{https://doi.org/10.1145/2591796.2591859}}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/2591796.2591859}
+\showDOI{\tempurl}
 
 
 \bibitem[\protect\citeauthoryear{Bootle, Cerulli, Chaidos, Ghadafi, Groth, and
@@ -92,7 +95,7 @@
   \bibinfo{person}{Jens Groth}, {and} \bibinfo{person}{Christophe Petit}.}
   \bibinfo{year}{2016}\natexlab{}.
 \newblock \showarticletitle{Short accountable ring signatures based on DDH}. In
-  \bibinfo{booktitle}{{\em Computer Security--ESORICS 2015: 20th European
+  \bibinfo{booktitle}{\emph{Computer Security--ESORICS 2015: 20th European
   Symposium on Research in Computer Security, Vienna, Austria, September 21-25,
   2015, Proceedings, Part I}}. Springer, \bibinfo{pages}{243--265}.
 \newblock
@@ -106,19 +109,20 @@
   Gasser}, \bibinfo{person}{Nicolas Gailly}, {and} \bibinfo{person}{Bryan
   Ford}.} \bibinfo{year}{2017}\natexlab{}.
 \newblock \showarticletitle{Proof-of-Personhood: Redemocratizing Permissionless
-  Cryptocurrencies}. In \bibinfo{booktitle}{{\em 2017 IEEE European Symposium
+  Cryptocurrencies}. In \bibinfo{booktitle}{\emph{2017 IEEE European Symposium
   on Security and Privacy Workshops (EuroS\&PW)}}. \bibinfo{pages}{23--26}.
 \newblock
-\showDOI{%
-\url{https://doi.org/10.1109/EuroSPW.2017.46}}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/EuroSPW.2017.46}
+\showDOI{\tempurl}
 
 
-\bibitem[\protect\citeauthoryear{by~Design~Foundation}{by~Design~Foundation}{}]%
+\bibitem[\protect\citeauthoryear{by~Design~Foundation}{by~Design~Foundation}{[n.d.]}]%
         {IRMAcredentials}
 \bibfield{author}{\bibinfo{person}{Privacy by Design~Foundation}.}
+  \bibinfo{year}{[n.d.]}\natexlab{}.
 \newblock \bibinfo{title}{IRMA docs v0.2.0}.
 \newblock \bibinfo{howpublished}{\url{https://irma.app/docs/v0.2.0/overview/}}.
-    (\bibinfo{year}{????}).
 \newblock
 
 
@@ -131,10 +135,10 @@
 \newblock \bibinfo{title}{LegoSNARK: Modular Design and Composition of Succinct
   Zero-Knowledge Proofs}.
 \newblock \bibinfo{howpublished}{Cryptology ePrint Archive, Paper 2019/142}.
-  (\bibinfo{year}{2019}).
 \newblock
-\showDOI{%
-\url{https://doi.org/10.1145/3319535.3339820}}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3319535.3339820}
+\showDOI{\tempurl}
 \newblock
 \shownote{\url{https://eprint.iacr.org/2019/142}.}
 
@@ -146,7 +150,6 @@
 \newblock \bibinfo{title}{Universally Composable Security: A New Paradigm for
   Cryptographic Protocols}.
 \newblock \bibinfo{howpublished}{Cryptology ePrint Archive, Report 2000/067}.
-  (\bibinfo{year}{2000}).
 \newblock
 \newblock
 \shownote{\url{https://eprint.iacr.org/2000/067}.}
@@ -157,7 +160,7 @@
 \bibfield{author}{\bibinfo{person}{Ran Canetti}.}
   \bibinfo{year}{2001}\natexlab{}.
 \newblock \showarticletitle{Universally composable security: A new paradigm for
-  cryptographic protocols}. In \bibinfo{booktitle}{{\em Proceedings 2001 IEEE
+  cryptographic protocols}. In \bibinfo{booktitle}{\emph{Proceedings 2001 IEEE
   International Conference on Cluster Computing}}. IEEE,
   \bibinfo{pages}{136--145}.
 \newblock
@@ -171,8 +174,8 @@
   Sahai}.} \bibinfo{year}{2003}\natexlab{}.
 \newblock \showarticletitle{Universally Composable Two-Party and Multi-Party
   Secure Computation}.
-\newblock \bibinfo{journal}{{\em Conference Proceedings of the Annual ACM
-  Symposium on Theory of Computing\/}} (\bibinfo{year}{2003}).
+\newblock \bibinfo{journal}{\emph{Conference Proceedings of the Annual ACM
+  Symposium on Theory of Computing}} (\bibinfo{year}{2003}).
 \newblock
 
 
@@ -182,7 +185,7 @@
 \bibfield{author}{\bibinfo{person}{Nishanth Chandran}, \bibinfo{person}{Jens
   Groth}, {and} \bibinfo{person}{Amit Sahai}.} \bibinfo{year}{2007}\natexlab{}.
 \newblock \showarticletitle{Ring signatures of sub-linear size without random
-  oracles}. In \bibinfo{booktitle}{{\em Automata, Languages and Programming:
+  oracles}. In \bibinfo{booktitle}{\emph{Automata, Languages and Programming:
   34th International Colloquium, ICALP 2007, Wroc{\l}aw, Poland, July 9-13,
   2007. Proceedings 34}}. Springer, \bibinfo{pages}{423--434}.
 \newblock
@@ -193,15 +196,17 @@
 \bibfield{author}{\bibinfo{person}{David Chaum}.}
   \bibinfo{year}{1983}\natexlab{}.
 \newblock \showarticletitle{Blind Signatures for Untraceable Payments}. In
-  \bibinfo{booktitle}{{\em Advances in Cryptology}},
+  \bibinfo{booktitle}{\emph{Advances in Cryptology}},
   \bibfield{editor}{\bibinfo{person}{David Chaum}, \bibinfo{person}{Ronald~L.
   Rivest}, {and} \bibinfo{person}{Alan~T. Sherman}} (Eds.).
   \bibinfo{publisher}{Springer US}, \bibinfo{address}{Boston, MA},
   \bibinfo{pages}{199--203}.
 \newblock
 \showISBNx{978-1-4757-0602-4}
+\urldef\tempurl%
+\url{https://www.hit.bme.hu/~buttyan/courses/BMEVIHIM219/2009/Chaum.BlindSigForPayment.1982.PDF}
 \showURL{%
-\url{https://www.hit.bme.hu/~buttyan/courses/BMEVIHIM219/2009/Chaum.BlindSigForPayment.1982.PDF}}
+\tempurl}
 
 
 \bibitem[\protect\citeauthoryear{Davidson, Goldberg, Sullivan, Tankersley, and
@@ -213,12 +218,13 @@
   \bibinfo{year}{2018}\natexlab{}.
 \newblock \showarticletitle{Privacy Pass: Bypassing Internet Challenges
   Anonymously}.
-\newblock \bibinfo{journal}{{\em Proceedings on Privacy Enhancing
-  Technologies\/}}  \bibinfo{volume}{2018} (\bibinfo{date}{06}
+\newblock \bibinfo{journal}{\emph{Proceedings on Privacy Enhancing
+  Technologies}}  \bibinfo{volume}{2018} (\bibinfo{date}{06}
   \bibinfo{year}{2018}), \bibinfo{pages}{164--180}.
 \newblock
-\showDOI{%
-\url{https://doi.org/10.1515/popets-2018-0026}}
+\urldef\tempurl%
+\url{https://doi.org/10.1515/popets-2018-0026}
+\showDOI{\tempurl}
 
 
 \bibitem[\protect\citeauthoryear{Ford and Strauss}{Ford and Strauss}{2008}]%
@@ -226,14 +232,16 @@
 \bibfield{author}{\bibinfo{person}{Bryan Ford} {and} \bibinfo{person}{Jacob
   Strauss}.} \bibinfo{year}{2008}\natexlab{}.
 \newblock \showarticletitle{An Offline Foundation for Online Accountable
-  Pseudonyms}. In \bibinfo{booktitle}{{\em Proceedings of the 1st Workshop on
-  Social Network Systems}} {\em (\bibinfo{series}{SocialNets '08})}.
-  \bibinfo{publisher}{Association for Computing Machinery},
-  \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{31–36}.
+  Pseudonyms}. In \bibinfo{booktitle}{\emph{Proceedings of the 1st Workshop on
+  Social Network Systems}} (Glasgow, Scotland)
+  \emph{(\bibinfo{series}{SocialNets '08})}. \bibinfo{publisher}{Association
+  for Computing Machinery}, \bibinfo{address}{New York, NY, USA},
+  \bibinfo{pages}{31–36}.
 \newblock
 \showISBNx{9781605581248}
-\showDOI{%
-\url{https://doi.org/10.1145/1435497.1435503}}
+\urldef\tempurl%
+\url{https://doi.org/10.1145/1435497.1435503}
+\showDOI{\tempurl}
 
 
 \bibitem[\protect\citeauthoryear{Fuchsbauer, Kiltz, and Loss}{Fuchsbauer
@@ -244,10 +252,12 @@
   \bibinfo{year}{2017}\natexlab{}.
 \newblock \bibinfo{title}{The Algebraic Group Model and its Applications}.
 \newblock \bibinfo{howpublished}{Cryptology ePrint Archive, Paper 2017/620,
-  2017}.   (\bibinfo{year}{2017}).
+  2017}.
 \newblock
+\urldef\tempurl%
+\url{https://eprint.iacr.org/2017/620}
 \showURL{%
-\url{https://eprint.iacr.org/2017/620}}
+\tempurl}
 \newblock
 \shownote{\url{https://eprint.iacr.org/2017/620}.}
 
@@ -261,10 +271,12 @@
 \newblock \bibinfo{title}{Quadratic Span Programs and Succinct NIZKs without
   PCPs}.
 \newblock \bibinfo{howpublished}{Cryptology ePrint Archive, Paper 2012/215,
-  2012}.   (\bibinfo{year}{2012}).
+  2012}.
 \newblock
+\urldef\tempurl%
+\url{https://eprint.iacr.org/2012/215}
 \showURL{%
-\url{https://eprint.iacr.org/2012/215}}
+\tempurl}
 \newblock
 \shownote{\url{https://eprint.iacr.org/2012/215}.}
 
@@ -275,12 +287,14 @@
 \bibfield{author}{\bibinfo{person}{Sharon Goldberg}, \bibinfo{person}{Leonid
   Reyzin}, \bibinfo{person}{Dimitrios Papadopoulos}, {and} \bibinfo{person}{Jan
   Včelák}.} \bibinfo{year}{2021}\natexlab{}.
-\newblock \bibinfo{booktitle}{{\em {Verifiable Random Functions (VRFs)}}}.
+\newblock \bibinfo{booktitle}{\emph{{Verifiable Random Functions (VRFs)}}}.
 \newblock \bibinfo{type}{Internet-Draft} draft-irtf-cfrg-vrf-10.
   \bibinfo{institution}{Internet Engineering Task Force}.
 \newblock
+\urldef\tempurl%
+\url{https://datatracker.ietf.org/doc/draft-irtf-cfrg-vrf/10/}
 \showURL{%
-\url{https://datatracker.ietf.org/doc/draft-irtf-cfrg-vrf/10/}}
+\tempurl}
 \newblock
 \shownote{Work in Progress.}
 
@@ -290,28 +304,30 @@
 \bibfield{author}{\bibinfo{person}{Jens Groth}.}
   \bibinfo{year}{2016}\natexlab{}.
 \newblock \showarticletitle{On the Size of Pairing-Based Non-interactive
-  Arguments}. In \bibinfo{booktitle}{{\em Advances in Cryptology -- EUROCRYPT
+  Arguments}. In \bibinfo{booktitle}{\emph{Advances in Cryptology -- EUROCRYPT
   2016}}, \bibfield{editor}{\bibinfo{person}{Marc Fischlin} {and}
   \bibinfo{person}{Jean-S{\'e}bastien Coron}} (Eds.).
   \bibinfo{publisher}{Springer Berlin Heidelberg}, \bibinfo{address}{Berlin,
   Heidelberg}, \bibinfo{pages}{305--326}.
 \newblock
 \showISBNx{978-3-662-49896-5}
+\urldef\tempurl%
+\url{https://eprint.iacr.org/2016/260}
 \showURL{%
-\url{https://eprint.iacr.org/2016/260}}
+\tempurl}
 \newblock
 \shownote{IACR ePrint Archive 2016/260.}
 
 
 \bibitem[\protect\citeauthoryear{Hopwood, Bowe, Hornby, and Wilcox}{Hopwood
-  et~al\mbox{.}}{}]%
+  et~al\mbox{.}}{[n.d.]}]%
         {zcash_protocol}
 \bibfield{author}{\bibinfo{person}{Daira Hopwood}, \bibinfo{person}{Sean Bowe},
   \bibinfo{person}{Taylor Hornby}, {and} \bibinfo{person}{Nathan Wilcox}.}
+  \bibinfo{year}{[n.d.]}\natexlab{}.
 \newblock \bibinfo{title}{{ZCash} Protocol Specification}.
 \newblock
   \bibinfo{howpublished}{\url{https://zips.z.cash/protocol/protocol.pdf}}.
-  (\bibinfo{year}{????}).
 \newblock
 \newblock
 \shownote{Version 2022.3.8 [NU5], 15 September 2022.}
@@ -323,7 +339,7 @@
   \bibinfo{year}{1990}\natexlab{}.
 \newblock \bibinfo{title}{Uses of randomness in algorithms and protocols}.
 \newblock \bibinfo{howpublished}{PhD Thesis. Massachusetts Institute of
-  Technology}.   (\bibinfo{year}{1990}).
+  Technology}.
 \newblock
 
 
@@ -335,8 +351,8 @@
   \bibinfo{year}{2013}\natexlab{}.
 \newblock \showarticletitle{Linkable ring signature with unconditional
   anonymity}.
-\newblock \bibinfo{journal}{{\em IEEE Transactions on Knowledge and Data
-  Engineering\/}} \bibinfo{volume}{26}, \bibinfo{number}{1}
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Knowledge and Data
+  Engineering}} \bibinfo{volume}{26}, \bibinfo{number}{1}
   (\bibinfo{year}{2013}), \bibinfo{pages}{157--165}.
 \newblock
 
@@ -346,7 +362,7 @@
 \bibfield{author}{\bibinfo{person}{Joseph~K Liu} {and}
   \bibinfo{person}{Duncan~S Wong}.} \bibinfo{year}{2005}\natexlab{}.
 \newblock \showarticletitle{Linkable ring signatures: Security models and new
-  schemes}. In \bibinfo{booktitle}{{\em Computational Science and Its
+  schemes}. In \bibinfo{booktitle}{\emph{Computational Science and Its
   Applications--ICCSA 2005: International Conference, Singapore, May 9-12,
   2005, Proceedings, Part II 5}}. Springer, \bibinfo{pages}{614--623}.
 \newblock
@@ -358,7 +374,7 @@
 \bibfield{author}{\bibinfo{person}{Giulio Malavolta} {and}
   \bibinfo{person}{Dominique Schr{\"o}der}.} \bibinfo{year}{2017}\natexlab{}.
 \newblock \showarticletitle{Efficient ring signatures in the standard model}.
-  In \bibinfo{booktitle}{{\em Advances in Cryptology--ASIACRYPT 2017: 23rd
+  In \bibinfo{booktitle}{\emph{Advances in Cryptology--ASIACRYPT 2017: 23rd
   International Conference on the Theory and Applications of Cryptology and
   Information Security, Hong Kong, China, December 3-7, 2017, Proceedings, Part
   II 23}}. Springer, \bibinfo{pages}{128--157}.
@@ -373,7 +389,7 @@
   \bibinfo{person}{Franziskus Kiefer}, {and} \bibinfo{person}{Bertram
   Poettering}.} \bibinfo{year}{2011}\natexlab{}.
 \newblock \bibinfo{title}{Group Signatures: Authentication with Privacy}.
-\newblock \bibinfo{howpublished}{BSI}.   (\bibinfo{year}{2011}).
+\newblock \bibinfo{howpublished}{BSI}.
 \newblock
 \newblock
 \shownote{\url{https://www.franziskuskiefer.de/paper/GruPA.pdf} and
@@ -387,22 +403,24 @@
   Rabin}, {and} \bibinfo{person}{Salil Vadhan}.}
   \bibinfo{year}{1999}\natexlab{}.
 \newblock \showarticletitle{Verifiable random functions}. In
-  \bibinfo{booktitle}{{\em 40th annual symposium on foundations of computer
+  \bibinfo{booktitle}{\emph{40th annual symposium on foundations of computer
   science (cat. No. 99CB37039)}}. IEEE, \bibinfo{pages}{120--130}.
 \newblock
-\showDOI{%
-\url{https://doi.org/10.1109/SFFCS.1999.814584}}
+\urldef\tempurl%
+\url{https://doi.org/10.1109/SFFCS.1999.814584}
+\showDOI{\tempurl}
 
 
 \bibitem[\protect\citeauthoryear{Otto, Lee, Sletten, Burnett, Sporny, and
-  Ebert}{Otto et~al\mbox{.}}{}]%
+  Ebert}{Otto et~al\mbox{.}}{[n.d.]}]%
         {w3c_vc_use_cases}
 \bibfield{author}{\bibinfo{person}{Nate Otto}, \bibinfo{person}{Sunny Lee},
   \bibinfo{person}{Brian Sletten}, \bibinfo{person}{Daniel Burnett},
   \bibinfo{person}{Manu Sporny}, {and} \bibinfo{person}{Ken Ebert}.}
+  \bibinfo{year}{[n.d.]}\natexlab{}.
 \newblock \bibinfo{title}{Verifiable Credentials Use Cases}.
 \newblock \bibinfo{howpublished}{W3C Working Group Note 24 September 2019.
-  \url{https://www.w3.org/TR/vc-use-cases/}}.   (\bibinfo{year}{????}).
+  \url{https://www.w3.org/TR/vc-use-cases/}}.
 \newblock
 
 
@@ -416,21 +434,22 @@
   \bibinfo{year}{2017}\natexlab{}.
 \newblock \bibinfo{title}{Making NSEC5 Practical for DNSSEC}.
 \newblock \bibinfo{howpublished}{Cryptology ePrint Archive, Paper 2017/099}.
-  (\bibinfo{year}{2017}).
 \newblock
+\urldef\tempurl%
+\url{https://eprint.iacr.org/2017/099}
 \showURL{%
-\url{https://eprint.iacr.org/2017/099}}
+\tempurl}
 \newblock
 \shownote{\url{https://eprint.iacr.org/2017/099}.}
 
 
-\bibitem[\protect\citeauthoryear{Perrin}{Perrin}{}]%
+\bibitem[\protect\citeauthoryear{Perrin}{Perrin}{[n.d.]}]%
         {VXEd25519}
 \bibfield{author}{\bibinfo{person}{Trevor Perrin}.}
+  \bibinfo{year}{[n.d.]}\natexlab{}.
 \newblock \bibinfo{title}{The XEdDSA and VXEdDSA Signature Schemes}.
 \newblock \bibinfo{howpublished}{Revision 1, 2016-10-20.
   \url{https://signal.org/docs/specifications/xeddsa/}}.
-  (\bibinfo{year}{????}).
 \newblock
 
 
