@@ -4,7 +4,7 @@
 \def\eprint#1#2{#2} % crypto
 \eprint{\usepackage[margin=2.5cm,includefoot]{geometry}}{}
 % \sloppy
-
+\def\doublecolumn#1#2{#2}
 % \usepackage{amsthm}
 \usepackage{amsfonts}
 \usepackage{amsmath}
@@ -61,12 +61,12 @@
 
 \title{Ethical identity, ring VRFs, and zero-knowledge continuations}
 
-\author{Jeffrey Burdges \and Oana Ciobotaru \and Handan K{\i}l{\i}nç Alper \and Alistair Stewart \and Sergey Vasilyev}
+\eprint{\author{Jeffrey Burdges \and Oana Ciobotaru \and Handan K{\i}l{\i}nç Alper \and Alistair Stewart \and Sergey Vasilyev}}{\author{}}
 % oana.ciobotaru@gmail.com for
 
-\institute{Web 3.0 Foundation}
+\eprint{\institute{Web 3.0 Foundation}}{\institute{}}
 
-\date{\today}
+\eprint{\date{\today}}{\date{}}
 \begin{document}
 	
 \maketitle
@@ -77,6 +77,7 @@
 
 
 \input{intro}
+%\input{intro_crypto_conf}
 % \input{identity}
 
 \input{overview}
@@ -92,7 +93,7 @@
 \input{app_short}
 
 \bibliographystyle{plain}
-\bibliography{../climate,../commit,../anoncred,../sassafras,../identity,../vrf,../zkp}
+\bibliography{../climate,../commit,../anoncred,../sassafras,../identity,../vrf,../zkp,../ringsignatures}
 
 \appendix
 
