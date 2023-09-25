@@ -259,26 +259,36 @@ After deciding $ b $, $ \fgvrf $ records it as $ [\msg, \aux, W,\ring,\sigma,b] 
 		The only place that $ \fgvrf $ does not respond any query is when it aborts. It happens when it selects an honest anonymous key which already existed. This happens in negligible probability in $ \secparam $. }{}
 	
 	
-	\paragraph{Anonymity:} $ \fgvrf $ should satisfy for the anonymity that an honest signature $ \sigma $ verified by a ring and anonymous key $ W $ does not give any information about the honest party's key  except that the key is in $ \ring $ if $ \msg $ is not signed by the same party  before for any other ring. We define this formally with the anonymity game below. We note that we cannot define and verify this property in $ \fgvrf $ like we did for the other properties because it depends on how $ \Gen_{sign} $ is defined.
+	\paragraph{Anonymity:} We expect from an anonymous $ \fgvrf $  to adhere to the condition that an honest signature $\sigma$ generated for an input $\msg$ along with its associated anonymous key $W$ should not give any information regarding the honest party's key, except for the fact that it is a member of $ \ring $.  However, this condition should hold unless $\msg$ has been signed by the same party for any other ring $\ring'$. In such a case,  since both signatures includes $ W $, the anonymity may be compromised  i.e.,  $ \simulator $  learns the party's key is in the intersection of $ \ring $ and $ \ring' $. We note that this design choice is intentional, as it provides parties with the flexibility to reveal their identity when necessary.
+		
+	It is evident that anonymous keys do not give any information related to party's key as they are randomly sampled by $ \fgvrf $. However, this cannot be conclusively asserted for the signatures, because it depends on the specification of $ \Gen_{sign} $. Therefore, we introduce an anonymity definition (See Definition \ref{def:anonymity}) for $ \Gen_{sign} $ and establish that $ \fgvrf $ is anonymous if $ \Gen_{sign} $ is anonymous according to this definition.
 	
-	\begin{definition}[Anonymity]\label{def:anonymity} We define the anonymity game against a special environment $ \mathcal{D} $ which plays the following anonymity game.
-	We define the anonymity game between a challenger and $ \mathcal{D} $.  $\mathcal{D}$ accesses a signing oracle $ \mathcal{O}_{Sign} $ and $ \fgvrf $ simulated by the challenger as described in Figure \ref{f:gvrf}. 
-		\begin{itemize}
-			\item Given the input $ '\mathsf{keygen}' $, $\mathcal{O}_{Sign} $ sends $ (\oramsg{keygen, \sid}) $ to the challenger and obtains a verification key $ \pk $. Then, it stores $ \pk $ to a list $ \mathcal{K} $ and outputs $ \pk $.
-			\item Given the input $ '(\pk,\ring,\aux,\msg)' $, $ \mathcal{O}_{Sign} $ sends $ (\oramsg{sign}, \sid,\ring,\pk, \aux, \msg) $ to the challenger and receives $ (\oramsg{signature}, \sid, \ring, W,\aux, \msg, y, \sigma) $ if $ \pk \in \ring $.  Then $ \mathcal{O}_{Sign} $ stores $ \msg $ to a list $ \arraysym{signed}[\pk]  $.
-			% and $ W  $ to a list $ \anonymouskeylist $. 
-			It outputs $ (\sigma,W) $. Otherwise, it outputs $ \perp $.
-		\end{itemize}
-		At some point,	
-		$ \mathcal{D} $ sends $ (\ring, \pk_0, \pk_1, \msg,\aux)$ to  the challenger where $ \pk_0, \pk_1 \in \ring $, $ \msg  \notin \arraysym{signed}[\pk_0]$ and $ \msg  \notin \arraysym{signed}[\pk_1] $\footnote{The challenger needs to check this because if $ \msg $ is signed before by one of $ \pk_0,\pk_1 $, then the anonymity is broken trivially because verification of any signature of $ \msg $ for different rings outputs the same evaluation value}.  Challenger lets $ b \leftarrow_r\bin$. Then it gives the input $ (\pk_b, \ring, \msg,\aux) $ to $ \ora{Sign} $ and receives either $ \perp $ or $(\sigma,W)$. If it is $ (\sigma,W) $, it sends $ (\sigma,W) $ to $ \mathcal{D} $ as a challenge.
-		If $ \mathcal{D} $ sends $ '(\pk,\ring,\aux,\msg)' $ to $ \mathcal{O}_{Sign} $ where $ \pk = \pk_0 $ or $ \pk = \pk_1 $, it loses the game. 
-		During the game if $ \mathcal{D} $ outputs $ b' = b $, $ \mathcal{D} $ wins.
-		
-		$ \fgvrf $ satisfies anonymity, if any PPT distinguisher $ \mathcal{D} $ has a negligible advantage in $ \secparam $ to win the anonymity game defined as follows:
-		
+
+	
+%	\begin{definition}[Anonymity]\label{def:anonymity} We define the anonymity game against a special environment $ \mathcal{D} $ which plays the following anonymity game.
+%	We define the anonymity game between a challenger and $ \mathcal{D} $.  $\mathcal{D}$ accesses a signing oracle $ \mathcal{O}_{Sign} $ and $ \fgvrf $ simulated by the challenger as described in Figure \ref{f:gvrf}. 
+%		\begin{itemize}
+%			\item Given the input $ '\mathsf{keygen}' $, $\mathcal{O}_{Sign} $ sends $ (\oramsg{keygen, \sid}) $ to the challenger and obtains a verification key $ \pk $. Then, it stores $ \pk $ to a list $ \mathcal{K} $ and outputs $ \pk $.
+%			\item Given the input $ '(\pk,\ring,\aux,\msg)' $, $ \mathcal{O}_{Sign} $ sends $ (\oramsg{sign}, \sid,\ring,\pk, \aux, \msg) $ to the challenger and receives $ (\oramsg{signature}, \sid, \ring, W,\aux, \msg, y, \sigma) $ if $ \pk \in \ring $.  Then $ \mathcal{O}_{Sign} $ stores $ \msg $ to a list $ \arraysym{signed}[\pk]  $.
+%			% and $ W  $ to a list $ \anonymouskeylist $. 
+%			It outputs $ (\sigma,W) $. Otherwise, it outputs $ \perp $.
+%		\end{itemize}
+%		At some point,	
+%		$ \mathcal{D} $ sends $ (\ring, \pk_0, \pk_1, \msg,\aux)$ to  the challenger where $ \pk_0, \pk_1 \in \ring $, $ \msg  \notin \arraysym{signed}[\pk_0]$ and $ \msg  \notin \arraysym{signed}[\pk_1] $\footnote{The challenger needs to check this because if $ \msg $ is signed before by one of $ \pk_0,\pk_1 $, then the anonymity is broken trivially because verification of any signature of $ \msg $ for different rings outputs the same evaluation value}.  Challenger lets $ b \leftarrow_r\bin$. Then it gives the input $ (\pk_b, \ring, \msg,\aux) $ to $ \ora{Sign} $ and receives either $ \perp $ or $(\sigma,W)$. If it is $ (\sigma,W) $, it sends $ (\sigma,W) $ to $ \mathcal{D} $ as a challenge.
+%		If $ \mathcal{D} $ sends $ '(\pk,\ring,\aux,\msg)' $ to $ \mathcal{O}_{Sign} $ where $ \pk = \pk_0 $ or $ \pk = \pk_1 $, it loses the game. 
+%		During the game if $ \mathcal{D} $ outputs $ b' = b $, $ \mathcal{D} $ wins.
+%		
+%		$ \fgvrf $ satisfies anonymity, if any PPT distinguisher $ \mathcal{D} $ has a negligible advantage in $ \secparam $ to win the anonymity game defined as follows:
+%		
+%	\end{definition}
+	
+	\begin{definition}[Anonymity of $ \Gen_{sign} $]\label{def:anonymity}
+		We define an anonymity game between a PPT distinguisher $ \mathcal{D} $ and a challenger.
+		In the game, $\mathcal{D}$ sends the query  $ (\oramsg{challenge}, \ring, (x_0,\pk_0), (x_1, \pk_1), \msg,\aux)$. Then the challenger checks if  $ \pk_0, \pk_1 \in \ring $. If it is the case, the challenger samples randomly  $ b\in \{0,1\}  $ and runs $ \Gen_{sign}(\ring, x_b, \pk_b,\aux, \msg) \rightarrow \sigma_b $. It gives $ \sigma_b $ as a challenge to $ \mathcal{D} $. In the end of the game, if $ \mathcal{D} $ outputs $ b' = b $, then wins the game.
+			
+		We say that $ \Gen_{sign} $ is anonymous  if any PPT distinguisher $ \mathcal{D} $ has a negligible advantage in $ \secparam $ to win the anonymity game.
+		%TODO Specify the sec param for the functionality
 	\end{definition}
-	
-	
 	
 	%	We remark that $ \mathcal{D} $ generates keys of honest parties and forwards them via dummy adversaries in the ideal model. So, $ \Gen_{sign} $ of $ \fgvrf $ should be defined in a way that it preserves the anonymity even if $ \mathcal{D} $ generates the keys.
 	
