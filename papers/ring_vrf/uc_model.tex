@@ -77,10 +77,9 @@ $ \rVRF.\Eval(\sk,\msg) $  that outputs evaluation value corresponds to generati
 	\eprint{}{\scriptsize}
 	\textbf{[Honest Ring VRF Signature and Evaluation.]} upon receiving a message $(\oramsg{sign}, \sid, \ring, \pk_i,\aux, \msg)$ from $\user_i$, verify that $\pk_i \in \ring$ and that there exists a public key $\pk_i$ associated to $\user_i$ in $ \vklist $. If it is not the case, just ignore the request. 	
 	If there exists no $ W' $ such that $ \anonymouskeymap[\msg,W'] =  \pk_i $, let $ W \leftsample \setsym{S}_W $ and let $y \leftsample \setsym{S}_{eval}$. Set $ \anonymouskeymap[\msg,W] = \pk_i $ and set $ \evaluationslist[\msg, W] = y$.
-	
-	In any case (except ignoring), obtain $ W, y $ where $ \anonymouskeymap[\msg,W] =\pk_i $, $ \evaluationslist[\msg, W] = y$ and  $ (x, \pk) $ is in $\vklist $. Then run  $ \Gen_{sign}(\ring, W,x,\pk,\aux,\msg) \rightarrow \sigma $.
+	In any case (except ignoring), obtain $ W, y $ where $ \anonymouskeymap[\msg,W] =\pk_i $, $ \evaluationslist[\msg, W] = y$ and  $ (x, \pk) $ is in $\vklist $. Then run  $ \Gen_{sign}(\ring,x,\pk,\aux,\msg) \rightarrow \sigma $.
 	%Verify that $ [\msg,\aux, W,\ring, \sigma, 0] $ is not recorded. If it is recorded, abort. Otherwise,
-	Record $ [\msg,\aux, W, \ring,\sigma, 1] $. Return $(\oramsg{signature}, \sid, \ring,W,\aux,\msg, y, \sigma)$ to $\user_i$.
+	Let $ \sigma = \sigma||W $ and record $ [\msg,\aux, W, \ring,\sigma, 1] $. Return $(\oramsg{signature}, \sid, \ring,W,\aux,\msg, y, \sigma)$ to $\user_i$.
 \end{tcolorbox}
 
 
@@ -259,7 +258,7 @@ After deciding $ b $, $ \fgvrf $ records it as $ [\msg, \aux, W,\ring,\sigma,b] 
 		The only place that $ \fgvrf $ does not respond any query is when it aborts. It happens when it selects an honest anonymous key which already existed. This happens in negligible probability in $ \secparam $. }{}
 	
 	
-	\paragraph{Anonymity:} We expect from an anonymous $ \fgvrf $  to adhere to the condition that an honest signature $\sigma$ generated for an input $\msg$ along with its associated anonymous key $W$ should not give any information regarding the honest party's key, except for the fact that it is a member of $ \ring $.  However, this condition should hold unless $\msg$ has been signed by the same party for any other ring $\ring'$. In such a case,  since both signatures includes $ W $, the anonymity may be compromised  i.e.,  $ \simulator $  learns the party's key is in the intersection of $ \ring $ and $ \ring' $. We note that this design choice is intentional, as it provides parties with the flexibility to reveal their identity when necessary.
+	\paragraph{Anonymity:} We expect from an anonymous $ \fgvrf $  to adhere to the condition that an honest signature $\sigma$ generated for an input $\msg$ with $ \Gen_{sign} $ along with its associated anonymous key $W$ should not give any information regarding the honest party's key, except for the fact that it is a member of $ \ring $.  However, this condition should hold unless $\msg$ has been signed by the same party for any other ring $\ring'$. In such a case,  since both signatures includes $ W $, the anonymity may be compromised  i.e.,  $ \simulator $  learns the party's key is in the intersection of $ \ring $ and $ \ring' $. We note that this design choice is intentional, as it provides parties with the flexibility to reveal their identity when necessary.
 		
 	It is evident that anonymous keys do not give any information related to party's key as they are randomly sampled by $ \fgvrf $. However, this cannot be conclusively asserted for the signatures, because it depends on the specification of $ \Gen_{sign} $. Therefore, we introduce an anonymity definition (See Definition \ref{def:anonymity}) for $ \Gen_{sign} $ and establish that $ \fgvrf $ is anonymous if $ \Gen_{sign} $ is anonymous according to this definition.
 	
