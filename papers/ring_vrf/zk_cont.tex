@@ -52,90 +52,89 @@ Below, we formally define ZK continuation. In section~\ref{sec:rvrf_groth16} we 
 %\end{definition} 
 
 %TODO: Check notation consistancy with NIZK in preliminaries
-\begin{definition}[ZK Continuations]
+\begin{definition}[ZK Continuation]
 \label{def:zk_cont}
- A zero-knowledge continuation $\ZKCont$ for a relation $\relone$ with 
-input $(\bary, \barx)$ and witness $\baromega_1$ is a tuple of efficient algorithms 
-($\ZKCont.\Setup$, $\ZKCont.\Preprove$, $\ZKCont.\Reprove$, 
-$\ZKCont.\VerifyCom$, $\ZKCont.\Verify$, $\ZKCont.\Sim$) 
-such that for implicit security parameter $\lambda$,
+A ZK continuation for a relation $\relone$ with a vectors of 
+inputs $(\bary, \barx)$ and witnesses $\baromega_1$ is a tuple of PPT algorithms 
+$(\ZKCont.\Setup, \ZKCont.\Preprove, \ZKCont.\Reprove, 
+\ZKCont.\VerifyCom, \ZKCont.\Verify $, $\ZKCont.\Sim)$
+with  implicit inputs $ \rel_1  $ and security parameter $\lambda$,
 \begin{itemize}
 
-\item $\ZKCont.\Setup: (1^{\lambda}, \relone) \mapsto (\crs, \tw, \pp)$ a setup 
-algorithm that on input the security parameter outputs a common reference 
-string $\crs$, a trapdoor $\tw$ and a list $\pp$ of public parameters, 
+\item $\ZKCont.\Setup(1^{\lambda}) \rightarrow (\crs, \tw, \pp):$ It outputs a common reference 
+string $\crs$, a trapdoor $\tw$ and a list $\pp$ of public parameters.
 
-\item $\ZKCont.\Preprove: (\crs, \bar{y}, \bar{x}, \baromega_1, \relone) \mapsto (X', \pi', b')$ \,
-constructs commitment $X'$ from a vector of inputs $\bar{x}$ (called \emph{opaque}) and 
-constructs proof $\pi'$ from vector of inputs $\bar{y}$ (called \emph{transparent}), 
-$\bar{x}$ and vector of witnesses $\baromega_1$, and it also outputs $b'$ as the opening for $X'$,
+\item $\ZKCont.\Preprove(\crs, \bar{y}, \bar{x}, \baromega_1) \rightarrow (X', \pi', b'):$ It
+outputs a commitment $X'$ to $\bar{x}$ (called \emph{opaque}), its opening $ b' $ and a proof $\pi'$ constructed from vector of inputs $\bar{y}$ (called \emph{transparent}).
+\item $\ZKCont.\Reprove(\crs, X', \pi', b') \rightarrow (X, \pi, b):$ It
+outputs a new commitment $X$ and proof $\pi$ with a new opening $b$ for the commitment. 
 
-\item $\ZKCont.\Reprove: (\crs, X', \pi', b', \relone) \mapsto (X, \pi, b)$ \,
-returns a new commitment $X$ and proof $\pi$ and returns an opening $b$ for the commitment, 
-
-\item $\ZKCont.\VerifyCom: (\pp, X, \barx, b) \mapsto 0/1$ \, 
-verifies that indeed $X$ is a commitment to $\barx$ with opening (e.g., randomness) $b$ and 
-outputs 1 if indeed that is the case and 0 otherwise,
+\item $\ZKCont.\VerifyCom(\pp, X, \barx, b) \rightarrow 0/1:$
+It verifies that  $X$ is a commitment to $\barx$ with opening $b$ and 
+outputs 1 if indeed that is the case and 0 otherwise.
  
-\item $\ZKCont.\Verify: (\crs, \bar{y}, X, \pi, \relone) \mapsto 0/1$ \, outputs $1$ in case it accepts  and $0$ otherwise,
+\item $\ZKCont.\Verify(\crs, \bar{y}, X, \pi) \rightarrow 0/1:$ It outputs $1$ if it verifies  and $0$ otherwise.
 
-\item $\ZKCont.\Sim: (\tw, \bary, \relone) \mapsto (\pi, X)$ takes as input a simulation trapdoor $\tw$ and statement $(\bary, \barx)$ and returns 
-arguments $\pi$ and $X$,
+\item $\ZKCont.\Sim(\tw, \bary)\rightarrow (\pi, X):$ It outputs a proof $\pi$ and $X$ given a simulation trapdoor $\tw$ and statement $(\bary, \barx)$. 
+
 \end{itemize}
-and satisfies perfect completeness for $\Preprove$ and, for $\Reprove$, it satisfies knowledge soundness and zero-knowledge as defined below:\\
-
-\noindent We define perfect completeness for $\Preprove$ and $\Reprove$ algorithms separately and in the most general way possible,
+$ \ZKCont $ satisfies perfect completeness, knowledge soundness and zero-knowledge as defined below.
+We define perfect completeness for $\Preprove$ and $\Reprove$  separately  in the most general way possible,
 (i.e., with inputs supplied by the adversary where possible).  
 
-\noindent \textbf{Perfect Completeness for $\Preprove$} For all $\lambda \in \mathbb{N}$, for every $(\bary, \barx; \baromega_1) \in \relone$:
-\begin{align*}
-\Pr (&\ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1 \ \wedge \ \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1\  | \ \\ 
-                  &(\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), (X, \pi, b) \leftarrow \ZKCont.\Preprove(\crs, \bar{y}, \bar{x}, \baromega_1, \relone)) = 1
+\noindent \textbf{Perfect Completeness for $\Preprove$:} For all $\lambda $, for every $(\bary, \barx; \baromega_1) \in \relone$:
+\begin{footnotesize}
+\begin{align*}\
+\Pr[&\ZKCont.\Verify(\crs, \bar{y}, X, \pi) = 1 \wedge  \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1\  | \ \\ 
+&(\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (X, \pi, b) \leftarrow \ZKCont.\Preprove(\crs, \bar{y}, \bar{x}, \baromega_1)] = 1
 \end{align*}
+	
+\end{footnotesize}
 
-\noindent \textbf{Perfect Completeness for $\Reprove$} For all $\lambda \in \mathbb{N}$, for every PPT adversary $A$: 
+\noindent \textbf{Perfect Completeness for $\Reprove$:} For all $\lambda$ and PPT adversaries $\adv$: 
+\begin{footnotesize}
 \begin{align*}
-\Pr (& (\ZKCont.\Verify(\crs, \bar{y}, X', \pi', \relone) = 1 \  \Rightarrow \ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1)  \ \wedge \ \\
+\Pr [& (\ZKCont.\Verify(\crs, \bar{y}, X', \pi') = 1 \  \Rightarrow \ZKCont.\Verify(\crs, \bar{y}, X, \pi) = 1)  \ \wedge \ \\
                    &\wedge \ (\ZKCont.\VerifyCom (\pp, X', \barx, b') = 1  \Rightarrow  \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1) \ | \\
-                   & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone),  (\bary, \barx, X', \pi', b') \leftarrow A(\crs,\relone), \\
-                   & (X, \pi, b) \leftarrow \ZKCont.\Reprove(\crs, X', \pi', b', \relone)) = 1
+                   & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}),  (\bary, \barx, X', \pi', b') \leftarrow \adv(\crs,\relone), \\
+                   & (X, \pi, b) \leftarrow \ZKCont.\Reprove(\crs, X', \pi', b')] = 1
 \end{align*}
+\end{footnotesize}
 
-\noindent \textbf{Knowledge Soundness} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $\realaux$ (as per~\cite{bening_auxiliary}) and 
-every non-uniform efficient adversary $A$, there exists efficient non-uniform extractor $E$ such that:
+\noindent \textbf{Knowledge Soundness} For all $\lambda$, for every benign auxiliary input $\realaux$ (as per~\cite{bening_auxiliary}) and 
+every non-uniform efficient adversary $\adv$, there exists an efficient non-uniform extractor  $ \Extract $ such that:
+\begin{footnotesize}
 \begin{align*}
-\Pr (& (\ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1) \ \wedge \ (\ZKCont.\VerifyCom(\pp, X, \bar{x}, b) = 1) \ \wedge\ ( (\bary, \barx; \baromega_1) \notin \relone) \ | \\
-                   & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), (\bary, \barx, X, \pi, b; \baromega_1 ) \leftarrow A || E (\crs, \realaux, \relone)) = \negl (\lambda),
+\Pr [& \ZKCont.\Verify(\crs, \bar{y}, X, \pi) = 1  \wedge \ZKCont.\VerifyCom(\pp, X, \bar{x}, b) = 1  \wedge (\bary, \barx; \baromega_1) \notin \relone\ | \\
+                   & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), (\bary, \barx, X, \pi, b; \baromega_1 ) \leftarrow \adv || \Extract(\crs, \realaux, \relone)] = \negl (\lambda),
 \end{align*}
+\end{footnotesize}
 
 \noindent where by $(\mathit{output_{A}};\mathit{output_{B}}) \leftarrow A || B(\mathit{input})$ we denote algorithms $A$, $B$ running on the same 
 $\mathit{input}$ and $B$ having access to the random coins of $A$. \\
 
-\noindent Finally, we introduce a new flavour of zero-knowledge property. It allows us to formalise the intuition that if one calls once 
-$\ZKCont.\Preprove$ on $((\bary, \barx), \baromega_1) \in \relone$ and 
-then sequentially calls $ \ZKCont.\Reprove $ at least once but also (possibly) multiple times, 
-then every time after the first call to $ \ZKCont.\Reprove $ the resulting proofs reveal nothing regarding either $\barx$ or $\baromega_1$. 
-Hence, the proofs obtained via sequential use of $ \ZKCont.\Reprove $ as described above are not linkable, i.e., a property targeted  
-in the preamble of this section. \\
+ Finally, we introduce a new flavour of zero-knowledge property for $ \ZKCont $. It allows us to formalize the concept that after an initial call to $\ZKCont.\Preprove$ with $((\bary, \barx), \baromega_1) \in \relone$, subsequent sequential calls to $ \ZKCont.\Reprove $ result in proofs that disclose no information about $\barx$ or $\baromega_1$.
 
-\noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $\realaux$, 
-for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$, for all $b'$, for every adversary $A$ there exists a PPT algorithm $ \Sim $ such that:
-\eprint{\begin{align*}
-& \Pr [A(\crs, \realaux, \pi, X, \relone] = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
-                       & \ \ \ \ \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, (\pi, X, \_) \leftarrow \ZKCont.\Reprove (\crs, X', \pi', b', \relone)) =  \\
-= \ &\mathit{Pr}(A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\ 
-                        & \ \ \ \ \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, (\pi, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone))
-\end{align*}}{\begin{align*}
-& \Pr (A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
-                      & \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, \\
-                       & (\pi, X, \_) \leftarrow \ZKCont.\Reprove (\crs, X', \pi', b', \relone)) =  \\
-& = \mathit{Pr}(A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\ 
-                        & \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, \\ 
-                        & (\pi, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone))
-\end{align*}} 
+
+\noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$:} For all $\lambda$, for every benign auxiliary input $\realaux$, 
+for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$, for all $b'$, for every adversary $\adv$, there exists a PPT algorithm $ \Sim $ such that:
+\begin{footnotesize}
+\begin{align*}
+& \Pr [\adv(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), 
+\\& \ZKCont.\Verify(\crs, \bary, X', \pi') = 1,  (\pi, X, \_) \leftarrow \ZKCont.\Reprove (\crs, X', \pi', b')] \\
+= & \Pr[A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}), \\ 
+                        & \ZKCont.\Verify(\crs, \bary, X', \pi') = 1,  (\pi, X) \leftarrow \ZKCont.\Sim(\tw, \bary)]
+\end{align*}
+
+\end{footnotesize}
+
+
 \end{definition} 
 
-\subsection{Specialised Groth16}
+
+%Hence, the proofs obtained via sequential use of $ \ZKCont.\Reprove $ as described above are not linkable, i.e., a property targeted  
+%in the preamble of this section. \\
+\subsection{Specialised Groth16 Proofs}
 \label{sec:rvrf_groth16}
 
 Below we instantiate our zero-knowledge continuation notion with a scheme based on Groth16~\cite{Groth16} SNARK;
