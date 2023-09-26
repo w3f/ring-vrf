@@ -8,11 +8,11 @@ pub mod ring;
 
 use ark_ec::{
     AffineRepr, CurveGroup,
-    hashing::{HashToCurveError, curve_maps, map_to_curve_hasher::MapToCurveBasedHasher}, // HashToCurve
+    // hashing::{HashToCurveError, curve_maps, map_to_curve_hasher::MapToCurveBasedHasher, HashToCurve},
 };
 use ark_std::{vec::Vec};   // io::{Read, Write}
 
-pub use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
+pub use ark_serialize::{CanonicalSerialize, CanonicalDeserialize, SerializationError, Compress};
 
 pub use ark_ed_on_bls12_381_bandersnatch::{
     self as bandersnatch,
@@ -140,8 +140,8 @@ mod tmp {
 }
 
 impl scale::ArkScaleMaxEncodedLen for RingVrfProof {
-    fn max_encoded_len() -> usize {
-        <PedersenVrfProof as scale::ArkScaleMaxEncodedLen>::max_encoded_len()
+    fn max_encoded_len(compress: Compress) -> usize {
+        <PedersenVrfProof as scale::ArkScaleMaxEncodedLen>::max_encoded_len(compress)
         + 4096  // TODO: How large is RingProof, Sergey?
     }
 }
