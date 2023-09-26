@@ -8,25 +8,22 @@
 
 \section{Zero-knowledge Continuations}
 \label{sec:rvrf_cont}
-
-\noindent In the following, we describe a NIZK for a relation $\rel$ where
+In this section, we describe our new notion that we call zero-knowledge (ZK) continuation. Our new notion focuses on optimizing a NIZK proving system tailored for a relation $ \rel $ such that
 $$\rel = \{(\bary, \barz; \barx, \baromega_1, \baromega_2):  (\bary, \barx; \baromega_1) \in \relone, (\barz, \barx; \baromega_2) \in \reltwo \},$$
 and $\relone$, $\reltwo$ are NP relations. 
-At a high level, this is based on the commit-and-prove methodology~\cite{Kilian1990UsesOR,CLOS02,LegoSNARK} 
-as relations $\relone$ and $\reltwo$ have input $\barx$ in common and the respective 
-proofs or arguments can and will make use of a commitment $X$ to $\barx$. However, our proposed NIZK has a more specific functionality: 
-it is designed to efficiently re-prove membership for relation $\relone$ via a new technique which we call \emph{zero-knowledge continuation}. 
-In practice, using a NIZK that ensures a zero-knowledge continuation for a 
-subcomponent relation (i.e., in our case $\relone$) means one essentially needs to create only once an otherwise expensive proof for that subcomponent 
+At a high level, NIZK proving systems for relations as $ \rel$ are based on the commit-and-prove methodology~\cite{Kilian1990UsesOR,CLOS02,LegoSNARK} 
+as relations $\relone$ and $\reltwo$ have input $\barx$ in common. These systems typically incorporate a commitment $X$ to $\barx$ in their respective 
+proofs or arguments. In our proposed NIZK system for $ \rel $, we adopt a similar methodology but with a distinctive addition. Our design is specified to facilitate the efficient re-proving membership for relation $\relone$ via ZK continuation. 
+In practice, using a NIZK that ensures a ZK continuation for a 
+subcomponent relation (i.e., in our case $\relone$) means one essentially needs to create only once an  expensive proof for that subcomponent 
 relation; the initial proof can later be re-used multiple times (just after inexpensive re-randomisations) 
 while preserving knowledge soundness and zero-knowledge of the entire NIZK. 
-Below, we formally define zero-knowledge continuation. In section~\ref{sec:rvrf_groth16} we instantiate it via a \emph{special(ised) 
-Groth16} or \SpecialG, and finally, in section~\ref{subsec:rvrf_faster} we use it to instantiate our $ \rVRF.\Sign $ algorithm in Section \ref{sec:pederson_vrf} with fast amortised prover time. \\
+Below, we formally define ZK continuation. In section~\ref{sec:rvrf_groth16} we instantiate it via  \SpecialG, and finally, in section~\ref{subsec:rvrf_faster} we use it to instantiate our $ \rVRF.\Sign $ algorithm in Section \ref{sec:pederson_vrf} with fast amortised prover time. \\
 
-\noindent In addition, the anonymity property of our ring VRF demands we not only finalise multiple times a component of the zero-knowledge 
-continuation but also each time the result remains unlinkable to previous finalisations, meaning our ring VRF stays zero-knowledge 
-even with a continuation component being reused. We formalise such a more general zero-knowledge property in 
-section~\ref{sec:rvrf_groth16} and give an instantiation of our NIZK fulfilling such a property in section~\ref{subsec:rvrf_faster}. 
+%\noindent In addition, the anonymity property of our ring VRF demands we not only finalise multiple times a component of the zero-knowledge 
+%continuation but also each time the result remains unlinkable to previous finalisations, meaning our ring VRF stays zero-knowledge 
+%even with a continuation component being reused. We formalise such a more general zero-knowledge property in 
+%section~\ref{sec:rvrf_groth16} and give an instantiation of our NIZK fulfilling such a property in section~\ref{subsec:rvrf_faster}. 
 %Moreover, the anonymity property of a ring VRF demands we finalise the amortized ``continuation'' multiple
 %times, with each time being unlinkable to the others, meaning our rVRF
 %stays zero-knowledge even with the continuation being reused.
@@ -92,13 +89,13 @@ and satisfies perfect completeness for $\Preprove$ and, for $\Reprove$, it satis
 
 \noindent \textbf{Perfect Completeness for $\Preprove$} For all $\lambda \in \mathbb{N}$, for every $(\bary, \barx; \baromega_1) \in \relone$:
 \begin{align*}
-\mathit{Pr} (&\ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1 \ \wedge \ \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1\  | \ \\ 
+\Pr (&\ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1 \ \wedge \ \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1\  | \ \\ 
                   &(\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), (X, \pi, b) \leftarrow \ZKCont.\Preprove(\crs, \bar{y}, \bar{x}, \baromega_1, \relone)) = 1
 \end{align*}
 
 \noindent \textbf{Perfect Completeness for $\Reprove$} For all $\lambda \in \mathbb{N}$, for every PPT adversary $A$: 
 \begin{align*}
-\mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X', \pi', \relone) = 1 \  \Rightarrow \ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1)  \ \wedge \ \\
+\Pr (& (\ZKCont.\Verify(\crs, \bar{y}, X', \pi', \relone) = 1 \  \Rightarrow \ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1)  \ \wedge \ \\
                    &\wedge \ (\ZKCont.\VerifyCom (\pp, X', \barx, b') = 1  \Rightarrow  \ZKCont.\VerifyCom (\pp, X, \barx, b) = 1) \ | \\
                    & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone),  (\bary, \barx, X', \pi', b') \leftarrow A(\crs,\relone), \\
                    & (X, \pi, b) \leftarrow \ZKCont.\Reprove(\crs, X', \pi', b', \relone)) = 1
@@ -107,7 +104,7 @@ and satisfies perfect completeness for $\Preprove$ and, for $\Reprove$, it satis
 \noindent \textbf{Knowledge Soundness} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $\realaux$ (as per~\cite{bening_auxiliary}) and 
 every non-uniform efficient adversary $A$, there exists efficient non-uniform extractor $E$ such that:
 \begin{align*}
-\mathit{Pr} (& (\ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1) \ \wedge \ (\ZKCont.\VerifyCom(\pp, X, \bar{x}, b) = 1) \ \wedge\ ( (\bary, \barx; \baromega_1) \notin \relone) \ | \\
+\Pr (& (\ZKCont.\Verify(\crs, \bar{y}, X, \pi, \relone) = 1) \ \wedge \ (\ZKCont.\VerifyCom(\pp, X, \bar{x}, b) = 1) \ \wedge\ ( (\bary, \barx; \baromega_1) \notin \relone) \ | \\
                    & (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), (\bary, \barx, X, \pi, b; \baromega_1 ) \leftarrow A || E (\crs, \realaux, \relone)) = \negl (\lambda),
 \end{align*}
 
@@ -124,12 +121,12 @@ in the preamble of this section. \\
 \noindent \textbf{Perfect Zero-knowledge w.r.t. $\relone$} For all $\lambda \in \mathbb{N}$, for every benign auxiliary input $\realaux$, 
 for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$, for all $b'$, for every adversary $A$ there exists a PPT algorithm $ \Sim $ such that:
 \eprint{\begin{align*}
-& \mathit{Pr} (A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
+& \Pr [A(\crs, \realaux, \pi, X, \relone] = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
                        & \ \ \ \ \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, (\pi, X, \_) \leftarrow \ZKCont.\Reprove (\crs, X', \pi', b', \relone)) =  \\
 = \ &\mathit{Pr}(A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\ 
                         & \ \ \ \ \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, (\pi, X) \leftarrow \ZKCont.\Sim(\tw, \bary, \relone))
 \end{align*}}{\begin{align*}
-& \mathit{Pr} (A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
+& \Pr (A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\
                       & \ZKCont.\Verify(\crs, \bary, X', \pi', \relone) = 1, \\
                        & (\pi, X, \_) \leftarrow \ZKCont.\Reprove (\crs, X', \pi', b', \relone)) =  \\
 & = \mathit{Pr}(A(\crs, \realaux, \pi, X, \relone) = 1 \ | \ (\crs, \tw, \pp) \leftarrow \ZKCont.\Setup (1^{\lambda}, \relone), \\ 
