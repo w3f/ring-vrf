@@ -30,12 +30,29 @@ ark-bls12-381 = { version = "0.4", default-features = false, features = [ "curve
 sha2 = { version = "0.10", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
 
+# Substrate deps
+sp-ed-on-bls12-381-bandersnatch = { path = "/mnt/ssd/develop/parity/ark-substrate/substrate-curves/ed_on_bls12_381_bandersnatch", optional = true }
+sp-bls12-381 = { path = "/mnt/ssd/develop/parity/ark-substrate/substrate-curves/bls12_381", optional = true }
+
 [dev-dependencies]
 
 
 [features]
 default = ["getrandom"]  #  "std",
 getrandom = ["dleq_vrf/getrandom"]
-std = ["getrandom", "ring/std", "ark-std/std", "ark-ff/std", "ark-ec/std", "ark-serialize/std"]
 # parallel = ["std", "ring/parallel"]  #  ["std", "rayon", "ark-std/parallel", "ark-ff/parallel", "ark-ec/parallel", "ark-poly/parallel"]
 print-trace = ["ark-std/print-trace"]
+substrate = [
+  "sp-ed-on-bls12-381-bandersnatch",
+  "sp-bls12-381",
+]
+std = [
+  "getrandom",
+  "ring/std",
+  "ark-std/std",
+  "ark-ff/std",
+  "ark-ec/std",
+  "ark-serialize/std",
+  "sp-ed-on-bls12-381-bandersnatch?/std",
+  "sp-bls12-381?/std",
+]
