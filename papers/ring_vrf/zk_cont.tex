@@ -13,7 +13,7 @@ $$\rel = \{(\bary, \barz; \barx, \baromega_1, \baromega_2):  (\bary, \barx; \bar
 and $\relone$, $\reltwo$ are NP relations. 
 At a high level, NIZK proving systems for relations as $ \rel$ are based on the commit-and-prove methodology~\cite{Kilian1990UsesOR,CLOS02,LegoSNARK} 
 as relations $\relone$ and $\reltwo$ have input $\barx$ in common. These systems typically incorporate a commitment $X$ to $\barx$ in their respective 
-proofs or arguments. In our proposed NIZK system for $ \rel $, we adopt a similar methodology but with a distinctive addition. Our design is specified to facilitate the efficient re-proving membership for relation $\relone$ via ZK continuation. 
+proofs or arguments for $ \relone $ and $ \reltwo $ to hide the witness $ x $ in $ \rel $. In our proposed NIZK system for $ \rel $, we adopt a similar methodology but with a distinctive addition. Our design is specified to facilitate the efficient re-proving membership for relation $\relone$ via ZK continuation. 
 In practice, using a NIZK that ensures a ZK continuation for a 
 subcomponent relation (i.e., in our case $\relone$) means one essentially needs to create only once an  expensive proof for that subcomponent 
 relation; the initial proof can later be re-used multiple times (just after inexpensive re-randomisations) 
@@ -137,11 +137,9 @@ for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$
 \subsection{Specialised Groth16 Proofs}
 \label{sec:rvrf_groth16}
 
-Below we instantiate our zero-knowledge continuation notion with a scheme based on Groth16~\cite{Groth16} SNARK;
-hence, we call our instantiation \emph{specialised Groth16} or \emph{$\mathsf{SpecialG}$}.
-\eprint{First, we remind the reader the definition of a Quadratic Arithmetic Program (QAP)~\cite{LegoSNARK}, ~\cite{GGPR13} and related $\relRQ$.}{We will use the polynomials that  define a Quadratic Arithmetic Program 
-(QAP)~\cite{LegoSNARK}, ~\cite{GGPR13} and related $\relRQ$ in a standard way. We invite the reader to consult 
-the references for a full reminder or the Appendix~\ref{appendix_specialg}.}  
+Below we instantiate our zero-knowledge continuation notion with a scheme that we call  \emph{$\mathsf{SpecialG}$}. It is based on Groth16 zkSNARK~\cite{Groth16}.
+\eprint{First, we remind the reader the definition of a Quadratic Arithmetic Program (QAP)~\cite{LegoSNARK}, ~\cite{GGPR13} and related $\relRQ$.}{
+As in~\cite{Groth16}, we use a standard quadratic arithmetic program $ \cQ $ (QAP) of size $ m $ defined over field $ \F_q $ (See Appendix~\ref{appendix_specialg} for more details). Then given $ \cQ $, we then set  $ \relRQ  $ that corresponds to $ \relone $. $ \relRQ $  consists of set of pairs $((\bary, \barx); \baromega) \in \F_q^{l} \times \F_q^{n-l} \times \F_q^{m-n}$ where $\F_q$ is a field.}  
 
 \eprint{\begin{definition}[QAP] 
 \label{def:QAP}
@@ -156,13 +154,17 @@ where $\barv = (v_0, \ldots, v_m) = (1, x_1, \ldots, x_n, w_1, \ldots w_{m-n})$ 
 $\barx = (x_{l+1}, \ldots, x_n)$ and $\baromega = (w_1, \ldots, w_{m-n})$. 
 \end{definition}}{}
 
-\noindent In summary, \SpecialG setup is an extension of original Groth16~\cite{Groth16} setup by two additional 
-group elements. $\SpecialG$ setup is identical to commit-carrying LegoSNARK 
-$\ccgroth$~\cite[Fig.~22]{LegoSNARK} setup\footnote{$\ccgroth$ is, in turn, based on  Groth16.}.
-Moreover, together the $\Preprove$ and the $\Reprove$ procedures of $\SpecialG$ are identical to the proving  
-procedure in $\ccgroth$ with the difference that $\SpecialG$ also re-randomises the commitment to part 
-of the public input, as part of  $\Reprove$. Additionally, the verification procedure and the commitment verification are identical to their 
-counterparts in $\ccgroth$. \eprint{}{We give $\SpecialG$ in full in Appendix~\ref{appendix_specialg} and below we only detail:} \\ 
+
+%SUMMARY%%%%
+%\noindent In summary, \SpecialG setup is an extension of original Groth16~\cite{Groth16} setup by two additional 
+%group elements. $\SpecialG$ setup is identical to commit-carrying LegoSNARK 
+%$\ccgroth$~\cite[Fig.~22]{LegoSNARK} setup\footnote{$\ccgroth$ is, in turn, based on  Groth16.}.
+%Moreover, together the $\Preprove$ and the $\Reprove$ procedures of $\SpecialG$ are identical to the proving  
+%procedure in $\ccgroth$ with the difference that $\SpecialG$ also re-randomises the commitment to part 
+%of the public input, as part of  $\Reprove$. Additionally, the verification procedure and the commitment verification are identical to their 
+%counterparts in $\ccgroth$. \eprint{}{We give $\SpecialG$ in full in Appendix~\ref{appendix_specialg} and below we only detail:} \\ 
+%%%%%%%%%%%
+
 %Second, our $\SpecialG.\Reprove$ algorithm uses a Groth16 re-randomisation 
 %technique for the proof (see~\cite[Fig.~1]{RandomizationGroth16} or LegoSNARK~\cite[Fig.~22]{LegoSNARK}), 
 %but, in addition, $\SpecialG.\Reprove$ also re-randomises $X$ which is a commitment to a slice of the public input;
@@ -171,86 +173,60 @@ counterparts in $\ccgroth$. \eprint{}{We give $\SpecialG$ in full in Appendix~\r
 %as well as the public input committed to in $X$.  
 
 \noindent Let $\ecE$ be a pairing friendly elliptic curve, let $e$ be its associated secure, efficient and 
-non-degenerate pairing and given its related first and second source groups (with randomly chosen generators 
-$\gone$ and $\gtwo$, respectively) and its target group, we introduce%Let $\mathbb{F}_q$ be a prime field, 
+non-degenerate pairing and given its related first  and second source groups $ \grone,\grtwo $ with randomly chosen generators 
+$\gone$ and $\gtwo$, respectively.
+%Let $\mathbb{F}_q$ be a prime field, 
 %let $G_1$, $G_2$, $G_T$ be as defined in section~\ref{??}, let $e$, $g$, $h$ be defined as $\ldots$. Let $t(X)$ and
 %$\{u_i(X),v_i(X),w_i(X)\}_{i=0}^m$ be polynomials in $\F_q[X]$, let $\ldots$ be $\ldots$ such that there exists $h(X) \in \F_q[X]$ with
 % $$ \sum_{i=0}^m a_iu_i(X) \cdot  \sum_{i=0}^m a_iv_i(X)  = \sum_{i=0}^m a_iw_i(X) + h(X)t(X)  \ (\ast)$$
 %Then let $\relone = \{ (;) \ | \ (;)  (\ast) \}$
-
-\eprint{\begin{definition}[Specialised Groth16 ($\SpecialG$)]
-\label{insta:sg16} Let $\relRQ$ be as mentioned above. We call 
-specialised Groth16 for relation $\relRQ$ the following: %instantiation of the zero-knowledge continuation notion from Definition~\ref{def:zk_cont}:
+$ \SpecialG $ for relation $\relRQ$ works as follows: %instantiation of the zero-knowledge continuation notion from Definition~\ref{def:zk_cont}:
 \begin{itemize}
-\item $\SpecialG.\Setup: (1^{\lambda}, \relRQ) \mapsto (\crs, \tw,\pp)$. \\ 
-\noindent Let $\alpha, \beta, \gamma, \delta, \tau, \eta  \xleftarrow{\$} \F_q^{*}$. 
-Let $\tw = (\alpha, \beta, \gamma, \delta, \tau, \eta)$. \\ 
-Let $\crs = (\barsig_1, \barsig_2)$ where 
-\eprint{\begin{align*}
-\barsig_1 = &(\alpha \cdot \gone, \beta \cdot \gone, \delta \cdot \gone, \{\tau_i \cdot \gone\}_{i=0}^{d-1}, 
-\left\{\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \cdot \gone \right\}_{i=1}^n, \frac{\eta}{\gamma} \cdot \gone, \\
-& \left\{\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\delta} \cdot \gone \right\}_{i=n+1}^m, 
-\left\{\frac{1}{\delta}\sigma^it(\sigma)\cdot \gone \right\}_{i=0}^{d-2}, \frac{\eta}{\delta}\cdot \gone), \\
-\barsig_2 = &(\beta \cdot \gtwo, \gamma \cdot \gtwo, \delta \cdot \gtwo, \{\tau^i \cdot \gtwo\}_{i=0}^{d-1}). 
-\end{align*}}{\begin{align*}
-\barsig_1 = (&\alpha \cdot \gone, \beta \cdot \gone, \delta \cdot \gone, \{\tau_i \cdot \gone\}_{i=0}^{d-1}, \\
-& \left\{\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \cdot \gone \right\}_{i=1}^n, \frac{\eta}{\gamma} \cdot \gone, \\ 
-&\left\{\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\delta} \cdot \gone \right\}_{i=n+1}^m, \\
-& \left\{\frac{1}{\delta}\sigma^it(\sigma)\cdot \gone \right\}_{i=0}^{d-2}, \frac{\eta}{\delta}\cdot \gone), \\
-\barsig_2 = (&\beta \cdot \gtwo, \gamma \cdot \gtwo, \delta \cdot \gtwo, \{\tau^i \cdot \gtwo\}_{i=0}^{d-1}). 
-\end{align*}}
+\item $\SpecialG.\Setup(1^{\lambda}, \relRQ) \rightarrow (\crs, \tw,\pp)$:  It is identical to the LegoSNARK  $\ccgroth$~\cite[Fig.~22]{LegoSNARK} setup which  is  an extension of original Groth16~\cite{Groth16} setup by two additional group elements in $ crs $ and one field element in $ \tw$ which are underlined next. $\tw $ consists of $ \alpha, \beta, \gamma, \delta, \tau, \underline{\eta} \leftsample \F_q^*$ and $\crs = (\barsig_1, \barsig_2)$ where 
+$ \barsig_1 = (\alpha  , \beta  , \delta  , \{\tau_i  \}_{i=0}^{d-1}, \{\gamma_i\}_{i=1}^n, \underline{\frac{\eta}{\gamma}}, \{\delta_i\}_{i=n+1}^m, \{\frac{1}{\delta}\tau^it(\sigma) \}_{i=0}^{d-2}, \underline{\frac{\eta}{\delta}})\cdot \gone,
+\barsig_2 = (\beta  , \gamma  , \delta  , \{\tau^i  \}_{i=0}^{d-1})\cdot \gtwo $. Here, $ \gamma_i = \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} $ and $ \delta_i =\frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\delta} \}_{i=n+1}^m  $.
 %\item $\SpecialG.\Gen: (\crs, \relRQ) \mapsto (\pp, \crspk, \crsvk)$ where \\
 %$\crspk = \left([\barsig_1]_1, [\beta]_2, [\delta]_2, \left\{[\tau^i]_2\right\}_{i=0}^{d-1}\right)$  \\ 
 %$\crsvk = \left([\alpha]_1, \left\{ \left[ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \right]_1 \right\}_{i=1}^{l}, 
 %[\beta]_2, [\gamma]_2, [\delta]_2\right)$  \\ 
-$\pp = \left( \left \{ \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \cdot \gone \right \}_{i=l+1}^{n}, \frac{\eta}{\gamma} \cdot \gone \right)$. \\
-\eprint{\noindent Moreover, for simplicity and later use, we call 
-$\Kgamma = \frac{\eta}{\gamma} \cdot \gone$  and $\Kdelta = \frac{\eta}{\delta} \cdot \gone$.}{\noindent Moreover, for simplicity and later use, we call \\
-$\Kgamma = \frac{\eta}{\gamma} \cdot \gone$  and $\Kdelta = \frac{\eta}{\delta} \cdot \gone$.}
+We let $\pp = (\{K_i\}_{\ell+1}^n,K_\gamma) = (\{\gamma_i\gone\}_{i=l+1}^{n},   \frac{\eta}{\gamma}\gone )$ and $\Kdelta = \frac{\eta}{\delta} \cdot \gone$.
+
+A Groth16 proof for $ \relRQ $ needs the public statement $ (\bary,\barx)$ for verification. Differently than this, we want to achieve the verification of a Groth16 proof without $ \barx $ but with the commitment to $ \barx $. Therefore, we need additional elements in $ \crs $ to be able to still execute the verification.
 %{We should say what is the difference from Groth16.Setup or it is the same. I think in general in $ \SpecialG $, you should tell which part is from Groth16 or Legosnark and where we %change it while describing the algorithms. It will be much clear for the reader to verify. You have notes in the end but I think it is better to have it while describing since you can tell %more right away from the algorithm than in the end of everything}
-\item $\SpecialG.\Preprove: (\crs, \bar{y}, \bar{x}, \baromega_1, \relRQ) \mapsto (X', \pi', b')$ such that \\
-\eprint{\begin{align*}
+\item $\SpecialG.\Preprove(\crs, \bar{y}, \bar{x}, \baromega_1) \leftarrow (X', \pi', b')$: It runs the proving algorithm of Groth16 SNARK outputting $ \pi' = (A, B, C)  \in (\grone, \grtwo, \grone)$, then it lets $ b' = 0 $, computes the deterministic commitment $ X' = \sum_{i = \ell +1}^n x_i K_i$ to  $ \barx $.
+\eprint{In more detail, 
+\begin{align*}
 &\ \ \ \ \ \ \ \   b' = 0; r, s\xleftarrow{\$} \F_p; X' = \sum_{i=l+1}^{n} v_i \cdot  \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \cdot \gone;  \\
 &\ \ \ \ \ \ \ \  o = \alpha + \sum_{i=0}^{m} v_i \cdot a_i(\tau) + r \cdot \delta; u = \beta + \sum_{i=0}^{m} v_i \cdot b_i(\tau) + s \cdot \delta; \\ 
 &\ \ \ \ \ \ \ \  v = \frac{\sum_{i=n+1}^{m} (v_i (\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau))) + h(\tau)t(\tau)}{\delta}  + o\cdot s + u \cdot r - r \cdot s \cdot \delta; \\
 &\ \ \ \ \ \ \ \  \pi' = (o \cdot \gone, u \cdot \gtwo, v \cdot \gone), 
-\end{align*}}{\begin{align*}
-&\ \ \ \ \ \ \ \   b' = 0; r, s\xleftarrow{\$} \F_p; X' = \sum_{i=l+1}^{n} v_i \cdot  \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \cdot \gone;  \\
-&\ \ \ \ \ \ \ \  o = \alpha + \sum_{i=0}^{m} v_i \cdot a_i(\tau) + r \cdot \delta; u = \beta + \sum_{i=0}^{m} v_i \cdot b_i(\tau) + s \cdot \delta; \\ 
-&\ \ \ \ \ \ \ \   v = \frac{\sum_{i=n+1}^{m} (v_i (\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau))) + h(\tau)t(\tau)}{\delta}   + \\ 
-& \ \ \ \ \ \ \ \ \ \ \ \ \  \ \   + o\cdot s + u \cdot r - r \cdot s \cdot \delta; \\
-&\ \ \ \ \ \ \ \ \pi' = (o \cdot \gone, u \cdot \gtwo, v \cdot \gone), 
-\end{align*}}
+\end{align*}}{}
 \eprint{\noindent where $\barv = (1, x_1, \ldots, x_n, w_1, \ldots, w_{m-n})$, $\bary = (x_1, \ldots, x_l)$, $\barx = (x_{l+1}, \ldots, x_n)$, 
-$\baromega = (w_1, \ldots, w_{m-n})$ (same as per definition of QAP).}{\noindent where $\barv = (1, x_1, \ldots, x_n, w_1, \ldots, w_{m-n})$, $\bary = (x_1, \ldots, x_l)$, $\barx = (x_{l+1}, \ldots, x_n)$, \\
-$\baromega = (w_1, \ldots, w_{m-n})$ (same as per definition of QAP).}
-\item$\SpecialG.\Reprove: (\crs, X', \pi', b', \relRQ) \mapsto (X, \pi, b)$  such that
-\begin{align*}
-&\ \ \ \ \ \ \ \  b , r_1, r_2  \xleftarrow{\$} \F_p, X = X' + (b- b') \Kgamma, \pi = (O, U, V), \\
-&\ \ \ \ \ \ \ \ O = \frac{1}{r_1} O', U = r_1 U' + r_1r_2 \delta \gtwo, V = V' + r_2O'  - (b - b') \Kdelta \mathperiod
-\end{align*}
-\noindent where $\pi' = (O', U', V')$.
-\item $\SpecialG.\VerifyCom: (\pp, X, \barx, b) \mapsto 0/1$ where the output is 1 iff the following holds
-$$X = \sum_{i=l+1}^{n} x_i \cdot  \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \cdot \gone  + b \Kgamma,$$
-where $\barx = (x_{l+1}, \ldots, x_n)$, $ 0 \leq l \leq n-1$. 
-\item $\SpecialG.\Verify: (\crs, \bar{y}, X, \pi, \relRQ) \mapsto 0/1$ where the output is 1 iff the following holds 
-$$e(O,U) = e(\alpha \cdot \gone, \beta \cdot \gtwo) \cdot e(X + Y, \gamma \cdot \gtwo) \cdot e(V, \delta \cdot \gtwo),$$
-where $\pi = (O, U, V)$, $Y = \sum_{i=1}^{l} x_i \cdot \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma}  \cdot \gone$ 
+$\baromega = (w_1, \ldots, w_{m-n})$ (same as per definition of QAP).}{}
+\item$\SpecialG.\Reprove(\crs, X', \pi', b') \leftarrow (X, \pi, b):$ It rerandomizes $ \pi $ and the commitment $ X $  by using $ b' $ i.e., given $ \pi' = (A',B',C') $, pick $ b , r_1, r_2  \xleftarrow{\$} \F_p $ and let $ X = X' + (b- b') \Kgamma, \pi = (A, B, C)  $ where $ A = \frac{A'}{r_1}, B = r_1 B' + r_1r_2 \delta \gtwo, C = V' + r_2A'  - (b - b') \Kdelta $.
+
+
+The randomization process of $ \pi' $ aligns with the proving algorithm of $ \ccgroth $ \cite{LegoSNARK}. Notably, our approach involves a \emph{re}-randomization step using the blinding factor $ b' $ of $ \pi' $. In essence, whereas $ \ccgroth $ employs a new blinding factor $ b $ and generates a new proof $ \pi $ according to $ b $, we utilize $ b-b' $ instead and modify $ \pi' $ accordingly to generate randomized proof $ \pi $. Actually, $ \SpecialG $ gives a way to obtain a new proof by randomizing another valid proof by leveraging the technique introduced in $ \ccgroth $. However, in the end, the resulting proofs of both schemes are  generated with the same operations. 
+%\begin{align*}
+%&\ \ \ \ \ \ \ \  b , r_1, r_2  \xleftarrow{\$} \F_p, X = X' + (b- b') \Kgamma, \pi = (O, U, V), \\
+%&\ \ \ \ \ \ \ \ O = \frac{1}{r_1} O', U = r_1 U' + r_1r_2 \delta \gtwo, V = V' + r_2O'  - (b - b') \Kdelta \mathperiod
+%\end{align*}
+%\noindent where $\pi' = (O', U', V')$.
+
+The next algorithms $ \SpecialG.\VerifyCom $ and $ \SpecialG.\Verify $ are identical to $ \ccgroth $ commitment and proof verification algorithms, respectively.
+\item $\SpecialG.\VerifyCom(\pp, X, \barx, b) \rightarrow 0/1$: It outputs 1 iff
+$X = \sum_{i=l+1}^{n} x_i K_i   + b \Kgamma$. 
+\item $\SpecialG.\Verify(\crs, \bar{y}, X, \pi) \rightarrow 0/1$: It outputs is 1 iff the following holds 
+$e(A,B) = e(\alpha\gone, \beta\gtwo) + e(X + Y, \gamma \gtwo) + e(C, \delta \gtwo)$
+where $\pi = (A, B, C)$, $Y = \sum_{i=1}^{l} x_i \delta_i\gone$ 
 and $\bary = (x_1, \ldots, x_l)$.
-\item \eprint{$\SpecialG.\Sim: (\tw, \bary, \relRQ) \mapsto (\pi, X)$ where $x, o, u \xleftarrow {\$} \F_p$ and let 
-$\pi = (o \cdot \gone, u  \cdot \gtwo , v \cdot \gone)$ where $v = \frac{o\cdot u - \alpha \beta - \sum_{i=1}^{l} x_i (\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau))- x}{\delta}  $ and, 
+
+\item$\SpecialG.\Sim(\tw, \bary, \relRQ) \rightarrow (\pi, X)$: It samples $\tilde{x}, a, b \xleftarrow {\$} \F_p$ and let $\pi = (a\gone, b \gtwo , c\gone)$ where $c = \frac{ab - \alpha \beta - \sum_{i=1}^{l} x_i (\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau))- \tilde{x}}{\delta}  $ and, 
 by definition $\bary = (x_1, \ldots, x_l)$. Note that $\pi$ is a simulated proof for transparent input $\bary$ 
-and commitment $X = x \cdot \gone$.}{$\SpecialG.\Sim: (\tw, \bary, \relRQ) \mapsto (\pi, X)$ where \\ $x, o, u \xleftarrow {\$} \F_p$ and let 
-$\pi = (o \cdot \gone, u  \cdot \gtwo , v \cdot \gone)$ where \\ $v = \frac{o\cdot u - \alpha \beta - \sum_{i=1}^{l} x_i (\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau))- x}{\delta}  $ and, 
-by definition $\bary = (x_1, \ldots, x_l)$. Note that $\pi$ is a simulated proof for transparent input $\bary$ 
-and commitment $X = x \cdot \gone$.}
+and commitment $X = \tilde{x} \gone$.
 \end{itemize} 
-\end{definition}}{$\SpecialG.\Reprove: (\crs, X', \pi', b', \relRQ) \mapsto (X, \pi, b)$  such that
-\begin{align*}
-&\ \ \ \ \ \ \ \  b , r_1, r_2  \xleftarrow{\$} \F_p, X = X' + (b- b') \Kgamma, \pi = (O, U, V), \\
-&\ \ \ \ \ \ \ \ O = \frac{1}{r_1} O', U = r_1 U' + r_1r_2 \delta \gtwo, V = V' + r_2O'  - (b - b') \Kdelta \mathperiod
-\end{align*}
-\noindent where $\pi' = (O', U', V')$.}
+
+
 
 %\noindent \paragraph{Notes:} First, the trusted setup required by \SpecialG is 
 %an extension of that required by original Groth16~\cite{Groth16} by two additional 
