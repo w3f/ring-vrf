@@ -269,7 +269,7 @@ We next prove knowledge-soundness (KS) an in Definition~\ref{def:zk_cont} by fir
 (see Definition 3.4~\cite{LegoSNARK}).  We use the fact that $\ccgroth$ as defined by the NILP detailed in Fig.22, Appendix H.5~\cite{LegoSNARK} 
 satisfies that latter definition. Moreover, $\SpecialG$'s $\Setup$ on one hand, and $\ccgroth$'s $ \mathsf{KeyGen} $, on the other hand, are the same 
 procedure. Also $\SpecialG$ and $\ccgroth$ share the same verification algorithm. Hence, translating the notation appropriately, $\SpecialG$ also 
-satisfies KS of a cc-SNARK with double binding. \\
+satisfies KS of a cc-SNARK with double binding. 
 
 % we first argue that We prove knowledge-soundness by reducing it to the knowledge-soundness property of the Groth16 
 %commit-carrying with double binding scheme (for short $\ccgroth$). This knowledge-soundness property has been formalised in 
@@ -277,22 +277,22 @@ satisfies KS of a cc-SNARK with double binding. \\
 %Indeed, $\SpecialG$'s $\Setup$ together with $\Gen$ and $\ccgroth$'s $\mathit{KeyGen}$ are the same procedure. Moreover $\SpecialG$ 
 %and $\ccgroth$ share the same verification algorithm. Since $\ccgroth$ satisfies the definition of a cc-SNARK with double binding, translating 
 %the notation appropriately, $\SpecialG$ also satisfies the knowledge soundness properties for a cc-SNARK with double binding. 
-\noindent Let $A_{\SpecialG}$ be an adversary for KS in Definition~\ref{def:zk_cont} and 
-define adversary $A_{\ccgroth}$ for KS in Definition 3.4~\cite{LegoSNARK}:
-\begin{align*}
-&\mathit{If} \ A_{\SpecialG} (\crs, \pp, \realaux, \relRQ)\ \mathit{outputs} \  (\bary, \barx, X, \pi, b) \\
-&\ \ \ \ \ \ \ \ \mathit{then}\ A_{\ccgroth} (\crs, \realaux, \relRQ)\ \mathit{outputs} \ (\bary, X, \pi). 
-\end{align*}
+Let $\adv_{\SpecialG}$ be an adversary for KS in Definition~\ref{def:zk_cont} and 
+define adversary $\adv_{\ccgroth}$ for KS in Definition 3.4~\cite{LegoSNARK}:
+\eprint{\begin{align*}
+&\mathit{If} \ \adv_{\SpecialG} (\crs, \pp, \realaux, \relRQ)\ \mathit{outputs} \  (\bary, \barx, X, \pi, b) \\
+&\ \ \ \ \ \ \ \ \mathit{then}\ \adv_{\ccgroth} (\crs, \realaux, \relRQ)\ \mathit{outputs} \ (\bary, X, \pi). 
+\end{align*}}{If $ \ \adv_{\SpecialG} (\crs, \pp, \realaux, \relRQ) $ outputs   $ (\bary, \barx, X, \pi, b) $,then  $ \adv_{\ccgroth} (\crs, \realaux, \relRQ) $ outputs $ (\bary, X, \pi) $.}
+Given extractor $\Extract_{\ccgroth}$ fulfilling Definition 3.4~\cite{LegoSNARK} for $\adv_{\ccgroth}$, we
+construct extractor $\Extract_{\SpecialG}$ for $\adv_{\SpecialG}$
+\eprint{\begin{align*}
+&\mathit{If} \Extract_{\ccgroth} (\crs, \realaux, \relRQ)\ \mathit{outputs} \ (\barx^*, b^*, \baromega^*) \\
+& \ \ \ \ \ \ \ \ \mathit{then} \ \Extract_{\SpecialG} (\crs, \realaux, \relRQ) \ \mathit{outputs} \ \baromega^*; \\
+& \mathit{Otherwise} \ \Extract_{\ccgroth}(\crs, \realaux, \relRQ) \ \mathit{outputs} \ \bot.
+\end{align*}}{If $ \Extract_{\ccgroth} (\crs, \realaux, \relRQ) $ outputs  $ (\barx^*, b^*, \baromega^*) $ 
+then $ \Extract_{\SpecialG} (\crs, \realaux, \relRQ) $ outputs  $ \baromega^* $; otherwise $ \Extract_{\ccgroth}(\crs, \realaux, \relRQ) $ outputs $ \bot $.}
 
-\noindent Given extractor $E_{\ccgroth}$ fulfilling Definition 3.4~\cite{LegoSNARK} for $A_{\ccgroth}$, we
-construct extractor $E_{\SpecialG}$ for $A_{\SpecialG}$
-\begin{align*}
-&\mathit{If} E_{\ccgroth} (\crs, \realaux, \relRQ)\ \mathit{outputs} \ (\barx^*, b^*, \baromega^*) \\
-& \ \ \ \ \ \ \ \ \mathit{then} \ E_{\SpecialG} (\crs, \realaux, \relRQ) \ \mathit{outputs} \ \baromega^*; \\
-& \mathit{Otherwise} \ E_{\ccgroth}(\crs, \realaux, \relRQ) \ \mathit{outputs} \ \bot.
-\end{align*}
-
-\noindent We show $E_{\SpecialG}$ fulfils Definition~\ref{def:zk_cont} for $A_{\SpecialG}$. Assume by contradiction that is not the case. 
+\noindent We show $\Extract_{\SpecialG}$ fulfils Definition~\ref{def:zk_cont} for $\adv_{\SpecialG}$. Assume by contradiction that is not the case. 
 This implies there exists an auxiliary input $\realaux$ such that each: 
 \eprint{\begin{align*}
 &\SpecialG.\Verify(\crs, \bary, X, \pi, \relRQ) =1 \ \ (10), \ \SpecialG.\VerifyCom(\pp, X, \barx, b) =1 \ \ (20), \ (\bary, \barx; \baromega) \notin \relRQ  \ \ (30) 
@@ -302,7 +302,7 @@ This implies there exists an auxiliary input $\realaux$ such that each:
 & (\bary, \barx; \baromega) \notin \relRQ  \ \ (30) 
 \end{align*}}
 hold with non-negligible probability. Since $(20)$ holds with non-negligible probability and verification (for both proofs and commitments actually) is identical in $\SpecialG$ and $\ccgroth$ respectively, 
-and since $E_{\ccgroth}$ is an extractor for $A_{\ccgroth}$ as per Definition 3.4~\cite{LegoSNARK},
+and since $\Extract_{\ccgroth}$ is an extractor for $\adv_{\ccgroth}$ as per Definition 3.4~\cite{LegoSNARK},
  then each of the two events 
 \begin{align*}
 \mathit{\ccgroth.\mathit{VerCommit}^*}(\mathit{ck}, X, \barx^*, b^*) =1 \ (40) \ ; \ (\bary, \barx^*; \baromega^*) \in  \relRQ \ (50)
@@ -310,11 +310,10 @@ and since $E_{\ccgroth}$ is an extractor for $A_{\ccgroth}$ as per Definition 3.
 holds with overwhelming probability. Since $(20)$ holds with non-negligible probability and $(40)$ holds with overwhelming probability and 
 together with (ii) from Definition 3.4~\cite{LegoSNARK} we obtain that $\barx^* = \barx$. Since $(50)$ holds with overwhelming probability, it implies 
 $(\bary, \barx; \baromega^*) \in \relRQ $ with overwhelming probability which contradicts our assumption, so our claim that $\SpecialG$ does not have 
-KS as per Definition~\ref{def:zk_cont} is false. \\
+KS as per Definition~\ref{def:zk_cont} is false. 
 
-\noindent Finally, regarding zero-knowledge, it is clear that if $\pi = (O, U, V)$ is part of the output of $\SpecialG.\Reprove$, 
-then $O$ and $U$ are uniformly distributed as group elements in their respective groups. This holds, as long as the 
-input to $\SpecialG.\Reprove$ is a verifying proof, even when the proof was maliciously generated. Hence, it is easy to check  
+Finally, regarding zero-knowledge, it is clear that if $\pi = (A, B, C)$ is part of the output of $\SpecialG.\Reprove$, 
+then $A$ and $B$ are uniformly distributed as group elements in their respective groups. This holds, as long as the input to $\SpecialG.\Reprove$ is a verifying proof, even when the proof was maliciously generated. Hence, it is easy to check  
 that the output $\pi'$ of $\SpecialG.\Sim$ is identically distributed to a proof $\pi$ output by $\SpecialG.\Reprove$ so the perfect 
 zero-knowledge property holds for $\SpecialG$. 
 \end{proof}
