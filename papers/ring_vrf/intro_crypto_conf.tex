@@ -27,7 +27,7 @@ In short, our contributions in this paper are as follows:
  \begin{itemize}
  	\item We formally define the security of a ring VRF in the universal composability (UC) model. For this, we construct a functionality $ \fgvrf $ and verify the security properties that $ \fgvrf $ provides.
  	
- 	\item We introduce a new notion called zero-knowledge continuations  which defines the transformation of a valid proof into another valid and unlinkable proof of the same statement through efficient operations. Essentially, this allows a prover to generate an initially costly proof and subsequently reuse it by simply rerandomizing it,  while maintaining unlinkability with other proofs. 
+ 	\item We introduce a new notion called zero-knowledge (ZK) continuations  which defines the transformation of a valid proof into another valid and unlinkable proof of the same statement through efficient operations. Essentially, this allows a prover to generate an initially costly proof and subsequently reuse it by simply rerandomizing it,  while maintaining unlinkability with other proofs. 
  	%This novel notion provides us with a practical tool for developing more efficient ring VRF constructions.
  	
  	\item We construct two distinct  ring VRF protocols. The first protocol is designed to be utilized with a non-interactive zero-knowledge (NIZK) proving system with our specific relations. The second protocol is more specialized, allowing instantiation with any zero-knowledge continuations. The latter offers an efficient solution for ring VRF applications that necessitate the generation of multiple signatures for the same ring. We show that both of our protocols are UC-secure.
