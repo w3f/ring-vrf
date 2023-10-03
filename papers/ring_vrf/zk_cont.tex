@@ -137,9 +137,9 @@ for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$
 \subsection{Specialised Groth16 Proofs}
 \label{sec:rvrf_groth16}
 
-Below we instantiate our zero-knowledge continuation notion with a scheme that we call  \emph{$\mathsf{SpecialG}$}. It is based on Groth16 zkSNARK~\cite{Groth16}.
+Below we instantiate our ZK continuation notion with a scheme that we call  \emph{$\mathsf{SpecialG}$}. It is based on Groth16 zkSNARK~\cite{Groth16}.
 \eprint{First, we remind the reader the definition of a Quadratic Arithmetic Program (QAP)~\cite{LegoSNARK}, ~\cite{GGPR13} and related $\relRQ$.}{
-As in~\cite{Groth16}, we use a standard quadratic arithmetic program $ \cQ $ (QAP) of size $ m $ defined over field $ \F_q $ (See Appendix~\ref{appendix_specialg} for more details). Then given $ \cQ $, we then set  $ \relRQ  $ that corresponds to $ \relone $. $ \relRQ $  consists of set of pairs $((\bary, \barx); \baromega) \in \F_q^{l} \times \F_q^{n-l} \times \F_q^{m-n}$ where $\F_q$ is a field.}  
+As in~\cite{Groth16}, we use a standard quadratic arithmetic program $ \cQ $ (QAP) of size $ m $ defined over field $ \F_q $ (See Appendix~\ref{appendix_specialg} for more details). Then given $ \cQ $, we then set  $ \relRQ  $ that corresponds to $ \relone $. $ \relRQ $  consists of pairs $((\bary, \barx); \baromega) \in \F_q^{l} \times \F_q^{n-l} \times \F_q^{m-n}$ where $\F_q$ is a field.}  
 
 \eprint{\begin{definition}[QAP] 
 \label{def:QAP}
@@ -172,8 +172,8 @@ $\barx = (x_{l+1}, \ldots, x_n)$ and $\baromega = (w_1, \ldots, w_{m-n})$.
 %that even after iteratively applying $\SpecialG.\Reprove$ zero-knowledge property is preserved for both the witness 
 %as well as the public input committed to in $X$.  
 
-\noindent Let $\ecE$ be a pairing friendly elliptic curve, let $e$ be its associated secure, efficient and 
-non-degenerate pairing and given its related first  and second source groups $ \grone,\grtwo $ with randomly chosen generators 
+\noindent We let $\ecE$ be a pairing friendly elliptic curve with an efficient and 
+non-degenerate pairing $e$. We denote its first  and second source groups by $ \grone,\grtwo $ with generators 
 $\gone$ and $\gtwo$, respectively.
 %Let $\mathbb{F}_q$ be a prime field, 
 %let $G_1$, $G_2$, $G_T$ be as defined in section~\ref{??}, let $e$, $g$, $h$ be defined as $\ldots$. Let $t(X)$ and
@@ -206,7 +206,7 @@ $\baromega = (w_1, \ldots, w_{m-n})$ (same as per definition of QAP).}{}
 \item$\SpecialG.\Reprove(\crs, X', \pi', b') \leftarrow (X, \pi, b):$ It rerandomizes $ \pi $ and the commitment $ X $  by using $ b' $ i.e., given $ \pi' = (A',B',C') $, pick $ b , r_1, r_2  \xleftarrow{\$} \F_p $ and let $ X = X' + (b- b') \Kgamma, \pi = (A, B, C)  $ where $ A = \frac{A'}{r_1}, B = r_1 B' + r_1r_2 \delta \gtwo, C = C' + r_2A'  - (b - b') \Kdelta $.
 
 
-The randomization process of $ \pi' $ aligns with the proving algorithm of $ \ccgroth $ \cite{LegoSNARK}. Notably, our approach involves a \emph{re}-randomization step using the blinding factor $ b' $ of $ \pi' $. In essence, whereas $ \ccgroth $ employs a new blinding factor $ b $ and generates a new proof $ \pi $ according to $ b $, we utilize $ b-b' $ instead and modify $ \pi' $ accordingly to generate randomized proof $ \pi $. Actually, $ \SpecialG $ gives a way to obtain a new proof by randomizing another valid proof by leveraging the technique introduced in $ \ccgroth $. However, in the end, the resulting proofs of both schemes are  generated with the same operations. 
+The randomization process of $ \pi' $ aligns with the proving algorithm of $ \ccgroth $ \cite{LegoSNARK}. Notably, our approach involves a \emph{re}-randomization step using the blinding factor $ b' $ of $ \pi' $. In essence, whereas $ \ccgroth $ employs a new blinding factor $ b $ and generates a new proof $ \pi $ according to $ b $, we utilize $ b-b' $ instead and modify $ \pi' $ accordingly to generate a randomized proof $ \pi $. Actually, $ \SpecialG $ gives a way to obtain a new proof by randomizing another valid proof by leveraging the technique introduced in $ \ccgroth $. However, in the end, the resulting proofs of both schemes are  generated with the same operations. 
 %\begin{align*}
 %&\ \ \ \ \ \ \ \  b , r_1, r_2  \xleftarrow{\$} \F_p, X = X' + (b- b') \Kgamma, \pi = (O, U, V), \\
 %&\ \ \ \ \ \ \ \ O = \frac{1}{r_1} O', U = r_1 U' + r_1r_2 \delta \gtwo, V = V' + r_2O'  - (b - b') \Kdelta \mathperiod
@@ -216,7 +216,7 @@ The randomization process of $ \pi' $ aligns with the proving algorithm of $ \cc
 The next algorithms $ \SpecialG.\VerifyCom $ and $ \SpecialG.\Verify $ are identical to $ \ccgroth $ commitment and proof verification algorithms, respectively.
 \item $\SpecialG.\VerifyCom(\pp, X, \barx, b) \rightarrow 0/1$: It outputs 1 iff
 $X = \sum_{i=l+1}^{n} x_i K_i   + b \Kgamma$. 
-\item $\SpecialG.\Verify(\crs, \bar{y}, X, \pi) \rightarrow 0/1$: It outputs is 1 iff the following holds 
+\item $\SpecialG.\Verify(\crs, \bar{y}, X, \pi) \rightarrow 0/1$: It outputs  1 iff the following holds 
 $e(A,B) = e(\alpha\gone, \beta\gtwo) + e(X + Y, \gamma \gtwo) + e(C, \delta \gtwo)$
 where $\pi = (A, B, C)$, $Y = \sum_{i=1}^{l} x_i \delta_i\gone$ 
 and $\bary = (x_1, \ldots, x_l)$. 
@@ -252,11 +252,12 @@ and commitment $X = \tilde{x} \gone$.
 %since the zk-SNARK must remain knowledge-sound even given enlarged CRS; adding too many (or just ?wrong?) elements to the 
 %CRS can break the knowledge-soundness."
 
-\noindent Finally, we are ready to prove that $\SpecialG$ is a zero-knowledge continuation. We show that the knowledge soundness property 
+\noindent Next, we  prove that $\SpecialG$ is a zero-knowledge continuation. 
+\eprint{We show that the knowledge soundness property 
 of $\SpecialG$ (i.e., as defined for $\ZKCont$) is implied by the knowledge soundness property of commit-carrying SNARK with double 
 binding (cc-SNARK with double binding, see Definition 3.4~\cite{LegoSNARK}); our notion of zero-knowledge for $\ZKCont$ is, in fact a 
 new and stronger notion so we prove that directly. Formally, we have: 
-
+}{}
 \begin{theorem}
 \label{sec_specialg}
 Let $\relRQ$ be a relation as related to a QAP such that additionally $\{a_k(X)\}_{k=0}^n$ are linearly independent polynomials. Then, in the 
@@ -296,17 +297,21 @@ then $ \Extract_{\SpecialG} (\crs, \realaux, \relRQ) $ outputs  $ \baromega^* $;
 This implies there exists an auxiliary input $\realaux$ such that each: 
 \eprint{\begin{align*}
 &\SpecialG.\Verify(\crs, \bary, X, \pi, \relRQ) =1 \ \ (10), \ \SpecialG.\VerifyCom(\pp, X, \barx, b) =1 \ \ (20), \ (\bary, \barx; \baromega) \notin \relRQ  \ \ (30) 
-\end{align*}}{\begin{align*}
-&\SpecialG.\Verify(\crs, \bary, X, \pi, \relRQ) =1 \ \ (10), \\
-& \SpecialG.\VerifyCom(\pp, X, \barx, b) =1 \ \ (20), \\
+\end{align*}}{
+\begin{footnotesize}
+	\begin{align*}
+&\SpecialG.\Verify(\crs, \bary, X, \pi, \relRQ) =1 \ \ (10), \SpecialG.\VerifyCom(\pp, X, \barx, b) =1 \ \ (20), \\
 & (\bary, \barx; \baromega) \notin \relRQ  \ \ (30) 
-\end{align*}}
-hold with non-negligible probability. Since $(20)$ holds with non-negligible probability and verification (for both proofs and commitments actually) is identical in $\SpecialG$ and $\ccgroth$ respectively, 
+\end{align*}
+\end{footnotesize}}
+holds with non-negligible probability. Since $(20)$ holds with non-negligible probability and verification (for both proofs and commitments actually) is identical in $\SpecialG$ and $\ccgroth$ respectively, 
 and since $\Extract_{\ccgroth}$ is an extractor for $\adv_{\ccgroth}$ as per Definition 3.4~\cite{LegoSNARK},
  then each of the two events 
+ \begin{footnotesize}
 \begin{align*}
-\mathit{\ccgroth.\mathit{VerCommit}^*}(\mathit{ck}, X, \barx^*, b^*) =1 \ (40) \ ; \ (\bary, \barx^*; \baromega^*) \in  \relRQ \ (50)
+\mathit{\ccgroth.\mathit{VerCommit}^*}(\mathit{ck}, X, \barx^*, b^*) =1 \ (40), \ (\bary, \barx^*; \baromega^*) \in  \relRQ \ (50)
 \end{align*}
+\end{footnotesize}
 holds with overwhelming probability. Since $(20)$ holds with non-negligible probability and $(40)$ holds with overwhelming probability and 
 together with (ii) from Definition 3.4~\cite{LegoSNARK} we obtain that $\barx^* = \barx$. Since $(50)$ holds with overwhelming probability, it implies 
 $(\bary, \barx; \baromega^*) \in \relRQ $ with overwhelming probability which contradicts our assumption, so our claim that $\SpecialG$ does not have 

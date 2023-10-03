@@ -79,7 +79,7 @@ $ \rVRF.\Eval(\sk,\msg) $  that outputs evaluation value corresponds to generati
 	If there exists no $ W' $ such that $ \anonymouskeymap[\msg,W'] =  \pk_i $, let $ W \leftsample \setsym{S}_W $ and let $y \leftsample \setsym{S}_{eval}$. Set $ \anonymouskeymap[\msg,W] = \pk_i $ and set $ \evaluationslist[\msg, W] = y$.
 	In any case (except ignoring), obtain $ W, y $ where $ \anonymouskeymap[\msg,W] =\pk_i $, $ \evaluationslist[\msg, W] = y$ and  $ (x, \pk) $ is in $\vklist $. Then run  $ \Gen_{sign}(\ring,x,\pk,\aux,\msg) \rightarrow \sigma $.
 	%Verify that $ [\msg,\aux, W,\ring, \sigma, 0] $ is not recorded. If it is recorded, abort. Otherwise,
-	Let $ \sigma = \sigma||W $ and record $ [\msg,\aux, W, \ring,\sigma, 1] $. Return $(\oramsg{signature}, \sid, \ring,W,\aux,\msg, y, \sigma)$ to $\user_i$.
+	Let $ \sigma = (\sigma,W)$ and record $ [\msg,\aux, W, \ring,\sigma, 1] $. Return $(\oramsg{signature}, \sid, \ring,W,\aux,\msg, y, \sigma)$ to $\user_i$.
 \end{tcolorbox}
 
 
