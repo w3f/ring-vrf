@@ -96,7 +96,7 @@ $$
 	for relation $\mathcal{R}_{eval}$ i.e.,
 	let $r_1,r_2 \leftsample \F_p$
 	and compute $R = r_1 \genG + r_2 \genB, R_m = r_1 H_{\grE}(\msg) $ and $c = H_p(\aux,\msg,\compk,\PreOut,R,R_m)$, finally compute $s_1 = r_1 + c \, \sk$ and $s_2 = r_2 + c \, \openpk$ and let $ \pi = (c,s_1,s_2) $.
-	In the end, it returns the signature $\sigma = (\PreOut,\pi) $.
+	In the end, it returns the signature $\sigma = (\pi, \PreOut) $.
 	% and return the signature $\sigma = (\PreOut,c,s_1,s_2)$.
 	
 	\item $\PedVRF.\Verify(\compk,\msg,\aux,\sigma) \rightarrow (\Out \vee \perp):$ 
@@ -216,7 +216,7 @@ Now, we are ready to describe our first ring VRF construction.
 \eprint{\begin{itemize}}{}
 	
 	\item $\rVRF.\rSign((\sk,r),\comring, \openring,\msg,\aux) \rightarrow \sigma$
-	It returns a ring VRF signature $\sigma = (\compk,\piring,\sigma', \comring)$.
+	It returns a ring VRF signature $\sigma = (\compk,\piring, \comring),\sigma')$.
   For this, it obtains $(\openpk,\compk) $ by running $ \PedVRF.\CommitKey(\sk)$ and runs  $ \NIZK_{\Rring}.\Prove(\compk,\comring; \openpk,\openring, \pk,\sk,r) \rightarrow \piring$, then obtains the Pedersen VRF signature  $\sigma' $ by running $ \PedVRF.\Sign(\sk,\openpk,\msg, \aux')$  where $\aux' \leftarrow \tmpaux$. Here, 
 \eprint{$$ \Rring = \Setst{ (\compk,\comring ;\openpk,\openring,\sk,r) }{
 		\begin{aligned}
@@ -259,37 +259,56 @@ We note that if $ \pk = \sk\genG $ then $ \Rring $ does not need $ \sk,r $ as  p
 
 \eprint{Appendix \ref{ap:ucproof} proves our ring VRF construction realizes $ \fgvrf $ in Figure \ref{f:gvrf} but we want to give an intuition first why our scheme is secure. Intuitively, the randomness and the determinism of $ \rVRF.\Eval $ come from the random oracles $ H $ and $ H_{\grE} $.  The anonymity of our ring VRF signature $ (\sigma = (\compk, \pi_{ring}, \PreOut, \pi_{eval}, \comring)) $ comes from the perfect hiding property of Pedersen commitment i.e., $ \compk $ is independent from the signer's key, the zero-knowledge property of $ \NIZK_{\mathcal{R}_{ring}} $ and $ \NIZK_{\mathcal{R}_{eval}} $ and the difficulty of DDH in  $ \grE $ (Lemma \ref{lem:honestoutput}) so that $ \PreOut $ is indistinguishable from a random element in $ \grE $. The unforgeability and uniqueness come from the fact that CDH is hard in $ \grE $ (Lemma \ref{lem:simulation-ind}).}{}
 
-\begin{theorem}\label{thm:rvrfmain}
-	$ \rVRF $  over  $ pp_{rvrf} $ realizes  $ \fgvrf $ running $ \Gen_{sign} $ in Algorithm \ref{alg:gensign} \cite{canetti1,canetti2} in the random oracle model assuming that $ \NIZK_{\mathcal{R}_{eval}} $ and $ \NIZK_{\mathcal{R}_{ring}}$ are zero-knowledge and knowledge sound, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $ \eprint{(so the CDH problem is hard as well) }{} and the commitment scheme $ \mathsf{Com} $ is binding and perfectly hiding. 
-\end{theorem}
-
-
 \begin{algorithm}
 	\eprint{}{\scriptsize}
-	\caption{$\Gen_{sign}(\ring,W,x,\pk,\aux,\msg)$}
+	\caption{$\Gen_{sign}(\ring,x,\pk,\aux,\msg)$}
 	\label{alg:gensign}	 	
 	\begin{algorithmic}[1]
-		\State $ c,s_1, s_2 \leftsample \F_p $
-		\State $ \pi_{eval}  \leftarrow (c,s_1, s_2)$
-		\State $ \openpk \leftsample \F_p $
-		\State $ \compk =  x \genG + \openpk \, K$
-		%\State $ \pi_{eval} \leftarrow \NIZK.\mathsf{Simulate}(\rcom, (G, \genB,\GG,\compk,W,\In)) $
-		%\State \textbf{send} $(\oramsg{learn\_\tau},\sid)  $ to $ \gcrs $
-		%\State \textbf{receive} $(\oramsg{trapdoor},\sid, \tau,crs)  $ from $ \gcrs $
-		\State $ \comring, \openring \leftarrow \rVRF.\CommitRing(\ring, \pk) $
-		\State $ \pi_{ring} \leftarrow \NIZK_{\Rring}.\Prove(crs, \comring, \compk\; \openpk, \openring, x) $ 
-		\State\Return$ \sigma = (\pi_{eval},\pi_{ring},\compk,\comring,W) $
-	\end{algorithmic}
+			\State $ c,s_1, s_2 \leftsample \F_p $
+			\State $ \pi_{eval}  \leftarrow (c,s_1, s_2)$
+			\State $ \openpk \leftsample \F_p $
+			\State $ \compk =  x \genG + \openpk \, K$
+			%\State $ \pi_{eval} \leftarrow \NIZK.\mathsf{Simulate}(\rcom, (G, \genB,\GG,\compk,W,\In)) $
+			%\State \textbf{send} $(\oramsg{learn\_\tau},\sid)  $ to $ \gcrs $
+			%\State \textbf{receive} $(\oramsg{trapdoor},\sid, \tau,crs)  $ from $ \gcrs $
+			\State $ \comring, \openring \leftarrow \rVRF.\CommitRing(\ring, \pk) $ \label{line:comring}
+			\State $ \pi_{ring} \leftarrow \NIZK_{\Rring}.\Prove(\crs_{\Rring}, \pp_{\Rring}, \comring, \compk; \openpk, \openring, x) $ \label{line:piring}
+			\State\Return$ \sigma = (\pi_{ring},\compk,\comring,\pi_{eval}) $
+		\end{algorithmic}
 	
 \end{algorithm}
-We have the security proof of Theorem \ref{thm:rvrfmain} in Appendix \ref{ap:ucproof}. We give a proof sketch here.
-
-\noindent \textit{Proof Sketch:} We first verify that $ \fgvrf $ running $ \Gen_{sign} $ gives the anonymity defined in Definition \ref{def:anonymity} (See Lemma \ref{lem:anonymity}). \eprint{We can show it by reducing the anonymity game in another game where we  replace   $\NIZK_{\Rring}.\Prove(\comring, \compk\; \openpk, \openring, x) $
-by $ \NIZK_{\Rring}.\Simulate(\comring,\compk) $ in $ \Gen_{sign} $. Since the signature generated in this reduction is independent from honest keys thanks to perfectly hiding $ \compk $, the signatures generated by $ \Gen_{sign} $ are indistinguishable.}{Intuitively, it does not reveal the signer because $ \NIZK_{\Rring} $ is ZK and Pedersen commitment is perfectly hiding.}
-
-After making sure that $ \fgvrf $ running $ \Gen_{sign} $ satisfies all security properties, we show that our protocol $ \rVRF $ realizes $ \fgvrf $. So, we construct a simulator $ \simulator $ that simulates the honest parties in the real protocol $ \rVRF $ and simulates the adversary in the ideal world with $ \fgvrf $. $ \simulator $ simulates the random oracles against adversaries in the real protocol. It simulates $H_\grE $ so that it knows the discrete logarithm of each $ H_\grE $ output. This trapdoor helps $ \simulator $ to learn the public key of the adversary if the adversary ever comes to the random oracle $ H $ to compute the evaluation value of $ \msg $. When it happens, $ \simulator $ asks $ \fgvrf $ to evaluate $ \msg $ for this public key and replies the evaluation value provided by $ \fgvrf $ as a random oracle $ H $. Thus, $ \simulator $ makes the evaluation values of real world malicious parties be consistent with the evaluation values of ideal world malicious parties. Whenever $ \fgvrf $ sends a message $ (\oramsg{verify}, \sid, \ring, W, \aux,\msg, \sigma) $ to $ \simulator $, $ \simulator $ runs $ \rVRF.\Verify(\comring, \msg,\aux,\sigma) \rightarrow (b_\simulator,.)$ and sends a response including $ b_\simulator $. If $ \fgvrf $ replies with a decision $ b \neq b_\simulator $, $ \simulator $ aborts because of the inconsistency. Then, we  make sure that our simulation is indistinguishable. We show this in Lemma \ref{lem:honestoutput} and \ref{lem:simulation-ind} in Appendix \ref{ap:ucproof}:
-We  show that the indistinguishability of outputs in Lemma \ref{lem:honestoutput}. Differently than ideal honest parties, the honest parties in our  protocol have $ \PreOut $ as a part of their signature. The ideal world honest parties has $ W $ instead of it which is sampled randomly by $ \fgvrf $ instead of it. We can verify by the DDH assumption that $ W $ and $ \PreOut $ are indistinguishable.
-We also show that $ \simulator $ does not abort during the simulation except with negligible probability in Lemma \ref{lem:simulation-ind} in Appendix \ref{ap:ucproof} under the assumption of the hardness of the CDH problem. 
+%IF BELOW WILL BE ADDED, REMOVE UC-SIMULATION TO THE APPENDIX
+%\begin{theorem}\label{thm:rvrfmain}
+%	$ \rVRF $  over  $ pp_{rvrf} $ realizes  $ \fgvrf $ running $ \Gen_{sign} $ in Algorithm \ref{alg:gensign} \cite{canetti1,canetti2} in the random oracle model assuming that $ \NIZK_{\mathcal{R}_{eval}} $ and $ \NIZK_{\mathcal{R}_{ring}}$ are zero-knowledge and knowledge sound, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $ \eprint{(so the CDH problem is hard as well) }{} and the commitment scheme $ \mathsf{Com} $ is binding and perfectly hiding. 
+%\end{theorem}
+%
+%
+%\begin{algorithm}
+%	\eprint{}{\scriptsize}
+%	\caption{$\Gen_{sign}(\ring,W,x,\pk,\aux,\msg)$}
+%	\label{alg:gensign}	 	
+%	\begin{algorithmic}[1]
+%		\State $ c,s_1, s_2 \leftsample \F_p $
+%		\State $ \pi_{eval}  \leftarrow (c,s_1, s_2)$
+%		\State $ \openpk \leftsample \F_p $
+%		\State $ \compk =  x \genG + \openpk \, K$
+%		%\State $ \pi_{eval} \leftarrow \NIZK.\mathsf{Simulate}(\rcom, (G, \genB,\GG,\compk,W,\In)) $
+%		%\State \textbf{send} $(\oramsg{learn\_\tau},\sid)  $ to $ \gcrs $
+%		%\State \textbf{receive} $(\oramsg{trapdoor},\sid, \tau,crs)  $ from $ \gcrs $
+%		\State $ \comring, \openring \leftarrow \rVRF.\CommitRing(\ring, \pk) $
+%		\State $ \pi_{ring} \leftarrow \NIZK_{\Rring}.\Prove(crs, \comring, \compk\; \openpk, \openring, x) $ 
+%		\State\Return$ \sigma = (\pi_{eval},\pi_{ring},\compk,\comring,W) $
+%	\end{algorithmic}
+%	
+%\end{algorithm}
+%We have the security proof of Theorem \ref{thm:rvrfmain} in Appendix \ref{ap:ucproof}. We give a proof sketch here.
+%
+%\noindent \textit{Proof Sketch:} We first verify that $ \fgvrf $ running $ \Gen_{sign} $ gives the anonymity defined in Definition \ref{def:anonymity} (See Lemma \ref{lem:anonymity}). \eprint{We can show it by reducing the anonymity game in another game where we  replace   $\NIZK_{\Rring}.\Prove(\comring, \compk\; \openpk, \openring, x) $
+%by $ \NIZK_{\Rring}.\Simulate(\comring,\compk) $ in $ \Gen_{sign} $. Since the signature generated in this reduction is independent from honest keys thanks to perfectly hiding $ \compk $, the signatures generated by $ \Gen_{sign} $ are indistinguishable.}{Intuitively, it does not reveal the signer because $ \NIZK_{\Rring} $ is ZK and Pedersen commitment is perfectly hiding.}
+%
+%After making sure that $ \fgvrf $ running $ \Gen_{sign} $ satisfies all security properties, we show that our protocol $ \rVRF $ realizes $ \fgvrf $. So, we construct a simulator $ \simulator $ that simulates the honest parties in the real protocol $ \rVRF $ and simulates the adversary in the ideal world with $ \fgvrf $. $ \simulator $ simulates the random oracles against adversaries in the real protocol. It simulates $H_\grE $ so that it knows the discrete logarithm of each $ H_\grE $ output. This trapdoor helps $ \simulator $ to learn the public key of the adversary if the adversary ever comes to the random oracle $ H $ to compute the evaluation value of $ \msg $. When it happens, $ \simulator $ asks $ \fgvrf $ to evaluate $ \msg $ for this public key and replies the evaluation value provided by $ \fgvrf $ as a random oracle $ H $. Thus, $ \simulator $ makes the evaluation values of real world malicious parties be consistent with the evaluation values of ideal world malicious parties. Whenever $ \fgvrf $ sends a message $ (\oramsg{verify}, \sid, \ring, W, \aux,\msg, \sigma) $ to $ \simulator $, $ \simulator $ runs $ \rVRF.\Verify(\comring, \msg,\aux,\sigma) \rightarrow (b_\simulator,.)$ and sends a response including $ b_\simulator $. If $ \fgvrf $ replies with a decision $ b \neq b_\simulator $, $ \simulator $ aborts because of the inconsistency. Then, we  make sure that our simulation is indistinguishable. We show this in Lemma \ref{lem:honestoutput} and \ref{lem:simulation-ind} in Appendix \ref{ap:ucproof}:
+%We  show that the indistinguishability of outputs in Lemma \ref{lem:honestoutput}. Differently than ideal honest parties, the honest parties in our  protocol have $ \PreOut $ as a part of their signature. The ideal world honest parties has $ W $ instead of it which is sampled randomly by $ \fgvrf $ instead of it. We can verify by the DDH assumption that $ W $ and $ \PreOut $ are indistinguishable.
+%We also show that $ \simulator $ does not abort during the simulation except with negligible probability in Lemma \ref{lem:simulation-ind} in Appendix \ref{ap:ucproof} under the assumption of the hardness of the CDH problem. 
 %Indeed, we show that if there exists an adversary $ \adv $ which makes $ \simulator $ abort during the simulation, then we construct another adversary $ \mathcal{B} $ which breaks either the CDH problem or the binding property of $ \mathsf{Com}$. 
 
 
