@@ -12,5 +12,4 @@ For the next signatures for the same ring,  $\rVRF.\Sign$  runs only  $\SpecialG
 
 
 
-\paragraph{Instantiation our first protocol:} 
-TODO: Mention about Segey's implementation
+\paragraph{Instantiation our first protocol:}  Our instantiation commits to the ring using KZG commitments to the x and y coordinates of the public key. Without needing to open this commitment inside the SNARK, the constraint system is simple and we can use a custom SNARK similar to the construction in \cite{accountable}, modified to obtain zero-knowledge.  This gives proving time under a second for rings of size up to a few thousand (comparable to the benchmarks in \cite{accountable}), but unlike the second protocol, it has proving time proportional to the ring size and does not allow fast reproving. 

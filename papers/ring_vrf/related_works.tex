@@ -11,4 +11,3 @@ Other related security models are linkable ring signature \cite{ring_linkable,ri
 The most related construction is Semaphore\cite{Semaphore}, which also provides a "nullifier", unique per identity and context but anonymous, (akin to a ring VRF output in our formalism) along with a signature on a message. The properties this construction satisfies are not fully formalised. UC technicalities prevent this from satisfying our definition of a ring VRF. We expect our constructions have better proving time because it proves less in the SNARK as well as allowing proof reuse.
 
 ZK Continuations are an example of the commit and prove approach\cite{LegoSNARK}, linking SNARKs in a way similar to the ccGroth16 construction from LegoSNARKS\cite{LegoSNARK}. We prove that a very similar construction has the property that one of the SNARKs proofs can be resued in zero knowledge for which we provide new formalism.
-

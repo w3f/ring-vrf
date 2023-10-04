@@ -102,6 +102,11 @@ Nishanth Chandran, Jens Groth, and Amit Sahai.
   Colloquium, ICALP 2007, Wroc{\l}aw, Poland, July 9-13, 2007. Proceedings 34},
   pages 423--434. Springer, 2007.
 
+\bibitem{accountable}
+Oana Ciobotaru, Fatemeh Shirazi, Alistair Stewart, and Sergey Vasilyev.
+\newblock Accountable light client systems for pos blockchains.
+\newblock {\em Cryptology ePrint Archive}, 2022.
+
 \bibitem{praos}
 Bernardo David, Peter Ga{\v{z}}i, Aggelos Kiayias, and Alexander Russell.
 \newblock Ouroboros {P}raos: An adaptively-secure, semi-synchronous
