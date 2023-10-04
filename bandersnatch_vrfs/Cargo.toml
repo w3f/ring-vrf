@@ -31,8 +31,8 @@ sha2 = { version = "0.10", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
 
 # Substrate deps
-sp-ed-on-bls12-381-bandersnatch = { path = "/mnt/ssd/develop/parity/ark-substrate/substrate-curves/ed_on_bls12_381_bandersnatch", optional = true }
-sp-bls12-381 = { path = "/mnt/ssd/develop/parity/ark-substrate/substrate-curves/bls12_381", optional = true }
+sp-ed-on-bls12-381-bandersnatch = { path = "/mnt/ssd/develop/parity/ark-substrate/substrate-curves/ed_on_bls12_381_bandersnatch", default-features = false, optional = true }
+sp-bls12-381 = { path = "/mnt/ssd/develop/parity/ark-substrate/substrate-curves/bls12_381", default-features = false, optional = true }
 
 [dev-dependencies]
 
