@@ -195,9 +195,9 @@ Now, we are ready to describe our first ring VRF construction.
 \paragraph{The Ring VRF Construction:} The main building blocks of our construction are $ \PedVRF $, $ \NIZK_{\Rring} $ ($\Rring$ instantiated below) and a commitment scheme $ \mathsf{Com} $.
 
 \begin{itemize}
-	\item $\rVRF.\KeyGen(\pprvrf)\rightarrow ((\sk,r),\pk)$: It outputs as secret key $\sk,r \leftsample \F_p$ and $ \pk $ as public key where $ \pk = \mathsf{Com}.\mathsf{Commit}(\sk,r)  $. We deploy this key generation algorithm based on a commitment scheme to be consistent with the key generation algorithm of our second construction in  \S\ref{subsec:rvrf_faster} which necessitates commitment to $ \sk $ to run securely. However, we note that an alternative definition for $ \pk $ is possible, where $ \pk = \sk \genG $  and $ r = 0 $ within this construction.
+	\item $\rVRF.\KeyGen(\pprvrf)\rightarrow (\sk,\pk)$: It outputs as secret key $ \sk = (x,r) $ where $x,r \leftsample \F_p$ and $ \pk $ as public key where $ \pk = \mathsf{Com}.\mathsf{Commit}(x,r)  $. We deploy this key generation algorithm based on a commitment scheme to be consistent with the key generation algorithm of our second construction in  \S\ref{subsec:rvrf_faster} which necessitates commitment to $ \sk $ to run securely. However, we note that an alternative definition for $ \pk $ is possible, where $ \pk = \sk \genG $ and $ \sk = x $.
 	
-	\item $\rVRF.\Eval((\sk,r), \msg) $ runs $\PedVRF.\Eval(\sk,\msg)$. 
+	\item $\rVRF.\Eval(\sk, \msg) $ runs $\PedVRF.\Eval(x,\msg)$. 
 	\eprint{We remark that the evaluation value is generated with \emph{only} the first part of the secret key which is $ \sk $.}{}
 	
 	\item $ \rVRF.\CommitRing(\ring,\pk) \rightarrow (\comring,\openring)$: It computes a Merkle tree root $\comring  $ using $ H_\ring $ considering the elements of $ \ring $ as leaves and generates a  Merkle tree path $ \openring $ that verifies $ \pk \in \ring $.
@@ -215,27 +215,27 @@ Now, we are ready to describe our first ring VRF construction.
 \Prove and \Verify from $\NIZK_{\Rring}$, as follows:}{}
 \eprint{\begin{itemize}}{}
 	
-	\item $\rVRF.\rSign((\sk,r),\comring, \openring,\msg,\aux) \rightarrow \sigma$
+	\item $\rVRF.\rSign(\sk,\comring, \openring,\msg,\aux) \rightarrow \sigma$
 	It returns a ring VRF signature $\sigma = (\compk,\piring, \comring),\sigma')$.
-  For this, it obtains $(\openpk,\compk) $ by running $ \PedVRF.\CommitKey(\sk)$ and runs  $ \NIZK_{\Rring}.\Prove(\compk,\comring; \openpk,\openring, \pk,\sk,r) \rightarrow \piring$, then obtains the Pedersen VRF signature  $\sigma' $ by running $ \PedVRF.\Sign(\sk,\openpk,\msg, \aux')$  where $\aux' \leftarrow \tmpaux$. Here, 
-\eprint{$$ \Rring = \Setst{ (\compk,\comring ;\openpk,\openring,\sk,r) }{
+  For this, it obtains $(\openpk,\compk) $ by running $ \PedVRF.\CommitKey(x)$ and runs  $ \NIZK_{\Rring}.\Prove(\compk,\comring; \openpk,\openring, \pk,\sk) \rightarrow \piring$, then obtains the Pedersen VRF signature  $\sigma' $ by running $ \PedVRF.\Sign(x,\openpk,\msg, \aux')$  where $\aux' \leftarrow \tmpaux$. Here, 
+\eprint{$$ \Rring = \Setst{ (\compk,\comring ;\openpk,\openring,\sk=(x,r)) }{
 		\begin{aligned}
 			&	\pk = \OpenRing(\comring,\openring), \\
-			& 	\sk = \mathsf{Com}.\mathsf{Open}(\pk,r), \\
+			& 	x = \mathsf{Com}.\mathsf{Open}(\pk,r), \\
 			& 	\compk = \sk \genG + \openpk \genB
 		\end{aligned}	
 	}$$}{
 	\begin{scriptsize}
-	$$ \Rring = \Setst{ (\compk,\comring ;\openpk,\openring,\sk,r) }{
+	$$ \Rring = \Setst{ (\compk,\comring ;\openpk,\openring,\sk = (x,r)) }{
 		\begin{aligned}
 			&	\pk = \OpenRing(\comring,\openring), \\
-			& 	\sk = \mathsf{Com}.\mathsf{Open}(\pk,r), \\
-			& 	\compk = \sk \genG + \openpk \genB
+			& 	x = \mathsf{Com}.\mathsf{Open}(\pk,r), \\
+			& 	\compk = x \genG + \openpk \genB
 		\end{aligned}	
 	}$$
 	\end{scriptsize}}
 
-We note that if $ \pk = \sk\genG $ then $ \Rring $ does not need $ \sk,r $ as  part of its witness. In this case, we need to replace the last two conditions by $ \compk = \pk + \openpk \genB $.
+We note that if $ \pk = \sk\genG $ then $ \Rring $ does not need $ \sk $ as a part of its witness. In this case, we need to replace the last two conditions by $ \compk = \pk + \openpk \genB $.
 
 	\item $\rVRF.\rVerify(\comring,\msg,\aux,\sigma) \rightarrow (1,\Out) \,\, \lor (0,\perp)$: It
 	parses $\sigma$ as $(\compk,\piring,\sigma', \comring)$,  sets $\aux' \leftarrow \tmpaux$ and runs $\NIZK_{\Rring}.\Verify((\compk,\comring); \piring)$.
@@ -261,7 +261,7 @@ We note that if $ \pk = \sk\genG $ then $ \Rring $ does not need $ \sk,r $ as  p
 
 \begin{algorithm}
 	\eprint{}{\scriptsize}
-	\caption{$\Gen_{sign}(\ring,x,\pk,\aux,\msg)$}
+	\caption{$\Gen_{sign}(\ring,\sk=(x,r),\pk,\aux,\msg)$}
 	\label{alg:gensign}	 	
 	\begin{algorithmic}[1]
 			\State $ c,s_1, s_2 \leftsample \F_p $
@@ -272,7 +272,7 @@ We note that if $ \pk = \sk\genG $ then $ \Rring $ does not need $ \sk,r $ as  p
 			%\State \textbf{send} $(\oramsg{learn\_\tau},\sid)  $ to $ \gcrs $
 			%\State \textbf{receive} $(\oramsg{trapdoor},\sid, \tau,crs)  $ from $ \gcrs $
 			\State $ \comring, \openring \leftarrow \rVRF.\CommitRing(\ring, \pk) $ \label{line:comring}
-			\State $ \pi_{ring} \leftarrow \NIZK_{\Rring}.\Prove(\crs_{\Rring}, \pp_{\Rring}, \comring, \compk; \openpk, \openring, x) $ \label{line:piring}
+			\State $ \pi_{ring} \leftarrow \NIZK_{\Rring}.\Prove(\crs_{\Rring}, \pp_{\Rring}, \comring, \compk; \openpk, \openring, \sk) $ \label{line:piring}
 			\State\Return$ \sigma = (\pi_{ring},\compk,\comring,\pi_{eval}) $
 		\end{algorithmic}
 	
