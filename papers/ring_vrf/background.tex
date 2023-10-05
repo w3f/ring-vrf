@@ -204,13 +204,15 @@ auxiliary inputs as defined in~\cite{bening_auxiliary}.
 
 % REMARKS:  Removed excessive notation $\approx$.
 
-\begin{definition}
+\begin{definition}[Commitment Scheme]
 	A commitment scheme $ \com $ consists of the algorithms:
 	\begin{itemize}
 		\item $ \com.\commit(x) \mapsto c,r$ outputs a commitment $ c $ to $ x $ and  an opening $ r $.
 		\item $ \com.\open(c;x,r)  \mapsto x'$ opens the commitment $ c $ with the openings $ x,r$ to $ x' $. 
 	\end{itemize}
 \end{definition}
+
+If $ \com $ is a deterministic commitment scheme e.g., $ \com.\commit $ is a hash function, we ignore $ r $.
 
 
 
