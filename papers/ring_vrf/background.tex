@@ -1,6 +1,7 @@
 \newcommand{\com}{\mathsf{Com}}
 \newcommand{\open}{\mathsf{Open}}
 \newcommand{\commit}{\mathsf{Commit}}
+\newcommand{\NARK}{\mathsf{NARK}}
 \section{Preliminaries} %It is better name because this section contains information that helps reader to understand the later sections better
 \label{sec:background}
 
@@ -146,7 +147,8 @@ However, for our particular instantiation of $\NIZK_\rel$ in Section~\ref{subsec
 all three parameters $\crs_\rel$, $\tw_\rel$, $\pp_\rel$. Thus our definition allows for maximum flexibility. Finally, for each of our instantiations, we consider only benign 
 auxiliary inputs as defined in~\cite{bening_auxiliary}. 
 
-
+\begin{definition}[Non-interactive knowledge of arguments (NARK)] $ \NARK_\rel $ for a relation $ \rel $ consists of the same algorithms $ \NIZK $ but satisfies only completeness (Definition \ref{def:nizk_completeness}) and knowledge soundness (Definition \ref{def:nizk_knowledge_sound}).
+\end{definition}
 %Our zero-knowledge continuations in \S\ref{sec:rvrf_cont} demand
 %rerandomizing existing zkSNARKs, which only Groth16 supports \cite{Groth16}.
 %We therefore introduce some details of Groth16 \cite{Groth16} there,
@@ -203,9 +205,14 @@ auxiliary inputs as defined in~\cite{bening_auxiliary}.
 % REMARKS:  Removed excessive notation $\approx$.
 
 \begin{definition}
-	A commitment scheme $ \com $ consists of two algorithms:
+	A commitment scheme $ \com $ consists of the algorithms:
 	\begin{itemize}
 		\item $ \com.\commit(x) \mapsto c,r$ outputs a commitment $ c $ to $ x $ and  an opening $ r $.
 		\item $ \com.\open(c;x,r)  \mapsto x'$ opens the commitment $ c $ with the openings $ x,r$ to $ x' $. 
 	\end{itemize}
 \end{definition}
+
+
+
+
+
