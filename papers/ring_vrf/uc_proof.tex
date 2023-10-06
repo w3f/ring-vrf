@@ -235,11 +235,11 @@ This completes the security proof of our ring VRF protocol.\eprint{ \qed}{}
 
 \subsection{Security of Our Protocol with $ \SpecialG $}
 \label{ap:secondprotocolproof}
-\begin{theorem}
-Our specialized $ \rVRF $   over  $ pp_{rvrf} $ realizes $ \fgvrf $ running $ \Gen_{sign} $ (Algorithm \ref{alg:gensignSG}) \cite{canetti1,canetti2} in the random oracle model assuming that $\ZKCont $ is zero-knowledge and knowledge sound as defined in Definition \ref{def:zk_cont} and $ \NIZK_{\mathcal{R}_{eval}} $ is zero-knowledge and knowledge sound, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $ \eprint{(so the CDH problem is hard as well)}{} and the commitment scheme $ \mathsf{Com} $ is binding and perfectly hiding. 
-\end{theorem}
-
-Before we start to analyse our protocol, we should define the algorithm $ \gen_{sign} $  for $ \fgvrf $ and show that $ \fgvrf $ with $ \gen_{sign} $ satisfies the anonymity defined in Definition \ref{def:anonymity}. It is very similar to Algorithm \ref{alg:gensign}.
+%\begin{theorem}
+%Our specialized $ \rVRF $   over  $ pp_{rvrf} $ realizes $ \fgvrf $ running $ \Gen_{sign} $ (Algorithm \ref{alg:gensignSG}) \cite{canetti1,canetti2} in the random oracle model assuming that $\ZKCont $ is zero-knowledge and knowledge sound as defined in Definition \ref{def:zk_cont} and $ \NIZK_{\mathcal{R}_{eval}} $ is zero-knowledge and knowledge sound, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $ \eprint{(so the CDH problem is hard as well)}{} and the commitment scheme $ \mathsf{Com} $ is binding and perfectly hiding. 
+%\end{theorem}
+%
+%Before we start to analyse our protocol, we should define the algorithm $ \gen_{sign} $  for $ \fgvrf $ and show that $ \fgvrf $ with $ \gen_{sign} $ satisfies the anonymity defined in Definition \ref{def:anonymity}. It is very similar to Algorithm \ref{alg:gensign}.
 
 
 \begin{lemma} \label{lem:anonymitySG} $ \fgvrf $ running Algorithm \ref{alg:gensignSG} satisfies anonymity defined in Definition \ref{def:anonymity} assuming that $\ZKCont $ is a zero-knowledge as defined in Definition \ref{def:zk_cont}.
@@ -249,11 +249,7 @@ Before we start to analyse our protocol, we should define the algorithm $ \gen_{
 We simulate $ \fgvrf $ with Algorithm \ref{alg:gensign} against $ \mathcal{D} $. Assume that the advantage of $ \mathcal{D} $ is $ \epsilon $. Now, we reduce the anonymity game to the following game where we change the simulation of $ \fgvrf $ by changing the Algorithm \ref{alg:gensign}. In our change, we replace Line 2 and 3 of Algorithm \ref{alg:gensignSG} with $ \ZKCont.\Sim(\mathsf{td}, \comring,\relinner) $. Since $ \ZKCont$ is zero knowledge, there exists an algorithm  $ \ZKCont.\Sim$ which generates a proof which is indistinguishable from the original proof and $ \compk $. Therefore, our reduced game is indistinguishable from the anonymity game. Since in this game, no  key is used while generating the proof and $ W $ and $ \compk $ is perfectly hiding, the probability that  $ \mathcal{D} $ wins the game is $ \frac{1}{2} $. This means that $ \epsilon $ is negligible.		
 \end{proof}
 
-\begin{theorem}\label{thm:rvrfzkcont}
-$ \rVRF $  over  $ pp_{rvrf} $ realizes  $ \fgvrf $ running $ \Gen_{sign} $ in Algorithm \ref{alg:gensign} \cite{canetti1,canetti2} in the random oracle model assuming that $ \NIZK_{\mathcal{R}_{eval}} $ and $ \NIZK_{\mathcal{R}_{ring}}$ are zero-knowledge and knowledge sound, the decisional Diffie-Hellman (DDH) problem are hard in $ \grE  $ \eprint{(so the CDH problem is hard as well) }{} and the commitment scheme $ \mathsf{Com} $ is binding and perfectly hiding. 
-\end{theorem}
 
-The security proof follows the same proof we have for Theorem \ref{thm:rvrfmain} except the parts that we run extractor and simulator algorithms in $ \NIZK_{\Rring} $ and $ \NIZK_{\rel_{eval}} $.
 We construct the same $ \simulator $ described in the proof of Theorem \ref{thm:rvrfmain} because it does not deploy any extractor or simulator of $ \NIZK $ for $ \rel_{eval} $ and $ \Rring $. Similarly, Lemma \ref{lem:honestoutput} applies here. The only difference is in Lemma \ref{lem:simulation-ind} since $ \Gen_{sign} $ is different than Algorithm \ref{alg:gensign}.
 We first replace $ \Gen_{sign} $ run by $ \bdv $ in Algorithm \ref{alg:gensignbdv} defined for Lemma \ref{lem:simulation-ind} with Algorithm \ref{alg:gensignSGbdv}.
 
@@ -271,13 +267,13 @@ We first replace $ \Gen_{sign} $ run by $ \bdv $ in Algorithm \ref{alg:gensignbd
 	%					\State $ R_m = s\hashG(m) + c W $
 	%					\State $ \aux' = \tmpaux $
 	%					\State $ \mathtt{H_p}[\aux',m, \compk,W,R',R'_m] = c$						
-	\State\Return$ \sigma = (\pi_{eval},\pi_{ring},\compk,\comring,W) $
+	\State\Return$ \sigma = (\compk, \pi_{\mathtt{inner}},\comring, \pieval) $
 \end{algorithmic}
 
 \end{algorithm}
 
-The other change is that we replace all extractors in Lemma \ref{lem:simulation-ind} for $ \Rring, \rel_{eval} $ with the extractor  for $ \NIZK_{\relrvrf} $. $ \bdv $ here is simpler than $ \bdv$ in Lemma \ref{lem:simulation-ind} because the secret key is the part of  $\relrvrf$ while the secret key is not part of the witness in $ \Rring $ for the case $ \pk $ is defined as $ \sk\genG $.
-When $ \bdv $ sees a signature $ \sigma = (\compk, \pi_{ring}, W, \pi_{eval}, \comring) $ of $ \msg $, it runs the extractor for $ \NIZK_{\relrvrf} $ and obtains $ \sk,r, \openring $. Then, it lets $ X $ be $ \sk\genG $. If $ X $ is generated for an honest party, it solves the CDH as described in Lemma \ref{lem:simulation-ind} for the same case. If $ \anonymouskeylist[\msg,\ring] = t' > |\ring_{mal}| = t$, it runs the extractors for $ \NIZK_{\Rring} $ of all malicious signatures of $ \msg $ for $ \ring $ and obtains $ \{(\sk_j,r_j,\openring_j)\}_{j = 1}^{t'}$. Then, for all $ j \in [1,t']$, it adds $ X_j = \sk_j \genG $ to $ \mathcal{X} $ and $ \pk_j  = \rVRF.\OpenRing(\comring,\openring)$ to a list $ \mathcal{PK} $. Then, the first two cases in Lemma \ref{lem:simulation-ind} happens and $ \bdv $ behaves the same.
+The other change is that we replace all extractors in Lemma \ref{lem:simulation-ind} for $ \Rring, \rel_{eval} $ with the extractor  for $ \NIZK_{\relrvrf} $. $ \bdv $ here is simpler than $ \bdv$ in Lemma \ref{lem:simulation-ind} because the secret key is the part of  $\relrvrf$ while the secret key is not part of the witness in $ \Rring $ for the case $ \pk $ is defined as $ \sk\genG $ (Version 2).
+When $ \bdv $ sees a signature $ \sigma = (\compk, \pi_{\mathtt{inner}},\comring, \pieval)  $ of $ \msg $, it runs the extractor for $ \NIZK_{\relrvrf} $ and obtains $ x,r, \openring $. Then, it lets $ X $ be $ x\genG $. If $ X $ is generated for an honest party, it solves the CDH as described in Lemma \ref{lem:simulation-ind} for the same case. If $ \anonymouskeylist[\msg,\ring] = t' > |\ring_{mal}| = t$, it runs the extractors for $ \NIZK_{\Rring} $ of all malicious signatures of $ \msg $ for $ \ring $ and obtains $ \{(x_j,r_j,\openring_j)\}_{j = 1}^{t'}$. Then, for all $ j \in [1,t']$, it adds $ X_j = x_j \genG $ to $ \mathcal{X} $ and $ \pk_j  = \rVRF.\OpenRing(\comring,\openring)$ to a list $ \mathcal{PK} $. Then, the first two cases in Lemma \ref{lem:simulation-ind} happens and $ \bdv $ behaves the same.
 We note that here all $ \sk_j $'s are different because $ \PreOut_j $'s are different. Therefore, the last case in Lemma  \ref{lem:simulation-ind} does not happen.
 
 
