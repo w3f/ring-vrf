@@ -1,26 +1,29 @@
 
 \def\eprintsmallskip{\smallskip}{}%
 We introduce a new cryptographic primitive,  named
-\emph{ring verifiable random function (ring VRF)}.
-% which enables better anonymous credentials...
-% Anonymized
-%\eprint{Ring VRFs are}{We introduce ring VRFs, which are}
-Ring VRF is a ring signature that proves correct evaluation
-of some authorized signer's PRF, while hiding the signer's
-identity within a ring, some set of possible signers. We design a ring VRF protocol which has efficient instantiations with our novel {\em zero-knowledge continuation} technique.
-% \eprint{We propose ring VRFs as a natural fulcrum around which a diverse array of zkSNARK circuits turn, making them an ideal target for optimization and eventually standards.}{}
-We demonstrate a {\em zero-knowledge continuation} technique,
-which works by adjusting a Groth16 trusted setup to hide public inputs
-when rerandomizing the Groth16, ensuring that muliple uses of a proof generated once are unlinkable.  We then build ring VRFs that amortizes
-expensive ring membership proofs across many ring VRF signatures.
-%
-Our ring VRF needs only eight $\mathcal{G}_1$ and two
-$\mathcal{G}_2$ scalar multiplications, making it the only ring signature
-with performance competitive with group signatures.
+\emph{ring verifiable random function (ring VRF)}. Ring VRF combines properties of VRF  and ring signatures, offering verifiable unique, pseudorandom outputs while ensuring  anonymity of the output and message authentication. We design its security in the universal composability (UC) framework and construct two protocols secure in our model.
+We also formalize a new notion of \emph{zero-knowledge (ZK) continuations} allowing for the reusability of proofs by randomizing and enhancing the efficiency of one of our ring VRF schemes.
 
-A ring VRF can be used to obtain a unique pseudo-anonymous identity from a given a list of identities.
-By using a different input for the ring VRF in different contexts, we can generate a pseudonym for each context that is unlinkable between different contexts. 
-We discuss applications that range across the anonymous credential space.
+%ty to sign a message 
+%% which enables better anonymous credentials...
+%% Anonymized
+%%\eprint{Ring VRFs are}{We introduce ring VRFs, which are}
+%Ring VRF is a ring signature that proves a correct evaluation
+%of a random, while hiding the signer's
+%identity within a ring, some set of possible signers. We design a ring VRF protocol which has efficient instantiations with our novel {\em zero-knowledge continuation} technique.
+%% \eprint{We propose ring VRFs as a natural fulcrum around which a diverse array of zkSNARK circuits turn, making them an ideal target for optimization and eventually standards.}{}
+%We demonstrate a {\em zero-knowledge continuation} technique,
+%which works by adjusting a Groth16 trusted setup to hide public inputs
+%when rerandomizing the Groth16, ensuring that muliple uses of a proof generated once are unlinkable.  We then build ring VRFs that amortizes
+%expensive ring membership proofs across many ring VRF signatures.
+%%
+%Our ring VRF needs only eight $\mathcal{G}_1$ and two
+%$\mathcal{G}_2$ scalar multiplications, making it the only ring signature
+%with performance competitive with group signatures.
+%
+%A ring VRF can be used to obtain a unique pseudo-anonymous identity from a given a list of identities.
+%By using a different input for the ring VRF in different contexts, we can generate a pseudonym for each context that is unlinkable between different contexts. 
+%We discuss applications that range across the anonymous credential space.
 
 %Ring VRFs produce a unique identity for any given context but remain
 %unlinkable between different contexts.  These unlinkable but unique
@@ -30,4 +33,4 @@ We discuss applications that range across the anonymous credential space.
 %consumption that winds up vastly more flexible and efficient than
 %purchases via money-like protocols.
 
-We define the security of ring VRFs in the universally composable (UC) model and show that our protocol is UC secure.
+%We define the security of ring VRFs in the universally composable (UC) model and show that our protocol is UC secure.
