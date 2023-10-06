@@ -81,7 +81,7 @@ We enhance our construction from Section \ref{sec:pederson_vrf} by incorporating
 \end{algorithm}
 
 \noindent \textit{Proof Sketch:}  The security proof follows very similar to our first construction.
-We construct the same $ \simulator $ described in the proof of Theorem \ref{thm:firstprotocol} and use the result of Lemma \ref{lem:anonymity}. The only slight difference is in Lemma \ref{lem:simulation-ind} since $ \Gen_{sign} $ is different than Algorithm \ref{alg:gensign}. There, we run the simulator and extractor of $ \NIZK_{\relrvrf} $  instead of extractors of  $ \NIZK_{\Rring} $ and $ \NIZK_{\rel_{eval}} $. See Appendix \ref{ap:ucproof} for more details.
+We construct the same $ \simulator $ described in the proof of Theorem \ref{thm:firstprotocol} and use the result of Lemma \ref{lem:anonymity}. The only slight difference is in Lemma \ref{lem:simulation-ind} since $ \Gen_{sign} $ is different than Algorithm \ref{alg:gensign}. There, we run the simulator and extractor of $ \NIZK_{\relrvrf} $  instead of extractors of  $ \NIZK_{\Rring} $ and $ \NIZK_{\rel_{eval}} $. See Appendix \ref{ap:secondprotocolproof} for more details.
 
 
 
