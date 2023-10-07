@@ -15,18 +15,18 @@ use ark_std::vec::Vec;   // io::{Read, Write}
 pub use ark_serialize::{CanonicalSerialize, CanonicalDeserialize, SerializationError, Compress};
 
 #[cfg(not(feature = "substrate-curves"))]
-mod ark_dep {
+mod curves {
     pub use ark_ed_on_bls12_381_bandersnatch as bandersnatch;
     pub use ark_bls12_381 as bls12_381;
 }
 
 #[cfg(feature = "substrate-curves")]
-mod ark_dep {
+mod curves {
     pub use sp_ed_on_bls12_381_bandersnatch as bandersnatch;
     pub use sp_bls12_381 as bls12_381;
 }
 
-pub use ark_dep::*;
+pub use curves::*;
 
 // Conversion discussed in https://github.com/arkworks-rs/curves/pull/76#issuecomment-929121470
 
