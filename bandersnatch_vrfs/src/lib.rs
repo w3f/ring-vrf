@@ -14,13 +14,13 @@ use ark_std::vec::Vec;   // io::{Read, Write}
 
 pub use ark_serialize::{CanonicalSerialize, CanonicalDeserialize, SerializationError, Compress};
 
-#[cfg(not(feature = "substrate"))]
+#[cfg(not(feature = "substrate-curves"))]
 mod ark_dep {
     pub use ark_ed_on_bls12_381_bandersnatch as bandersnatch;
     pub use ark_bls12_381 as bls12_381;
 }
 
-#[cfg(feature = "substrate")]
+#[cfg(feature = "substrate-curves")]
 mod ark_dep {
     pub use sp_ed_on_bls12_381_bandersnatch as bandersnatch;
     pub use sp_bls12_381 as bls12_381;
