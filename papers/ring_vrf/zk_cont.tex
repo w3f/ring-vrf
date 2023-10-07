@@ -13,12 +13,12 @@ $$\rel = \{(\bary, \barz; \barx, \baromega_1, \baromega_2):  (\bary, \barx; \bar
 and $\relone$, $\reltwo$ are NP relations. 
 At a high level, NIZK proving systems for relations as $ \rel$ are based on the commit-and-prove methodology~\cite{Kilian1990UsesOR,CLOS02,LegoSNARK} 
 as relations $\relone$ and $\reltwo$ have input $\barx$ in common. These systems typically incorporate a commitment $X$ to $\barx$ in their respective 
-proofs or arguments for $ \relone $ and $ \reltwo $ to hide the witness $ x $ in $ \rel $. In our proposed NIZK system for $ \rel $, we adopt a similar methodology but with a distinctive addition. Our design is specified to facilitate the efficient re-proving membership for relation $\relone$ via ZK continuation. 
+proofs or arguments for $ \relone $ and $ \reltwo $ to hide the witness $ x $ in $ \rel $. In our proposed NIZK  for $ \rel $, we adopt a similar methodology but with a distinctive addition. Our design is specified to facilitate the efficient re-proving membership for relation $\relone$ via ZK continuation. 
 In practice, using a NIZK that ensures a ZK continuation for a 
 subcomponent relation (i.e., in our case $\relone$) means one essentially needs to create only once an  expensive proof for that subcomponent 
-relation; the initial proof can later be re-used multiple times (just after inexpensive re-randomisations), 
+relation; the initial proof can later be re-used multiple times (just after inexpensive operations), 
 while preserving knowledge soundness and zero-knowledge of the entire NIZK. Thus, our re-used proofs stay unlinkable. 
-Below, we formally define ZK continuation. In Section~\ref{sec:rvrf_groth16} we instantiate it via  \SpecialG, and finally, in section~\ref{subsec:rvrf_faster} we use it to instantiate our $ \rVRF.\Sign $ algorithm from Section \ref{sec:pederson_vrf} with fast amortised prover time. \\
+Below, we formally define ZK continuation. In Section~\ref{sec:rvrf_groth16}, we instantiate it via  \SpecialG, and finally, in section~\ref{subsec:rvrf_faster} we use it to instantiate our $ \rVRF.\Sign $ algorithm from Section \ref{sec:pederson_vrf}\eprint{ with fast amortised prover time}{}. \\
 
 %\noindent In addition, the anonymity property of our ring VRF demands we not only finalise multiple times a component of the zero-knowledge 
 %continuation but also each time the result remains unlinkable to previous finalisations, meaning our ring VRF stays zero-knowledge 
@@ -300,21 +300,14 @@ This implies there exists an auxiliary input $\realaux$ such that each:
 \eprint{\begin{align*}
 &\SpecialG.\Verify(\crs, \bary, X, \pi, \relRQ) =1 \ \ (10), \ \SpecialG.\VerifyCom(\pp, X, \barx, b) =1 \ \ (20), \ (\bary, \barx; \baromega) \notin \relRQ  \ \ (30) 
 \end{align*}}{
-\begin{footnotesize}
-	\begin{align*}
-&\SpecialG.\Verify(\crs, \bary, X, \pi, \relRQ) =1 \ \ (10), \SpecialG.\VerifyCom(\pp, X, \barx, b) =1 \ \ (20), \\
-& (\bary, \barx; \baromega) \notin \relRQ  \ \ (30) 
-\end{align*}
-\end{footnotesize}}
+$ \SpecialG.\Verify(\crs, \bary, X, \pi, \relRQ) =1 \ \ (10), \SpecialG.\VerifyCom(\pp, X, \barx, b) =1 \ \ (20),  (\bary, \barx; \baromega) \notin \relRQ  \ \ (30)  $
+}
 holds with non-negligible probability. Since $(20)$ holds with non-negligible probability and verification (for both proofs and commitments actually) is identical in $\SpecialG$ and $\ccgroth$ respectively, 
 and since $\Extract_{\ccgroth}$ is an extractor for $\adv_{\ccgroth}$ as per Definition 3.4~\cite{LegoSNARK},
  then each of the two events 
- \begin{footnotesize}
-\begin{align*}
-\mathit{\ccgroth.\mathit{VerCommit}^*}(\mathit{ck}, X, \barx^*, b^*) =1 \ (40), \ (\bary, \barx^*; \baromega^*) \in  \relRQ \ (50)
-\end{align*}
-\end{footnotesize}
-holds with overwhelming probability. Since $(20)$ holds with non-negligible probability and $(40)$ holds with overwhelming probability and 
+$\mathit{\ccgroth.\mathit{VerCommit}^*}(\mathit{ck}, X, \barx^*, b^*) =1 \ (40), \ (\bary, \barx^*; \baromega^*) \in  \relRQ \ (50)
+$
+ holds with overwhelming probability. Since $(20)$ holds with non-negligible probability and $(40)$ holds with overwhelming probability and 
 together with (ii) from Definition 3.4~\cite{LegoSNARK} we obtain that $\barx^* = \barx$. Since $(50)$ holds with overwhelming probability, it implies 
 $(\bary, \barx; \baromega^*) \in \relRQ $ with overwhelming probability which contradicts our assumption, so our claim that $\SpecialG$ does not have 
 KS as per Definition~\ref{def:zk_cont} is false. 
