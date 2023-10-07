@@ -30,22 +30,13 @@ ark-bls12-381 = { version = "0.4", default-features = false, features = [ "curve
 sha2 = { version = "0.10", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
 
-# sp-ed-on-bls12-381-bandersnatch = { git = "https://github.com/paritytech/substrate-curves", default-features = false, optional = true }
-# sp-bls12-381 = { path = "", default-features = false, optional = true }
+# Substrate curves are optional and gated by the 'substrate-curves' feature
 sp-ed-on-bls12-381-bandersnatch = { git = "https://github.com/paritytech/substrate-curves", default-features = false, optional = true }
 sp-bls12-381 = { git = "https://github.com/paritytech/substrate-curves", default-features = false, optional = true }
 
 
 [features]
 default = ["std"]
-getrandom = ["dleq_vrf/getrandom"]
-print-trace = ["ark-std/print-trace"]
-# Substrate curves: offload computationally heavy tasks to Substrate host functions.
-# This is mostly useful when targeting wasm32 architecture in Substrate contexts.
-substrate-curves = [
-  "sp-ed-on-bls12-381-bandersnatch",
-  "sp-bls12-381",
-]
 std = [
   "getrandom",
   "ring/std",
@@ -55,5 +46,13 @@ std = [
   "ark-serialize/std",
   "sp-ed-on-bls12-381-bandersnatch?/std",
   "sp-bls12-381?/std",
+]
+getrandom = ["dleq_vrf/getrandom"]
+print-trace = ["ark-std/print-trace"]
+# Substrate curves allows to offload computationally heavy tasks to Substrate host functions.
+# Mostly useful in Substrate development context when targeting wasm32 architecture.
+substrate-curves = [
+  "sp-ed-on-bls12-381-bandersnatch",
+  "sp-bls12-381",
 ]
 # parallel = ["std", "ring/parallel"]  #  ["std", "rayon", "ark-std/parallel", "ark-ff/parallel", "ark-ec/parallel", "ark-poly/parallel"]
