@@ -10,14 +10,24 @@ use ark_ec::{
     AffineRepr, CurveGroup,
     // hashing::{HashToCurveError, curve_maps, map_to_curve_hasher::MapToCurveBasedHasher, HashToCurve},
 };
-use ark_std::{vec::Vec};   // io::{Read, Write}
+use ark_std::vec::Vec;   // io::{Read, Write}
 
 pub use ark_serialize::{CanonicalSerialize, CanonicalDeserialize, SerializationError, Compress};
 
-pub use ark_ed_on_bls12_381_bandersnatch::{
-    self as bandersnatch,
-    EdwardsAffine,
-};
+#[cfg(not(feature = "substrate-curves"))]
+mod curves {
+    pub use ark_ed_on_bls12_381_bandersnatch as bandersnatch;
+    pub use ark_bls12_381 as bls12_381;
+}
+
+#[cfg(feature = "substrate-curves")]
+mod curves {
+    pub use sp_ed_on_bls12_381_bandersnatch as bandersnatch;
+    pub use sp_bls12_381 as bls12_381;
+}
+
+pub use curves::*;
+
 // Conversion discussed in https://github.com/arkworks-rs/curves/pull/76#issuecomment-929121470
 
 pub use dleq_vrf::{
@@ -26,7 +36,7 @@ pub use dleq_vrf::{
     vrf::{self, IntoVrfInput},
     EcVrfSecret,EcVrfSigner,EcVrfVerifier,
     VrfSignature,VrfSignatureVec,
-    scale::self,
+    scale,
 };
 
 // Set usage of SW affine form

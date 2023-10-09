@@ -14,11 +14,12 @@ use fflonk::pcs::PCS;
 use rand_core::RngCore;
 use ring::Domain;
 
-use ark_ed_on_bls12_381_bandersnatch::{Fq, SWConfig, SWAffine};  // Fr
+use crate::bandersnatch::{Fq, SWConfig, SWAffine};  // Fr
+use crate::bls12_381;
 
-type RealKZG = fflonk::pcs::kzg::KZG<ark_bls12_381::Bls12_381>;
+type RealKZG = fflonk::pcs::kzg::KZG<bls12_381::Bls12_381>;
 
-type PcsParams = fflonk::pcs::kzg::urs::URS<ark_bls12_381::Bls12_381>;
+type PcsParams = fflonk::pcs::kzg::urs::URS<bls12_381::Bls12_381>;
 
 pub type PiopParams = ring::PiopParams<Fq, SWConfig>;
 pub type RingProof = ring::RingProof<Fq, RealKZG>;

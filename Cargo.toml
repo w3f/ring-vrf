@@ -3,6 +3,7 @@ repository = "https://github.com/w3f/ring-vrf/"
 
 
 [workspace]
+resolver = "2"
 members = [
     "ark-secret-scalar",
     "ark-transcript",
