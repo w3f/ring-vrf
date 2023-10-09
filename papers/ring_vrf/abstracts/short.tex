@@ -2,7 +2,8 @@
 \def\eprintsmallskip{\smallskip}{}%
 We introduce a new cryptographic primitive,  named
 \emph{ring verifiable random function (ring VRF)}. Ring VRF combines properties of VRF  and ring signatures, offering verifiable unique, pseudorandom outputs while ensuring  anonymity of the output and message authentication. We design its security in the universal composability (UC) framework and construct two protocols secure in our model.
-We also formalize a new notion of \emph{zero-knowledge (ZK) continuations} allowing for the reusability of proofs by randomizing and enhancing the efficiency of one of our ring VRF schemes.
+We also formalize a new notion of \emph{zero-knowledge (ZK) continuations} allowing for the reusability of proofs by randomizing and enhancing the efficiency of one of our ring VRF schemes. We instantiate this notion with our protocol $ \SpecialG $
+which allows a prover to reprove a statement in a constant time and be unlikable to the previous proof(s). 
 
 %ty to sign a message 
 %% which enables better anonymous credentials...
