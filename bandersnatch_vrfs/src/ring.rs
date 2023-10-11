@@ -38,10 +38,15 @@ fn make_piop_params(h_seed: [u8; 32], domain_size: usize) -> PiopParams {
     PiopParams::setup(domain, h, seed)
 }
 
+pub fn make_ring_verifier(verifier_key: VerifierKey, h_seed: [u8; 32], domain_size: usize) -> RingVerifier {
+    let piop_params = make_piop_params(h_seed, domain_size);
+    RingVerifier::init(verifier_key, piop_params, Transcript::new(b"ring-vrf-test"))
+}
+
 #[derive(Clone)]
 pub struct KZG {
-    domain_size: u32,
-    h_seed: [u8; 32],
+    pub domain_size: u32,
+    pub h_seed: [u8; 32],
     piop_params: PiopParams,
     pcs_params: PcsParams,
 }
