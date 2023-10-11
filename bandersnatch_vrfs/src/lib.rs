@@ -6,6 +6,7 @@
 
 pub mod ring;
 
+use ark_ff::MontFp;
 use ark_ec::{
     AffineRepr, CurveGroup,
     // hashing::{HashToCurveError, curve_maps, map_to_curve_hasher::MapToCurveBasedHasher, HashToCurve},
@@ -81,6 +82,13 @@ impl<'a> IntoVrfInput<E> for Message<'a> {
 }
 
 
+const BLINDING_BASE_X: bandersnatch::Fq = MontFp!("4956610287995045830459834427365747411162584416641336688940534788579455781570");
+
+const BLINDING_BASE_Y: bandersnatch::Fq = MontFp!("52360910621642801549936840538960627498114783432181489929217988668068368626761");
+
+pub const BLINDING_BASE: E = E::new_unchecked(BLINDING_BASE_X, BLINDING_BASE_Y);
+
+
 type ThinVrf = dleq_vrf::ThinVrf<E>;
 
 /// Then VRF configured by the G1 generator for signatures.
@@ -91,8 +99,8 @@ pub fn thin_vrf() -> ThinVrf {
 type PedersenVrf = dleq_vrf::PedersenVrf<E>;
 
 /// Pedersen VRF configured by the G1 generator for public key certs.
-pub fn pedersen_vrf(blinding_base: E) -> PedersenVrf {
-    thin_vrf().pedersen_vrf([ blinding_base ])
+pub fn pedersen_vrf() -> PedersenVrf {
+    thin_vrf().pedersen_vrf([ BLINDING_BASE ])
 }
 
 
@@ -172,8 +180,7 @@ impl EcVrfVerifier for RingVerifier<'_> {
         signature: &RingVrfProof,
     ) -> Result<&'a [VrfInOut],Self::Error> {
         let ring_verifier = &self.0;
-        let blinding_base = ring_verifier.piop_params().h;
-        pedersen_vrf(blinding_base).verify_pedersen_vrf(t,ios.as_ref(),&signature.dleq_proof) ?;
+        pedersen_vrf().verify_pedersen_vrf(t,ios.as_ref(),&signature.dleq_proof) ?;
 
         let key_commitment = signature.dleq_proof.as_key_commitment();
         match ring_verifier.verify_ring_proof(signature.ring_proof.clone(), key_commitment.0.clone()) {
@@ -217,9 +224,8 @@ impl<'a> EcVrfSigner for RingProver<'a> {
     ) -> Result<RingVrfProof,()>
     {
         let RingProver { ring_prover, secret } = *self;
-        let blinding_base = ring_prover.piop_params().h;
         let secret_blinding = None; // TODO: Set this first so we can hash the ring proof
-        let (dleq_proof,secret_blinding) = pedersen_vrf(blinding_base).sign_pedersen_vrf(t, ios, secret_blinding, secret);
+        let (dleq_proof,secret_blinding) = pedersen_vrf().sign_pedersen_vrf(t, ios, secret_blinding, secret);
         let ring_proof = ring_prover.prove(secret_blinding.0[0]);
         Ok(RingVrfProof { dleq_proof, ring_proof, })
     }
@@ -242,6 +248,13 @@ mod tests {
     use super::*;
     use core::iter;
     use ark_std::rand::RngCore;
+
+    #[test]
+    fn blinding_base() {
+        let mut t = b"Bandersnatch VRF blinding base".into_transcript();
+        let blinding_base: <E as AffineRepr>::Group = t.challenge(b"vrf-input").read_uniform();
+        debug_assert_eq!(blinding_base.into_affine(), BLINDING_BASE);
+    }
 
     #[test]
     fn good_max_encoded_len() {
