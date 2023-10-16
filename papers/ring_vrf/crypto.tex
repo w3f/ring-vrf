@@ -1,8 +1,10 @@
+\def\eprint#1#2{#1} % crypto
+
+%\eprint{\documentclass[11pt,a4paper]{article}}
 \documentclass{llncs}
 
 % \def\eprint#1#2{#2} % eprint
-\def\eprint#1#2{#2} % crypto
-\eprint{\usepackage[margin=2.5cm,includefoot]{geometry}}{}
+\eprint{\usepackage[margin=3cm,includefoot]{geometry}}{}
 % \sloppy
 \def\doublecolumn#1#2{#2}
 % \usepackage{amsthm}
@@ -56,15 +58,19 @@
 
 \usepackage{tcolorbox}
 \tcbset{colback=white}
+
 % \usepackage{todonotes}
 \sloppy
 
 \title{Ring Verifiable Random Functions and Zero-Knowledge Continuations}
 
-\eprint{\author{Jeffrey Burdges \and Oana Ciobotaru \and Handan K{\i}l{\i}nç Alper \and Alistair Stewart \and Sergey Vasilyev}}{\author{}}
+\eprint{\author{Jeffrey Burdges\inst{1} \and Oana Ciobotaru\inst{2} \and Handan K{\i}l{\i}nç Alper\inst{1} \and Alistair Stewart\inst{1} \and Sergey Vasilyev\inst{1}}}{\author{}}
 % oana.ciobotaru@gmail.com for
 
-\eprint{\institute{Web 3.0 Foundation}}{\institute{}}
+\eprint{
+	\institute{Web 3.0 Foundation
+		\and
+		OpenZeppelin}}{}
 
 \eprint{\date{\today}}{\date{}}
 \begin{document}
