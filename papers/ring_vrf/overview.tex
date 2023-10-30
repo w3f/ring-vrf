@@ -25,7 +25,7 @@ Similar to VRF \cite{vrf_micali}, a ring VRF construction needs:
 %\cite{praos,ucvrf} which handles adversarial keys better however. %NOT CLEAR WHAT HANDLING BETTER MEANS
 
 We demand a pseudorandomness property from the output of \Eval for all $ \sk $.
-\eprint{In our construction in \S\ref{sec:pederson_vrf},  \rVRF.\KeyGen and \rVRF.\Eval resemble EC VRF like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}.}{}
+%\eprint{In our construction in \S\ref{sec:pederson_vrf},  \rVRF.\KeyGen and \rVRF.\Eval resemble EC VRF like \cite{nsec5,VXEd25519,draft-irtf-cfrg-vrf-10}.}{}
 
 % TODO: Should this text be moved elsewhere?
 % and prove it corresponds to $\rVRF.\Eval$ for some plausible signer.
@@ -110,21 +110,21 @@ $ \pk = \rVRF.\OpenRing(\comring,\openring) $ and replace $ \ring $ in the state
 
 
 
-\eprint{Indeed, regular (non-anonymous) VRF uses always encounter similar tension
-	with VRF inputs \msg being smaller than full message bodies $(\msg,\aux)$.
-	As an example, Praos \cite{praos} binds their VRF public key together
-	with a second public key for another (forward secure) signature scheme,
-	with which they sign their \aux, the block itself.
-	%
-	An EC VRF should expose an \aux parameter which it hashes when computing
-	its challenge hashes.  Aside from saving redundant signatures, exposing
-	\aux avoids user key handling mistakes that create replay attacks.}{}
-
-\eprint{Ring VRFs cannot so easily be combined with other signatures, which
-	makes \aux essential,%
-	\eprint{\footnote{If ring VRFs authorized creating blocks in an anonymous Praos blockchain then \aux must include the block being created, or else others could steal their block production turn.}}{}
-	but thankfully our ring VRF construction in \S\ref{sec:pederson_vrf} exposes \aux exactly like EC VRFs should do.%
-	\eprint{\footnote{We suppress multiple input-output pairs until \S\ref{subsec:multi_io} below, but they work like in \cite{PrivacyPass} too.}}{}}{}
+%\eprint{Indeed, regular (non-anonymous) VRF uses always encounter similar tension
+%	with VRF inputs \msg being smaller than full message bodies $(\msg,\aux)$.
+%	As an example, Praos \cite{praos} binds their VRF public key together
+%	with a second public key for another (forward secure) signature scheme,
+%	with which they sign their \aux, the block itself.
+%	%
+%	An EC VRF should expose an \aux parameter which it hashes when computing
+%	its challenge hashes.  Aside from saving redundant signatures, exposing
+%	\aux avoids user key handling mistakes that create replay attacks.}{}
+%
+%\eprint{Ring VRFs cannot so easily be combined with other signatures, which
+%	makes \aux essential,%
+%	\eprint{\footnote{If ring VRFs authorized creating blocks in an anonymous Praos blockchain then \aux must include the block being created, or else others could steal their block production turn.}}{}
+%	but thankfully our ring VRF construction in \S\ref{sec:pederson_vrf} exposes \aux exactly like EC VRFs should do.%
+%	\eprint{\footnote{We suppress multiple input-output pairs until \S\ref{subsec:multi_io} below, but they work like in \cite{PrivacyPass} too.}}{}}{}
 
 % $\pk = \OpenRing(\comring,\openring)$.
 %

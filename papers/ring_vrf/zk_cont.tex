@@ -137,21 +137,20 @@ for all  $(\bary, \barx; \baromega_1) \in \relone$, for all $X'$, for all $\pi'$
 \label{sec:rvrf_groth16}
 
 Below we instantiate our ZK continuation notion with a scheme that we call  \emph{$\mathsf{SpecialG}$}. It is based on Groth16 zkSNARK~\cite{Groth16}.
-\eprint{First, we remind the reader the definition of a Quadratic Arithmetic Program (QAP)~\cite{LegoSNARK}, ~\cite{GGPR13} and related $\relRQ$.}{
-As in~\cite{Groth16}, we use a standard quadratic arithmetic program $ \cQ $ (QAP) of size $ m $ defined over field $ \F_q $ (See Appendix~\ref{appendix_specialg} for more details). Then given $ \cQ $, we then set  $ \relRQ  $ that corresponds to $ \relone $. $ \relRQ $  consists of pairs $((\bary, \barx); \baromega) \in \F_q^{l} \times \F_q^{n-l} \times \F_q^{m-n}$ where $\F_q$ is a field.}  
+As in~\cite{Groth16}, we use a standard quadratic arithmetic program $ \cQ $ (QAP) of size $ m $ defined over field $ \F_q $ (See Appendix~\ref{appendix_specialg} for more details). Then given $ \cQ $, we then set  $ \relRQ  $ that corresponds to $ \relone $. $ \relRQ $  consists of pairs $((\bary, \barx); \baromega) \in \F_q^{l} \times \F_q^{n-l} \times \F_q^{m-n}$ where $\F_q$ is a field.  
 
-\eprint{\begin{definition}[QAP] 
-\label{def:QAP}
-A Quadratic Arithmetic Program (QAP) $\cQ = (\cA, \cB, \cC, t(X))$ of size $m$ 
-and degree $d$ over a finite field $\F_q$ is defined by three sets of polynomials $\cA = \{a_i(X)\}_{i=0}^m$, 
-$\cB = \{b_i(X)\}_{i=0}^m$, $\cC = \{c_i(X)\}_{i=0}^m$, each of degree less than $d-1$ and a target degree $d$ 
-polynomial $t(X)$. Given $\cQ$ we define $\relRQ$ as the set of pairs 
-$((\bary, \barx); \baromega) \in \F_q^{l} \times \F_q^{n-l} \times \F_q^{m-n}$ for which it 
-holds that there exist a polynomial $h(X)$ of degree at most $d-2$ such that:
-$$(\sum_{k=0}^m v_k \cdot a_k(X)) \cdot (\sum_{k=0}^m v_k \cdot b_k(X)) = (\sum_{k=0}^m v_k \cdot c_k(X)) + h(X)t(X) \ \ (\ast)$$ 
-where $\barv = (v_0, \ldots, v_m) = (1, x_1, \ldots, x_n, w_1, \ldots w_{m-n})$ and $\bary = (x_1, \ldots, x_l)$ and 
-$\barx = (x_{l+1}, \ldots, x_n)$ and $\baromega = (w_1, \ldots, w_{m-n})$. 
-\end{definition}}{}
+%\eprint{\begin{definition}[QAP] 
+%\label{def:QAP}
+%A Quadratic Arithmetic Program (QAP) $\cQ = (\cA, \cB, \cC, t(X))$ of size $m$ 
+%and degree $d$ over a finite field $\F_q$ is defined by three sets of polynomials $\cA = \{a_i(X)\}_{i=0}^m$, 
+%$\cB = \{b_i(X)\}_{i=0}^m$, $\cC = \{c_i(X)\}_{i=0}^m$, each of degree less than $d-1$ and a target degree $d$ 
+%polynomial $t(X)$. Given $\cQ$ we define $\relRQ$ as the set of pairs 
+%$((\bary, \barx); \baromega) \in \F_q^{l} \times \F_q^{n-l} \times \F_q^{m-n}$ for which it 
+%holds that there exist a polynomial $h(X)$ of degree at most $d-2$ such that:
+%$$(\sum_{k=0}^m v_k \cdot a_k(X)) \cdot (\sum_{k=0}^m v_k \cdot b_k(X)) = (\sum_{k=0}^m v_k \cdot c_k(X)) + h(X)t(X) \ \ (\ast)$$ 
+%where $\barv = (v_0, \ldots, v_m) = (1, x_1, \ldots, x_n, w_1, \ldots w_{m-n})$ and $\bary = (x_1, \ldots, x_l)$ and 
+%$\barx = (x_{l+1}, \ldots, x_n)$ and $\baromega = (w_1, \ldots, w_{m-n})$. 
+%\end{definition}}{}
 
 
 %SUMMARY%%%%
@@ -197,9 +196,9 @@ A Groth16 proof for $ \relRQ $ needs the public statement $ (\bary,\barx)$ for v
 \eprint{In more detail, 
 \begin{align*}
 &\ \ \ \ \ \ \ \   b' = 0; r, s\xleftarrow{\$} \F_p; X' = \sum_{i=l+1}^{n} v_i \cdot  \frac{\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau)}{\gamma} \cdot \gone;  \\
-&\ \ \ \ \ \ \ \  o = \alpha + \sum_{i=0}^{m} v_i \cdot a_i(\tau) + r \cdot \delta; u = \beta + \sum_{i=0}^{m} v_i \cdot b_i(\tau) + s \cdot \delta; \\ 
-&\ \ \ \ \ \ \ \  v = \frac{\sum_{i=n+1}^{m} (v_i (\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau))) + h(\tau)t(\tau)}{\delta}  + o\cdot s + u \cdot r - r \cdot s \cdot \delta; \\
-&\ \ \ \ \ \ \ \  \pi' = (o \cdot \gone, u \cdot \gtwo, v \cdot \gone), 
+&\ \ \ \ \ \ \ \  a= \alpha + \sum_{i=0}^{m} v_i \cdot a_i(\tau) + r \cdot \delta; b = \beta + \sum_{i=0}^{m} v_i \cdot b_i(\tau) + s \cdot \delta; \\ 
+&\ \ \ \ \ \ \ \  c = \frac{\sum_{i=n+1}^{m} (v_i (\beta a_i(\tau)+ \alpha b_i(\tau)+ c_i(\tau))) + h(\tau)t(\tau)}{\delta}  + o\cdot s + u \cdot r - r \cdot s \cdot \delta; \\
+&\ \ \ \ \ \ \ \  \pi' = (A,B,C) =(a \gone, u\gtwo, v \gone), 
 \end{align*}}{}
 \eprint{\noindent where $\barv = (1, x_1, \ldots, x_n, w_1, \ldots, w_{m-n})$, $\bary = (x_1, \ldots, x_l)$, $\barx = (x_{l+1}, \ldots, x_n)$, 
 $\baromega = (w_1, \ldots, w_{m-n})$ (same as per definition of QAP).}{}
