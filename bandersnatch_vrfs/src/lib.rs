@@ -23,8 +23,8 @@ mod curves {
 
 #[cfg(feature = "substrate-curves")]
 mod curves {
-    pub use sp_ed_on_bls12_381_bandersnatch as bandersnatch;
-    pub use sp_bls12_381 as bls12_381;
+    pub use sp_ark_ed_on_bls12_381_bandersnatch as bandersnatch;
+    pub use sp_ark_bls12_381 as bls12_381;
 }
 
 pub use curves::*;
