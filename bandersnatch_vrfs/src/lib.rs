@@ -327,7 +327,7 @@ mod tests {
         
         let signature: RingVrfSignature<1> = RingProver {
             ring_prover: &ring_prover, secret,
-        }.sign_ring_vrf(transcript.clone(), &[io]);
+        }.sign_ring_vrf(transcript, &[io]);
         
         // TODO: serialize signature
 

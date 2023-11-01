@@ -11,7 +11,6 @@ use ark_serialize::{
 use merlin::Transcript;
 
 use fflonk::pcs::PCS;
-use rand_core::RngCore;
 use ring::Domain;
 
 use crate::bandersnatch::{Fq, SWConfig, SWAffine};  // Fr
