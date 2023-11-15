@@ -2,7 +2,7 @@
 name = "bandersnatch_vrfs"
 description = "Ring VRFs and thin VRF on bandersnatch"
 authors = ["Jeff Burdges <jeff@web3.foundation>"]
-version = "0.0.3"
+version = "0.0.4"
 repository = "https://github.com/w3f/ring-vrf/tree/master/bandersnatch_vrfs"
 edition = "2021"
 license = "MIT/Apache-2.0"

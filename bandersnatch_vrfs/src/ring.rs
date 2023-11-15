@@ -66,7 +66,9 @@ impl KZG {
     }
 
     pub fn max_keyset_size(&self) -> usize {
-        self.piop_params.keyset_part_size
+        // Hack until we fix https://github.com/w3f/ring-proof/commit/d6bd529b9d08d2c11dfe0495556932be28dbf3bf#diff-d9afcebbe3d5a30f85085cf7ce661ad8f581ae8412b4df7e3a884ff9ccbdb472R20
+        800
+        // self.piop_params.keyset_part_size
     }
 
     /*
