@@ -243,7 +243,12 @@ impl<'a> RingProver<'a> {
 }
 
 
-#[cfg(test)]
+// TODO:  Run test vector tests once we have some even without getrandom
+// #[cfg(test)]
+// mod testvectors {
+// }
+
+#[cfg(all(test, feature = "getrandom"))]
 mod tests {
     use super::*;
     use core::iter;

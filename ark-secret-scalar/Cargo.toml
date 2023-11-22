@@ -10,7 +10,7 @@ keywords = ["crypto", "cryptography", "vrf", "signature", "proof", "zkp", "priva
 
 
 [dependencies]
-rand_core.workspace = true
+getrandom_or_panic.workspace = true
 
 # TODO:  Add a std feature which activates thread_rng
 # rand = { version = "0.8", default-features = false }
@@ -34,7 +34,8 @@ ark-transcript = { version = "0.0.2", default-features = false, path = "../ark-t
 
 [features]
 default = ["getrandom"]  # "std"
-getrandom = ["rand_core/getrandom"]
+std = ["getrandom_or_panic/std"]
+getrandom = ["getrandom_or_panic/getrandom"]
 
 
 

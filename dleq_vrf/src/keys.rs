@@ -3,7 +3,6 @@
 //! ### VRF keys
 
 
-use rand_core::{RngCore}; // CryptoRng
 use zeroize::Zeroize;
 
 use ark_std::{vec::Vec, io::{Read, Write}};
@@ -13,11 +12,12 @@ use ark_std::{vec::Vec, io::{Read, Write}};
 use ark_ec::{AffineRepr}; // Group, CurveGroup
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 
-use ark_secret_scalar::SecretScalar;
+use ark_secret_scalar::{SecretScalar,RngCore,rand_core}; // CryptoRng
 
 use crate::{
     ThinVrf,
     transcript::digest::{Update,XofReader},
+
 };
 
 
