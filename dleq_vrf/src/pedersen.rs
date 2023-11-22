@@ -314,7 +314,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         secret: &SecretKey<K>,
         compk: KeyCommitment<K>,
     ) -> (Batchable<PedersenVrf<K,H,B>>,NonBatchable<PedersenVrf<K,H,B>>) {
-        let Witness { r, k } = self;
+        let Witness { r, mut k } = self;
         t.label(b"Pedersen R");
         t.append(&r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge").read_reduce();
@@ -326,7 +326,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
             keying: k.keying + secret.key.mul_by_challenge(&c),
             blindings: blindings.into_inner().unwrap(),
         };
-        // k.zeroize();
+        k.zeroize();
         (Batchable { compk: compk.clone(), r, s: s.clone() }, NonBatchable { compk, c, s })
         // See additional rowhammer defenses thoughts in Witness<ThinVrf>::sign_final
     }

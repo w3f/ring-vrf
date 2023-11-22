@@ -103,12 +103,13 @@ impl<K: AffineRepr> Witness<ThinVrf<K>> {
     pub(crate) fn sign_final(
         self, t: &mut Transcript, secret: &SecretKey<K>
     ) -> Batchable<ThinVrf<K>> {
-        let Witness { r, k } = self;
+        use zeroize::Zeroize;
+        let Witness { r, mut k } = self;
         t.label(b"Thin R");
         t.append(&r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge").read_reduce();
         let s = k + secret.key.mul_by_challenge(&c);
-        // k.zeroize();
+        k.zeroize();  
         Batchable { compk: (), r, s }
         // TODO: Add some verify_final for additional rowhammer defenses?
         // We already hash the public key though, so no issues like Ed25519.
