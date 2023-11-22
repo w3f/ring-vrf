@@ -12,40 +12,13 @@ use ark_ff::{PrimeField}; // Field, Zero
 use ark_ec::{AffineRepr, Group}; // CurveGroup
 
 use digest::{XofReader};
-use rand_core::{RngCore,CryptoRng};
+pub use getrandom_or_panic::{RngCore,CryptoRng,rand_core,getrandom_or_panic};
 // use subtle::{Choice,ConstantTimeEq};
 use zeroize::Zeroize;
 
 // TODO:  Remove ark-transcript dependency once https://github.com/arkworks-rs/algebra/pull/643 lands
 use ark_transcript::xof_read_reduced;
 
-
-/// Returns `OsRng` with `getrandom`, or a `CryptoRng` which panics without `getrandom`.
-#[cfg(feature = "getrandom")] 
-pub fn getrandom_or_panic() -> impl RngCore+CryptoRng {
-    rand_core::OsRng
-}
-
-/// Returns `OsRng` with `getrandom`, or a `CryptoRng` which panics without `getrandom`.
-#[cfg(not(feature = "getrandom"))]
-pub fn getrandom_or_panic() -> impl RngCore+CryptoRng {
-    const PRM: &'static str = "Attempted to use functionality that requires system randomness!!";
-
-    // Should we panic when invoked or when used?
-
-    struct PanicRng;
-    impl rand_core::RngCore for PanicRng {
-        fn next_u32(&mut self) -> u32 {  panic!("{}", PRM)  }
-        fn next_u64(&mut self) -> u64 {  panic!("{}", PRM)  }
-        fn fill_bytes(&mut self, _dest: &mut [u8]) {  panic!("{}", PRM)  }
-        fn try_fill_bytes(&mut self, _dest: &mut [u8]) -> Result<(), rand_core::Error> {
-            Err(core::num::NonZeroU32::new(core::u32::MAX).unwrap().into())
-        }
-    }
-    impl rand_core::CryptoRng for PanicRng {}
-
-    PanicRng
-}
 
 
 pub struct Rng2Xof<R: RngCore+CryptoRng>(pub R);

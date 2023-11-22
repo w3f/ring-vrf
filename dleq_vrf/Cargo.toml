@@ -13,7 +13,6 @@ keywords = ["crypto", "cryptography", "vrf", "signature", "proof", "zkp", "priva
 # arrayref = { version = "0.3", default-features = false }
 arrayvec = { version = "0.7.2", default-features = false }
 
-rand_core.workspace = true
 zeroize.workspace = true
 
 ark-std.workspace = true
@@ -36,6 +35,7 @@ ark-bls12-377 = { version = "0.4", default-features = false, features = [ "curve
 
 [features]
 default = ["getrandom"]  #  "std", "rand"
-getrandom = ["rand_core/getrandom", "ark-secret-scalar/getrandom"]  #  "ark_transcript/getrandom"
+std = ["ark-secret-scalar/std"] # "rand_core/std"
+getrandom = ["ark-secret-scalar/getrandom"]  #  "ark_transcript/getrandom", "rand_core/getrandom", "getrandom_or_panic/getrandom"
 scale = ["dep:ark-scale"]
 

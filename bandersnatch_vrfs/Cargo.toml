@@ -46,7 +46,7 @@ std = [
   "sp-ark-ed-on-bls12-381-bandersnatch?/std",
   "sp-ark-bls12-381?/std",
 ]
-getrandom = ["dleq_vrf/getrandom"]
+getrandom = ["dleq_vrf/getrandom"] # "ring/getrandom"]
 print-trace = ["ark-std/print-trace"]
 # Substrate curves allows to offload computationally heavy tasks to Substrate host functions.
 # Mostly useful in Substrate development context when targeting wasm32 architecture.
