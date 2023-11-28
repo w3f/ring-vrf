@@ -218,12 +218,12 @@ impl<'a> EcVrfSigner for RingProver<'a> {
     type Error = ();
     type Secret = SecretKey;
     fn vrf_sign_detached(
-        &self,
+        self,
         t: impl IntoTranscript,
         ios: &[VrfInOut]
     ) -> Result<RingVrfProof,()>
     {
-        let RingProver { ring_prover, secret } = *self;
+        let RingProver { ring_prover, secret } = self;
         let secret_blinding = None; // TODO: Set this first so we can hash the ring proof
         let (dleq_proof,secret_blinding) = pedersen_vrf().sign_pedersen_vrf(t, ios, secret_blinding, secret);
         let ring_proof = ring_prover.prove(secret_blinding.0[0]);
@@ -233,7 +233,7 @@ impl<'a> EcVrfSigner for RingProver<'a> {
 
 impl<'a> RingProver<'a> {
     pub fn sign_ring_vrf<const N: usize>(
-        &self,
+        self,
         t: impl IntoTranscript,
         ios: &[VrfInOut; N],
     ) -> RingVrfSignature<N>
