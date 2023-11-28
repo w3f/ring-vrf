@@ -28,7 +28,7 @@ pub type RingVerifier = ring::ring_verifier::RingVerifier<Fq, RealKZG, SWConfig>
 pub type ProverKey = ring::ProverKey<Fq, RealKZG, SWAffine>;
 pub type VerifierKey = ring::VerifierKey<Fq, RealKZG>;
 
-fn make_piop_params(domain_size: usize) -> PiopParams {
+pub fn make_piop_params(domain_size: usize) -> PiopParams {
     let domain = Domain::new(domain_size, true);
     let seed = ring::find_complement_point::<crate::bandersnatch::BandersnatchConfig>();
     PiopParams::setup(domain, crate::BLINDING_BASE, seed)
