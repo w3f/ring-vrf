@@ -12,7 +12,10 @@ use ark_std::{vec::Vec, io::{Read, Write}};
 use ark_ec::{AffineRepr}; // Group, CurveGroup
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 
-use ark_secret_scalar::{SecretScalar,RngCore,rand_core}; // CryptoRng
+#[cfg(feature = "getrandom")]
+use ark_secret_scalar::{rand_core, RngCore};
+
+use ark_secret_scalar::SecretScalar;
 
 use crate::{
     ThinVrf,
