@@ -7,7 +7,6 @@ use crate::{Transcript, vrf, Batchable};
 use ark_bls12_377 as curve;
 
 type K = curve::G1Affine;
-// type H = curve::G1Affine;
 
 type H2C = ark_ec::hashing::map_to_curve_hasher::MapToCurveBasedHasher::<
     <K as ark_ec::AffineRepr>::Group,
@@ -15,10 +14,7 @@ type H2C = ark_ec::hashing::map_to_curve_hasher::MapToCurveBasedHasher::<
     ark_ec::hashing::curve_maps::wb::WBMap<curve::g1::Config>,
 >;
 
-// type ThinVrf = crate::ThinVrf<K>;
 type PedersenVrf = crate::PedersenVrf<K>;
-type SecretKey = crate::SecretKey<K>;
-
 
 pub(crate) fn pedersen_vrf_test_flavor() -> PedersenVrf {
     let mut t = Transcript::new_labeled(b"TestFlavor");

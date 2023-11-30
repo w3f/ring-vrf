@@ -4,10 +4,7 @@ use dleq_vrf::Transcript;
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
 use ark_std::vec::Vec;
 
-type P = ark_bls12_381::Bls12_381;
 use crate::bls12_381::*;
-
-
 
 #[test]
 fn single() {
