@@ -28,7 +28,7 @@ use digest::{Update,XofReader,ExtendableOutput};
 #[cfg(test)]
 mod tests;
 
-#[cfg(debug_assertions)]
+#[cfg(any(test, debug_assertions))]
 pub mod debug;
 
 /// Trascript labels.
