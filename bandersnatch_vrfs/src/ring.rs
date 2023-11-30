@@ -42,8 +42,8 @@ pub fn make_ring_verifier(verifier_key: VerifierKey, domain_size: usize) -> Ring
 #[derive(Clone)]
 pub struct KZG {
     pub domain_size: u32,
-    piop_params: PiopParams,
-    pcs_params: PcsParams,
+    pub piop_params: PiopParams,
+    pub pcs_params: PcsParams,
 }
 
 
