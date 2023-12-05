@@ -5,6 +5,7 @@
 #![doc = include_str!("../README.md")]
 
 pub mod ring;
+pub mod zcash_consts;
 
 use ark_ff::MontFp;
 use ark_ec::{
