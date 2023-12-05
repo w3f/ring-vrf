@@ -40,13 +40,11 @@ pub use dleq_vrf::{
     scale,
 };
 
-// Set usage of SW affine form
-// use bandersnatch::EdwardsAffine as E;
-use bandersnatch::SWAffine as E;
+use bandersnatch::SWAffine as Jubjub;
 
-pub type VrfInput = dleq_vrf::vrf::VrfInput<E>;
-pub type VrfPreOut = dleq_vrf::vrf::VrfPreOut<E>;
-pub type VrfInOut = dleq_vrf::vrf::VrfInOut<E>;
+pub type VrfInput = dleq_vrf::vrf::VrfInput<Jubjub>;
+pub type VrfPreOut = dleq_vrf::vrf::VrfPreOut<Jubjub>;
+pub type VrfInOut = dleq_vrf::vrf::VrfInOut<Jubjub>;
 
 pub struct Message<'a> {
     pub domain: &'a [u8],
@@ -61,11 +59,11 @@ G1Projective,
 >;
 
 pub fn hash_to_bandersnatch_curve(domain: &[u8],message: &[u8]) -> Result<VrfInput,HashToCurveError> {
-    dleq_vrf::vrf::ark_hash_to_curve::<E,H2C>(domain,message)
+    dleq_vrf::vrf::ark_hash_to_curve::<Jubjub,H2C>(domain,message)
 }
 */
 
-impl<'a> IntoVrfInput<E> for Message<'a> {
+impl<'a> IntoVrfInput<Jubjub> for Message<'a> {
     fn into_vrf_input(self) -> VrfInput {
         // TODO: Add Elligator to Arkworks
         // hash_to_bandersnatch_curve(self.domain,self.message)
@@ -76,7 +74,7 @@ impl<'a> IntoVrfInput<E> for Message<'a> {
         t.append(self.domain);
         t.label(b"message");
         t.append(self.message);
-        let p: <E as AffineRepr>::Group = t.challenge(b"vrf-input").read_uniform();
+        let p: <Jubjub as AffineRepr>::Group = t.challenge(b"vrf-input").read_uniform();
         vrf::VrfInput( p.into_affine() )
     }
 }
@@ -86,17 +84,17 @@ const BLINDING_BASE_X: bandersnatch::Fq = MontFp!("49566102879950458304598344273
 
 const BLINDING_BASE_Y: bandersnatch::Fq = MontFp!("52360910621642801549936840538960627498114783432181489929217988668068368626761");
 
-pub const BLINDING_BASE: E = E::new_unchecked(BLINDING_BASE_X, BLINDING_BASE_Y);
+pub const BLINDING_BASE: Jubjub = Jubjub::new_unchecked(BLINDING_BASE_X, BLINDING_BASE_Y);
 
 
-type ThinVrf = dleq_vrf::ThinVrf<E>;
+type ThinVrf = dleq_vrf::ThinVrf<Jubjub>;
 
 /// Then VRF configured by the G1 generator for signatures.
 pub fn thin_vrf() -> ThinVrf {
-    dleq_vrf::ThinVrf::default()  //  keying_base: E::generator()
+    dleq_vrf::ThinVrf::default()  //  keying_base: Jubjub::generator()
 }
 
-type PedersenVrf = dleq_vrf::PedersenVrf<E>;
+type PedersenVrf = dleq_vrf::PedersenVrf<Jubjub>;
 
 /// Pedersen VRF configured by the G1 generator for public key certs.
 pub fn pedersen_vrf() -> PedersenVrf {
@@ -104,12 +102,12 @@ pub fn pedersen_vrf() -> PedersenVrf {
 }
 
 
-pub type SecretKey = dleq_vrf::SecretKey<E>;
+pub type SecretKey = dleq_vrf::SecretKey<Jubjub>;
 
 pub const PUBLIC_KEY_LENGTH: usize = 33;
 pub type PublicKeyBytes = [u8; PUBLIC_KEY_LENGTH];
 
-pub type PublicKey = dleq_vrf::PublicKey<E>;
+pub type PublicKey = dleq_vrf::PublicKey<Jubjub>;
 
 pub fn serialize_publickey(pk: &PublicKey) -> PublicKeyBytes {
     let mut bytes = [0u8; PUBLIC_KEY_LENGTH];
@@ -137,7 +135,7 @@ pub struct RingVrfProof {
 }
 
 impl dleq_vrf::EcVrfProof for RingVrfProof {
-    type H = E;
+    type H = Jubjub;
 }
 
 // TODO: Can you impl Debug+Eq+PartialEq for ring::RingProof please Sergey?  We'll then derive Debug.
@@ -194,7 +192,7 @@ impl RingVerifier<'_> {
     pub fn verify_ring_vrf<const N: usize>(
         &self,
         t: impl IntoTranscript,
-        inputs: impl IntoIterator<Item = impl IntoVrfInput<E>>,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<Jubjub>>,
         signature: &RingVrfSignature<N>,
     ) -> Result<[VrfInOut; N],SignatureError>
     {
@@ -257,7 +255,7 @@ mod tests {
     #[test]
     fn blinding_base() {
         let mut t = b"Bandersnatch VRF blinding base".into_transcript();
-        let blinding_base: <E as AffineRepr>::Group = t.challenge(b"vrf-input").read_uniform();
+        let blinding_base: <Jubjub as AffineRepr>::Group = t.challenge(b"vrf-input").read_uniform();
         debug_assert_eq!(blinding_base.into_affine(), BLINDING_BASE);
     }
 
@@ -303,7 +301,7 @@ mod tests {
 		let keyset_size = usize::from_le_bytes(l) % keyset_size;
 
         // Gen a bunch of random public keys
-        let mut pks: Vec<_> = (0..keyset_size).map(|_| E::rand(&mut rng)).collect();
+        let mut pks: Vec<_> = (0..keyset_size).map(|_| Jubjub::rand(&mut rng)).collect();
         // Just select one index for the actual key we are for signing
         let secret_key_idx = keyset_size / 2;
         pks[secret_key_idx] = pk.0.into();
