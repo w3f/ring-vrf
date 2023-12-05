@@ -1,25 +1,24 @@
 extern crate alloc;
+
 use alloc::vec::Vec;
+
 use ark_ff::{Field, MontFp};
-
-use ark_std::rand::{Rng, SeedableRng};
-
 use ark_serialize::{
-    CanonicalSerialize, CanonicalDeserialize, Valid, Compress, Validate, SerializationError,
-    Write, Read,
+    CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid,
+    Validate, Write,
 };
-
-use merlin::Transcript;
-
+use ark_std::rand::{Rng, SeedableRng};
 use fflonk::pcs::PCS;
+use merlin::Transcript;
 use ring::Domain;
 
-use crate::bandersnatch::{Fq, SWConfig, SWAffine};  // Fr
+use crate::bandersnatch::{Fq, SWAffine, SWConfig};
+use crate::bls12_381::Bls12_381;
 use crate::bls12_381;
 
-type RealKZG = fflonk::pcs::kzg::KZG<bls12_381::Bls12_381>;
+type RealKZG = fflonk::pcs::kzg::KZG<Bls12_381>;
 
-type PcsParams = fflonk::pcs::kzg::urs::URS<bls12_381::Bls12_381>;
+type PcsParams = fflonk::pcs::kzg::urs::URS<Bls12_381>;
 
 pub type PiopParams = ring::PiopParams<Fq, SWConfig>;
 pub type RingProof = ring::RingProof<Fq, RealKZG>;
@@ -28,6 +27,8 @@ pub type RingVerifier = ring::ring_verifier::RingVerifier<Fq, RealKZG, SWConfig>
 
 pub type ProverKey = ring::ProverKey<Fq, RealKZG, SWAffine>;
 pub type VerifierKey = ring::VerifierKey<Fq, RealKZG>;
+
+pub type KzgVk = fflonk::pcs::kzg::params::RawKzgVerifierKey<Bls12_381>;
 
 // A point on Jubjub, not belonging to the prime order subgroup.
 // Used as the point to start summation from, as inf doesn't have an affine representation.
@@ -51,9 +52,25 @@ pub fn make_ring_verifier(verifier_key: VerifierKey, domain_size: usize) -> Ring
 pub struct KZG {
     pub domain_size: u32,
     piop_params: PiopParams,
-    pcs_params: PcsParams,
+    pub pcs_params: PcsParams,
 }
 
+#[derive(CanonicalDeserialize, CanonicalSerialize)]
+pub struct StaticVerifierKey {
+    // `N` Lagrangian bases `L1(tau).G1, ..., LN(tau).G1`, where `N=2^m` is domain size.
+    // Used to create/update the commitment to the public keys.
+    pub lag_g1: Vec<bls12_381::G1Affine>,
+    // KZG vk with unprepared G2 points.
+    pub kzg_vk: KzgVk,
+}
+
+#[derive(CanonicalDeserialize, CanonicalSerialize)]
+pub struct StaticProverKey {
+    // `3N+1` monomial bases `G1, tau.G1, ..., tau^(3N).G1`, where `N=2^m` is domain size.
+    pub mon_g1: Vec<bls12_381::G1Affine>,
+    // KZG vk with unprepared G2 points. Used in the Fiat-Shamir transform.
+    pub kzg_vk: KzgVk,
+}
 
 impl KZG {
     // TODO: Import powers of tau
@@ -62,6 +79,19 @@ impl KZG {
         let pcs_params = RealKZG::setup(3 * (domain_size as usize), rng);
         KZG {
             domain_size,
+            piop_params,
+            pcs_params,
+        }
+    }
+
+    pub fn kzg_setup(domain_size: usize, srs: StaticProverKey) -> Self {
+        let piop_params = make_piop_params(domain_size);
+        let pcs_params = fflonk::pcs::kzg::urs::URS  {
+            powers_in_g1: srs.mon_g1,
+            powers_in_g2: vec![srs.kzg_vk.g2, srs.kzg_vk.tau_in_g2],
+        };
+        KZG {
+            domain_size: domain_size as u32,
             piop_params,
             pcs_params,
         }
