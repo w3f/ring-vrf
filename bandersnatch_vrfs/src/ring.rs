@@ -1,5 +1,6 @@
 extern crate alloc;
 use alloc::vec::Vec;
+use ark_ff::{Field, MontFp};
 
 use ark_std::rand::{Rng, SeedableRng};
 
@@ -28,10 +29,17 @@ pub type RingVerifier = ring::ring_verifier::RingVerifier<Fq, RealKZG, SWConfig>
 pub type ProverKey = ring::ProverKey<Fq, RealKZG, SWAffine>;
 pub type VerifierKey = ring::VerifierKey<Fq, RealKZG>;
 
+// A point on Jubjub, not belonging to the prime order subgroup.
+// Used as the point to start summation from, as inf doesn't have an affine representation.
+const COMPLEMENT_POINT: crate::Jubjub = {
+    const X: Fq = Fq::ZERO;
+    const Y: Fq = MontFp!("11982629110561008531870698410380659621661946968466267969586599013782997959645");
+    crate::Jubjub::new_unchecked(X, Y)
+};
+
 pub fn make_piop_params(domain_size: usize) -> PiopParams {
     let domain = Domain::new(domain_size, true);
-    let seed = ring::find_complement_point::<crate::bandersnatch::BandersnatchConfig>();
-    PiopParams::setup(domain, crate::BLINDING_BASE, seed)
+    PiopParams::setup(domain, crate::BLINDING_BASE, COMPLEMENT_POINT)
 }
 
 pub fn make_ring_verifier(verifier_key: VerifierKey, domain_size: usize) -> RingVerifier {
@@ -141,3 +149,12 @@ impl Valid for KZG {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_complement_point() {
+        assert_eq!(COMPLEMENT_POINT, ring::find_complement_point::<crate::bandersnatch::BandersnatchConfig>());
+    }
+}

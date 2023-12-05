@@ -252,7 +252,7 @@ mod tests {
     use ark_std::rand::RngCore;
 
     #[test]
-    fn blinding_base() {
+    fn check_blinding_base() {
         let mut t = b"Bandersnatch VRF blinding base".into_transcript();
         let blinding_base: <Jubjub as AffineRepr>::Group = t.challenge(b"vrf-input").read_uniform();
         debug_assert_eq!(blinding_base.into_affine(), BLINDING_BASE);
