@@ -83,7 +83,7 @@ pub const EMPTY_RING_ZCASH_9: crate::ring::RingCommitment  = {
 };
 
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests {
     use ark_serialize::CanonicalDeserialize;
     use ring::ring::RingBuilderKey;
