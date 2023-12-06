@@ -7,7 +7,7 @@ use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid,
     Validate, Write,
 };
-use ark_std::rand::{Rng, SeedableRng};
+use ark_std::{rand::{Rng, SeedableRng}, vec};
 use fflonk::pcs::PCS;
 use merlin::Transcript;
 use ring::Domain;
