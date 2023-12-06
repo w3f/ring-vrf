@@ -3,6 +3,7 @@ use ark_ff::MontFp;
 use ring::ring::Ring;
 
 use crate::bls12_381;
+use crate::ring::PADDING_POINT;
 
 // KZG verification key formed using zcash powers of tau setup,
 // see https://zfnd.org/conclusion-of-the-powers-of-tau-ceremony/
@@ -43,14 +44,7 @@ pub const EMPTY_RING_ZCASH_16: crate::ring::RingCommitment  = {
         bls12_381::G1Affine::new_unchecked(S_X, S_Y)
     };
 
-    Ring {
-        cx: CX,
-        cy: CY,
-        selector: SELECTOR,
-        max_keys: (1 << 16) - 257,
-        curr_keys: 0,
-        padding_point: crate::ring::PADDING_POINT,
-    }
+    Ring::empty_unchecked(1 << 16, CX, CY, SELECTOR, PADDING_POINT)
 };
 
 pub const EMPTY_RING_ZCASH_9: crate::ring::RingCommitment  = {
@@ -72,14 +66,7 @@ pub const EMPTY_RING_ZCASH_9: crate::ring::RingCommitment  = {
         bls12_381::G1Affine::new_unchecked(S_X, S_Y)
     };
 
-    Ring {
-        cx: CX,
-        cy: CY,
-        selector: SELECTOR,
-        max_keys: (1 << 9) - 257,
-        curr_keys: 0,
-        padding_point: crate::ring::PADDING_POINT,
-    }
+    Ring::empty_unchecked(1 << 9, CX, CY, SELECTOR, PADDING_POINT)
 };
 
 
