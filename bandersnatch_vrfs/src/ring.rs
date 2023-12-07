@@ -1,24 +1,25 @@
 extern crate alloc;
+
 use alloc::vec::Vec;
 
-use ark_std::rand::{Rng, SeedableRng};
-
+use ark_ff::{Field, MontFp};
 use ark_serialize::{
-    CanonicalSerialize, CanonicalDeserialize, Valid, Compress, Validate, SerializationError,
-    Write, Read,
+    CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid,
+    Validate, Write,
 };
-
-use merlin::Transcript;
-
+use ark_std::{rand::{Rng, SeedableRng}, vec};
 use fflonk::pcs::PCS;
+use merlin::Transcript;
 use ring::Domain;
+use ring::ring::Ring;
 
-use crate::bandersnatch::{Fq, SWConfig, SWAffine};  // Fr
+use crate::bandersnatch::{Fq, SWAffine, SWConfig, BandersnatchConfig};
+use crate::bls12_381::Bls12_381;
 use crate::bls12_381;
 
-type RealKZG = fflonk::pcs::kzg::KZG<bls12_381::Bls12_381>;
+type RealKZG = fflonk::pcs::kzg::KZG<Bls12_381>;
 
-type PcsParams = fflonk::pcs::kzg::urs::URS<bls12_381::Bls12_381>;
+type PcsParams = fflonk::pcs::kzg::urs::URS<Bls12_381>;
 
 pub type PiopParams = ring::PiopParams<Fq, SWConfig>;
 pub type RingProof = ring::RingProof<Fq, RealKZG>;
@@ -28,10 +29,28 @@ pub type RingVerifier = ring::ring_verifier::RingVerifier<Fq, RealKZG, SWConfig>
 pub type ProverKey = ring::ProverKey<Fq, RealKZG, SWAffine>;
 pub type VerifierKey = ring::VerifierKey<Fq, RealKZG>;
 
+pub type KzgVk = fflonk::pcs::kzg::params::RawKzgVerifierKey<Bls12_381>;
+
+pub type RingCommitment = Ring<bls12_381::Fr, Bls12_381, BandersnatchConfig>;
+
+// A point on Jubjub, not belonging to the prime order subgroup.
+// Used as the point to start summation from, as inf doesn't have an affine representation.
+const COMPLEMENT_POINT: crate::Jubjub = {
+    const X: Fq = Fq::ZERO;
+    const Y: Fq = MontFp!("11982629110561008531870698410380659621661946968466267969586599013782997959645");
+    crate::Jubjub::new_unchecked(X, Y)
+};
+
+// Just a point of an unknown dlog.
+pub(crate) const PADDING_POINT: crate::Jubjub = {
+    const X: Fq = MontFp!("25448400713078632486748382313960039031302935774474538965225823993599751298535");
+    const Y: Fq = MontFp!("24382892199244280513693545286348030912870264650402775682704689602954457435722");
+    crate::Jubjub::new_unchecked(X, Y)
+};
+
 pub fn make_piop_params(domain_size: usize) -> PiopParams {
     let domain = Domain::new(domain_size, true);
-    let seed = ring::find_complement_point::<crate::bandersnatch::BandersnatchConfig>();
-    PiopParams::setup(domain, crate::BLINDING_BASE, seed)
+    PiopParams::setup(domain, crate::BLINDING_BASE, COMPLEMENT_POINT)
 }
 
 pub fn make_ring_verifier(verifier_key: VerifierKey, domain_size: usize) -> RingVerifier {
@@ -43,9 +62,25 @@ pub fn make_ring_verifier(verifier_key: VerifierKey, domain_size: usize) -> Ring
 pub struct KZG {
     pub domain_size: u32,
     piop_params: PiopParams,
-    pcs_params: PcsParams,
+    pub pcs_params: PcsParams,
 }
 
+#[derive(CanonicalDeserialize, CanonicalSerialize)]
+pub struct StaticVerifierKey {
+    // `N` Lagrangian bases `L1(tau).G1, ..., LN(tau).G1`, where `N=2^m` is domain size.
+    // Used to create/update the commitment to the public keys.
+    pub lag_g1: Vec<bls12_381::G1Affine>,
+    // KZG vk with unprepared G2 points.
+    pub kzg_vk: KzgVk,
+}
+
+#[derive(CanonicalDeserialize, CanonicalSerialize)]
+pub struct StaticProverKey {
+    // `3N+1` monomial bases `G1, tau.G1, ..., tau^(3N).G1`, where `N=2^m` is domain size.
+    pub mon_g1: Vec<bls12_381::G1Affine>,
+    // KZG vk with unprepared G2 points. Used in the Fiat-Shamir transform.
+    pub kzg_vk: KzgVk,
+}
 
 impl KZG {
     // TODO: Import powers of tau
@@ -54,6 +89,19 @@ impl KZG {
         let pcs_params = RealKZG::setup(3 * (domain_size as usize), rng);
         KZG {
             domain_size,
+            piop_params,
+            pcs_params,
+        }
+    }
+
+    pub fn kzg_setup(domain_size: usize, srs: StaticProverKey) -> Self {
+        let piop_params = make_piop_params(domain_size);
+        let pcs_params = fflonk::pcs::kzg::urs::URS  {
+            powers_in_g1: srs.mon_g1,
+            powers_in_g2: vec![srs.kzg_vk.g2, srs.kzg_vk.tau_in_g2],
+        };
+        KZG {
+            domain_size: domain_size as u32,
             piop_params,
             pcs_params,
         }
@@ -141,3 +189,18 @@ impl Valid for KZG {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_complement_point() {
+        assert_eq!(COMPLEMENT_POINT, ring::find_complement_point::<crate::bandersnatch::BandersnatchConfig>());
+    }
+
+    #[test]
+    fn check_padding_point() {
+        let padding_point = ring::hash_to_curve::<crate::Jubjub>(b"w3f/ring-proof/common/padding");
+        assert_eq!(PADDING_POINT, padding_point);
+    }
+}
