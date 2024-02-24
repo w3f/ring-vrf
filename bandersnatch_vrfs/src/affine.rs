@@ -1,6 +1,7 @@
 use ark_ff::MontFp;
 use ark_ec::{short_weierstrass::{self, SWCurveConfig, SWFlags}, CurveConfig};
 use ark_serialize::{Compress, Read, SerializationError, Validate, Write};
+use ark_std::vec::Vec;
 use crate::bandersnatch::{BandersnatchConfig as BandersnatchConfigBase, SWAffine as AffineBase, SWProjective as ProjectiveBase};
 
 pub const COMPRESSED_POINT_SIZE: usize = 32;
