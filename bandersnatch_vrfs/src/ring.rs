@@ -13,9 +13,10 @@ use merlin::Transcript;
 use ring::Domain;
 use ring::ring::Ring;
 
-use crate::bandersnatch::{Fq, SWAffine, SWConfig, BandersnatchConfig};
-use crate::bls12_381::Bls12_381;
-use crate::bls12_381;
+use crate::{
+    bandersnatch::{Fq, SWAffine, SWConfig, BandersnatchConfig},
+    bls12_381::Bls12_381, bls12_381,
+};
 
 type RealKZG = fflonk::pcs::kzg::KZG<Bls12_381>;
 
@@ -33,19 +34,20 @@ pub type KzgVk = fflonk::pcs::kzg::params::RawKzgVerifierKey<Bls12_381>;
 
 pub type RingCommitment = Ring<bls12_381::Fr, Bls12_381, BandersnatchConfig>;
 
-// A point on Jubjub, not belonging to the prime order subgroup.
+// A point not belonging to the prime order subgroup.
+//
 // Used as the point to start summation from, as inf doesn't have an affine representation.
-const COMPLEMENT_POINT: crate::Jubjub = {
+const COMPLEMENT_POINT: SWAffine = {
     const X: Fq = Fq::ZERO;
     const Y: Fq = MontFp!("11982629110561008531870698410380659621661946968466267969586599013782997959645");
-    crate::Jubjub::new_unchecked(X, Y)
+    SWAffine::new_unchecked(X, Y)
 };
 
 // Just a point of an unknown dlog.
-pub(crate) const PADDING_POINT: crate::Jubjub = {
+pub(crate) const PADDING_POINT: SWAffine = {
     const X: Fq = MontFp!("25448400713078632486748382313960039031302935774474538965225823993599751298535");
     const Y: Fq = MontFp!("24382892199244280513693545286348030912870264650402775682704689602954457435722");
-    crate::Jubjub::new_unchecked(X, Y)
+    SWAffine::new_unchecked(X, Y)
 };
 
 pub fn make_piop_params(domain_size: usize) -> PiopParams {
@@ -200,7 +202,7 @@ mod tests {
 
     #[test]
     fn check_padding_point() {
-        let padding_point = ring::hash_to_curve::<crate::Jubjub>(b"w3f/ring-proof/common/padding");
+        let padding_point = ring::hash_to_curve::<SWAffine>(b"w3f/ring-proof/common/padding");
         assert_eq!(PADDING_POINT, padding_point);
     }
 }

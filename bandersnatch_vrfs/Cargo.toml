@@ -18,6 +18,7 @@ ark-std.workspace = true
 ark-ff.workspace = true
 ark-ec.workspace = true
 ark-serialize.workspace = true
+ark-scale.workspace = true
 
 fflonk = { git = "https://github.com/w3f/fflonk" }
 ring = { git = "https://github.com/w3f/ring-proof" }
