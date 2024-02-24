@@ -1,7 +1,6 @@
 use ark_ff::MontFp;
 use ark_ec::{short_weierstrass::{self, SWCurveConfig, SWFlags}, CurveConfig};
 use ark_serialize::{Compress, Read, SerializationError, Validate, Write};
-use ark_std::vec::Vec;
 use crate::bandersnatch::{BandersnatchConfig as BandersnatchConfigBase, SWAffine as AffineBase, SWProjective as ProjectiveBase};
 
 pub const COMPRESSED_POINT_SIZE: usize = 32;
@@ -39,7 +38,6 @@ impl SWCurveConfig for BandersnatchConfig {
         BandersnatchConfigBase::msm(&bases, scalars).map(|p| {
             BandersnatchProjective { x: p.x, y: p.y, z: p.z }
         })
-
     }
 
     #[inline(always)]
@@ -54,7 +52,7 @@ impl SWCurveConfig for BandersnatchConfig {
         mut writer: W,
         compress: ark_serialize::Compress,
     ) -> Result<(), SerializationError> {
-        let base = AffineBase::new_unchecked(item.x, item.y);
+        let base = AffineBase { x: item.x, y: item.y, infinity: item.infinity };
         match compress {
             Compress::Yes => {
                 let mut buf = [0_u8; 33];
@@ -89,7 +87,7 @@ impl SWCurveConfig for BandersnatchConfig {
                 BandersnatchConfigBase::deserialize_with_mode(reader, compress, validate)
             }
         }?;
-        Ok(BandersnatchAffine::new(base.x, base.y))
+        Ok(BandersnatchAffine { x: base.x, y: base.y, infinity: base.infinity })
     }
 
     #[inline(always)]
@@ -98,5 +96,43 @@ impl SWCurveConfig for BandersnatchConfig {
             Compress::Yes => 32,
             Compress::No => BandersnatchConfigBase::serialized_size(compress),
         }
+    }
+}
+
+#[cfg(all(test, feature = "getrandom"))]
+mod tests {
+    use super::*;
+    use ark_ec::AffineRepr;
+    use ark_ff::UniformRand;
+    use rand_core;
+    use ark_serialize::{CanonicalSerialize, CanonicalDeserialize};
+
+    #[test]
+    fn serialization_works() {
+        let mut rng = rand_core::OsRng;
+        let mut buf = [0u8; 32];
+
+        let e = BandersnatchAffine::identity();
+        e.serialize_compressed(buf.as_mut_slice()).unwrap();
+        assert_eq!(buf, [0; 32]);
+        let e2 = BandersnatchAffine::deserialize_compressed(buf.as_slice()).unwrap();
+        assert_eq!(e, e2);
+        assert!(e2.is_zero());
+
+        
+        let mut p = BandersnatchAffine::rand(&mut rng);
+        assert_eq!(p.compressed_size(), COMPRESSED_POINT_SIZE);
+        p.serialize_compressed(buf.as_mut_slice()).unwrap();
+        let expected = if p.y <= -p.y { SWFlags::YIsPositive } else { SWFlags::YIsNegative };
+        assert_eq!(expected as u8, buf[31] & SWFlags::YIsNegative as u8 );
+        let p2 = BandersnatchAffine::deserialize_compressed(buf.as_slice()).unwrap();
+        assert_eq!(p, p2);
+
+        p.y = -p.y;
+        p.serialize_compressed(buf.as_mut_slice()).unwrap();
+        let expected = if p.y <= -p.y { SWFlags::YIsPositive } else { SWFlags::YIsNegative };
+        assert_eq!(expected as u8, buf[31] & SWFlags::YIsNegative as u8 );
+        let p2 = BandersnatchAffine::deserialize_compressed(buf.as_slice()).unwrap();
+        assert_eq!(p, p2);
     }
 }
