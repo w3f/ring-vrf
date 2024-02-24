@@ -1,11 +1,12 @@
 use ark_ff::MontFp;
 use ark_ec::{short_weierstrass::{self, SWCurveConfig, SWFlags}, CurveConfig};
 use ark_serialize::{Compress, Read, SerializationError, Validate, Write};
-use crate::bandersnatch::{BandersnatchConfig as BandersnatchConfigBase, SWAffine as AffineBase};
+use crate::bandersnatch::{BandersnatchConfig as BandersnatchConfigBase, SWAffine as AffineBase, SWProjective as ProjectiveBase};
 
 pub const COMPRESSED_POINT_SIZE: usize = 32;
 
 pub type BandersnatchAffine = short_weierstrass::Affine<BandersnatchConfig>;
+pub type BandersnatchProjective = short_weierstrass::Projective<BandersnatchConfig>;
 
 #[derive(Clone, Default, PartialEq, Eq)]
 pub struct BandersnatchConfig;
@@ -28,6 +29,24 @@ impl SWCurveConfig for BandersnatchConfig {
     const COEFF_A: Self::BaseField = <BandersnatchConfigBase as SWCurveConfig>::COEFF_A;
     const COEFF_B: Self::BaseField = <BandersnatchConfigBase as SWCurveConfig>::COEFF_B;
     const GENERATOR: BandersnatchAffine = BandersnatchAffine::new_unchecked(SW_GENERATOR_X, SW_GENERATOR_Y);
+    
+    #[inline(always)]
+    fn msm(bases: &[BandersnatchAffine], scalars: &[Self::ScalarField]) -> Result<BandersnatchProjective, usize> {
+        let bases: Vec<_> = bases.into_iter().map(|b| {
+            AffineBase { x: b.x, y: b.y, infinity: b.infinity }
+        }).collect();
+        BandersnatchConfigBase::msm(&bases, scalars).map(|p| {
+            BandersnatchProjective { x: p.x, y: p.y, z: p.z }
+        })
+
+    }
+
+    #[inline(always)]
+    fn mul_projective(base: &BandersnatchProjective, scalar: &[u64]) -> BandersnatchProjective {
+        let base = ProjectiveBase { x: base.x, y: base.y, z: base.z };
+        let res = BandersnatchConfigBase::mul_projective(&base, scalar);
+        BandersnatchProjective { x: res.x, y: res.y, z: res.z }
+    }
 
     fn serialize_with_mode<W: Write>(
         item: &BandersnatchAffine,
