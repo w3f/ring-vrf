@@ -106,7 +106,21 @@ mod tests {
     use ark_ec::AffineRepr;
     use ark_ff::UniformRand;
     use rand_core;
-    use ark_serialize::{CanonicalSerialize, CanonicalDeserialize};
+    use ark_serialize::{CanonicalSerialize, CanonicalDeserialize, SerializationError};
+
+    // We assume that the point encoded with all zeros is the point at infinity
+    // and that there is no valid point encoded with all zeros which is not the
+    // point at infinity. Double check this here.
+    #[test]
+    fn assumptions_check() {
+        let mut buf = [0_u8; 33];
+        let err = AffineBase::deserialize_compressed(buf.as_slice()).unwrap_err();
+        assert!(matches!(err, SerializationError::InvalidData));
+
+        buf[32] |= SWFlags::YIsNegative as u8;
+        let err = AffineBase::deserialize_compressed(buf.as_slice()).unwrap_err();
+        assert!(matches!(err, SerializationError::InvalidData));
+    }
 
     #[test]
     fn serialization_works() {
