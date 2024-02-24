@@ -167,7 +167,7 @@ fn point_decode<T: CanonicalDeserialize>(raw: &[u8; 32]) -> Result<T, Serializat
 }
 
 impl CanonicalSerialize for PublicKey {
-    fn serialize_with_mode<W: std::io::prelude::Write>(
+    fn serialize_with_mode<W: ark_std::io::Write>(
         &self,
         mut writer: W,
         compress: Compress,
@@ -190,7 +190,7 @@ impl CanonicalSerialize for PublicKey {
 }
 
 impl CanonicalDeserialize for PublicKey {
-    fn deserialize_with_mode<R: std::io::prelude::Read>(
+    fn deserialize_with_mode<R: ark_std::io::Read>(
         mut reader: R,
         compress: Compress,
         validate: ark_serialize::Validate,
