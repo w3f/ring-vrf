@@ -6,10 +6,11 @@
 
 pub mod ring;
 pub mod zcash_consts;
+mod affine;
 
 use ark_ff::MontFp;
 use ark_ec::{
-    AffineRepr, CurveGroup,
+    AffineRepr, CurveGroup
     // hashing::{HashToCurveError, curve_maps, map_to_curve_hasher::MapToCurveBasedHasher, HashToCurve},
 };
 use ark_std::vec::Vec;   // io::{Read, Write}
@@ -41,11 +42,11 @@ pub use dleq_vrf::{
     scale,
 };
 
-use bandersnatch::SWAffine as Jubjub;
+use affine::{BandersnatchAffine, BandersnatchConfig, COMPRESSED_POINT_SIZE};
 
-pub type VrfInput = dleq_vrf::vrf::VrfInput<Jubjub>;
-pub type VrfPreOut = dleq_vrf::vrf::VrfPreOut<Jubjub>;
-pub type VrfInOut = dleq_vrf::vrf::VrfInOut<Jubjub>;
+pub type VrfInput = dleq_vrf::vrf::VrfInput<BandersnatchAffine>;
+pub type VrfPreOut = dleq_vrf::vrf::VrfPreOut<BandersnatchAffine>;
+pub type VrfInOut = dleq_vrf::vrf::VrfInOut<BandersnatchAffine>;
 
 pub struct Message<'a> {
     pub domain: &'a [u8],
@@ -64,7 +65,7 @@ pub fn hash_to_bandersnatch_curve(domain: &[u8],message: &[u8]) -> Result<VrfInp
 }
 */
 
-impl<'a> IntoVrfInput<Jubjub> for Message<'a> {
+impl<'a> IntoVrfInput<BandersnatchAffine> for Message<'a> {
     fn into_vrf_input(self) -> VrfInput {
         // TODO: Add Elligator to Arkworks
         // hash_to_bandersnatch_curve(self.domain,self.message)
@@ -75,26 +76,26 @@ impl<'a> IntoVrfInput<Jubjub> for Message<'a> {
         t.append(self.domain);
         t.label(b"message");
         t.append(self.message);
-        let p: <Jubjub as AffineRepr>::Group = t.challenge(b"vrf-input").read_uniform();
+        let p: <BandersnatchAffine as AffineRepr>::Group = t.challenge(b"vrf-input").read_uniform();
         vrf::VrfInput( p.into_affine() )
     }
 }
 
-pub const BLINDING_BASE: Jubjub = {
+pub const BLINDING_BASE: BandersnatchAffine = {
     const X: bandersnatch::Fq = MontFp!("4956610287995045830459834427365747411162584416641336688940534788579455781570");
     const Y: bandersnatch::Fq = MontFp!("52360910621642801549936840538960627498114783432181489929217988668068368626761");
-    Jubjub::new_unchecked(X, Y)
+    BandersnatchAffine::new_unchecked(X, Y)
 };
 
 
-type ThinVrf = dleq_vrf::ThinVrf<Jubjub>;
+type ThinVrf = dleq_vrf::ThinVrf<BandersnatchAffine>;
 
 /// Then VRF configured by the G1 generator for signatures.
 pub fn thin_vrf() -> ThinVrf {
     dleq_vrf::ThinVrf::default()  //  keying_base: Jubjub::generator()
 }
 
-type PedersenVrf = dleq_vrf::PedersenVrf<Jubjub>;
+type PedersenVrf = dleq_vrf::PedersenVrf<BandersnatchAffine>;
 
 /// Pedersen VRF configured by the G1 generator for public key certs.
 pub fn pedersen_vrf() -> PedersenVrf {
@@ -102,24 +103,12 @@ pub fn pedersen_vrf() -> PedersenVrf {
 }
 
 
-pub type SecretKey = dleq_vrf::SecretKey<Jubjub>;
+pub type SecretKey = dleq_vrf::SecretKey<BandersnatchAffine>;
 
-pub const PUBLIC_KEY_LENGTH: usize = 33;
+pub const PUBLIC_KEY_LENGTH: usize = COMPRESSED_POINT_SIZE;
 pub type PublicKeyBytes = [u8; PUBLIC_KEY_LENGTH];
 
-pub type PublicKey = dleq_vrf::PublicKey<Jubjub>;
-
-pub fn serialize_publickey(pk: &PublicKey) -> PublicKeyBytes {
-    let mut bytes = [0u8; PUBLIC_KEY_LENGTH];
-    pk.serialize_compressed(bytes.as_mut_slice())
-    .expect("Curve needs more than 33 bytes compressed!");
-    bytes
-}
-
-pub fn deserialize_publickey(reader: &[u8]) -> Result<PublicKey, SerializationError> {
-    PublicKey::deserialize_compressed(reader)
-}
-
+pub type PublicKey = dleq_vrf::PublicKey<BandersnatchAffine>;
 
 type ThinVrfProof = dleq_vrf::Batchable<ThinVrf>;
 
@@ -135,7 +124,7 @@ pub struct RingVrfProof {
 }
 
 impl dleq_vrf::EcVrfProof for RingVrfProof {
-    type H = Jubjub;
+    type H = BandersnatchAffine;
 }
 
 // TODO: Can you impl Debug+Eq+PartialEq for ring::RingProof please Sergey?  We'll then derive Debug.
@@ -192,7 +181,7 @@ impl RingVerifier<'_> {
     pub fn verify_ring_vrf<const N: usize>(
         &self,
         t: impl IntoTranscript,
-        inputs: impl IntoIterator<Item = impl IntoVrfInput<Jubjub>>,
+        inputs: impl IntoIterator<Item = impl IntoVrfInput<BandersnatchAffine>>,
         signature: &RingVrfSignature<N>,
     ) -> Result<[VrfInOut; N],SignatureError>
     {
@@ -249,13 +238,13 @@ impl<'a> RingProver<'a> {
 #[cfg(all(test, feature = "getrandom"))]
 mod tests {
     use super::*;
-    use core::iter;
     use ark_std::rand::RngCore;
+    use std::iter;
 
     #[test]
     fn check_blinding_base() {
         let mut t = b"Bandersnatch VRF blinding base".into_transcript();
-        let blinding_base: <Jubjub as AffineRepr>::Group = t.challenge(b"vrf-input").read_uniform();
+        let blinding_base: <BandersnatchAffine as AffineRepr>::Group = t.challenge(b"vrf-input").read_uniform();
         debug_assert_eq!(blinding_base.into_affine(), BLINDING_BASE);
     }
 
@@ -270,8 +259,6 @@ mod tests {
         let secret = SecretKey::from_seed(&[0; 32]);
         let public = secret.to_public();
         assert_eq!(public.compressed_size(), PUBLIC_KEY_LENGTH);
-        let public = serialize_publickey(&public);
-        let public = deserialize_publickey(&public).unwrap();
 
         let input = Message {
             domain: b"domain",
@@ -301,7 +288,7 @@ mod tests {
 		let keyset_size = usize::from_le_bytes(l) % keyset_size;
 
         // Gen a bunch of random public keys
-        let mut pks: Vec<_> = (0..keyset_size).map(|_| Jubjub::rand(&mut rng)).collect();
+        let mut pks: Vec<_> = (0..keyset_size).map(|_| BandersnatchAffine::rand(&mut rng)).collect();
         // Just select one index for the actual key we are for signing
         let secret_key_idx = keyset_size / 2;
         pks[secret_key_idx] = pk.0.into();
@@ -317,25 +304,56 @@ mod tests {
 
     #[test]
     fn ring_sign_verify() {
-        let secret = & SecretKey::from_seed(&[0; 32]);
+        let secret = &SecretKey::from_seed(&[0; 32]);
 
         let (ring_prover, ring_verifier) = ring_test_init(secret.to_public());
         
-        let input = Message {
-            domain: b"domain",
-            message: b"message",
-        }.into_vrf_input();
+        let input = Message { domain: b"domain", message: b"message"}.into_vrf_input();
         let io = secret.vrf_inout(input.clone());
         let transcript: &[u8] = b"Meow";  // Transcript::new_labeled(b"label");
         
         let signature: RingVrfSignature<1> = RingProver {
             ring_prover: &ring_prover, secret,
         }.sign_ring_vrf(transcript, &[io]);
+        assert_eq!(signature.compressed_size(), 784);
+        let mut buf = [0u8; 784];
+        signature.serialize_compressed(&mut buf[..]).unwrap();
+        let signature2 = RingVrfSignature::<1>::deserialize_compressed(&buf[..]).unwrap();
+        assert_eq!(signature, signature2);
         
-        // TODO: serialize signature
-
         let result = RingVerifier(&ring_verifier)
-        .verify_ring_vrf(transcript, iter::once(input), &signature);
+            .verify_ring_vrf(transcript, iter::once(input), &signature);
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn serialization_works() {
+        let secret = &SecretKey::from_seed(&[0; 32]);
+        let mut buf = [0u8; 128];
+
+        let public1 = secret.to_public();
+        assert_eq!(public1.compressed_size(), COMPRESSED_POINT_SIZE);
+        public1.serialize_compressed(&mut buf[..COMPRESSED_POINT_SIZE]).unwrap();
+        let public2 = PublicKey::deserialize_compressed(&buf[..COMPRESSED_POINT_SIZE]).unwrap();
+        assert_eq!(public1, public2);
+
+        let input = Message { domain: b"domain", message: b"message"}.into_vrf_input();
+        input.serialize_compressed(&mut buf[..COMPRESSED_POINT_SIZE]).unwrap();
+        let input2 = VrfInput::deserialize_compressed(&buf[..COMPRESSED_POINT_SIZE]).unwrap();
+        assert_eq!(input, input2);
+        
+        let io = secret.vrf_inout(input.clone());
+        io.serialize_compressed(&mut buf[..2*COMPRESSED_POINT_SIZE]).unwrap();
+        let io2 = VrfInOut::deserialize_compressed(&buf[..2*COMPRESSED_POINT_SIZE]).unwrap();
+        assert_eq!(io, io2);
+       
+        let transcript = Transcript::new_labeled(b"label");
+        let signature: ThinVrfSignature<1> = secret.sign_thin_vrf(transcript.clone(), &[io.clone()]);
+        assert_eq!(signature.compressed_size(), 3 * COMPRESSED_POINT_SIZE);
+        assert_eq!(signature.proof.compressed_size(), 2 * COMPRESSED_POINT_SIZE);
+        assert_eq!(signature.preouts[0].compressed_size(), COMPRESSED_POINT_SIZE);
+        signature.serialize_compressed(&mut buf[..3*COMPRESSED_POINT_SIZE]).unwrap();
+        let signature2 = ThinVrfSignature::<1>::deserialize_compressed(&buf[..3*COMPRESSED_POINT_SIZE]).unwrap();
+        assert_eq!(signature, signature2);
     }
 }
