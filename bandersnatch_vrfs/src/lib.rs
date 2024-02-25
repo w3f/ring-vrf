@@ -240,6 +240,7 @@ mod tests {
     use super::*;
     use ark_std::rand::RngCore;
     use std::iter;
+    use dleq_vrf::scale::{ArkScale, ArkScaleRef, ArkScaleMaxEncodedLen, Decode, Encode, MaxEncodedLen};
 
     #[test]
     fn check_blinding_base() {
@@ -355,5 +356,27 @@ mod tests {
         signature.serialize_compressed(&mut buf[..3*COMPRESSED_POINT_SIZE]).unwrap();
         let signature2 = ThinVrfSignature::<1>::deserialize_compressed(&buf[..3*COMPRESSED_POINT_SIZE]).unwrap();
         assert_eq!(signature, signature2);
+    }
+
+    #[test]
+    fn ark_scale_works() {
+        let secret = &SecretKey::from_seed(&[0; 32]);
+
+        let public1 = secret.to_public();
+        assert_eq!(<PublicKey as ArkScaleMaxEncodedLen>::max_encoded_len(Compress::Yes), COMPRESSED_POINT_SIZE);
+        assert_eq!(<PublicKey as MaxEncodedLen>::max_encoded_len(), COMPRESSED_POINT_SIZE);
+        assert_eq!(public1.encoded_size(), COMPRESSED_POINT_SIZE);
+        let bytes = public1.encode();
+        assert_eq!(bytes.len(), COMPRESSED_POINT_SIZE);
+        let public2 = PublicKey::decode(&mut bytes.as_slice()).unwrap();
+        assert_eq!(public1, public2);
+       
+        let wrapped1 = ArkScale::<PublicKey>::from(public1);
+        assert_eq!(wrapped1.encode(), bytes);
+        let wrapped2 = ArkScale::<PublicKey>::decode(&mut bytes.as_slice()).unwrap();
+        assert_eq!(wrapped1, wrapped2);
+
+        let wrapped_ref: ArkScaleRef<PublicKey> = ArkScaleRef(&public2);
+        assert_eq!(wrapped_ref.encode(), bytes);
     }
 }
