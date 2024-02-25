@@ -120,7 +120,7 @@ mod tests {
     // The point `p = (x = 0, y != 0)` is a valid point on the curve but it is not considered
     // valid (`p.check()` fails) as it has an order not equal to `BandersnatchConfig::ScalarField`.
     // 
-    // Be explicity with validation flag.
+    // Assess the backend assumptions (i.e. `BandersnatchConfig` which ships with arkworks).
     #[test]
     fn assumptions_check() {
         let mut buf = [0_u8; 33];
@@ -146,9 +146,7 @@ mod tests {
         // Checks that `p = (0, y)` is NOT in the subgroup with order defined by `BandersnatchConfig::ScalarField`.
         assert!(!p.is_in_correct_subgroup_assuming_on_curve());
         let p = p.clear_cofactor();
-        assert!(p.check().is_ok());
-
-        
+        assert!(p.check().is_ok());       
     }
 
     #[test]
@@ -162,7 +160,6 @@ mod tests {
         let e2 = BandersnatchAffine::deserialize_compressed(buf.as_slice()).unwrap();
         assert_eq!(e, e2);
         assert!(e2.is_zero());
-
         
         let mut p = BandersnatchAffine::rand(&mut rng);
         assert_eq!(p.compressed_size(), COMPRESSED_POINT_SIZE);
