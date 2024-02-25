@@ -1,3 +1,10 @@
+//! Definition of `SWCurveConfig` for compact points serialization.
+//!
+//! Our serialization technique works for any point in the curve excluded for `p = (x = 0, y)`.
+//!
+//! The point `p = (x = 0, y)` is a point in the curve but not in the prime order subgroup.
+//! Such a point is not considered valid by the arkworks decoding procedures when `Validate::Yes`.
+
 use ark_ff::MontFp;
 use ark_ec::{short_weierstrass::{self, SWCurveConfig, SWFlags}, CurveConfig};
 use ark_serialize::{Compress, Read, SerializationError, Validate, Write};
@@ -106,22 +113,42 @@ mod tests {
     use ark_ec::AffineRepr;
     use ark_ff::UniformRand;
     use rand_core;
-    use ark_serialize::{CanonicalSerialize, CanonicalDeserialize, SerializationError};
+    use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, SerializationError, Valid};
 
-    // We assume that the point encoded with all zeros is the point at infinity
-    // and that there is no valid point encoded with all zeros which is not the
-    // point at infinity. Double check this here.
+    // We assume that the point encoded with all zeros is the point at infinity.
     //
+    // The point `p = (x = 0, y != 0)` is a valid point on the curve but it is not considered
+    // valid (`p.check()` fails) as it has an order not equal to `BandersnatchConfig::ScalarField`.
+    // 
     // Be explicity with validation flag.
     #[test]
     fn assumptions_check() {
         let mut buf = [0_u8; 33];
-        let err = AffineBase::deserialize_with_mode(buf.as_slice(), Compress::Yes, Validate::Yes).unwrap_err();
-        assert!(matches!(err, SerializationError::InvalidData));
 
-        buf[32] |= SWFlags::YIsNegative as u8;
-        let err = AffineBase::deserialize_with_mode(buf.as_slice(), Compress::Yes, Validate::Yes).unwrap_err();
+        // Positive y
+        let err = BandersnatchConfigBase::deserialize_with_mode(buf.as_slice(), Compress::Yes, Validate::Yes).unwrap_err();
         assert!(matches!(err, SerializationError::InvalidData));
+        let p = BandersnatchConfigBase::deserialize_with_mode(buf.as_slice(), Compress::Yes, Validate::No).unwrap();
+        assert!(matches!(p.check().unwrap_err(), SerializationError::InvalidData));
+        assert!(p.is_on_curve());
+        // Checks that `p = (0, y)` is NOT in the subgroup with order defined by `BandersnatchConfig::ScalarField`.
+        assert!(!p.is_in_correct_subgroup_assuming_on_curve());
+        let p = p.clear_cofactor();
+        assert!(p.check().is_ok());
+
+        // Negative y
+        buf[32] |= SWFlags::YIsNegative as u8;
+        let err = BandersnatchConfigBase::deserialize_with_mode(buf.as_slice(), Compress::Yes, Validate::Yes).unwrap_err();
+        assert!(matches!(err, SerializationError::InvalidData));
+        let p = BandersnatchConfigBase::deserialize_with_mode(buf.as_slice(), Compress::Yes, Validate::No).unwrap();
+        assert!(matches!(p.check().unwrap_err(), SerializationError::InvalidData));
+        assert!(p.is_on_curve());
+        // Checks that `p = (0, y)` is NOT in the subgroup with order defined by `BandersnatchConfig::ScalarField`.
+        assert!(!p.is_in_correct_subgroup_assuming_on_curve());
+        let p = p.clear_cofactor();
+        assert!(p.check().is_ok());
+
+        
     }
 
     #[test]
