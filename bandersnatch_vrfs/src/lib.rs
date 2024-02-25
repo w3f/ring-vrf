@@ -6,7 +6,6 @@
 
 pub mod ring;
 pub mod zcash_consts;
-mod affine;
 
 use ark_ff::MontFp;
 use ark_ec::{
@@ -22,14 +21,27 @@ mod curves {
     pub use ark_ed_on_bls12_381_bandersnatch as bandersnatch;
     pub use ark_bls12_381 as bls12_381;
 }
-
 #[cfg(feature = "substrate-curves")]
 mod curves {
     pub use sp_ark_ed_on_bls12_381_bandersnatch as bandersnatch;
     pub use sp_ark_bls12_381 as bls12_381;
 }
-
 pub use curves::*;
+
+#[cfg(feature = "tiny-compress")]
+mod affine;
+#[cfg(feature = "tiny-compress")]
+mod affine_defs {
+    use super::*;
+    pub use affine::{BandersnatchAffine, BandersnatchConfig, COMPRESSED_POINT_SIZE};
+}
+#[cfg(not(feature = "tiny-compress"))]
+mod affine_defs {
+    use super::*;
+    pub use bandersnatch::{BandersnatchConfig, SWAffine as BandersnatchAffine};
+    pub const COMPRESSED_POINT_SIZE: usize = 33;
+}
+use affine_defs::*;
 
 // Conversion discussed in https://github.com/arkworks-rs/curves/pull/76#issuecomment-929121470
 
@@ -41,8 +53,6 @@ pub use dleq_vrf::{
     VrfSignature,VrfSignatureVec,
     scale,
 };
-
-use affine::{BandersnatchAffine, BandersnatchConfig, COMPRESSED_POINT_SIZE};
 
 pub type VrfInput = dleq_vrf::vrf::VrfInput<BandersnatchAffine>;
 pub type VrfPreOut = dleq_vrf::vrf::VrfPreOut<BandersnatchAffine>;
@@ -305,6 +315,11 @@ mod tests {
 
     #[test]
     fn ring_sign_verify() {
+        #[cfg(feature = "tiny-compress")]
+        const RING_PROOF_SIZE: usize = 752;
+        #[cfg(not(feature = "tiny-compress"))]
+        const RING_PROOF_SIZE: usize = 755;
+
         let secret = &SecretKey::from_seed(&[0; 32]);
 
         let (ring_prover, ring_verifier) = ring_test_init(secret.to_public());
@@ -316,8 +331,9 @@ mod tests {
         let signature: RingVrfSignature<1> = RingProver {
             ring_prover: &ring_prover, secret,
         }.sign_ring_vrf(transcript, &[io]);
-        assert_eq!(signature.compressed_size(), 784);
-        let mut buf = [0u8; 784];
+        assert_eq!(signature.proof.compressed_size(), RING_PROOF_SIZE);
+        assert_eq!(signature.compressed_size(), RING_PROOF_SIZE + COMPRESSED_POINT_SIZE);
+        let mut buf = [0u8; RING_PROOF_SIZE + COMPRESSED_POINT_SIZE];
         signature.serialize_compressed(&mut buf[..]).unwrap();
         let signature2 = RingVrfSignature::<1>::deserialize_compressed(&buf[..]).unwrap();
         assert_eq!(signature, signature2);
@@ -326,6 +342,8 @@ mod tests {
             .verify_ring_vrf(transcript, iter::once(input), &signature);
         assert!(result.is_ok());
     }
+
+    const SCALAR_SIZE: usize = 32;
 
     #[test]
     fn serialization_works() {
@@ -350,8 +368,8 @@ mod tests {
        
         let transcript = Transcript::new_labeled(b"label");
         let signature: ThinVrfSignature<1> = secret.sign_thin_vrf(transcript.clone(), &[io.clone()]);
-        assert_eq!(signature.compressed_size(), 3 * COMPRESSED_POINT_SIZE);
-        assert_eq!(signature.proof.compressed_size(), 2 * COMPRESSED_POINT_SIZE);
+        assert_eq!(signature.compressed_size(), 2 * COMPRESSED_POINT_SIZE + SCALAR_SIZE);
+        assert_eq!(signature.proof.compressed_size(), COMPRESSED_POINT_SIZE + SCALAR_SIZE);
         assert_eq!(signature.preouts[0].compressed_size(), COMPRESSED_POINT_SIZE);
         signature.serialize_compressed(&mut buf[..3*COMPRESSED_POINT_SIZE]).unwrap();
         let signature2 = ThinVrfSignature::<1>::deserialize_compressed(&buf[..3*COMPRESSED_POINT_SIZE]).unwrap();

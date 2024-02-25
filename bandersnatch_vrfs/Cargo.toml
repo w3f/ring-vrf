@@ -54,4 +54,5 @@ substrate-curves = [
   "sp-ark-ed-on-bls12-381-bandersnatch",
   "sp-ark-bls12-381",
 ]
+tiny-compress = []
 # parallel = ["std", "ring/parallel"]  #  ["std", "rayon", "ark-std/parallel", "ark-ff/parallel", "ark-ec/parallel", "ark-poly/parallel"]
