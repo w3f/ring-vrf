@@ -58,7 +58,7 @@ impl<F: PrimeField + Clone> From<&F> for SecretScalar<F> {
     fn from(value: &F) -> Self {
         let mut xof = Rng2Xof(getrandom_or_panic());
         let v1 = xof_read_reduced(&mut xof);
-        let v2 = value.clone() - &v1;
+        let v2 = value.sub(v1);
         SecretScalar([v1, v2])
     }
 }
@@ -73,11 +73,10 @@ impl<F: PrimeField> Clone for SecretScalar<F> {
 
 impl<F: PrimeField> PartialEq for SecretScalar<F> {
     fn eq(&self, rhs: &SecretScalar<F>) -> bool {
-        let lhs = &self.0;
-        let rhs = &rhs.0;
-        ( (lhs[0] - rhs[0]) + (lhs[1] - rhs[1]) ).is_zero()
+        self.scalar() == rhs.scalar()
     }
 }
+
 impl<F: PrimeField> Eq for SecretScalar<F> {}
 
 impl<F: PrimeField> Drop for SecretScalar<F> {
@@ -93,6 +92,11 @@ impl<F: PrimeField> SecretScalar<F> {
         selfy[1] -= &x;
     }
 
+    /// Internal clone which skips resplit.
+    fn risky_clone(&self) -> SecretScalar<F> {
+        SecretScalar(self.0.clone())
+    }
+
     /// Initialize and unbiased `SecretScalar` from a `XofReaader`.
     pub fn from_xof<R: XofReader>(xof: &mut R) -> Self {
         let mut xof = || xof_read_reduced(&mut *xof);
@@ -103,8 +107,7 @@ impl<F: PrimeField> SecretScalar<F> {
 
     /// Multiply by a scalar.
     pub fn mul_by_challenge(&self, rhs: &F) -> F {
-        let selfy = &self.clone().0;
-        (selfy[0] * rhs) + (selfy[1] * rhs)
+        self.scalar() * rhs
     }
 
     pub fn scalar(&self) -> F {
@@ -135,7 +138,7 @@ impl<F: PrimeField> Add<&SecretScalar<F>> for &SecretScalar<F> {
     type Output = SecretScalar<F>;
 
     fn add(self, rhs: &SecretScalar<F>) -> SecretScalar<F> {
-        let mut lhs = self.clone();
+        let mut lhs = self.risky_clone();
         lhs += rhs;
         lhs
     }
@@ -174,12 +177,27 @@ mod tests {
 
     #[test]
     fn from_single_scalar_works() {
-        let value: Fr = MontFp!("12345678");
+        let value: Fr = MontFp!("123456789");
 
         let mut secret = SecretScalar::from(value);
         assert_eq!(value, secret.scalar());
 
         secret.resplit();
         assert_eq!(value, secret.scalar());
+
+        let secret2 = secret.clone();
+        assert_ne!(secret.0[0], secret2.0[0]);
+        assert_ne!(secret.0[1], secret2.0[1]);
+        assert_eq!(secret, secret2);
+    }
+
+    #[test]
+    fn mul_my_challenge_works() {
+        let value: Fr = MontFp!("123456789");
+        let secret = SecretScalar::from(value);
+
+        let factor = Fr::from(3);
+        let result = secret.mul_by_challenge(&factor);
+        assert_eq!(result, value * factor);
     }
 }
