@@ -16,15 +16,12 @@ use zeroize::Zeroize;
 // TODO:  Remove ark-transcript dependency once https://github.com/arkworks-rs/algebra/pull/643 lands
 use ark_transcript::xof_read_reduced;
 
-
-
 pub struct Rng2Xof<R: RngCore+CryptoRng>(pub R);
 impl<R: RngCore+CryptoRng> XofReader for Rng2Xof<R> {
     fn read(&mut self, dest: &mut [u8]) {
         self.0.fill_bytes(dest);
     }
 }
-
 
 /// Secret scalar split into the sum of two scalars, which randomly
 /// mutate but retain the same sum.   Incurs 2x penalty in scalar
@@ -73,7 +70,9 @@ impl<F: PrimeField> Clone for SecretScalar<F> {
 
 impl<F: PrimeField> PartialEq for SecretScalar<F> {
     fn eq(&self, rhs: &SecretScalar<F>) -> bool {
-        self.scalar() == rhs.scalar()
+        let lhs = &self.0;
+        let rhs = &rhs.0;
+        ((lhs[0] - rhs[0]) + (lhs[1] - rhs[1])).is_zero()
     }
 }
 
@@ -84,17 +83,17 @@ impl<F: PrimeField> Drop for SecretScalar<F> {
 }
 
 impl<F: PrimeField> SecretScalar<F> {
+    /// Internal clone which skips resplit.
+    fn risky_clone(&self) -> SecretScalar<F> {
+        SecretScalar(self.0.clone())
+    }
+
     pub fn resplit(&mut self) {
         let mut xof = Rng2Xof(getrandom_or_panic());
         let x = xof_read_reduced(&mut xof);
         let selfy = &mut self.0;
         selfy[0] += &x;
         selfy[1] -= &x;
-    }
-
-    /// Internal clone which skips resplit.
-    fn risky_clone(&self) -> SecretScalar<F> {
-        SecretScalar(self.0.clone())
     }
 
     /// Initialize and unbiased `SecretScalar` from a `XofReaader`.
@@ -107,7 +106,8 @@ impl<F: PrimeField> SecretScalar<F> {
 
     /// Multiply by a scalar.
     pub fn mul_by_challenge(&self, rhs: &F) -> F {
-        self.scalar() * rhs
+        let lhs = &self.clone().0;
+        (lhs[0] * rhs) + (lhs[1] * rhs)
     }
 
     pub fn scalar(&self) -> F {
