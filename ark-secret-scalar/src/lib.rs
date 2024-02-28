@@ -3,10 +3,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![doc = include_str!("../README.md")]
 
-use core::{
-    cell::UnsafeCell,
-    ops::{Add,AddAssign,Mul}
-};
+use core::ops::{Add,AddAssign,Mul};
 
 use ark_ff::{PrimeField}; // Field, Zero
 use ark_ec::{AffineRepr, Group}; // CurveGroup
@@ -48,71 +45,50 @@ impl<R: RngCore+CryptoRng> XofReader for Rng2Xof<R> {
 // TODO:  We split additively right now, but would a multiplicative splitting
 // help against rowhammer attacks on the secret key?
 #[repr(transparent)]
-pub struct SecretScalar<F: PrimeField>(UnsafeCell<[F; 2]>);
+#[derive(Zeroize)]
+pub struct SecretScalar<F: PrimeField>([F; 2]);
+
+impl<F: PrimeField> From<F> for SecretScalar<F> {
+    fn from(value: F) -> Self {
+        Self::from(&value)
+    }
+}
+
+impl<F: PrimeField + Clone> From<&F> for SecretScalar<F> {
+    fn from(value: &F) -> Self {
+        let mut xof = Rng2Xof(getrandom_or_panic());
+        let v1 = xof_read_reduced(&mut xof);
+        let v2 = value.clone() - &v1;
+        SecretScalar([v1, v2])
+    }
+}
 
 impl<F: PrimeField> Clone for SecretScalar<F> {
     fn clone(&self) -> SecretScalar<F> {
-        let n = self.operate(|ss| ss.clone());
-        self.resplit();
-        SecretScalar(UnsafeCell::new(n) )
+        let mut secret = SecretScalar(self.0.clone());
+        secret.resplit();
+        secret
     }
 }
 
 impl<F: PrimeField> PartialEq for SecretScalar<F> {
     fn eq(&self, rhs: &SecretScalar<F>) -> bool {
-        let lhs = unsafe { &*self.0.get() };
-        let rhs = unsafe { &*rhs.0.get() };
+        let lhs = &self.0;
+        let rhs = &rhs.0;
         ( (lhs[0] - rhs[0]) + (lhs[1] - rhs[1]) ).is_zero()
     }
 }
 impl<F: PrimeField> Eq for SecretScalar<F> {}
 
-impl<F: PrimeField> Zeroize for SecretScalar<F> { 
-    fn zeroize(&mut self) {
-        self.0.get_mut().zeroize()
-    }
-}
 impl<F: PrimeField> Drop for SecretScalar<F> {
     fn drop(&mut self) { self.zeroize() }
 }
 
 impl<F: PrimeField> SecretScalar<F> {
-    /// Do computations with an immutable borrow of the two scalars.
-    ///
-    /// At the module level, we keep this method private, never pass
-    /// these references into user's code, and never accept user's
-    /// closures, so our being `!Sync` ensures memory safety.
-    /// All other method ensure only the sum of the scalars is visible
-    /// outside this module too.
-    fn operate<R,O>(&self, f : O) -> R
-    where O: FnOnce(&[F; 2]) -> R
-    {
-        f(unsafe { &*self.0.get() })
-    }
-
-    /// Internal clone which skips replit.
-    fn risky_clone(&self) -> SecretScalar<F> {
-        let n = self.operate(|ss| ss.clone());
-        SecretScalar(UnsafeCell::new(n) )
-    }
-
-    /// Immutably borrow `&self` but add opposite random values to its two scalars.
-    /// 
-    /// We encapsulate exposed interior mutability of `SecretScalar` here, but
-    /// our other methods should never reveal references into the scalars,
-    /// or even their individual valus.
-    pub fn resplit(&self) {
+    pub fn resplit(&mut self) {
         let mut xof = Rng2Xof(getrandom_or_panic());
         let x = xof_read_reduced(&mut xof);
-        let selfy = unsafe { &mut *self.0.get() };
-        selfy[0] += &x;
-        selfy[1] -= &x;
-    }
-
-    pub fn resplit_mut(&mut self) {
-        let mut xof = Rng2Xof(getrandom_or_panic());
-        let x = xof_read_reduced(&mut xof);
-        let selfy = self.0.get_mut();
+        let selfy = &mut self.0;
         selfy[0] += &x;
         selfy[1] -= &x;
     }
@@ -120,73 +96,90 @@ impl<F: PrimeField> SecretScalar<F> {
     /// Initialize and unbiased `SecretScalar` from a `XofReaader`.
     pub fn from_xof<R: XofReader>(xof: &mut R) -> Self {
         let mut xof = || xof_read_reduced(&mut *xof);
-        let mut ss = SecretScalar(UnsafeCell::new([xof(), xof()]) );
-        ss.resplit_mut();
+        let mut ss = SecretScalar([xof(), xof()]);
+        ss.resplit();
         ss
     }
 
     /// Multiply by a scalar.
     pub fn mul_by_challenge(&self, rhs: &F) -> F {
-        let o = self.operate(|ss| (ss[0] * rhs) + (ss[1] * rhs) );
-        self.resplit();
-        o
+        let selfy = &self.clone().0;
+        (selfy[0] * rhs) + (selfy[1] * rhs)
+    }
+
+    pub fn scalar(&self) -> F {
+        self.0[0] + self.0[1]
     }
 
     /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
     /// but ark_ec being our dependency requires left multiplication here.
     fn mul_action<G: Group<ScalarField=F>>(&self, x: &mut G) {
         let mut y = x.clone();
-        self.operate(|ss| {
-            *x *= ss[0];
-            y *= ss[1];
-            *x += y;
-        });
+        let selfy = &self.0;
+        *x *= selfy[0];
+        y *= selfy[1];
+        *x += y;
     }
 }
 
 impl<F: PrimeField> AddAssign<&SecretScalar<F>> for SecretScalar<F> {
     fn add_assign(&mut self, rhs: &SecretScalar<F>) {
-        let lhs = self.0.get_mut();
-        rhs.operate(|rhs| {
-            lhs[0] += rhs[0];
-            lhs[1] += rhs[1];
-        });
+        let lhs = &mut self.0;
+        let rhs = &rhs.clone().0;
+        lhs[0] += rhs[0];
+        lhs[1] += rhs[1];
     }
 }
 
 impl<F: PrimeField> Add<&SecretScalar<F>> for &SecretScalar<F> {
     type Output = SecretScalar<F>;
+
     fn add(self, rhs: &SecretScalar<F>) -> SecretScalar<F> {
-        let mut lhs = self.risky_clone();
+        let mut lhs = self.clone();
         lhs += rhs;
-        lhs.resplit_mut();
         lhs
     }
 }
 
-/*
-impl<G: Group> Mul<&G> for &SecretScalar<<G as Group>::ScalarField> {
-    type Output = G;
-    /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
-    /// but ark_ec being our dependency requires left multiplication here.
-    fn mul(self, rhs: &G) -> G {
-        let mut rhs = rhs.clone();
-        self.mul_action(&mut rhs);
-        rhs
-    }
-}
-*/
-
 impl<C: AffineRepr> Mul<&C> for &SecretScalar<<C as AffineRepr>::ScalarField> {
     type Output = <C as AffineRepr>::Group;
+
     /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
     /// but ark_ec being our dependency requires left multiplication here.
     fn mul(self, rhs: &C) -> Self::Output {
-        let o = self.operate(|lhs| rhs.mul(lhs[0]) + rhs.mul(lhs[1]));
+        let lhs = &self.clone().0;
+        let o = rhs.mul(lhs[0]) + rhs.mul(lhs[1]);
         use ark_ec::CurveGroup;
         debug_assert_eq!(o.into_affine(), { let mut t = rhs.into_group(); self.mul_action(&mut t); t }.into_affine() );
-        self.resplit();
         o
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ark_bls12_377::Fr;
+    use ark_ff::MontFp;
+    use ark_std::fmt::Debug;
+
+    impl<F: PrimeField + Debug> Debug for SecretScalar<F> {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            let selfy = &self.0;
+            f.debug_tuple("SecretScalar")
+                .field(&selfy[0])
+                .field(&selfy[1])
+                .finish()
+        }
+    }
+
+    #[test]
+    fn from_single_scalar_works() {
+        let value: Fr = MontFp!("12345678");
+
+        let mut secret = SecretScalar::from(value);
+        assert_eq!(value, secret.scalar());
+
+        secret.resplit();
+        assert_eq!(value, secret.scalar());
+    }
+}
