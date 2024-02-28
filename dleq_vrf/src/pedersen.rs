@@ -9,6 +9,7 @@
 
 use ark_ff::PrimeField;
 use ark_ec::{AffineRepr, CurveGroup};
+use ark_secret_scalar::SecretScalar;
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
 use ark_std::{borrow::BorrowMut, vec::Vec};
 
@@ -322,8 +323,9 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         for i in 0..B {
             blindings.push( k.blindings[i] + c * secret_blindings.0[i] );
         }
+        let secret = SecretScalar::from(&secret.key);
         let s = Scalars {
-            keying: k.keying + secret.key.mul_by_challenge(&c),
+            keying: k.keying + secret.mul_by_challenge(&c),
             blindings: blindings.into_inner().unwrap(),
         };
         k.zeroize();
