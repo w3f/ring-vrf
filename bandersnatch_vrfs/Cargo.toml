@@ -9,7 +9,7 @@ license = "MIT/Apache-2.0"
 keywords = ["crypto", "cryptography", "vrf", "signature", "privacy"]
 
 [dependencies]
-dleq_vrf = { version = "0.0.2", default-features = false, path = "../dleq_vrf", features = [ "scale" ] }
+dleq_vrf = { default-features = false, path = "../dleq_vrf", features = [ "scale" ] }
 
 rand_core.workspace = true
 zeroize.workspace = true
