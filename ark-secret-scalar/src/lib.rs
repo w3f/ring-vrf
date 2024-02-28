@@ -88,6 +88,7 @@ impl<F: PrimeField> SecretScalar<F> {
         SecretScalar(self.0.clone())
     }
 
+    /// Randomply resplit the secret in two components.
     pub fn resplit(&mut self) {
         let mut xof = Rng2Xof(getrandom_or_panic());
         let x = xof_read_reduced(&mut xof);
@@ -110,6 +111,7 @@ impl<F: PrimeField> SecretScalar<F> {
         (lhs[0] * rhs) + (lhs[1] * rhs)
     }
 
+    /// Get the secret scalar value by joining the two components.
     pub fn scalar(&self) -> F {
         self.0[0] + self.0[1]
     }
