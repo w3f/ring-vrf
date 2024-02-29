@@ -144,7 +144,6 @@ impl<K: AffineRepr> ThinVrf<K> {
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
         xof.read(&mut nonce_seed);
-
         let key = SecretScalar::from_xof(&mut xof);
         let public = self.make_public(&key);
         SecretKey { thin: self, key, nonce_seed, public, 

@@ -25,7 +25,7 @@ impl<R: RngCore+CryptoRng> XofReader for Rng2Xof<R> {
 
 #[repr(transparent)]
 #[derive(Zeroize, Clone)]
-pub struct SecretScalar<F: PrimeField>(F);
+pub struct SecretScalar<F: PrimeField>(pub F);
 
 impl<F: PrimeField> SecretScalar<F> {
     /// Initialize and unbiased `SecretScalar` from a `XofReaader`.
@@ -59,8 +59,7 @@ impl<C: AffineRepr> Mul<&C> for &SecretScalar<<C as AffineRepr>::ScalarField> {
     /// but ark_ec being our dependency requires left multiplication here.
     fn mul(self, rhs: &C) -> Self::Output {
         let lhs = SecretSplit::from(self);
-        let o = rhs.mul(lhs[0]) + rhs.mul(lhs[1]);
-        o
+        rhs.mul(lhs[0]) + rhs.mul(lhs[1])
     }
 }
 
@@ -106,6 +105,7 @@ impl<F: PrimeField> From<SecretScalar<F>> for SecretSplit<F> {
     }
 }
 
+/// Randomply splits the secret in two components.
 impl<F: PrimeField> From<&SecretScalar<F>> for SecretSplit<F> {
     fn from(value: &SecretScalar<F>) -> Self {
         let mut xof = Rng2Xof(getrandom_or_panic());
@@ -127,6 +127,7 @@ impl<F: PrimeField> From<&F> for SecretSplit<F> {
     }
 }
 
+/// Randomly resplits the cloned components.
 impl<F: PrimeField> Clone for SecretSplit<F> {
     fn clone(&self) -> SecretSplit<F> {
         let mut secret = SecretSplit(self.0.clone());
@@ -166,8 +167,7 @@ impl<F: PrimeField> SecretSplit<F> {
 
     /// Multiply by a scalar.
     pub fn mul_by_challenge(&self, rhs: &F) -> F {
-        let lhs = &self.clone().0;
-        (lhs[0] * rhs) + (lhs[1] * rhs)
+        (self[0] * rhs) + (self[1] * rhs)
     }
 
     /// Get the secret scalar value by joining the two components.
@@ -179,17 +179,14 @@ impl<F: PrimeField> SecretSplit<F> {
     /// but ark_ec being our dependency requires left multiplication here.
     fn mul_action<G: Group<ScalarField=F>>(&self, x: &mut G) {
         let mut y = x.clone();
-        let selfy = &self.0;
-        *x *= selfy[0];
-        y *= selfy[1];
+        *x *= self[0];
+        y *= self[1];
         *x += y;
     }
 }
 
 impl<F: PrimeField> AddAssign<&SecretSplit<F>> for SecretSplit<F> {
     fn add_assign(&mut self, rhs: &SecretSplit<F>) {
-        // Clone performs a resplit
-        let rhs = rhs.clone();
         self[0] += rhs[0];
         self[1] += rhs[1];
     }
@@ -211,8 +208,7 @@ impl<C: AffineRepr> Mul<&C> for &SecretSplit<<C as AffineRepr>::ScalarField> {
     /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
     /// but ark_ec being our dependency requires left multiplication here.
     fn mul(self, rhs: &C) -> Self::Output {
-        let lhs = &self.clone().0;
-        let o = rhs.mul(lhs[0]) + rhs.mul(lhs[1]);
+        let o = rhs.mul(self[0]) + rhs.mul(self[1]);
 
         use ark_ec::CurveGroup;
         debug_assert_eq!(o.into_affine(), { let mut t = rhs.into_group(); self.mul_action(&mut t); t }.into_affine() );
