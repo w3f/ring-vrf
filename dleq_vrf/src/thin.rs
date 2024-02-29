@@ -136,7 +136,7 @@ impl<C: AffineRepr> Valid for Batchable<ThinVrf<C>> {
 */
 
 impl<K: AffineRepr> ThinVrf<K> {
-    pub(crate) fn make_public(&self, secret: &SecretScalar<<K as AffineRepr>::ScalarField>) -> PublicKey<K> {
+    pub(crate) fn make_public(&self, secret: &SecretScalar<K::ScalarField>) -> PublicKey<K> {
         // let secret = SecretScalarSplit::from(secret);
         let public = secret * self.keying_base();
         PublicKey(public.into_affine())

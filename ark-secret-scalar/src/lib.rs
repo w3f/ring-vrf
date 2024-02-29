@@ -35,19 +35,19 @@ impl<F: PrimeField> SecretScalar<F> {
 
     /// Multiply by a scalar.
     pub fn mul_by_challenge(&self, rhs: &F) -> F {
-        let lhs = SecretScalarSplit::from(self);
+        let lhs = SecretSplit::from(self);
         (lhs[0] * rhs) + (lhs[1] * rhs)
     }
 }
 
-impl<F: PrimeField> From<&SecretScalarSplit<F>> for SecretScalar<F> {
-    fn from(value: &SecretScalarSplit<F>) -> Self {
+impl<F: PrimeField> From<&SecretSplit<F>> for SecretScalar<F> {
+    fn from(value: &SecretSplit<F>) -> Self {
         SecretScalar(value.0[0] + value.0[1])
     }
 }
 
-impl<F: PrimeField> From<SecretScalarSplit<F>> for SecretScalar<F> {
-    fn from(value: SecretScalarSplit<F>) -> Self {
+impl<F: PrimeField> From<SecretSplit<F>> for SecretScalar<F> {
+    fn from(value: SecretSplit<F>) -> Self {
         SecretScalar::from(&value)
     }
 }
@@ -58,7 +58,7 @@ impl<C: AffineRepr> Mul<&C> for &SecretScalar<<C as AffineRepr>::ScalarField> {
     /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
     /// but ark_ec being our dependency requires left multiplication here.
     fn mul(self, rhs: &C) -> Self::Output {
-        let lhs = SecretScalarSplit::from(self);
+        let lhs = SecretSplit::from(self);
         let o = rhs.mul(lhs[0]) + rhs.mul(lhs[1]);
         o
     }
@@ -84,9 +84,9 @@ impl<C: AffineRepr> Mul<&C> for &SecretScalar<<C as AffineRepr>::ScalarField> {
 // help against rowhammer attacks on the secret key?
 #[repr(transparent)]
 #[derive(Zeroize)]
-pub struct SecretScalarSplit<F: PrimeField>([F; 2]);
+pub struct SecretSplit<F: PrimeField>([F; 2]);
 
-impl<F: PrimeField> Index<usize> for SecretScalarSplit<F> {
+impl<F: PrimeField> Index<usize> for SecretSplit<F> {
     type Output = F;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -94,60 +94,60 @@ impl<F: PrimeField> Index<usize> for SecretScalarSplit<F> {
     }
 }
 
-impl<F: PrimeField> IndexMut<usize> for SecretScalarSplit<F> {
+impl<F: PrimeField> IndexMut<usize> for SecretSplit<F> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.0[index]
     }
 }
 
-impl<F: PrimeField> From<SecretScalar<F>> for SecretScalarSplit<F> {
+impl<F: PrimeField> From<SecretScalar<F>> for SecretSplit<F> {
     fn from(value: SecretScalar<F>) -> Self {
-        SecretScalarSplit::from(&value)
+        SecretSplit::from(&value)
     }
 }
 
-impl<F: PrimeField> From<&SecretScalar<F>> for SecretScalarSplit<F> {
+impl<F: PrimeField> From<&SecretScalar<F>> for SecretSplit<F> {
     fn from(value: &SecretScalar<F>) -> Self {
         let mut xof = Rng2Xof(getrandom_or_panic());
         let v1 = xof_read_reduced(&mut xof);
         let v2 = value.0.sub(v1);
-        SecretScalarSplit([v1, v2])
+        SecretSplit([v1, v2])
     }
 }
 
-impl<F: PrimeField> From<F> for SecretScalarSplit<F> {
+impl<F: PrimeField> From<F> for SecretSplit<F> {
     fn from(value: F) -> Self {
         Self::from(&value)
     }
 }
 
-impl<F: PrimeField> From<&F> for SecretScalarSplit<F> {
+impl<F: PrimeField> From<&F> for SecretSplit<F> {
     fn from(value: &F) -> Self {
         SecretScalar(*value).into()
     }
 }
 
-impl<F: PrimeField> Clone for SecretScalarSplit<F> {
-    fn clone(&self) -> SecretScalarSplit<F> {
-        let mut secret = SecretScalarSplit(self.0.clone());
+impl<F: PrimeField> Clone for SecretSplit<F> {
+    fn clone(&self) -> SecretSplit<F> {
+        let mut secret = SecretSplit(self.0.clone());
         secret.resplit();
         secret
     }
 }
 
-impl<F: PrimeField> PartialEq for SecretScalarSplit<F> {
-    fn eq(&self, rhs: &SecretScalarSplit<F>) -> bool {
+impl<F: PrimeField> PartialEq for SecretSplit<F> {
+    fn eq(&self, rhs: &SecretSplit<F>) -> bool {
         ((self[0] - rhs[0]) + (self[1] - rhs[1])).is_zero()
     }
 }
 
-impl<F: PrimeField> Eq for SecretScalarSplit<F> {}
+impl<F: PrimeField> Eq for SecretSplit<F> {}
 
-impl<F: PrimeField> Drop for SecretScalarSplit<F> {
+impl<F: PrimeField> Drop for SecretSplit<F> {
     fn drop(&mut self) { self.zeroize() }
 }
 
-impl<F: PrimeField> SecretScalarSplit<F> {
+impl<F: PrimeField> SecretSplit<F> {
     /// Randomply resplit the secret in two components.
     pub fn resplit(&mut self) {
         let mut xof = Rng2Xof(getrandom_or_panic());
@@ -159,7 +159,7 @@ impl<F: PrimeField> SecretScalarSplit<F> {
     /// Initialize and unbiased `SecretScalar` from a `XofReaader`.
     pub fn from_xof<R: XofReader>(xof: &mut R) -> Self {
         let mut xof = || xof_read_reduced(&mut *xof);
-        let mut ss = SecretScalarSplit([xof(), xof()]);
+        let mut ss = SecretSplit([xof(), xof()]);
         ss.resplit();
         ss
     }
@@ -186,8 +186,8 @@ impl<F: PrimeField> SecretScalarSplit<F> {
     }
 }
 
-impl<F: PrimeField> AddAssign<&SecretScalarSplit<F>> for SecretScalarSplit<F> {
-    fn add_assign(&mut self, rhs: &SecretScalarSplit<F>) {
+impl<F: PrimeField> AddAssign<&SecretSplit<F>> for SecretSplit<F> {
+    fn add_assign(&mut self, rhs: &SecretSplit<F>) {
         // Clone performs a resplit
         let rhs = rhs.clone();
         self[0] += rhs[0];
@@ -195,17 +195,17 @@ impl<F: PrimeField> AddAssign<&SecretScalarSplit<F>> for SecretScalarSplit<F> {
     }
 }
 
-impl<F: PrimeField> Add<&SecretScalarSplit<F>> for SecretScalarSplit<F> {
-    type Output = SecretScalarSplit<F>;
+impl<F: PrimeField> Add<&SecretSplit<F>> for SecretSplit<F> {
+    type Output = SecretSplit<F>;
 
-    fn add(self, rhs: &SecretScalarSplit<F>) -> Self::Output {
-        let mut res = SecretScalarSplit([self[0], self[1]]);
+    fn add(self, rhs: &SecretSplit<F>) -> Self::Output {
+        let mut res = SecretSplit([self[0], self[1]]);
         res += rhs;
         res
     }
 }
 
-impl<C: AffineRepr> Mul<&C> for &SecretScalarSplit<<C as AffineRepr>::ScalarField> {
+impl<C: AffineRepr> Mul<&C> for &SecretSplit<<C as AffineRepr>::ScalarField> {
     type Output = <C as AffineRepr>::Group;
 
     /// Arkworks multiplies on the right since ark_ff is a dependency of ark_ec.
@@ -227,7 +227,7 @@ mod tests {
     use ark_ff::MontFp;
     use ark_std::fmt::Debug;
 
-    impl<F: PrimeField + Debug> Debug for SecretScalarSplit<F> {
+    impl<F: PrimeField + Debug> Debug for SecretSplit<F> {
         fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
             let selfy = &self.0;
             f.debug_tuple("SecretScalar")
@@ -241,7 +241,7 @@ mod tests {
     fn from_single_scalar_works() {
         let value: Fr = MontFp!("123456789");
 
-        let mut secret = SecretScalarSplit::from(value);
+        let mut secret = SecretSplit::from(value);
         assert_eq!(value, secret.scalar());
 
         secret.resplit();
@@ -256,7 +256,7 @@ mod tests {
     #[test]
     fn mul_my_challenge_works() {
         let value: Fr = MontFp!("123456789");
-        let secret = SecretScalarSplit::from(value);
+        let secret = SecretSplit::from(value);
 
         let factor = Fr::from(3);
         let result = secret.mul_by_challenge(&factor);

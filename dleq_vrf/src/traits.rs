@@ -23,7 +23,6 @@
 //! a remote signer.
 
 
-use ark_secret_scalar::SecretScalarSplit;
 use ark_std::{borrow::Borrow, fmt, vec::Vec};
 
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize}; // Valid
@@ -74,8 +73,7 @@ impl<H,K> EcVrfSecret<H> for SecretKey<K>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
     fn vrf_preout(&self, input: &VrfInput<H>) -> VrfPreOut<H> {
-        let secret = SecretScalarSplit::from(&self.key);
-        VrfPreOut( (&secret * &input.0).into_affine() )
+        VrfPreOut( (&self.key * &input.0).into_affine() )
     }
 }
 
