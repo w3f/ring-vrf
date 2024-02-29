@@ -109,8 +109,7 @@ impl<K: AffineRepr> Witness<ThinVrf<K>> {
         t.label(b"Thin R");
         t.append(&r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge").read_reduce();
-        let secret = SecretScalar::from(secret.key);
-        let s = k + secret.mul_by_challenge(&c);
+        let s = k + secret.key.mul_by_challenge(&c);
         k.zeroize();
         Batchable { compk: (), r, s }
         // TODO: Add some verify_final for additional rowhammer defenses?
@@ -137,9 +136,9 @@ impl<C: AffineRepr> Valid for Batchable<ThinVrf<C>> {
 */
 
 impl<K: AffineRepr> ThinVrf<K> {
-    pub(crate) fn make_public(&self, secret: &<K as AffineRepr>::ScalarField) -> PublicKey<K> {
-        let secret = SecretScalar::from(secret);
-        let public = &secret * self.keying_base();
+    pub(crate) fn make_public(&self, secret: &SecretScalar<<K as AffineRepr>::ScalarField>) -> PublicKey<K> {
+        // let secret = SecretScalarSplit::from(secret);
+        let public = secret * self.keying_base();
         PublicKey(public.into_affine())
     }
 

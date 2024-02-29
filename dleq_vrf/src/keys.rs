@@ -11,15 +11,14 @@ use ark_std::{vec::Vec, io::{Read, Write}};
 
 use ark_ec::{AffineRepr}; // Group, CurveGroup
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
-use ark_transcript::xof_read_reduced;
 
 #[cfg(feature = "getrandom")]
 use ark_secret_scalar::{rand_core, RngCore};
+use ark_secret_scalar::SecretScalar;
 
 use crate::{
     ThinVrf,
     transcript::digest::{Update,XofReader},
-
 };
 
 
@@ -85,7 +84,7 @@ pub struct SecretKey<K: AffineRepr> {
     pub(crate) thin: ThinVrf<K>,
 
     /// Secret key represented as a scalar.
-    pub(crate) key: K::ScalarField,
+    pub(crate) key: SecretScalar<K::ScalarField>,
 
     /// Seed for deriving the nonces used in Schnorr proofs.
     ///
@@ -146,7 +145,7 @@ impl<K: AffineRepr> ThinVrf<K> {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
         xof.read(&mut nonce_seed);
 
-        let key = xof_read_reduced(&mut xof);
+        let key = SecretScalar::from_xof(&mut xof);
         let public = self.make_public(&key);
         SecretKey { thin: self, key, nonce_seed, public, 
             #[cfg(debug_assertions)]
