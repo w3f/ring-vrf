@@ -31,8 +31,11 @@ sha2 = { version = "0.10", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
 
 # Substrate curves are optional and gated by the 'substrate-curves' feature
-# sp-ark-ed-on-bls12-381-bandersnatch = { git = "https://github.com/paritytech/arkworks-substrate", default-features = false, optional = true }
-# sp-ark-bls12-381 = { git = "https://github.com/paritytech/arkworks-substrate", default-features = false, optional = true }
+# NOTE: do not enable any feature (e.g. under `std`) for these crates if you don't want
+# to bloat your `Cargo.lock` with all the `sp-ark-*` dependencies. This happens even
+# though you don't enable `substrate-curves` feature.
+sp-ark-ed-on-bls12-381-bandersnatch = { git = "https://github.com/paritytech/arkworks-substrate", default-features = false, optional = true }
+sp-ark-bls12-381 = { git = "https://github.com/paritytech/arkworks-substrate", default-features = false, optional = true }
 
 [features]
 default = ["std"]
@@ -43,21 +46,19 @@ std = [
   "ark-ff/std",
   "ark-ec/std",
   "ark-serialize/std",
-  # "sp-ark-ed-on-bls12-381-bandersnatch?/std",
-  # "sp-ark-bls12-381?/std",
 ]
-getrandom = ["dleq_vrf/getrandom"] # "ring/getrandom"]
+getrandom = ["dleq_vrf/getrandom"]
 print-trace = ["ark-std/print-trace"]
-# Substrate curves allows to offload computationally heavy tasks to Substrate host functions.
-# Mostly useful in Substrate development context when targeting wasm32 architecture.
-# substrate-curves = [
-#   "sp-ark-ed-on-bls12-381-bandersnatch",
-#   "sp-ark-bls12-381",
-# ]
 parallel = [
   "std",
   "ring/parallel",
   "ark-std/parallel",
   "ark-ff/parallel",
   "ark-ec/parallel",
+]
+# Substrate curves allows to offload computationally heavy tasks to Substrate host functions.
+# Mostly useful in Substrate development context when targeting wasm32 architecture.
+substrate-curves = [
+   "sp-ark-ed-on-bls12-381-bandersnatch",
+   "sp-ark-bls12-381",
 ]
