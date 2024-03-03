@@ -16,17 +16,17 @@ use ark_std::vec::Vec;   // io::{Read, Write}
 
 pub use ark_serialize::{CanonicalSerialize, CanonicalDeserialize, SerializationError, Compress};
 
-#[cfg(not(feature = "substrate-curves"))]
+// #[cfg(not(feature = "substrate-curves"))]
 mod curves {
     pub use ark_ed_on_bls12_381_bandersnatch as bandersnatch;
     pub use ark_bls12_381 as bls12_381;
 }
 
-#[cfg(feature = "substrate-curves")]
-mod curves {
-    pub use sp_ark_ed_on_bls12_381_bandersnatch as bandersnatch;
-    pub use sp_ark_bls12_381 as bls12_381;
-}
+// #[cfg(feature = "substrate-curves")]
+// mod curves {
+//     pub use sp_ark_ed_on_bls12_381_bandersnatch as bandersnatch;
+//     pub use sp_ark_bls12_381 as bls12_381;
+// }
 
 pub use curves::*;
 
