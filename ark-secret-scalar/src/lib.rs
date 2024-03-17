@@ -25,7 +25,7 @@ impl<R: RngCore+CryptoRng> XofReader for Rng2Xof<R> {
 
 #[repr(transparent)]
 #[derive(Zeroize, Clone)]
-pub struct SecretScalar<F: PrimeField>(pub F);
+pub struct SecretScalar<F: PrimeField>(F);
 
 impl<F: PrimeField> SecretScalar<F> {
     /// Initialize and unbiased `SecretScalar` from a `XofReaader`.
