@@ -1,0 +1,21 @@
+[metadata]
+name = "Ring VRF"
+description = "Ring VRF implementation using zkSNARKs."
+authors = ["Alistair, Jeff, Syed, Sergey"]
+
+[config]
+template = "specification_template.md"
+
+[sections]
+# DLEQ VRF
+dleq-vrf-preliminaries = "dleq_vrf/src/lib.rs"
+## VRF
+vrf = "dleq_vrf/src/vrf.rs"
+### VRF Keys
+vrf-keys = "dleq_vrf/src/keys.rs"
+
+## Thin VRF
+
+## Pedersen VRF
+
+# Bandersnatch VRF

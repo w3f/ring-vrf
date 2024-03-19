@@ -24,7 +24,9 @@ use crate::{
 };
 
 
-/// Public key
+//~ #### Public key  \
+//~ \
+//~ A Public key of a VRF is a point on an Elliptic Curve $E$. \
 #[derive(Debug,Clone,Eq,Hash,CanonicalSerialize,CanonicalDeserialize)] // Copy, PartialOrd, Ord, Hash, 
 #[repr(transparent)]
 pub struct PublicKey<C: AffineRepr>(pub C);
@@ -35,6 +37,9 @@ impl<C: AffineRepr> PartialEq for PublicKey<C> {
     }
 }
 
+//~ Public key is represented in Affine form and is serialized using Arkwork compressed serialized
+//~ format.
+//
 /// Arkworks' own serialization traits should be preferred over these.
 impl<C: AffineRepr> PublicKey<C> {
     pub fn update_digest(&self, h: &mut impl Update) {
