@@ -91,7 +91,8 @@ pub type EC<P> = <P as EcVrfProof>::H;
 pub type PreOut<P> = VrfPreOut<EC<P>>;
 pub type IO<P> = VrfInOut<EC<P>>;
 
-
+//~ **Definition**: A VRFsignature is a pair of *Elliptic curve VRF proof* and
+//~ an array of *PreOut*
 /// VRF signature with variable number of input-output pairs
 #[derive(CanonicalSerialize,CanonicalDeserialize)]
 pub struct VrfSignature<P: EcVrfProof, const N: usize> {
