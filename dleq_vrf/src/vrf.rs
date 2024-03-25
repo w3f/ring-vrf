@@ -130,6 +130,7 @@ impl<K: AffineRepr> SecretKey<K> {
     }
 }
 
+//~ **Definition**: *VRF pre-output* is defined to be a point in $G$ in serialized  affine representation 
 /// VRF pre-output, possibly unverified.
 #[derive(Debug,Copy,Clone,PartialEq,Eq,CanonicalSerialize,CanonicalDeserialize)] // Copy, Default, PartialOrd, Ord, Hash
 #[repr(transparent)]
@@ -183,7 +184,8 @@ pub fn collect_preoutputs_vec<C: AffineRepr>(ios: &[VrfInOut<C>]) -> Vec<VrfPreO
     ).collect::<Vec<VrfPreOut<C>>>()
 }
 
-
+//~ ** Definition **: *VRF InOut* is defined as a pair as follows:
+//~ $$(VRF Input, VRF Preoutput)$$
 /// VRF input and pre-output paired together, possibly unverified.
 ///
 /// 
@@ -322,4 +324,6 @@ where
 #[cfg(test)]
 mod tests {
 }
+
+
 
