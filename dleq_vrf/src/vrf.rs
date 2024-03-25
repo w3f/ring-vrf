@@ -85,9 +85,16 @@ where C: AffineRepr, H2C: HashToCurve<<C as AffineRepr>::Group>,
 
 /// Actual VRF input, consisting of an elliptic curve point.  
 ///
-/// Always created locally, either by hash-to-cuve or ocasionally
-/// some base point, never sent over the wire nor deserialized.
-/// 
+//~ ## EC VRF Input
+//~ The EC-VRF input ultimately is a point on the elliptic curve
+//~ as out put of hash of the transcript using arkworks chosen hash
+//~ for the given curve.
+//~
+//~ VRF Input point should always be created locally, either as a hash-to-cuve
+//~ output of the transcripto or ocasionally some base point.
+//~ It should never be sent over the wire nor deserialized???Do you mean serialized?
+//~
+//~
 /// `VrfInput` should always be consructed inside the prime order
 /// subgroup, as otherwise risks leaking secret key material.
 /// 
