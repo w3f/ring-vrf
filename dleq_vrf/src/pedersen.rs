@@ -3,10 +3,18 @@
 // Authors:
 // - Jeffrey Burdges <jeff@web3.foundation>
 
+//~ ### Pedersen VRF
+//~
+//~ Strictly speaking Pederson VRF is not a VRF. Instead, it proves
+//~ that the output has been generated with a secret key associated
+//~ with a blinded public (instead of public key). The blinded public
+//~ key is a cryptographic commitement to the public key. And it could
+//~ unblinded to prove that the output of the VRF is corresponds to 
+//~ the public key of the signer.
+//~
 //! ### Pedersen VRF routines
 //! 
 //! 
-
 use ark_ff::PrimeField;
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_serialize::{CanonicalSerialize,CanonicalDeserialize};
@@ -231,6 +239,20 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         Witness { r, k }
     }
 
+    //~ ### Pedersen VRF Sign
+    //~ **Inputs**:\
+    //~   - Transcript $t$ of `ArkTranscript` type\
+    //~   - $inputs$: An array of points on elliptic curve $E$.\
+    //~   - $sb$: Blinding coefficient $\in F$\
+    //~   - $sk$: A VRF secret key.\
+    //~   - $pk$: VRF verification key corresponds to $sk$.\
+    //~ **Output**:\
+    //~   - $signature$: of VRFPreOutput type.
+    //~
+    //~ ---
+    //~
+
+    ///
     /// Sign Pedersen VRF signature
     /// 
     /// We create the secret blinding unless the user supplies one.
@@ -245,19 +267,25 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         let flavor = self;
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
+        //~ 1. AddLabel(t, "PedersenVRF")
         t.label(b"PedersenVRF");
         let io = vrf::vrfs_merge(t, ios);
-
         // Allow derandomization by constructing secret_blinding and
         // witness as late as possible.
         let secret_blinding = secret_blinding.unwrap_or_else( || secret.new_secret_blinding(t) );
+        //~ 2. $compk = sk*G + b*K$
         let compk = flavor.compute_blinded_publickey(secret.as_publickey(), &secret_blinding);
+        //~ 3. AddLabel("KeyCommitment")
+        //~ 1. Append(t, compk)
         t.label(b"KeyCommitment");
         t.append(&compk);
 
         // In principle our new secret blinding should be derandomizable
-        // if the user supplied none. 
+        // if the user supplied none.
+        //~ 1. $w \leftarrow GeneratePedersenFiatShamir(t,inputs,secret)$
         let w = flavor.new_pedersen_witness(t,&io.input,secret);
+        //~ 1. $signature \leftarrow GeneratePedersonProof(t,sb,sk,compk)$
+        //~ 1. **return** $signature$
         let signature = w.sign_final(t,&secret_blinding,secret,compk).0;
         ( signature, secret_blinding )
     }

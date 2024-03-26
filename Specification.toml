@@ -17,5 +17,6 @@ vrf-keys = "dleq_vrf/src/keys.rs"
 ## Thin VRF
 
 ## Pedersen VRF
+pedersen-vrf = "dleq_vrf/src/pedersen.rs"
 
 # Bandersnatch VRF

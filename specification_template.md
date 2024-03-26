@@ -48,13 +48,14 @@ As the Pedersen VRF needs two verification equations, we support
 DLEQ proofs between two distinct curves provided both have the same
 subgroup order.  Around this, we support omitting the blinding factors
 for  cross curve DLEQ proofs, like proving public keys on G1 and G2
-of a BLS12 curve have the same secret key.  
+of a BLS12 curve have the same secret key.
 
 
 {sections.dleq-vrf-preliminaries}
 ### Thin VRF
 
 ### Pedersen VRF
+{sections.pedersen-vrf}
 
 ## Bandersnatch VRF
 

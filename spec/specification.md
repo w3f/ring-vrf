@@ -19,6 +19,19 @@ where
 - $ArkTranscript$ function is described in [[ark-transcript]] section.
 - $H2C: B \rightarrow G$  is a hash to curve function correspond to curve $E$ specified in Section [[hash-to-curve]] for the specific choice of $E$
 
+## EC VRF Input
+The EC-VRF input ultimately is a point on the elliptic curve
+as out put of hash of the transcript using arkworks chosen hash
+for the given curve.
+
+VRF Input point should always be created locally, either as a hash-to-cuve
+output of the transcripto or ocasionally some base point.
+It should never be sent over the wire nor deserialized???Do you mean serialized?
+
+
+**Definition**: *VRF pre-output* is defined to be a point in $G$ in serialized  affine representation 
+** Definition **: *VRF InOut* is defined as a pair as follows:
+$$(VRF Input, VRF Preoutput)$$
 
 
 
@@ -72,13 +85,42 @@ As the Pedersen VRF needs two verification equations, we support
 DLEQ proofs between two distinct curves provided both have the same
 subgroup order.  Around this, we support omitting the blinding factors
 for  cross curve DLEQ proofs, like proving public keys on G1 and G2
-of a BLS12 curve have the same secret key.  
+of a BLS12 curve have the same secret key.
 
 
 
 ### Thin VRF
 
 ### Pedersen VRF
+### Pedersen VRF
+
+Strictly speaking Pederson VRF is not a VRF. Instead, it proves
+that the output has been generated with a secret key associated
+with a blinded public (instead of public key). The blinded public
+key is a cryptographic commitement to the public key. And it could
+unblinded to prove that the output of the VRF is corresponds to 
+the public key of the signer.
+
+### Pedersen VRF Sign
+**Inputs**:\
+  - Transcript $t$ of `ArkTranscript` type\
+  - $inputs$: An array of points on elliptic curve $E$.\
+  - $sb$: Blinding coefficient $\in F$\
+  - $sk$: A VRF secret key.\
+  - $pk$: VRF verification key corresponds to $sk$.\
+**Output**:\
+  - $signature$: of VRFPreOutput type.
+
+---
+
+1. AddLabel(t, "PedersenVRF")
+1. $compk = sk*G + b*K$
+1. AddLabel("KeyCommitment")
+1. Append(t, compk)
+1. $w \leftarrow GeneratePedersenFiatShamir(t,inputs,secret)$
+1. $signature \leftarrow GeneratePedersonProof(t,sb,sk,compk)$
+1. **return** $signature$
+
 
 ## Bandersnatch VRF
 
