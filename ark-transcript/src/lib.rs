@@ -120,7 +120,11 @@ impl Mode {
         println!("Shake128 {}transcript XoF reader",self.debug_name);
         match self {
             Mode::Hash(hasher) => Reader(hasher.clone().finalize_xof()),
-            Mode::Accumulate(_) => panic!("Attempt to read from accumulating Transcript"),
+            Mode::Accumulate(acc) => {
+                let mut t = Transcript::from_accumulation(acc);
+                t.seperate();
+                t.mode.raw_reader()
+            }
         }
     }
 }
