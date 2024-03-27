@@ -63,7 +63,6 @@ of a BLS12 curve have the same secret key.
 
 ## Bandersnatch VRF
 
-
 ## Transcript
 
 A Shake-128 based transcript construction which implements the Fiat-Shamir
@@ -73,63 +72,39 @@ We do basic domain separation using postfix writes of the lengths of written
 data (as opposed to the prefix writes by [Merlin](https://merlin.cool)
 `TupleHash` from [SP 800-185](https://csrc.nist.gov/pubs/sp/800/185/final)).
 
+    H(item_1, item_2, ..., item_n)
+
+Represents the application of shake-128 to the concatenation of the serialization of each item
+followed by the serialization of the length of each objects, as a 32-bit unsigned integer.
+
+    bytes = encode(item_1) || encode(length(item_1)) || .. || encode(item_n) || encode(length(item_n))
+    Shake128(bytes)
+
 The length of each item should be less than 2^31.
 
-The transcript can be created with an initial domain label.
-The label bytes are written into the hasher as all the other items which
-may follow.
+## Objects Serialization Encoding
 
-On construction the Shake128 hasher state is initialized to hash the empty
-octet-string TODO @davxy: DOUBLE CHECK THIS
+### Unsigned Integers
 
-### Pre-defined functions
+Unsigned integers are encoded in big-endian.
 
-Get octet string length
+This applies to both fixed or arbitrary width unsigned integers.
 
-```
-    length(data)
+TODO:
+- ARK serializes integers in LE :-/
+- Check Zcash serialization format (IIRC BE)
 
-      Input:
-        - data: user data
-      Output:
-        - data length as 32 bit integer
-```
+### EC Points
 
-Big-endian encoding of 32-bit unsigned integers
+Elliptic curve points are serialized in compressed form as specified by TODO.
 
-```
-    big_endian_bytes(length)
+TODO isn't there any standard like https://www.secg.org/sec1-v2.pdf ?
+There the standard serializes in BE as well.
 
-      Input:
-        - length: 32-bit integer
-      Output:
-        - 4 bytes big endian encoding of length
-```
+TODO maybe we must convert to BE our serialized points/scalars?
 
-Update the hasher state with some data
 
-```
-    update_hasher(hasher, data)    
-
-      Input:
-        - hasher: Shake128 hasher
-        - data: user provided data
-```
-
-### Transcript update
-
-Update the hasher state with user data.
-
-```
-    write_bytes(hasher, data) 
-
-      Inputs:
-        - hasher: shake128 hasher state
-        - data: user data
-
-      Steps:
-        1. update_hasher(hasher, data)
-```
+## OBSOLETE (TODO: REMOVE THIS PARAGRAPH)
 
 Write unlabeled domain separator into the hasher state.
 
