@@ -239,15 +239,15 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         Witness { r, k }
     }
 
-    //~ ### Pedersen VRF Sign
+    //~ ### PedersenVRF.Sign
     //~ **Inputs**:\
     //~   - Transcript $t$ of `ArkTranscript` type\
-    //~   - $inputs$: An array of points on elliptic curve $E$.\
+    //~   - $input$: An array of points on elliptic curve $E$.\
     //~   - $sb$: Blinding coefficient $\in F$\
     //~   - $sk$: A VRF secret key.\
     //~   - $pk$: VRF verification key corresponds to $sk$.\
     //~ **Output**:\
-    //~   - $signature$: of VRFPreOutput type.
+    //~   - A Quintuple corresponding to PedersenVRF signature
     //~
     //~ ---
     //~
@@ -273,19 +273,27 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         // Allow derandomization by constructing secret_blinding and
         // witness as late as possible.
         let secret_blinding = secret_blinding.unwrap_or_else( || secret.new_secret_blinding(t) );
-        //~ 2. $compk = sk*G + b*K$
+        //~ 2. $compk = sk*G + sb*B$
         let compk = flavor.compute_blinded_publickey(secret.as_publickey(), &secret_blinding);
-        //~ 3. AddLabel("KeyCommitment")
-        //~ 1. Append(t, compk)
+        //~ 3. AppendToTranscript("KeyCommitment")
+        //~ 4. AppendToTranscript(t, compk)
         t.label(b"KeyCommitment");
         t.append(&compk);
 
         // In principle our new secret blinding should be derandomizable
         // if the user supplied none.
-        //~ 1. $w \leftarrow GeneratePedersenFiatShamir(t,inputs,secret)$
+        //~ 5. $krand \leftarrow RandomElement(F)$
+        //~ 6. $brand \leftarrow RandomElement(F)$
+        //~ 7. $KBrand \leftarrow krand * G + brand * B$
+        //~ 8. $POrand \leftarrow krand * input$
         let w = flavor.new_pedersen_witness(t,&io.input,secret);
-        //~ 1. $signature \leftarrow GeneratePedersonProof(t,sb,sk,compk)$
-        //~ 1. **return** $signature$
+        //~ 9. $AppendToTranscript(t, "Pedersen R")$
+        //~ 10. $AppendToTranscript(t, "PedersenVrfChallenge")$
+        //~ 11. $c \rightarrow GetChallengeFromTranscript(t)$
+        //~ 13. $ks \rightarrow krand + sk * c$ 
+        //~ 12. $bs \rightarrow brand + c * sb$
+        //~ 14. **return** $(compk, KBrand, PORand, ks, bs)$
+        //~ 
         let signature = w.sign_final(t,&secret_blinding,secret,compk).0;
         ( signature, secret_blinding )
     }

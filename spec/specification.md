@@ -39,6 +39,7 @@ $$(VRF Input, VRF Preoutput)$$
 
 
 ### VRF Key
+
 #### Public key  \
 \
 A Public key of a VRF is a point on an Elliptic Curve $E$. \
@@ -57,7 +58,9 @@ then hash to curve it.
 
 
 ## DELQ VRF
+
 ### Preliminaries
+
 Implements the two relevant verifiable random functions (VRFs) with
 associated data (VRF-ADs) which arise from Chaum-Pedersen DLEQ proofs,
 polymorphic over Arkworks' elliptic curves.
@@ -92,6 +95,7 @@ of a BLS12 curve have the same secret key.
 ### Thin VRF
 
 ### Pedersen VRF
+
 ### Pedersen VRF
 
 Strictly speaking Pederson VRF is not a VRF. Instead, it proves
@@ -101,26 +105,188 @@ key is a cryptographic commitement to the public key. And it could
 unblinded to prove that the output of the VRF is corresponds to 
 the public key of the signer.
 
-### Pedersen VRF Sign
+### PedersenVRF.Sign
 **Inputs**:\
   - Transcript $t$ of `ArkTranscript` type\
-  - $inputs$: An array of points on elliptic curve $E$.\
+  - $input$: An array of points on elliptic curve $E$.\
   - $sb$: Blinding coefficient $\in F$\
   - $sk$: A VRF secret key.\
   - $pk$: VRF verification key corresponds to $sk$.\
 **Output**:\
-  - $signature$: of VRFPreOutput type.
+  - A Quintuple corresponding to PedersenVRF signature
 
 ---
 
 1. AddLabel(t, "PedersenVRF")
-1. $compk = sk*G + b*K$
-1. AddLabel("KeyCommitment")
-1. Append(t, compk)
-1. $w \leftarrow GeneratePedersenFiatShamir(t,inputs,secret)$
-1. $signature \leftarrow GeneratePedersonProof(t,sb,sk,compk)$
-1. **return** $signature$
+2. $compk = sk*G + sb*B$
+3. AddLabel("KeyCommitment")
+4. Append(t, compk)
+5. $krand \leftarrow RandomElement(F)$
+6. $brand \leftarrow RandomElement(F)$
+7. $KBrand \leftarrow krand * G + brand * B$
+8. $POrand \leftarrow krand * input$
+9. $AppendToTranscript(t, "Pedersen R")$
+10. $AppendToTranscript(t, "PedersenVrfChallenge")$
+11. $c \rightarrow GetChallengeFromTranscript(t)$
+13. $ks \rightarrow krand + sk * c$ 
+12. $bs \rightarrow brand + c * sb$
+14. **return** $(compk, KBrand, PORand, ks, bs)$
+
 
 
 ## Bandersnatch VRF
 
+
+## Transcript
+
+A Shake-128 based transcript construction which implements the Fiat-Shamir
+transform procedure.
+
+We do basic domain separation using postfix writes of the lengths of written
+data (as opposed to the prefix writes by [Merlin](https://merlin.cool)
+`TupleHash` from [SP 800-185](https://csrc.nist.gov/pubs/sp/800/185/final)).
+
+The length of each item should be less than 2^31.
+
+The transcript can be created with an initial domain label.
+The label bytes are written into the hasher as all the other items which
+may follow.
+
+On construction the Shake128 hasher state is initialized to hash the empty
+octet-string TODO @davxy: DOUBLE CHECK THIS
+
+### Pre-defined functions
+
+Get octet string length
+
+```
+    length(data)
+
+      Input:
+        - data: user data
+      Output:
+        - data length as 32 bit integer
+```
+
+Big-endian encoding of 32-bit unsigned integers
+
+```
+    big_endian_bytes(length)
+
+      Input:
+        - length: 32-bit integer
+      Output:
+        - 4 bytes big endian encoding of length
+```
+
+Update the hasher state with some data
+
+```
+    update_hasher(hasher, data)    
+
+      Input:
+        - hasher: Shake128 hasher
+        - data: user provided data
+```
+
+### Transcript update
+
+Update the hasher state with user data.
+
+```
+    write_bytes(hasher, data) 
+
+      Inputs:
+        - hasher: shake128 hasher state
+        - data: user data
+
+      Steps:
+        1. update_hasher(hasher, data)
+```
+
+Write unlabeled domain separator into the hasher state.
+
+```
+    write_separator(hasher, data)
+
+      Inputs:
+        - hasher: shake128 hasher state
+        - data: user data
+
+      Steps:
+        1. bytes = big_endian_bytes(length(data))
+        2. write_bytes(hasher, bytes)
+```
+
+Update the hasher state with user provided data with separator.
+
+```
+    update(hasher, data)
+
+      Inputs:
+        - hasher: shake128 hasher state
+        - data: user data
+
+      Steps:
+        1. write_bytes(hasher, data)
+        2. write_separator(hasher, data)
+```
+
+### Challenge
+
+Creates a challenge reader
+
+```
+    challenge(hasher, label)
+
+      Inputs:
+        - label: user provided domain separator (octet-string)
+      Outputs:
+        - Shake128 hash reader
+    
+      Steps:
+        1. update(hasher, label)
+        2. write_bytes(hasher, b"challenge")
+        3. reader = get_reader(hasher)
+        4. separate(hasher, b"challenge")
+        5. return reader
+```
+
+### Forking
+
+Forks transcript to prepare a witness reader
+
+```
+    fork(hasher, label)
+
+      Inputs:
+        - hasher: shake128 state
+        - label: user provided label (octets)
+      Output:
+        - forked hasher state
+
+      Steps:
+        1. hasher_clone = clone(hasher)
+        2. update(hasher_clone, label)
+        3. return hasher_clone
+```
+
+### Witness
+
+Create a witness reader from a forked transcript
+
+```
+    witness(hasher, rng)  
+
+      Inputs:
+        - hasher: shake128 state
+        - rng: random number generator
+      Output
+        - Shake128 hasher reader
+
+      Steps:
+        1. rand = read_bytes(rng, 32)
+        2. write_bytes(hasher, rand)
+        3. reader = get_reader(hasher)
+        4. return reader
+```
