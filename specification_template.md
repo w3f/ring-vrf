@@ -12,13 +12,17 @@
 
 ### VRF input
 
-VRF input is an ArkTranscript. See ArkTranscript
+Procedure to map arbitrary user input to a point follows the `hash_to_curve`
+procedure described by RFC9380.
+
+    Suite_ID: "bandersnatch_XMD:SHA-512_ELL2_RO_"
+
+See [ArkTranscript](TODO) for details.
 
 #### From transcript to point
 
 You need to call challenge and add b"vrf-input" to it. getting random byte (some hash?)
 then hash to curve it. 
-
 
 ## DELQ VRF
 
