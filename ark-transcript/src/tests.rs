@@ -104,3 +104,26 @@ fn accumulation() {
     let c2: [u8; 32] = t3.challenge(b"challenge").read_byte_array();
     assert_eq!(c1,c2);
 }
+
+#[test]
+fn challenge_in_accumulation() {
+    let mut t1 = Transcript::new_blank_accumulator();
+    let mut t2 = Transcript::new_blank_accumulator();
+
+    let commitment1 = b"commitment data 1";
+    let commitment2 = b"commitment data 2";
+
+    t1.write_bytes(commitment1);
+    t2.write_bytes(commitment1);
+
+    t1.write_bytes(commitment2);
+    t2.write_bytes(commitment2);
+
+    let acc = t2.accumulator_finalize();
+    let mut t3 = Transcript::from_accumulation(acc);
+
+    let c1: [u8; 32] = t1.challenge(b"challenge").read_byte_array();
+    let c2: [u8; 32] = t3.challenge(b"challenge").read_byte_array();
+
+    assert_eq!(c1, c2);
+}
