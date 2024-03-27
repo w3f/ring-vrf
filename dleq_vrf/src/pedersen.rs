@@ -267,7 +267,7 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         let flavor = self;
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
-        //~ 1. AddLabel(t, "PedersenVRF")
+        //~ 1. $AddLabel(t, "PedersenVRF")$
         t.label(b"PedersenVRF");
         let io = vrf::vrfs_merge(t, ios);
         // Allow derandomization by constructing secret_blinding and

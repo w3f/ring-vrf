@@ -1,7 +1,7 @@
 [metadata]
 name = "Ring VRF"
-description = "Ring VRF implementation using zkSNARKs."
-authors = ["Alistair, Jeff, Syed, Sergey"]
+description = "Ring VRF implementation using zkSNARKs or does it?"
+authors = ["Alistair, Davide, Jeff, Syed, Sergey"]
 
 [config]
 template = "specification_template.md"
