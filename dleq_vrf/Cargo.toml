@@ -2,7 +2,7 @@
 name = "dleq_vrf"
 description = "VRFs from Chaum-Pedersen DLEQ proofs, usable in Ring VRFs"
 authors = ["Sergey Vasilyev <swasilyev@gmail.com>", "Jeff Burdges <jeff@web3.foundation>", "Syed Hosseini <syed@riseup.net>"]
-version = "0.0.2"
+version = "0.0.3"
 repository = "https://github.com/w3f/ring-vrf/tree/master/dleq_vrf"
 edition = "2021"
 license = "MIT/Apache-2.0"
@@ -20,8 +20,8 @@ ark-ff.workspace = true
 ark-ec.workspace = true
 ark-serialize.workspace = true
 
-ark-secret-scalar = { version = "0.0.2", default-features = false, path = "../ark-secret-scalar" }
-ark-transcript = { version = "0.0.2", default-features = false, path = "../ark-transcript" }
+ark-secret-scalar = { default-features = false, path = "../ark-secret-scalar" }
+ark-transcript = { default-features = false, path = "../ark-transcript" }
 
 ark-scale = { workspace = true, optional = true }
 

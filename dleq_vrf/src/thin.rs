@@ -7,6 +7,7 @@
 
 use ark_std::{borrow::{Borrow,BorrowMut}, vec::Vec};
 use ark_ec::{AffineRepr, CurveGroup};
+use ark_secret_scalar::SecretScalar;
 
 use crate::{
     Transcript, IntoTranscript,
@@ -109,7 +110,7 @@ impl<K: AffineRepr> Witness<ThinVrf<K>> {
         t.append(&r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"ThinVrfChallenge").read_reduce();
         let s = k + secret.key.mul_by_challenge(&c);
-        k.zeroize();  
+        k.zeroize();
         Batchable { compk: (), r, s }
         // TODO: Add some verify_final for additional rowhammer defenses?
         // We already hash the public key though, so no issues like Ed25519.
@@ -135,15 +136,10 @@ impl<C: AffineRepr> Valid for Batchable<ThinVrf<C>> {
 */
 
 impl<K: AffineRepr> ThinVrf<K> {
-    pub(crate) fn make_public(
-        &self,
-        secret: &ark_secret_scalar::SecretScalar<<K as AffineRepr>::ScalarField>
-    ) -> PublicKey<K> {
-        // #[cfg(feature = "getrandom")]
-        let p = secret * self.keying_base();
-        // #[cfg(not(feature = "getrandom"))]
-        // let p = self.keying_base().mul(secret.0[0]) + self.keying_base().mul(secret.0[1]) ;
-        PublicKey(p.into_affine())
+    pub(crate) fn make_public(&self, secret: &SecretScalar<K::ScalarField>) -> PublicKey<K> {
+        // let secret = SecretScalarSplit::from(secret);
+        let public = secret * self.keying_base();
+        PublicKey(public.into_affine())
     }
 
     /// Verify thin VRF signature 

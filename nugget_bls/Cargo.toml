@@ -10,7 +10,7 @@ keywords = ["crypto", "cryptography", "bls", "signature"]
 
 
 [dependencies]
-dleq_vrf = { version = "0.0.2", default-features = false, path = "../dleq_vrf" }
+dleq_vrf = { default-features = false, path = "../dleq_vrf" }
 
 rand_core.workspace = true
 zeroize.workspace = true
