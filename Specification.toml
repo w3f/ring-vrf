@@ -7,16 +7,9 @@ authors = ["Alistair, Davide, Jeff, Syed, Sergey"]
 template = "specification_template.md"
 
 [sections]
-# DLEQ VRF
-dleq-vrf-preliminaries = "dleq_vrf/src/lib.rs"
 ## VRF
 vrf = "dleq_vrf/src/vrf.rs"
-### VRF Keys
-vrf-keys = "dleq_vrf/src/keys.rs"
-
-## Thin VRF
-
+# DLEQ VRF
+dleq-vrf-preliminaries = "dleq_vrf/src/lib.rs"
 ## Pedersen VRF
 pedersen-vrf = "dleq_vrf/src/pedersen.rs"
-
-# Bandersnatch VRF
