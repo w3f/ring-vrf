@@ -31,7 +31,6 @@ mod curves {
 pub use curves::*;
 
 // Conversion discussed in https://github.com/arkworks-rs/curves/pull/76#issuecomment-929121470
-
 pub use dleq_vrf::{
     Transcript, IntoTranscript, transcript,
     error::{SignatureResult, SignatureError},
@@ -120,11 +119,9 @@ pub fn deserialize_publickey(reader: &[u8]) -> Result<PublicKey, SerializationEr
     PublicKey::deserialize_compressed(reader)
 }
 
-
 type ThinVrfProof = dleq_vrf::Batchable<ThinVrf>;
 
 pub type ThinVrfSignature<const N: usize> = dleq_vrf::VrfSignature<ThinVrfProof,N>;
-
 
 type PedersenVrfProof = dleq_vrf::Batchable<PedersenVrf>;
 

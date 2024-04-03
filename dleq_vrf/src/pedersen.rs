@@ -240,14 +240,16 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     }
 
     //~ ### PedersenVRF.Sign
-    //~ **Inputs**:\
+    //~ **Inputs**:  
     //~   - Transcript $t$ of `ArkTranscript` type\
-    //~   - $input$: An array of points on elliptic curve $E$.\
+    //~   - $input$: $VRFInput \in G$.
     //~   - $sb$: Blinding coefficient $\in F$\
     //~   - $sk$: A VRF secret key.\
     //~   - $pk$: VRF verification key corresponds to $sk$.\
     //~ **Output**:\
-    //~   - A Quintuple corresponding to PedersenVRF signature
+    //~   - A Quintuple
+    //~       $(compk, KBrand, PORand, ks, bs)2$
+    //~       corresponding to PedersenVRF signature
     //~
     //~ ---
     //~
@@ -374,7 +376,19 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 impl<K,H,const B: usize> PedersenVrf<K,H,B>
 where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
 {
-    /// Verify Pedersen VRF signature 
+    /// Verify Pedersen VRF signature
+    ///
+    //~ ### PedersenVRF.Verify  
+    //~ **Inputs**:  
+    //~   - $t$: Transcript of `ArkTranscript` type\
+    //~   - $input$: $VRFInput \in G$.  
+    //~   - $preout$: $VRFPreOutput \in G$.  
+    //~   - $(compk, KBrand, PORand, ks, bs)$ the quintuple results of PeredersonVRF.Sign  
+    //~ **Output**:  
+    //~   - True if Pedersen VRF signature verifys False otherwise.  
+    //~ 
+    //~ ---
+    //~
     pub fn verify_pedersen_vrf<'a>(
         &self,
         t: impl IntoTranscript,
@@ -384,12 +398,19 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     {
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
+        //~ Append(t, "PedersenVRF")
         t.label(b"PedersenVRF");
         let io = vrf::vrfs_merge(t, ios);
+        //~ Append$(t, ""KeyCommitment")$
+        //~ Append$(t, compk)$
         t.label(b"KeyCommitment");
         t.append(&signature.compk);
+        //~ $z1 \leftarrow POrand + c \times PreOut - In \times ks
 
         // verify_final
+        //~ Append$(t, "Pedersen R")$
+        //~ Append$(t, KBrand || PORand)$
+        //~ $c \leftarrow Challenge(t, "PedersenVrfChallenge")$
         t.label(b"Pedersen R");
         t.append(&signature.r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge").read_reduce();
@@ -399,23 +420,31 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         //     &[io.input, io.preoutput],
         //     &[-signature.s, c],
         // ) + signature.r.into_group();
+        //~ $z1 \leftarrow POrand + c \times preoutput - input \times ks
         let z1 = signature.r.preoutish.into_group() + io.preoutput.0 * c - io.input.0 * signature.s.keying;
+        //~ $z1 \leftarrow ClearCofactor(z1$)        
+        //~ **if** $z1 \not \in  $O$ **then** **return** False
         if ! crate::zero_mod_small_cofactor(z1) {
             return Err(SignatureError::Invalid);
         }
         // TODO: Use an MSM here
+        //~ $z2 \leftarrow KBrand + c \times compk - krand \times K$  - brand \times B$
         let mut z2 = signature.r.keyish.into_group() + signature.compk.0 * c;
         z2 -= self.keying_base.mul(signature.s.keying);
         for i in 0..B {
             z2 -= self.blinding_bases[i].mul(signature.s.blindings[i]);
         }
+        //~ $z2 \leftarrow ClearCofactor(z1)$        
+        //~ **if** $z2 \not \in  $O$ **then** **return** False **else** **return** True
         if ! crate::zero_mod_small_cofactor(z2) {
             return Err(SignatureError::Invalid);
-        }
+        }        
         Ok(ios)
+        //~ 
+        //~ ---          
     }
 
-    /// Verify Pedersen VRF signature 
+    /// Verify Pedersen VRF signature
     pub fn verify_non_batchable_pedersen_vrf<'a>(
         &self,
         t: impl IntoTranscript,

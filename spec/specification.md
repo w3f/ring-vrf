@@ -49,13 +49,17 @@ format.
 
 ### VRF input
 
-VRF input is an ArkTranscript. See ArkTranscript
+Procedure to map arbitrary user input to a point follows the `hash_to_curve`
+procedure described by RFC9380.
+
+    Suite_ID: "bandersnatch_XMD:SHA-512_ELL2_RO_"
+
+See [ArkTranscript](TODO) for details.
 
 #### From transcript to point
 
 You need to call challenge and add b"vrf-input" to it. getting random byte (some hash?)
 then hash to curve it. 
-
 
 ## DELQ VRF
 
@@ -106,21 +110,23 @@ unblinded to prove that the output of the VRF is corresponds to
 the public key of the signer.
 
 ### PedersenVRF.Sign
-**Inputs**:\
+**Inputs**:  
   - Transcript $t$ of `ArkTranscript` type\
-  - $input$: An array of points on elliptic curve $E$.\
+  - $input$: $VRFInput \in G$.
   - $sb$: Blinding coefficient $\in F$\
   - $sk$: A VRF secret key.\
   - $pk$: VRF verification key corresponds to $sk$.\
 **Output**:\
-  - A Quintuple corresponding to PedersenVRF signature
+  - A Quintuple
+      $(compk, KBrand, PORand, ks, bs)2$
+      corresponding to PedersenVRF signature
 
 ---
 
-1. AddLabel(t, "PedersenVRF")
+1. $AddLabel(t, "PedersenVRF")$
 2. $compk = sk*G + sb*B$
-3. AddLabel("KeyCommitment")
-4. Append(t, compk)
+3. AppendToTranscript("KeyCommitment")
+4. AppendToTranscript(t, compk)
 5. $krand \leftarrow RandomElement(F)$
 6. $brand \leftarrow RandomElement(F)$
 7. $KBrand \leftarrow krand * G + brand * B$
@@ -132,10 +138,35 @@ the public key of the signer.
 12. $bs \rightarrow brand + c * sb$
 14. **return** $(compk, KBrand, PORand, ks, bs)$
 
+### PedersenVRF.Verify  
+**Inputs**:  
+  - $t$: Transcript of `ArkTranscript` type\
+  - $input$: $VRFInput \in G$.  
+  - $preout$: $VRFPreOutput \in G$.  
+  - $(compk, KBrand, PORand, ks, bs)$ the quintuple results of PeredersonVRF.Sign  
+**Output**:  
+  - True if Pedersen VRF signature verifys False otherwise.  
+
+---
+
+Append(t, "PedersenVRF")
+Append$(t, ""KeyCommitment")$
+Append$(t, compk)$
+$z1 \leftarrow POrand + c \times PreOut - In \times ks
+Append$(t, "Pedersen R")$
+Append$(t, KBrand || PORand)$
+$c \leftarrow Challenge(t, "PedersenVrfChallenge")$
+$z1 \leftarrow POrand + c \times preoutput - input \times ks
+$z1 \leftarrow ClearCofactor(z1$)        
+**if** $z1 \not \in  $O$ **then** **return** False
+$z2 \leftarrow KBrand + c \times compk - krand \times K$  - brand \times B$
+$z2 \leftarrow ClearCofactor(z1)$        
+**if** $z2 \not \in  $O$ **then** **return** False **else** **return** True
+
+---          
 
 
 ## Bandersnatch VRF
-
 
 ## Transcript
 
@@ -146,63 +177,39 @@ We do basic domain separation using postfix writes of the lengths of written
 data (as opposed to the prefix writes by [Merlin](https://merlin.cool)
 `TupleHash` from [SP 800-185](https://csrc.nist.gov/pubs/sp/800/185/final)).
 
+    H(item_1, item_2, ..., item_n)
+
+Represents the application of shake-128 to the concatenation of the serialization of each item
+followed by the serialization of the length of each objects, as a 32-bit unsigned integer.
+
+    bytes = encode(item_1) || encode(length(item_1)) || .. || encode(item_n) || encode(length(item_n))
+    Shake128(bytes)
+
 The length of each item should be less than 2^31.
 
-The transcript can be created with an initial domain label.
-The label bytes are written into the hasher as all the other items which
-may follow.
+## Objects Serialization Encoding
 
-On construction the Shake128 hasher state is initialized to hash the empty
-octet-string TODO @davxy: DOUBLE CHECK THIS
+### Unsigned Integers
 
-### Pre-defined functions
+Unsigned integers are encoded in big-endian.
 
-Get octet string length
+This applies to both fixed or arbitrary width unsigned integers.
 
-```
-    length(data)
+TODO:
+- ARK serializes integers in LE :-/
+- Check Zcash serialization format (IIRC BE)
 
-      Input:
-        - data: user data
-      Output:
-        - data length as 32 bit integer
-```
+### EC Points
 
-Big-endian encoding of 32-bit unsigned integers
+Elliptic curve points are serialized in compressed form as specified by TODO.
 
-```
-    big_endian_bytes(length)
+TODO isn't there any standard like https://www.secg.org/sec1-v2.pdf ?
+There the standard serializes in BE as well.
 
-      Input:
-        - length: 32-bit integer
-      Output:
-        - 4 bytes big endian encoding of length
-```
+TODO maybe we must convert to BE our serialized points/scalars?
 
-Update the hasher state with some data
 
-```
-    update_hasher(hasher, data)    
-
-      Input:
-        - hasher: Shake128 hasher
-        - data: user provided data
-```
-
-### Transcript update
-
-Update the hasher state with user data.
-
-```
-    write_bytes(hasher, data) 
-
-      Inputs:
-        - hasher: shake128 hasher state
-        - data: user data
-
-      Steps:
-        1. update_hasher(hasher, data)
-```
+## OBSOLETE (TODO: REMOVE THIS PARAGRAPH)
 
 Write unlabeled domain separator into the hasher state.
 
