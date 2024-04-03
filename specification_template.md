@@ -1,16 +1,18 @@
 # Bandersnatch VRFs
 
-## VRF
+## Introduction
 
 {sections.vrf}
 
-### VRF Key
-
-{sections.vrf-keys}
-
 ## IETF VRF
 
-Refer to [RFC-9381](https://www.rfc-editor.org/rfc/rfc9381) for the details.
+Definition of a VRF based on the IETF [RFC-9381](https://www.rfc-editor.org/rfc/rfc9381).
+
+All the details specified by the RFC applies with the additional capability to add additional
+data (`ad`) as per definition of EC-VRF we've given. In particular the step 5 of section
+5.4.3 is defined as:
+
+    str = str || ad || challenge_generation_domain_separator_back
 
 ### Bandersnatch Cipher Suite Configuration
 
@@ -57,9 +59,10 @@ Configuration follows the RFC-9381 suite specification guidelines.
 * The hash function Hash is SHA-512 as specified in
   [RFC6234](https://www.rfc-editor.org/rfc/rfc6234), with hLen = 64.
 
-* The ECVRF_encode_to_curve function is as specified in
-  Section 5.4.1.2, with `h2c_suite_ID_string` = `"BANDERSNATCH_XMD:BLAKE2b_ELL2_RO_"`.
-  The suite is defined in Section 8.5 of [RFC9380](https://datatracker.ietf.org/doc/rfc9380/).
+* The `ECVRF_encode_to_curve` function (*Elligator2*) is as specified in
+  Section 5.4.1.2, with `h2c_suite_ID_string` = `"BANDERSNATCH_XMD:SHA-512_ELL2_RO_"`.
+  The suite must be interpreted as defined by Section 8.5 of [RFC9380](https://datatracker.ietf.org/doc/rfc9380/)
+  and using the domain separation tag `DST = "ECVRF_" || h2c_suite_ID_string || suite_string`.
 
 ## Pedersen VRF
 
@@ -68,36 +71,3 @@ public key by a Pedersen commitment to the secret key, which makes the
 Pedersen VRF useful in anonymized ring VRFs, or perhaps group VRFs.
 
 {sections.pedersen-vrf}
-
-## VRF input
-
-Procedure to map arbitrary user input to a point follows the `hash_to_curve`
-procedure described by RFC9380.
-
-    Suite_ID: "bandersnatch_XMD:SHA-512_ELL2_RO_"
-
-See [ArkTranscript](TODO) for details.
-
-### From transcript to point
-
-You need to call challenge and add b"vrf-input" to it. getting random byte (some hash?)
-then hash to curve it. 
-
-## Transcript
-
-A Shake-128 based transcript construction which implements the Fiat-Shamir
-transform procedure.
-
-We do basic domain separation using postfix writes of the lengths of written
-data (as opposed to the prefix writes by [Merlin](https://merlin.cool)
-`TupleHash` from [SP 800-185](https://csrc.nist.gov/pubs/sp/800/185/final)).
-
-    H(item_1, item_2, ..., item_n)
-
-Represents the application of shake-128 to the concatenation of the serialization of each item
-followed by the serialization of the length of each objects, as a 32-bit unsigned integer.
-
-    bytes = encode(item_1) || encode(length(item_1)) || .. || encode(item_n) || encode(length(item_n))
-    Shake128(bytes)
-
-The length of each item should be less than 2^31.
