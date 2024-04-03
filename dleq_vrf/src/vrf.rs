@@ -3,8 +3,6 @@
 // Authors:
 // - Jeffrey Burdges <jeff@web3.foundation>
 
-//~ ## VRF
-//~
 //~ **Definition**: A *verifiable random function with auxiliary data (VRF-AD)* can be described with three functions: 
 //~
 //~ - $VRF.KeyGen: () \mapsto (pk,sk)$ where $pk$ is a public key and $sk$ is its corresponding secret key.
@@ -32,13 +30,14 @@ use crate::{Transcript,IntoTranscript,transcript::AsLabel,SecretKey};
 
 use core::borrow::{Borrow}; // BorrowMut
 
-//~ For input $msg$ and $aux$ auxilary date first we compute the $VRFInput$ which is a point on elliptic curve $E$ as follows:
+//~ For input $msg$ and $aux$ auxilary data first we compute the $VRFInput$ which is a point on elliptic curve $E$ as follows:
 //
-//~ $$ VRFiput := H2C(ArkTranscript(msg, aux) $$
+//~ $$ t \leftarrow Transcript(msg) $$  
+//~ $$ VRFiput := H2C(challange(t, "vrf-input") $$  
 //~
 //~ where
-//~ - $ArkTranscript$ function is described in [[ark-transcript]] section.
-//~ - $H2C: B \rightarrow G$  is a hash to curve function correspond to curve $E$ specified in Section [[hash-to-curve]] for the specific choice of $E$
+//~ - $transcript$ function is described in [[ark-transcript]] section.  
+//~ - $H2C: B \rightarrow G$  is a hash to curve function correspond to curve $E$ specified in Section [[hash-to-curve]] for the specific choice of $E$  
 //~
 /// Create VRF input points
 ///
@@ -85,8 +84,8 @@ where C: AffineRepr, H2C: HashToCurve<<C as AffineRepr>::Group>,
 
 /// Actual VRF input, consisting of an elliptic curve point.  
 ///
-//~ ## EC VRF Input
-//~ The EC-VRF input ultimately is a point on the elliptic curve
+//~ ### VRF Input
+//~ The VRF input ultimately is a point on the elliptic curve
 //~ as out put of hash of the transcript using arkworks chosen hash
 //~ for the given curve.
 //~
@@ -137,8 +136,10 @@ impl<K: AffineRepr> SecretKey<K> {
     }
 }
 
-//~ **Definition**: *VRF pre-output* is defined to be a point in $G$ in serialized  affine representation 
-/// VRF pre-output, possibly unverified.
+//~ ### VRF Preoutput and Output
+//~ **Definition**: *VRF pre-output* is defined to be a point in $E$ in serialized affine representation.
+//~ 
+/// VRF pre-output, possibly unverified.  
 #[derive(Debug,Copy,Clone,PartialEq,Eq,CanonicalSerialize,CanonicalDeserialize)] // Copy, Default, PartialOrd, Ord, Hash
 #[repr(transparent)]
 pub struct VrfPreOut<C: AffineRepr>(pub C);
@@ -191,7 +192,7 @@ pub fn collect_preoutputs_vec<C: AffineRepr>(ios: &[VrfInOut<C>]) -> Vec<VrfPreO
     ).collect::<Vec<VrfPreOut<C>>>()
 }
 
-//~ ** Definition **: *VRF InOut* is defined as a pair as follows:
+//~ **Definition**: *VRF InOut* is defined as a pair as follows:
 //~ $$(VRF Input, VRF Preoutput)$$
 /// VRF input and pre-output paired together, possibly unverified.
 ///
@@ -205,6 +206,12 @@ pub struct VrfInOut<C: AffineRepr> {
 }
 
 impl<C: AffineRepr> VrfInOut<C> {
+    //~ **Definition**: *VRF output* is generated using VRF preoutput:
+    //~ $$ t \leftarrow Transcript(Domain) $$
+    //~ $$ append(t, "VrfOutput") $$
+    //~ $$ append(t, cofactor * VRFpreout) $$
+    //~ $$ VRFoutput \leftarrow t.challenge("") $$
+
     /// Append to VRF output transcript, suitable for producing VRF output.
     /// 
     /// We incorporate both the input and output to provide the 2Hash-DH

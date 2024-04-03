@@ -3,7 +3,7 @@
 // Authors:
 // - Jeffrey Burdges <jeff@web3.foundation>
 
-//~ ### Pedersen VRF
+//~ ## Pedersen VRF
 //~
 //~ Strictly speaking Pederson VRF is not a VRF. Instead, it proves
 //~ that the output has been generated with a secret key associated
@@ -31,6 +31,12 @@ use crate::{
 };
 
 
+//~ ### Setup
+//~
+//~ PedersenVRF is initiated for prime subgroup $G < E$ of an elliptic
+//~ curve E with $K, B \in G$ are defined to be *key base* and *blinding base*
+//~ respectively.
+//~
 /// Pedersen VRF flavor
 #[derive(Debug,Clone,Eq,PartialEq)]
 pub struct PedersenVrf<K, H=K, const B: usize=1> 
@@ -398,19 +404,19 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
     {
         let mut t = t.into_transcript();
         let t = t.borrow_mut();
-        //~ Append(t, "PedersenVRF")
+        //~ Append$(t, "PedersenVRF")$  
         t.label(b"PedersenVRF");
         let io = vrf::vrfs_merge(t, ios);
-        //~ Append$(t, ""KeyCommitment")$
-        //~ Append$(t, compk)$
+        //~ Append$(t, ""KeyCommitment")$  
+        //~ Append$(t, compk)$  
         t.label(b"KeyCommitment");
         t.append(&signature.compk);
-        //~ $z1 \leftarrow POrand + c \times PreOut - In \times ks
+        //~ $z1 \leftarrow POrand + c \times PreOut - In \times ks$ 
 
         // verify_final
-        //~ Append$(t, "Pedersen R")$
-        //~ Append$(t, KBrand || PORand)$
-        //~ $c \leftarrow Challenge(t, "PedersenVrfChallenge")$
+        //~ Append$(t, "Pedersen R")$  
+        //~ Append$(t, KBrand || PORand)$  
+        //~ $c \leftarrow Challenge(t, "PedersenVrfChallenge")$  
         t.label(b"Pedersen R");
         t.append(&signature.r);
         let c: <K as AffineRepr>::ScalarField = t.challenge(b"PedersenVrfChallenge").read_reduce();
@@ -420,22 +426,22 @@ where K: AffineRepr, H: AffineRepr<ScalarField = K::ScalarField>,
         //     &[io.input, io.preoutput],
         //     &[-signature.s, c],
         // ) + signature.r.into_group();
-        //~ $z1 \leftarrow POrand + c \times preoutput - input \times ks
+        //~ $z1 \leftarrow POrand + c \times preoutput - input \times ks$   
         let z1 = signature.r.preoutish.into_group() + io.preoutput.0 * c - io.input.0 * signature.s.keying;
-        //~ $z1 \leftarrow ClearCofactor(z1$)        
-        //~ **if** $z1 \not \in  $O$ **then** **return** False
+        //~ $z1 \leftarrow ClearCofactor(z1)$    
+        //~ **if** $z1 \neq O$ **then** **return** False  
         if ! crate::zero_mod_small_cofactor(z1) {
             return Err(SignatureError::Invalid);
         }
         // TODO: Use an MSM here
-        //~ $z2 \leftarrow KBrand + c \times compk - krand \times K$  - brand \times B$
+        //~ $z2 \leftarrow KBrand + c \times compk - krand \times K - brand \times B$  
         let mut z2 = signature.r.keyish.into_group() + signature.compk.0 * c;
         z2 -= self.keying_base.mul(signature.s.keying);
         for i in 0..B {
             z2 -= self.blinding_bases[i].mul(signature.s.blindings[i]);
         }
         //~ $z2 \leftarrow ClearCofactor(z1)$        
-        //~ **if** $z2 \not \in  $O$ **then** **return** False **else** **return** True
+        //~ **if** $z2 \neq O$ **then** **return** False **else** **return** True  
         if ! crate::zero_mod_small_cofactor(z2) {
             return Err(SignatureError::Invalid);
         }        
