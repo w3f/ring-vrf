@@ -1,4 +1,4 @@
-# Ring VRF
+# Bandersnatch VRFs
 
 ## VRF
 
@@ -42,7 +42,6 @@ $$ append(t, cofactor * VRFpreout) $$
 $$ VRFoutput \leftarrow t.challenge("") $$
 
 
-
 ### VRF Key
 
 #### Public key  \
@@ -52,7 +51,61 @@ Public key is represented in Affine form and is serialized using Arkwork compres
 format.
 
 
-### Pedersen VRF
+## IETF VRF
+
+Refer to [RFC-9381](https://www.rfc-editor.org/rfc/rfc9381) for the details.
+
+### Bandersnatch Cipher Suite Configuration
+
+Configuration follows the RFC-9381 suite specification guidelines.
+
+* The EC group G is the Bandersnatch elliptic curve, in Twisted Edwards form,
+  with the finite field and curve parameters as specified in the [neuromancer](https://neuromancer.sk/std/bls/Bandersnatch)
+  standard curves database. For this group, `fLen` = `qLen` = 32 and `cofactor` = 4.
+
+* The prime subgroup generator `g` is constructed following Zcash's guidelines:
+  *"The generators of G1 and G2 are computed by finding the lexicographically
+  smallest valid x-coordinate, and its lexicographically smallest y-coordinate
+  and scaling it by the cofactor such that the result is not the point at infinity."*
+
+  - g.x = `0x29c132cc2c0b34c5743711777bbe42f32b79c022ad998465e1e71866a252ae18`
+  - g.y = `0x2a6c669eda123e0f157d8b50badcd586358cad81eee464605e3167b6cc974166`
+
+* The public key generation primitive is `PK = SK · g`, with `SK` the secret
+  key scalar and `g` the group generator. In this ciphersuite, the secret
+  scalar `x` is equal to the secret key `SK`.
+
+* `suite_string` = 0x33.
+
+* `cLen` = 32.
+
+* `encode_to_curve_salt` = `PK_string`.
+
+* The `ECVRF_nonce_generation` function is as specified in Section 5.4.2.1 of RFC-9381.
+
+* The `int_to_string` function encodes into the 32 bytes little endian representation.
+ 
+* The `string_to_int` function decodes from the 32 bytes little endian representation.
+
+* The point_to_string function converts a point on E to an octet
+  string using compressed form. The Y coordinate is encoded using
+  `int_to_string` function and the most significant bit of the last
+  octet is used to keep track of the X's sign. This implies that
+  the point is encoded on 32 bytes.
+
+* The string_to_point function tries to decompress the point encoded
+  according to `point_to_string` procedure. This function MUST outputs
+  "INVALID" if the octet string does not decode to a point on the curve E.
+
+* The hash function Hash is SHA-512 as specified in
+  [RFC6234](https://www.rfc-editor.org/rfc/rfc6234), with hLen = 64.
+
+* The ECVRF_encode_to_curve function is as specified in
+  Section 5.4.1.2, with `h2c_suite_ID_string` = `"BANDERSNATCH_XMD:BLAKE2b_ELL2_RO_"`.
+  The suite is defined in Section 8.5 of [RFC9380](https://datatracker.ietf.org/doc/rfc9380/).
+
+## Pedersen VRF
+
 Pedersen VRF resembles EC VRF but replaces the
 public key by a Pedersen commitment to the secret key, which makes the
 Pedersen VRF useful in anonymized ring VRFs, or perhaps group VRFs.
@@ -129,9 +182,7 @@ $z2 \leftarrow ClearCofactor(z1)$
 ---          
 
 
-## Bandersnatch VRF
-
-### VRF input
+## VRF input
 
 Procedure to map arbitrary user input to a point follows the `hash_to_curve`
 procedure described by RFC9380.
@@ -140,7 +191,7 @@ procedure described by RFC9380.
 
 See [ArkTranscript](TODO) for details.
 
-#### From transcript to point
+### From transcript to point
 
 You need to call challenge and add b"vrf-input" to it. getting random byte (some hash?)
 then hash to curve it. 
@@ -163,114 +214,3 @@ followed by the serialization of the length of each objects, as a 32-bit unsigne
     Shake128(bytes)
 
 The length of each item should be less than 2^31.
-
-## Objects Serialization Encoding
-
-### Unsigned Integers
-
-Unsigned integers are encoded in big-endian.
-
-This applies to both fixed or arbitrary width unsigned integers.
-
-TODO:
-- ARK serializes integers in LE :-/
-- Check Zcash serialization format (IIRC BE)
-
-### EC Points
-
-Elliptic curve points are serialized in compressed form as specified by TODO.
-
-TODO isn't there any standard like https://www.secg.org/sec1-v2.pdf ?
-There the standard serializes in BE as well.
-
-TODO maybe we must convert to BE our serialized points/scalars?
-
-
-## OBSOLETE (TODO: REMOVE THIS PARAGRAPH)
-
-Write unlabeled domain separator into the hasher state.
-
-```
-    write_separator(hasher, data)
-
-      Inputs:
-        - hasher: shake128 hasher state
-        - data: user data
-
-      Steps:
-        1. bytes = big_endian_bytes(length(data))
-        2. write_bytes(hasher, bytes)
-```
-
-Update the hasher state with user provided data with separator.
-
-```
-    update(hasher, data)
-
-      Inputs:
-        - hasher: shake128 hasher state
-        - data: user data
-
-      Steps:
-        1. write_bytes(hasher, data)
-        2. write_separator(hasher, data)
-```
-
-### Challenge
-
-Creates a challenge reader
-
-```
-    challenge(hasher, label)
-
-      Inputs:
-        - label: user provided domain separator (octet-string)
-      Outputs:
-        - Shake128 hash reader
-    
-      Steps:
-        1. update(hasher, label)
-        2. write_bytes(hasher, b"challenge")
-        3. reader = get_reader(hasher)
-        4. separate(hasher, b"challenge")
-        5. return reader
-```
-
-### Forking
-
-Forks transcript to prepare a witness reader
-
-```
-    fork(hasher, label)
-
-      Inputs:
-        - hasher: shake128 state
-        - label: user provided label (octets)
-      Output:
-        - forked hasher state
-
-      Steps:
-        1. hasher_clone = clone(hasher)
-        2. update(hasher_clone, label)
-        3. return hasher_clone
-```
-
-### Witness
-
-Create a witness reader from a forked transcript
-
-```
-    witness(hasher, rng)  
-
-      Inputs:
-        - hasher: shake128 state
-        - rng: random number generator
-      Output
-        - Shake128 hasher reader
-
-      Steps:
-        1. rand = read_bytes(rng, 32)
-        2. write_bytes(hasher, rand)
-        3. reader = get_reader(hasher)
-        4. return reader
-```
