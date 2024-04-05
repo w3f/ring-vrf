@@ -78,7 +78,7 @@ where C: AffineRepr, H2C: HashToCurve<<C as AffineRepr>::Group>,
 /// As a defense in depth, we suggest thin VRF usages hash their
 /// public, given some broken applications might do soft derivations
 /// anyways.
-#[derive(Debug,Copy,Clone,CanonicalSerialize)] // CanonicalDeserialize, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash
+#[derive(Debug,Copy,Clone,CanonicalSerialize, CanonicalDeserialize, PartialEq, Eq)] // Default, PartialOrd, Ord, Hash
 #[repr(transparent)]
 pub struct VrfInput<C: AffineRepr>(pub C);
 
@@ -166,7 +166,7 @@ pub fn collect_preoutputs_vec<C: AffineRepr>(ios: &[VrfInOut<C>]) -> Vec<VrfPreO
 /// VRF input and pre-output paired together, possibly unverified.
 ///
 /// 
-#[derive(Debug,Copy,Clone,CanonicalSerialize)] // CanonicalDeserialize, PartialEq,Eq, PartialOrd, Ord, Hash
+#[derive(Debug,Copy,Clone,CanonicalSerialize, CanonicalDeserialize, PartialEq, Eq)] // PartialOrd, Ord, Hash
 pub struct VrfInOut<C: AffineRepr> {
     /// VRF input point
     pub input: VrfInput<C>,
