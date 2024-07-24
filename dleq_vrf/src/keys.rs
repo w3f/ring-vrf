@@ -14,13 +14,11 @@ use ark_serialize::{CanonicalSerialize,CanonicalDeserialize,SerializationError};
 
 #[cfg(feature = "getrandom")]
 use ark_secret_scalar::{rand_core, RngCore};
-
 use ark_secret_scalar::SecretScalar;
 
 use crate::{
     ThinVrf,
     transcript::digest::{Update,XofReader},
-
 };
 
 
@@ -86,7 +84,7 @@ pub struct SecretKey<K: AffineRepr> {
     pub(crate) thin: ThinVrf<K>,
 
     /// Secret key represented as a scalar.
-    pub(crate) key: SecretScalar<<K as AffineRepr>::ScalarField>,
+    pub(crate) key: SecretScalar<K::ScalarField>,
 
     /// Seed for deriving the nonces used in Schnorr proofs.
     ///
@@ -146,8 +144,8 @@ impl<K: AffineRepr> ThinVrf<K> {
     {
         let mut nonce_seed: [u8; 32] = [0u8; 32];
         xof.read(&mut nonce_seed);
-        let mut key = SecretScalar::from_xof(&mut xof);
-        let public = self.make_public(&mut key);
+        let key = SecretScalar::from_xof(&mut xof);
+        let public = self.make_public(&key);
         SecretKey { thin: self, key, nonce_seed, public, 
             #[cfg(debug_assertions)]
             test_vector_fake_rng: false,
@@ -156,7 +154,7 @@ impl<K: AffineRepr> ThinVrf<K> {
 
     /// Generate a `SecretKey` from a 32 byte seed.
     pub fn secretkey_from_seed(self, seed: &[u8; 32]) -> SecretKey<K> {
-        use crate::transcript::digest::{ExtendableOutput};
+        use crate::transcript::digest::ExtendableOutput;
         let mut xof = crate::transcript::Shake128::default();
         xof.update(b"VrfSecretSeed");
         xof.update(seed.as_ref());
