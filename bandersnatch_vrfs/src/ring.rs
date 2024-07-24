@@ -129,11 +129,11 @@ impl KZG {
     */
 
     pub fn prover_key(&self, pks: Vec<SWAffine>) -> ProverKey {
-        ring::index(self.pcs_params.clone(), &self.piop_params, pks).0
+        ring::index(&self.pcs_params, &self.piop_params, &pks).0
     }
 
     pub fn verifier_key(&self, pks: Vec<SWAffine>) -> VerifierKey {
-        ring::index(self.pcs_params.clone(), &self.piop_params, pks).1
+        ring::index(&self.pcs_params, &self.piop_params, &pks).1
     }
 
     /// `k` is the prover secret index in [0..keyset_size).
