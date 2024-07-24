@@ -8,18 +8,15 @@ use ark_serialize::{
     Validate, Write,
 };
 use ark_std::{rand::{Rng, SeedableRng}, vec};
-use fflonk::pcs::PCS;
-use merlin::Transcript;
-use ring::Domain;
-use ring::ring::Ring;
+use ring::{Transcript, pcs::PCS, Domain, ring::Ring};
 
 use crate::bandersnatch::{Fq, SWAffine, SWConfig, BandersnatchConfig};
 use crate::bls12_381::Bls12_381;
 use crate::bls12_381;
 
-type RealKZG = fflonk::pcs::kzg::KZG<Bls12_381>;
+type RealKZG = ring::pcs::kzg::KZG<Bls12_381>;
 
-type PcsParams = fflonk::pcs::kzg::urs::URS<Bls12_381>;
+type PcsParams = ring::pcs::kzg::urs::URS<Bls12_381>;
 
 pub type PiopParams = ring::PiopParams<Fq, SWConfig>;
 pub type RingProof = ring::RingProof<Fq, RealKZG>;
@@ -29,7 +26,7 @@ pub type RingVerifier = ring::ring_verifier::RingVerifier<Fq, RealKZG, SWConfig>
 pub type ProverKey = ring::ProverKey<Fq, RealKZG, SWAffine>;
 pub type VerifierKey = ring::VerifierKey<Fq, RealKZG>;
 
-pub type KzgVk = fflonk::pcs::kzg::params::RawKzgVerifierKey<Bls12_381>;
+pub type KzgVk = ring::pcs::kzg::params::RawKzgVerifierKey<Bls12_381>;
 
 pub type RingCommitment = Ring<bls12_381::Fr, Bls12_381, BandersnatchConfig>;
 
@@ -96,7 +93,7 @@ impl KZG {
 
     pub fn kzg_setup(domain_size: usize, srs: StaticProverKey) -> Self {
         let piop_params = make_piop_params(domain_size);
-        let pcs_params = fflonk::pcs::kzg::urs::URS  {
+        let pcs_params = ring::pcs::kzg::urs::URS  {
             powers_in_g1: srs.mon_g1,
             powers_in_g2: vec![srs.kzg_vk.g2, srs.kzg_vk.tau_in_g2],
         };

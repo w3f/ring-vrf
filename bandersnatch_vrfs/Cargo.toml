@@ -19,10 +19,7 @@ ark-ff.workspace = true
 ark-ec.workspace = true
 ark-serialize.workspace = true
 
-fflonk = { git = "https://github.com/w3f/fflonk" }
-ring = { git = "https://github.com/w3f/ring-proof" }
-
-merlin = { version = "3.0", default-features = false }
+ring = { git = "https://github.com/w3f/ring-proof", rev = "665f5f5" }
 
 # In these three, add optional = true here only if we create some related curves trait.
 ark-ed-on-bls12-381-bandersnatch = { version = "0.4", default-features = false }
