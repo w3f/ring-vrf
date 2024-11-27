@@ -261,7 +261,7 @@ pub trait EcVrfVerifier {
 /// 
 /// Inherent methods and other traits being used here:
 /// `IntoTranscript`, `vrf::{VrfInOut, VrfPreOut}`
-pub trait EcVrfSigner: Borrow<Self::Secret> {
+pub trait EcVrfSigner: Sized+Borrow<Self::Secret> {
     /// Detached signature aka proof type created by the VRF
     type Proof: EcVrfProof;
 
@@ -273,14 +273,14 @@ pub trait EcVrfSigner: Borrow<Self::Secret> {
     type Secret: EcVrfSecret<EC<Self::Proof>>;
 
     fn vrf_sign_detached(
-        &self,
+        self,
         t: impl IntoTranscript,
         ios: &[IO<Self::Proof>]
     ) -> Result<Self::Proof,Self::Error>;
 
     /// VRF signature for a fixed number of input-output pairs
     fn vrf_sign<const N: usize>(
-        &self,
+        self,
         t: impl IntoTranscript,
         ios: &[IO<Self::Proof>; N]
     ) -> Result<VrfSignature<Self::Proof,N>,Self::Error>
@@ -296,7 +296,7 @@ pub trait EcVrfSigner: Borrow<Self::Secret> {
     /// more for pedagogy than for convenience.  It demonstrates choosing
     /// whether we sign the VRF, and what else we sign in its transcript,
     /// after examining the VRF output.
-    fn vrf_sign_one<I,T,F>(&self, input: I, mut check: F) -> Result<VrfSignature<Self::Proof,1>,Self::Error>
+    fn vrf_sign_one<I,T,F>(self, input: I, mut check: F) -> Result<VrfSignature<Self::Proof,1>,Self::Error>
     where
         I: IntoVrfInput<EC<Self::Proof>>,
         T: IntoTranscript,
@@ -309,7 +309,7 @@ pub trait EcVrfSigner: Borrow<Self::Secret> {
 
     /// VRF signature for a variable number of input-output pairs.
     fn vrf_sign_vec(
-        &self,
+        self,
         t: impl IntoTranscript,
         ios: &[IO<Self::Proof>]
     ) -> Result<VrfSignatureVec<Self::Proof>,Self::Error>

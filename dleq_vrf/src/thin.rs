@@ -245,12 +245,12 @@ impl<K: AffineRepr> PublicKey<K> {
     }
 }
 
-impl<K: AffineRepr> EcVrfSigner for SecretKey<K> {
+impl<K: AffineRepr> EcVrfSigner for &SecretKey<K> {
     type Proof = ThinVrfProof<K>;
     type Error = ();
-    type Secret = Self;
+    type Secret = SecretKey<K>;
     fn vrf_sign_detached(
-        &self,
+        self,
         t: impl IntoTranscript,
         ios: &[VrfInOut<K>]
     ) -> Result<Self::Proof,()>
